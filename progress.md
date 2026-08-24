@@ -82,6 +82,27 @@
   - `npx tsc --noEmit`: 0 errors.
 
 * **Next Immediate Task:**
-  - Phase 4 (Task 4.1): Build `components/tailor/measurement-intake-form.tsx` featuring standard keyboard `Tab`/`Enter` cycling.
+  - Phase 4 (Completed)
 
+---
 
+## Phase 4: Bilingual Measurement Intake Engine (Completed)
+* **Date:** 2026-08-24
+* **Tasks Completed:**
+  - `4.1` Built `components/tailor/measurement-intake-form.tsx`: Bilingual 17-field measurement form (Kameez 12 + Shalwar 5) with `CYCLE_FIELD_ORDER` array governing `Enter`-key sequential focus across 9 primary fields (`kameez_length → chest → waist → shoulder_teera → sleeve_length → neck_gala → daman_width → shalwar_length → paincha → aasan`). Optional fields grouped under `<details>` disclosure. `FractionalPillSelector` bound with `tabIndex={-1}` — never steals input focus.
+  - `4.2` Implemented full bilingual labels on every `MeasurementRow`: EN label (standard sans, above) + UR label (`font-urdu-sans`, `dir="rtl"`, `lang="ur"`, `leading-urdu-data: 1.65`) below. Numeric values wrapped in `<bdi dir="ltr">` for bidirectional isolation. Section headings use `font-urdu-serif` with `leading-urdu-display: 2.2`. GarmentStyleChips integrated within the Kameez section for cut/collar/daman/pocket selection.
+  - `4.3` Implemented customer auto-lookup in `app/orders/new/page.tsx`: `useEffect` fires on 10–11 digit phone entry, matches against `mockCustomers` (primary + alternate phone). On match: autofills name, address, default `MeasurementProfile`, all measurements, and style preferences. Shows "Profile Found" badge with Khata balance indicator (Udhaar/Credit/Settled). "New Revision" button clears profile lock without clearing the found customer. Unknown numbers display advisory note for new customer entry.
+  - `4.4` Built `components/tailor/visual-mannequin-pad.tsx`: Pure inline SVG body silhouette (viewBox 120×310, static-export compatible) with 9 named body region paths (`head_neck`, `shoulder`, `torso_upper`, `torso_mid`, `torso_lower`, `arm_left`, `arm_right`, `hip_aasan`, `lower_leg`). `REGION_FIELD_MAP` maps each `ShalwarKameezMeasurements` key to its anatomical region. Active region renders gold `stroke` + `fill` glow with `transition-all duration-300`. Sticky in sidebar on `sm:` breakpoints. Toggle button (`Eye` / `EyeOff`) controls visibility.
+
+* **Active File Changes:**
+  - `components/tailor/measurement-intake-form.tsx` [NEW]
+  - `components/tailor/visual-mannequin-pad.tsx` [NEW]
+  - `app/orders/new/page.tsx` [NEW]
+  - `tasks.md`
+  - `progress.md`
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors. (Fixed `BadgeVariant` strings: `overdue` → `status-overdue`, `ready` → `status-ready`, `stitching` → `status-stitching`, `cutting` → `status-cutting`, `booked` → `status-booked` to match existing `Badge` component type union.)
+
+* **Next Immediate Task:**
+  - Phase 5 (Task 5.1): Build `components/tailor/pipeline-board.tsx` Kanban pipeline board.
