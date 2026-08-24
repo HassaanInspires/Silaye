@@ -107,3 +107,71 @@
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
 }
+
+/* ============================================================================
+   Thermal Printing Cross-Platform Stylesheet (@media print)
+   ============================================================================ */
+
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  html, body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide all app chrome, navigation, headers, footers, and modal overlays */
+  .no-print,
+  header,
+  nav,
+  aside,
+  button,
+  dialog::backdrop,
+  [data-dialog-overlay="true"],
+  .app-shell-sidebar,
+  .app-shell-header {
+    display: none !important;
+  }
+
+  /* Thermal slip printable container */
+  .printable-thermal-slip {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 2mm 3mm !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-after: always;
+  }
+
+  .printable-thermal-slip.slip-58mm {
+    max-width: 54mm !important;
+  }
+
+  .printable-thermal-slip.slip-80mm {
+    max-width: 76mm !important;
+  }
+
+  /* Ensure high contrast pure black text & borders */
+  .printable-thermal-slip * {
+    color: #000000 !important;
+    border-color: #000000 !important;
+    background: transparent !important;
+  }
+}
+

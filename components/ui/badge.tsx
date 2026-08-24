@@ -10,7 +10,9 @@ export type BadgeVariant =
   | 'status-cutting'
   | 'status-stitching'
   | 'status-ready'
-  | 'status-overdue';
+  | 'status-overdue'
+  | 'status-advance-credit'
+  | 'status-udhaar-pending';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
@@ -26,6 +28,8 @@ const variantStyles: Record<BadgeVariant, string> = {
   'status-stitching': 'border-transparent bg-status-stitching/20 text-status-stitching',
   'status-ready': 'border-transparent bg-status-ready/20 text-status-ready',
   'status-overdue': 'border-transparent bg-status-overdue/20 text-status-overdue',
+  'status-advance-credit': 'border-transparent bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+  'status-udhaar-pending': 'border-transparent bg-rose-500/15 text-rose-400 border-rose-500/20',
 };
 
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(

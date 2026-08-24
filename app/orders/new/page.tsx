@@ -25,14 +25,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MeasurementIntakeForm } from '@/components/tailor/measurement-intake-form';
 import { VisualMannequinPad } from '@/components/tailor/visual-mannequin-pad';
+import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal';
+import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
+import confetti from 'canvas-confetti';
 import {
   mockCustomers,
   mockMeasurementProfiles,
   mockStaff,
+  mockShop,
 } from '@/lib/mock-data';
 import { calculateOrderFinancials, formatPakistaniPhone } from '@/lib/validations/tailor';
 import type {
   Customer,
+  GarmentOrder,
   MeasurementProfile,
   ShalwarKameezMeasurements,
   StylePreferences,
@@ -244,6 +249,12 @@ export default function NewOrderPage() {
   // ── Special notes ──────────────────────────────────────────────────────
   const [specialNotes, setSpecialNotes] = React.useState<string>('');
 
+  // ── WhatsApp Receipt & Thermal Tag Dispatcher modal states ────────────
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = React.useState<boolean>(false);
+  const [isThermalModalOpen, setIsThermalModalOpen] = React.useState<boolean>(false);
+  const [newBookedOrder, setNewBookedOrder] = React.useState<GarmentOrder | null>(null);
+  const [newBookedCustomer, setNewBookedCustomer] = React.useState<Customer | null>(null);
+
   // --------------------------------------------------------------------------
   // Customer auto-lookup: fires when phone reaches 10–11 digits
   // --------------------------------------------------------------------------
@@ -354,6 +365,77 @@ export default function NewOrderPage() {
     setAssignedStitcherId('');
     setSpecialNotes('');
     setActiveField(null);
+  };
+
+  const handleBookOrder = () => {
+    if (!customerName.trim() || !deliveryDate) return;
+
+    const orderNum = `DP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const effectiveCust: Customer = foundCustomer || {
+      id: `cust-${Date.now()}`,
+      shop_id: mockShop.id,
+      full_name: customerName.trim(),
+      phone: phone.trim() || '03001234567',
+      alternate_phone: null,
+      address: customerAddress.trim() || null,
+      city: 'Wah Cantt',
+      notes: specialNotes || null,
+      total_orders_count: 1,
+      total_spent: financials.total_amount,
+      current_khata_balance: financials.balance_due,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const newOrder: GarmentOrder = {
+      id: `ord-${Date.now()}`,
+      order_number: orderNum,
+      shop_id: mockShop.id,
+      customer_id: effectiveCust.id,
+      measurement_profile_id: foundProfile?.id || null,
+      status: 'BOOKED',
+      garment_type: garmentType,
+      quantity,
+      booking_date: new Date().toISOString(),
+      trial_date: trialDate || null,
+      delivery_date: deliveryDate,
+      actual_delivery_date: null,
+      fabric_provided_by: fabricSource,
+      fabric_color: fabricColor || null,
+      fabric_brand: fabricBrand || null,
+      fabric_pieces_count: 1,
+      fabric_notes: fabricNotes || null,
+      stitching_rate: stitchingRate,
+      fabric_charges: fabricCharges,
+      addons_charges: addonsCharges,
+      discount_amount: discountAmount,
+      total_amount: financials.total_amount,
+      advance_paid: financials.advance_paid,
+      balance_due: financials.balance_due,
+      payment_status: financials.payment_status,
+      assigned_cutter_id: assignedCutterId || null,
+      assigned_stitcher_id: assignedStitcherId || null,
+      snapshot_measurements: measurements,
+      snapshot_styles: stylePreferences,
+      barcode_token: `BC-${orderNum}`,
+      public_tracking_key: `track-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    setNewBookedOrder(newOrder);
+    setNewBookedCustomer(effectiveCust);
+    setIsReceiptModalOpen(true);
+
+    try {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+    } catch {
+      // ignore
+    }
   };
 
   const cuttingMasters = mockStaff.filter((s) => s.role === 'CUTTING_MASTER' && s.is_active);
@@ -917,6 +999,7 @@ export default function NewOrderPage() {
               variant="default"
               size="sm"
               disabled={!customerName.trim() || !deliveryDate}
+              onClick={handleBookOrder}
               className="gap-1.5"
             >
               <CheckCircle2 className="h-4 w-4" />
@@ -924,6 +1007,26 @@ export default function NewOrderPage() {
             </Button>
           </div>
         </div>
+
+        {/* WhatsApp Booking Receipt Modal */}
+        <WhatsAppReceiptModal
+          open={isReceiptModalOpen}
+          onOpenChange={setIsReceiptModalOpen}
+          order={newBookedOrder}
+          customer={newBookedCustomer}
+          shop={mockShop}
+          initialTemplate="booking"
+        />
+
+        {/* Thermal Slip & Fabric Tag Modal */}
+        <ThermalSlipModal
+          open={isThermalModalOpen}
+          onOpenChange={setIsThermalModalOpen}
+          order={newBookedOrder}
+          customer={newBookedCustomer}
+          shop={mockShop}
+          initialFormat="58mm"
+        />
       </div>
     </AppShell>
   );

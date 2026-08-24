@@ -33,30 +33,30 @@
 ---
 
 ## Phase 5: Workshop Production Pipeline (Kanban Queue)
-- [ ] 5.1 Build `components/tailor/pipeline-board.tsx` displaying columns: `Booked`, `Cutting`, `Stitching`, `Kaj & Button`, `Pressing`, `Ready`, `Delivered`.
-- [ ] 5.2 Implement drag-and-drop or 1-tap stage advancement with automated status audit logging.
-- [ ] 5.3 Add urgent deadline badges (amber at 48 hours, pulsing red on delivery date, Eid Rush priority tags).
+- [x] 5.1 Build `components/tailor/pipeline-board.tsx` displaying columns: `Booked`, `Cutting`, `Stitching`, `Kaj & Button`, `Pressing`, `Ready`, `Delivered`.
+- [x] 5.2 Implement drag-and-drop or 1-tap stage advancement with automated status audit logging.
+- [x] 5.3 Add urgent deadline badges (amber at 48 hours, pulsing red on delivery date, Eid Rush priority tags).
 
 ---
 
 ## Phase 6: 1-Click WhatsApp & Receipt Simulation
-- [ ] 6.1 Create `@/lib/whatsapp.ts` with phone number sanitization regex for Pakistani formats (`03xx` -> `923xx`) and URI builder.
-- [ ] 6.2 Build `components/tailor/whatsapp-receipt-modal.tsx` with live interactive message preview.
-- [ ] 6.3 Implement dispatch handlers supporting Web (`window.open`), Desktop Electron (`openExternal`), and Mobile Capacitor (`AppLauncher`).
+- [x] 6.1 Create `@/lib/whatsapp.ts` with phone number sanitization regex for Pakistani formats (`03xx` -> `923xx`) and URI builder.
+- [x] 6.2 Build `components/tailor/whatsapp-receipt-modal.tsx` with live interactive message preview.
+- [x] 6.3 Implement dispatch handlers supporting Web (`window.open`), Desktop Electron (`openExternal`), and Mobile Capacitor (`AppLauncher`).
 
 ---
 
 ## Phase 7: Khata & Financial Ledger Engine
-- [ ] 7.1 Build `components/tailor/khata-ledger-view.tsx` listing total market receivables (*Udhaar*), advance credits, and customer balance cards.
-- [ ] 7.2 Implement append-only transaction entry modal (Advance deposit, Final payment collection, Manual credit adjustment).
-- [ ] 7.3 Build 1-tap WhatsApp payment reminder generator with personalized outstanding balance templates.
+- [x] 7.1 Build `components/tailor/khata-ledger-view.tsx` listing total market receivables (*Udhaar*), advance credits, and customer balance cards.
+- [x] 7.2 Implement append-only transaction entry modal (Advance deposit, Final payment collection, Manual credit adjustment).
+- [x] 7.3 Build 1-tap WhatsApp payment reminder generator with personalized outstanding balance templates.
 
 ---
 
 ## Phase 8: ESC/POS Thermal Printing & Fabric Tag Generator
-- [ ] 8.1 Implement `@/lib/escpos.ts` builder for 58mm fabric staple tags and 80mm customer booking receipts.
-- [ ] 8.2 Build printable HTML/CSS fallback component with `@media print` rules for 58mm/80mm roll dimensions.
-- [ ] 8.3 Integrate barcode generation (Code 128) embedding the unique order token on printable tags.
+- [x] 8.1 Implement `@/lib/escpos.ts` builder for 58mm fabric staple tags and 80mm customer booking receipts.
+- [x] 8.2 Build printable HTML/CSS fallback component with `@media print` rules for 58mm/80mm roll dimensions.
+- [x] 8.3 Integrate barcode generation (Code 128) embedding the unique order token on printable tags.
 
 ---
 
@@ -68,8 +68,8 @@
 ---
 
 ## Phase 10: Landing Page & Public Customer Tracking Portal
-- [ ] 10.1 Assemble luxury editorial marketing page (`app/page.tsx`) matching the dual-horizon theme (Obsidian Dark Hero, Raw Linen Bento Grid, Testimonials, Pricing).
-- [ ] 10.2 Build public order tracking page (`app/track/[orderId]/page.tsx`) enabling customers to view live tailoring progress without logging in.
+- [x] 10.1 Assemble luxury editorial marketing page (`app/page.tsx`) matching the dual-horizon theme (Obsidian Dark Hero, Raw Linen Bento Grid, Testimonials, Pricing).
+- [x] 10.2 Build public order tracking page (`app/track/[orderId]/page.tsx`) enabling customers to view live tailoring progress without logging in.
 
 ---
 

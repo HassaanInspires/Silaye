@@ -40,13 +40,13 @@ interface NavItem {
 // ---------------------------------------------------------------------------
 
 const NAV_ITEMS: ReadonlyArray<NavItem> = [
-  { icon: PlusCircle, label: 'New Order', route: '/dashboard/new' },
-  { icon: ClipboardList, label: 'Orders', route: '/dashboard/orders' },
-  { icon: Users, label: 'Customers', route: '/dashboard/customers' },
-  { icon: Scissors, label: 'Workshop', route: '/dashboard/workshop' },
-  { icon: Wallet, label: 'Khata', route: '/dashboard/khata' },
-  { icon: Tag, label: 'Print Tag', route: '/dashboard/print' },
-  { icon: Settings, label: 'Settings', route: '/dashboard/settings' },
+  { icon: PlusCircle, label: 'New Order', route: '/orders/new' },
+  { icon: ClipboardList, label: 'Orders', route: '/orders' },
+  { icon: Users, label: 'Customers', route: '/customers' },
+  { icon: Scissors, label: 'Workshop', route: '/workshop' },
+  { icon: Wallet, label: 'Khata', route: '/khata' },
+  { icon: Tag, label: 'Print Tag', route: '/print' },
+  { icon: Settings, label: 'Settings', route: '/settings' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -181,10 +181,12 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         <ConnectionPill />
 
         {/* New Booking CTA */}
-        <Button variant="default" size="sm" className="gap-1.5 whitespace-nowrap">
-          <PlusCircle className="h-4 w-4" aria-hidden="true" />
-          New Booking
-        </Button>
+        <a href="/orders/new">
+          <Button variant="default" size="sm" className="gap-1.5 whitespace-nowrap">
+            <PlusCircle className="h-4 w-4" aria-hidden="true" />
+            New Booking
+          </Button>
+        </a>
 
         {/* Settings */}
         <Button variant="ghost" size="icon" aria-label="Open settings">
