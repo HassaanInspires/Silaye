@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default Theme: Obsidian Dark Mode */
+  --surface-obsidian-bg: #0B0C0E;
+  --surface-obsidian-card: #141619;
+  --surface-obsidian-card-elevated: #1B1E22;
+  --surface-obsidian-border: #24282F;
+  --surface-obsidian-border-subtle: #1C1F24;
+  --surface-obsidian-text: #F4F1EA;
+  --surface-obsidian-text-muted: #8E95A0;
+
+  /* Surface Layers - Warm Raw Linen Mode */
+  --surface-linen-bg: #F5F2EB;
+  --surface-linen-card: #FFFFFF;
+  --surface-linen-card-muted: #EDE8DE;
+  --surface-linen-border: #E2DCD0;
+  --surface-linen-text: #1C1917;
+  --surface-linen-text-muted: #78716C;
+
+  /* Brand Accents & Craft Metallics */
+  --accent-gold-primary: #C8A97E;
+  --accent-gold-hover: #D9BE9B;
+  --accent-gold-glow: rgba(200, 169, 126, 0.15);
+  --accent-gold-subtle: #2C261E;
+
+  /* Workshop Functional Semantic Indicators */
+  --status-booked: #64748B;
+  --status-cutting: #38BDF8;
+  --status-stitching: #F59E0B;
+  --status-ready: #10B981;
+  --status-overdue: #EF4444;
+  --status-advance-credit: #22C55E;
+  --status-udhaar-pending: #F43F5E;
+
+  /* Default Active Semantic Mappings (Obsidian Dark) */
+  --background: var(--surface-obsidian-bg);
+  --foreground: var(--surface-obsidian-text);
+  --card: var(--surface-obsidian-card);
+  --card-foreground: var(--surface-obsidian-text);
+  --card-elevated: var(--surface-obsidian-card-elevated);
+  --popover: var(--surface-obsidian-card);
+  --popover-foreground: var(--surface-obsidian-text);
+  --primary: var(--accent-gold-primary);
+  --primary-foreground: #0B0C0E;
+  --secondary: var(--surface-obsidian-card-elevated);
+  --secondary-foreground: var(--surface-obsidian-text);
+  --muted: var(--surface-obsidian-border-subtle);
+  --muted-foreground: var(--surface-obsidian-text-muted);
+  --accent: var(--accent-gold-subtle);
+  --accent-foreground: var(--accent-gold-hover);
+  --destructive: var(--status-overdue);
+  --destructive-foreground: #F4F1EA;
+  --border: var(--surface-obsidian-border);
+  --border-subtle: var(--surface-obsidian-border-subtle);
+  --input: var(--surface-obsidian-border);
+  --ring: var(--accent-gold-primary);
+}
+
+.theme-linen {
+  --background: var(--surface-linen-bg);
+  --foreground: var(--surface-linen-text);
+  --card: var(--surface-linen-card);
+  --card-foreground: var(--surface-linen-text);
+  --card-elevated: var(--surface-linen-card-muted);
+  --popover: var(--surface-linen-card);
+  --popover-foreground: var(--surface-linen-text);
+  --primary: var(--accent-gold-primary);
+  --primary-foreground: #0B0C0E;
+  --secondary: var(--surface-linen-card-muted);
+  --secondary-foreground: var(--surface-linen-text);
+  --muted: var(--surface-linen-card-muted);
+  --muted-foreground: var(--surface-linen-text-muted);
+  --accent: var(--surface-linen-border);
+  --accent-foreground: var(--surface-linen-text);
+  --destructive: var(--status-overdue);
+  --destructive-foreground: #FFFFFF;
+  --border: var(--surface-linen-border);
+  --border-subtle: var(--surface-linen-card-muted);
+  --input: var(--surface-linen-border);
+  --ring: var(--accent-gold-primary);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Urdu Typography & Baseline Utilities */
+.urdu-data-text {
+  font-family: var(--font-urdu-sans), system-ui, sans-serif;
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+}
+
+.urdu-display-text {
+  font-family: var(--font-urdu-serif), 'Traditional Arabic', serif;
+  line-height: 2.2;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
