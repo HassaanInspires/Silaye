@@ -713,6 +713,10 @@ const DAMAN_LABELS: Record<string, string> = {
 };
 
 const POCKET_LABELS: Record<string, string> = {
+  FRONT_CHEST: 'Front Chest',
+  LEFT_SIDE: 'Left Side',
+  RIGHT_SIDE: 'Right Side',
+  SECRET_ZIP: 'Mobile Zip',
   FRONT_ONLY: 'Front Pocket Only',
   FRONT_ONE_SIDE: '1 Front + 1 Side',
   FRONT_TWO_SIDES: '1 Front + 2 Sides',
@@ -739,7 +743,12 @@ export function mapOrderToSlipData(
     cuts.push(DAMAN_LABELS[styles.daman_style] || styles.daman_style);
   }
 
-  const pocket = styles?.pocket_config ? POCKET_LABELS[styles.pocket_config] || styles.pocket_config : undefined;
+  let pocket: string | undefined;
+  if (styles?.pockets && styles.pockets.length > 0) {
+    pocket = styles.pockets.map((p) => POCKET_LABELS[p] || p).join(' + ');
+  } else if (styles?.pocket_config) {
+    pocket = POCKET_LABELS[styles.pocket_config] || styles.pocket_config;
+  }
 
   // Check delivery urgency (< 48 hours)
   const deliveryDateObj = new Date(order.delivery_date);

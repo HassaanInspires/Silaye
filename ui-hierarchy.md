@@ -162,28 +162,115 @@ It departs entirely from sterile, generic SaaS templates by utilizing:
 
 ## 5. Workshop Application Shell (Internal Dashboard UI Hierarchy)
 
-When logged in, the application uses a focused **Obsidian Dark Command Center** designed for high contrast under shop lighting:
+When authenticated, the internal application switches to a high-contrast **Obsidian Dark Command Shell** (`#0B0C0E` background, `#141619` cards, `#C8A97E` gold highlights).
+
+### 5.1 Core UX & Layout Mandates (Anti-Cognitive Overload)
+* **No Heavy Default Kanban Boards:** The production pipeline abandons wide 7-column horizontal drag-and-drop boards as the primary view. The default view MUST be a fast, scan-friendly **High-Density Data List** (Table format).
+* **Slide-Out Inspector Drawer:** Deep garment specs (fractional measurement matrices, fabric swatches, cutting/stitching assignments, khata ledger snapshots) are strictly hidden from the main table and rendered inside a sleek **Right-Hand Slide-Out Drawer** on row click.
+* **Progressive Disclosure Booking:** The "New Booking" workflow avoids monolithic vertical scrolling forms by partitioning data entry into 3 focused **Progressive Disclosure Tabs** (`Customer & Fabric`, `Measurements & Style`, `Financials & Billing`).
+* **Calm Command Dashboard:** The home view provides executive clarity for the workshop master: 4 primary KPI metrics (Total Orders, Due Today, Overdue, Revenue/Khata) and a focused Urgent Orders Watchlist.
+
+---
+
+### 5.2 Home / Command Dashboard Layout (`/dashboard` or `/`)
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ TOP COMMAND BAR                                                         │
-│ [Brand Logo] | [Search Customer (Name/Phone) /] | [Offline Sync OK] | [⚙]│
-├──────────────┬──────────────────────────────────────────────────────────┤
-│ SIDEBAR      │ MAIN WORKSPACE VIEWPORT                                  │
-│              │                                                          │
-│ ＋ New Order │ [TAB: Active Queue]  [TAB: Cutting]  [TAB: Ready]        │
-│ 📋 Orders    │ ──────────────────────────────────────────────────────── │
-│ 👥 Customers │ ┌──────────────────────────────────────────────────────┐ │
-│ ✂️ Workshop   │ │ QUICK FILTER: [Today's Deliveries (8)] [Eid Rush]    │ │
-│ 💰 Khata     │ ├──────────────────────────────────────────────────────┤ │
-│ 🏷️ Print Tag │ │ ORDER CARD #DP-2026-0801                             │ │
-│ ⚙️ Settings  │ │ Muhammad Usman • 0300-1234567 • 2x Men Shalwar Kameez│ │
-│              │ │ Delivery: Tomorrow, 6 PM  [Due: Rs. 2,500]           │ │
-│              │ │ Stage: [ IN_STITCHING (Master Aslam) ]               │ │
-│              │ │ Actions: [WhatsApp Receipt] [Thermal Tag] [Advance+] │ │
-│              │ └──────────────────────────────────────────────────────┘ │
-└──────────────┴──────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│ TOP COMMAND BAR: [Brand Logo] | [🔍 Quick Customer/Order Search (⌘K)] | [🟢 Offline Sync OK]│
+├──────────────┬──────────────────────────────────────────────────────────────────────────────┤
+│ SIDEBAR      │ COMMAND DASHBOARD (Home Viewport)                                            │
+│              │ ┌──────────────────────────────────────────────────────────────────────────┐ │
+│ 🏠 Home      │ │ TOP KPI METRICS RIBBON                                                   │ │
+│ 📋 Orders    │ │ ┌──────────────┬──────────────┬──────────────┬─────────────────────────┐ │ │
+│ ＋ Booking   │ │ │ ACTIVE QUEUE │ DUE TODAY    │ OVERDUE      │ UNSETTLED KHATA         │ │ │
+│ 👥 Customers │ │ │ 42 Orders    │ 6 Suits      │ 1 Suit ⚠️    │ Rs. 68,500 (14 Clients) │ │ │
+│ 💰 Khata     │ │ │ Rs. 148,000  │ Rs. 21,000   │ Rs. 3,500    │ [Send Reminders ->]     │ │ │
+│ 🏷️ Thermal   │ │ └──────────────┴──────────────┴──────────────┴─────────────────────────┘ │ │
+│ ⚙️ Settings  │ ├──────────────────────────────────────────────────────────────────────────┤ │
+│              │ │ QUICK ACTION BAR                                                         │ │
+│              │ │ [＋ Book New Suit]  [🔍 Find Customer]  [🏷️ Print Daily Run-Sheet]       │ │
+│              │ ├──────────────────────────────────────────────────────────────────────────┤ │
+│              │ │ URGENT DELIVERIES WATCHLIST (Due Today & Tomorrow)                       │ │
+│              │ │ ┌──────────┬─────────────────┬──────────────┬─────────────┬────────────┐ │ │
+│              │ │ │ Order #  │ Customer Name   │ Garment      │ Stage       │ Balance    │ │ │
+│              │ │ ├──────────┼─────────────────┼──────────────┼─────────────┼────────────┤ │ │
+│              │ │ │ DP-0801  │ Muhammad Usman  │ 2x Shalwar K.│ STITCHING   │ Rs. 2,500  │ │ │
+│              │ │ │ DP-0804  │ Tariq Mehmood   │ 1x Kurta     │ READY_PICKUP│ Rs. 0 Paid │ │ │
+│              │ │ │ DP-0809  │ Haji Saleem     │ 3x Shalwar K.│ CUTTING     │ Rs. 4,500  │ │ │
+│              │ │ └──────────┴─────────────────┴──────────────┴─────────────┴────────────┘ │ │
+│              │ └──────────────────────────────────────────────────────────────────────────┘ │
+└──────────────┴──────────────────────────────────────────────────────────────────────────────┘
+```
 
+---
+
+### 5.3 Orders Production Pipeline: High-Density List + Slide-Out Drawer (`/orders`)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│ TOP COMMAND BAR                                                                             │
+├──────────────┬─────────────────────────────────────────────────┬────────────────────────────┤
+│ SIDEBAR      │ HIGH-DENSITY DATA LIST (Default View)           │ SLIDE-OUT INSPECTOR DRAWER │
+│              │                                                 │ (Opens on Row Click)       │
+│ 🏠 Home      │ [🔍 Search Name/Phone/Order] [Filter: Due Today]│ ┌────────────────────────┐ │
+│ 📋 Orders    │ [Stage: ALL (42) | CUTTING (12) | READY (8)]    │ │ ORDER #DP-2026-0801    │ │
+│ ＋ Booking   │ ─────────────────────────────────────────────── │ │ Muhammad Usman         │ │
+│ 👥 Customers │ ┌──────┬──────────────┬─────────────┬─────────┐ │ │ 0300-1234567 (Wah Cantt)│ │
+│ 💰 Khata     │ │#DP-01│ M. Usman     │ 2x Shalwar  │STITCHING│ │ ────────────────────── │ │
+│ 🏷️ Thermal   │ │#DP-02│ Tariq M.     │ 1x Kurta    │READY    │ │ GARMENT SNAPSHOT       │ │
+│ ⚙️ Settings  │ │#DP-03│ Kamran Ali   │ 1x Prince S.│CUTTING  │ │ • 2x Men Shalwar Kameez│ │
+│              │ │#DP-04│ Haji Saleem  │ 3x Shalwar  │STITCHING│ │ • Fabric: Pasha Cotton │ │
+│              │ │#DP-05│ Bilal Ahmed  │ 1x Waistcoat│BOOKED   │ │ • Cut: Sherwani Collar │ │
+│              │ └──────┴──────────────┴─────────────┴─────────┘ │ ────────────────────── │ │
+│              │                                                 │ MEASUREMENTS MATRIX    │ │
+│              │                                                 │ L: 42.5" | C: 40.25"   │ │
+│              │                                                 │ W: 38.0" | T: 17.5"    │ │
+│              │                                                 │ Slv: 24" | G: 15.5"    │ │
+│              │                                                 │ ────────────────────── │ │
+│              │                                                 │ STAGE TRANSITION       │ │
+│              │                                                 │ [<- Prev] [Advance ->] │ │
+│              │                                                 │ ────────────────────── │ │
+│              │                                                 │ FINANCIAL SETTLEMENT   │ │
+│              │                                                 │ Total: Rs. 6,000       │ │
+│              │                                                 │ Advance: Rs. 3,500     │ │
+│              │                                                 │ Due: Rs. 2,500 (Amber) │ │
+│              │                                                 │ [💬 WhatsApp Receipt]  │ │
+│              │                                                 │ [🏷️ Thermal Fabric Tag]│ │
+│              │                                                 └────────────────────────┘ │
+└──────────────┴─────────────────────────────────────────────────┴────────────────────────────┘
+```
+
+---
+
+### 5.4 New Booking Architecture: Progressive Disclosure Tabs (`/orders/new`)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│ NEW BOOKING WORKSPACE (Progressive Disclosure)                                              │
+├───────────────────────────────────────────────────────────────┬─────────────────────────────┤
+│ TABBED INTAKE STEPPER                                         │ STICKY ORDER SUMMARY PANE   │
+│ ┌───────────────────────────────────────────────────────────┐ │ ┌─────────────────────────┐ │
+│ │ [TAB 1: Customer & Fabric] [TAB 2: Measurements] [TAB 3: $]│ │ │ LIVE ORDER LEDGER       │ │
+│ ├───────────────────────────────────────────────────────────┤ │ │ • Customer: M. Usman    │ │
+│ │ TAB 1: CUSTOMER & FABRIC                                  │ │ │ • Garment: 2x Shalwar K.│ │
+│ │ • Mobile Lookup (Auto-populates existing measurement prof)│ │ │ • Delivery: 28 Aug 2026 │ │
+│ │ • Name & Address                                          │ │ ├─────────────────────────┤ │
+│ │ • Garment Type & Quantity                                 │ │ │ FINANCIAL BREAKDOWN     │ │
+│ │ • Target Delivery & Trial Dates                           │ │ │ Stitching (2x): Rs.6,000│ │
+│ │ • Fabric Source (Customer Supplied vs Shop In-Stock)      │ │ │ Fabric Charges: Rs.    0│ │
+│ │ • Fabric Brand, Color & Tag Instructions                  │ │ │ Advance Paid:   Rs.3,500│ │
+│ │ [Proceed to Measurements & Style ->]                      │ │ │ Balance Due:    Rs.2,500│ │
+│ ├───────────────────────────────────────────────────────────┤ │ ├─────────────────────────┤ │
+│ │ TAB 2: MEASUREMENTS & STYLE                               │ │ │ WORKSHOP ASSIGNMENT     │ │
+│ │ • Dense 3-Column Measurement Grid with Fractional Pills   │ │ │ Cutter: Master Aslam    │ │
+│ │ • Collar, Daman, Pocket, and Stitch Style Chips           │ │ │ Stitcher: Ustad Rafiq   │ │
+│ │ • Optional Interactive Mannequin Visual Overlay           │ │ ├─────────────────────────┤ │
+│ ├───────────────────────────────────────────────────────────┤ │ │ [✨ Confirm & Book Suit]│ │
+│ │ TAB 3: BILLING & CONFIRMATION                             │ │ │ [💾 Save Draft]         │ │
+│ │ • Rate Modifiers, Addons, Discounts                       │ │ └─────────────────────────┘ │
+│ │ • Advance Cash/Online Intake & Khata Sync                 │ │                             │
+│ └───────────────────────────────────────────────────────────┘ │                             │
+└───────────────────────────────────────────────────────────────┴─────────────────────────────┘
 ```
 
 ---
@@ -191,25 +278,16 @@ When logged in, the application uses a focused **Obsidian Dark Command Center** 
 ## 6. Micro-Components & Interaction Rules
 
 ### 6.1 Fractional Measurement Pill Matrix
-
-* Number fields are paired with quarter-inch toggle pills:
-`[ .00 ]` | `[ .25 ]` | `[ .50 ]` | `[ .75 ]`
+* Number fields are paired with quarter-inch toggle pills: `[ .00 ]` | `[ .25 ]` | `[ .50 ]` | `[ .75 ]`.
 * Selecting a pill immediately updates the decimal value without keyboard input.
 
 ### 6.2 Visual Garment Cut Chips
+* Active chips display a gold outline with a subtle background glow (`border-primary bg-primary/15 text-primary shadow-[0_0_12px_rgba(200,169,126,0.2)] ring-1 ring-primary/40`).
+* Inactive chips use a neutral muted border (`border-border/60 bg-card/40 text-muted-foreground hover:border-border hover:text-foreground`).
 
-* Active chips display a gold outline with a subtle background glow (`border-primary bg-primary/10 text-primary-foreground`).
-* Inactive chips use a neutral muted border (`border-border text-muted-foreground hover:border-foreground/30`).
+### 6.3 WhatsApp Live Invoice Card & Modal
+* Interactive preview card with real-time reactive calculations:
+  `Balance Due = (Stitching Rate * Qty + Fabric + Addons) - (Discount + Advance Paid)`.
+* Green badge for `Fully Paid`; Amber badge for `Balance Due`; Red badge for `Overdue Udhaar`.
+* One-tap `Send on WhatsApp` button triggers pre-formatted bilingual Urdu/English booking receipts and payment reminders.
 
-### 6.3 WhatsApp Live Invoice Card
-
-* Floating interactive preview card with real-time reactive calculations:
-* Automatically calculates `Balance Due = (Stitching + Fabric + Addons) - Advance Paid`.
-* Green text badge for `Fully Paid`; Amber/Red badge for `Balance Due`.
-* One-tap `Send on WhatsApp` button triggers the generated deep-link with animated feedback.
-
-
-
-```
-
-```

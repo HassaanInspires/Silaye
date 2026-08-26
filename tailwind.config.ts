@@ -48,10 +48,12 @@ const config: Config = {
         input: "var(--input)",
         ring: "var(--ring)",
         gold: {
-          primary: "var(--accent-gold-primary)",
-          hover: "var(--accent-gold-hover)",
-          glow: "var(--accent-gold-glow)",
-          subtle: "var(--accent-gold-subtle)",
+          DEFAULT: '#d4af37',
+          muted: '#927825',
+          glow: 'rgba(212, 175, 55, 0.3)',
+          primary: 'var(--accent-gold-primary)',
+          hover: 'var(--accent-gold-hover)',
+          subtle: 'var(--accent-gold-subtle)',
         },
         linen: {
           bg: "var(--surface-linen-bg)",
@@ -89,6 +91,10 @@ const config: Config = {
       lineHeight: {
         "urdu-data": "1.65",
         "urdu-display": "2.2",
+      },
+      letterSpacing: {
+        tighter: '-0.04em',
+        widest: '0.2em',
       },
     },
   },

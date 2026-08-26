@@ -12,6 +12,7 @@ import {
   AlertCircle,
   ArrowLeft,
   Scissors,
+  Sparkles,
 } from 'lucide-react';
 import { mockOrders, mockCustomers, mockShop } from '@/lib/mock-data';
 import { OrderProgressStepper } from '@/components/track/order-progress-stepper';
@@ -59,38 +60,37 @@ function buildWhatsAppInquiryLink(orderNumber: string, shopPhone: string): strin
 function OrderNotFound({ shopPhone }: { shopPhone: string }) {
   const waLink = buildWhatsAppInquiryLink('?', shopPhone);
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-status-overdue/30 bg-status-overdue/10 mb-6">
-        <AlertCircle className="h-8 w-8 text-status-overdue" />
+    <div className="flex flex-col items-center justify-center flex-1 px-6 py-16 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-red-200 bg-red-50 mb-6">
+        <AlertCircle className="h-8 w-8 text-red-600" />
       </div>
-      <h2 className="text-xl font-semibold text-foreground">Order Not Found</h2>
-      <p className="mt-2 text-sm text-muted-foreground max-w-sm">
-        We couldn&apos;t find an order matching that link. The link may be incorrect or the order
-        may have been removed.
+      <h2 className="text-xl font-bold text-neutral-900">Order Not Found</h2>
+      <p className="mt-2 text-sm text-neutral-600 max-w-xs">
+        We couldn&apos;t find an order matching that link. The link may be incorrect or the order may have been removed.
       </p>
-      <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
+      <div className="mt-8 flex flex-col w-full gap-3">
         <a
           href={waLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-sm font-semibold text-white shadow-md hover:bg-[#20ba59] transition-colors"
         >
           <MessageSquare className="h-4 w-4" />
-          Contact Shop on WhatsApp
+          Contact Workshop on WhatsApp
         </a>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-card"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-5 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Home
+          Back to Silaye Home
         </Link>
       </div>
     </div>
   );
 }
 
-// ─── Main client view ─────────────────────────────────────────────────────────
+// ─── Main Client View ─────────────────────────────────────────────────────────
 
 export function OrderTrackingView() {
   const params = useParams();
@@ -104,7 +104,7 @@ export function OrderTrackingView() {
       o.public_tracking_key === orderId
   ) ?? null;
 
-  // Customer reference (used only server-side / for shop; not displayed publicly)
+  // Customer reference (used only server-side / for screen reader attributes)
   const customer = order
     ? mockCustomers.find((c) => c.id === order.customer_id) ?? null
     : null;
@@ -114,62 +114,112 @@ export function OrderTrackingView() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* ── Minimal tracking nav ── */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-foreground transition-opacity hover:opacity-80"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/40 bg-primary/10">
-              <Scissors className="h-4 w-4 text-primary" />
+    <div className="min-h-screen bg-[#0B0C0E] py-0 sm:py-8 flex justify-center items-start">
+      {/* ── Mobile Container Frame ── */}
+      <div className="w-full max-w-md mx-auto min-h-screen sm:min-h-[92vh] bg-linen-base shadow-2xl relative pb-28 text-neutral-900 sm:rounded-3xl sm:border sm:border-neutral-800/30 sm:overflow-hidden flex flex-col">
+        
+        {/* ── Top Header Bar ── */}
+        <header className="bg-ambient-dark text-white p-5 text-center rounded-b-2xl shadow-lg relative z-20 border-b border-white/5">
+          <div className="flex items-center justify-between mb-3">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Silaye</span>
+            </Link>
+            <div className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2.5 py-0.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-gold" />
+              <span className="text-[11px] font-medium text-gold">Verified Tracker</span>
             </div>
-            <span className="font-semibold text-foreground">Silaye</span>
-          </Link>
-          <div className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1">
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-medium text-primary">Secure Order Tracker</span>
           </div>
-        </div>
-      </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-8 md:py-12">
+          <div className="flex flex-col items-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15 border border-gold/30 mb-2 text-gold">
+              <Scissors className="h-5 w-5" />
+            </div>
+            <h1 className="font-editorial text-2xl font-bold tracking-tight text-white">
+              Silaye Workshop
+            </h1>
+            <p className="text-xs text-gold-muted uppercase tracking-widest mt-0.5">
+              Order Tracker · <span className="font-urdu-sans" dir="rtl">آرڈر ٹریکر</span>
+            </p>
+          </div>
+        </header>
+
+        {/* ── Body Content ── */}
         {!order ? (
           <OrderNotFound shopPhone={mockShop.owner_phone} />
         ) : (
-          <div className="space-y-6">
-            {/* ── Order identity card ── */}
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
+          <main className="flex-1 flex flex-col">
+            {/* ── 1. Order Details Card ── */}
+            <div className="linen-card p-6 mt-6 mx-4 relative overflow-hidden">
+              <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
-                  <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1">
-                    <Package className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-                      Order #{order.order_number}
-                    </span>
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-2.5 py-0.5 text-xs font-bold text-neutral-900 mb-2">
+                    <Package className="h-3.5 w-3.5 text-gold-muted" />
+                    <span>Order #{order.order_number}</span>
                   </div>
-                  <h1 className="text-2xl font-semibold text-foreground">
+                  <h2 className="text-xl font-bold text-neutral-900 leading-snug">
                     {order.quantity}× {GARMENT_TYPE_LABELS[order.garment_type]}
-                  </h1>
-                  <p className="mt-1 urdu-data-text text-sm text-muted-foreground" dir="rtl">
+                  </h2>
+                  <p className="urdu-data-text text-sm text-neutral-600" dir="rtl">
                     {order.quantity}× {GARMENT_TYPE_LABELS_UR[order.garment_type]}
                   </p>
                 </div>
+              </div>
 
-                {/* Booking date chip */}
-                <div className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-muted-foreground">
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>Booked {formatDate(order.booking_date)}</span>
+              {/* Grid: Dates & Status */}
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-neutral-200/80 text-xs">
+                <div className="rounded-xl bg-[#F4F1EA] p-3">
+                  <div className="flex items-center gap-1 text-neutral-500 mb-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span className="font-medium">Booked</span>
+                  </div>
+                  <p className="font-bold text-neutral-900">{formatDate(order.booking_date)}</p>
                 </div>
+
+                <div className="rounded-xl bg-gold/15 border border-gold/20 p-3">
+                  <div className="flex items-center gap-1 text-neutral-700 mb-1">
+                    <Sparkles className="h-3.5 w-3.5 text-gold-muted" />
+                    <span className="font-semibold">Target Delivery</span>
+                  </div>
+                  <p className="font-bold text-neutral-950">{formatDate(order.delivery_date)}</p>
+                </div>
+              </div>
+
+              {/* Financial Status Banner */}
+              <div className="mt-3">
+                {order.payment_status === 'FULLY_PAID' ? (
+                  <div className="flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs">
+                    <span className="font-semibold text-emerald-800">Payment Status</span>
+                    <span className="font-bold text-emerald-700">Fully Paid ✓</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-xs">
+                    <div>
+                      <span className="font-semibold text-amber-900 block">Balance Due on Pickup</span>
+                      <span className="urdu-data-text text-[11px] text-amber-800" dir="rtl">وصولی پر بقیہ رقم</span>
+                    </div>
+                    <span className="text-sm font-bold text-amber-950">
+                      <bdi dir="ltr">Rs. {order.balance_due.toLocaleString('en-PK')}</bdi>
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* ── Progress stepper ── */}
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="mb-6 text-base font-semibold text-foreground">
-                Production Progress
-              </h2>
+            {/* ── 2. Progress Stepper Container ── */}
+            <div className="linen-card p-6 mt-4 mx-4">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900">
+                  Production Progress
+                </h3>
+                <span className="urdu-data-text text-xs text-neutral-500" dir="rtl">
+                  مراحلِ تیاری
+                </span>
+              </div>
+
               <OrderProgressStepper
                 currentStatus={order.status}
                 deliveryDate={order.delivery_date}
@@ -177,170 +227,56 @@ export function OrderTrackingView() {
               />
             </div>
 
-            {/* ── Schedule & pickup details ── */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Trial date — only show if not yet ready */}
-              {order.trial_date &&
-                order.status !== 'READY_FOR_DELIVERY' &&
-                order.status !== 'COMPLETED' && (
-                  <div className="rounded-xl border border-border bg-card p-5">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Trial Date
-                    </p>
-                    <p className="text-lg font-semibold text-foreground">
-                      {formatDate(order.trial_date)}
-                    </p>
-                    <p className="mt-0.5 urdu-data-text text-xs text-muted-foreground" dir="rtl">
-                      ٹرائل کی تاریخ
-                    </p>
-                  </div>
-                )}
-
-              {/* Final delivery date */}
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Final Delivery
-                </p>
-                <p className="text-lg font-semibold text-foreground">
-                  {formatDate(order.delivery_date)}
-                </p>
-                <p className="mt-0.5 urdu-data-text text-xs text-muted-foreground" dir="rtl">
-                  آخری ڈیلیوری تاریخ
-                </p>
+            {/* ── 3. Workshop Contact & Trust Card ── */}
+            <div className="linen-card p-5 mt-4 mx-4 space-y-2.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-neutral-900">{mockShop.name}</span>
+                <span className="text-[11px] text-neutral-500 font-medium">Bespoke Workshop</span>
               </div>
-
-              {/* Balance due — only show if unpaid/partially paid */}
-              {order.payment_status !== 'FULLY_PAID' && order.balance_due > 0 && (
-                <div className="rounded-xl border border-status-udhaar-pending/20 bg-status-udhaar-pending/5 p-5">
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Balance Due on Pickup
-                  </p>
-                  <p className="text-lg font-semibold text-status-udhaar-pending">
-                    <bdi dir="ltr">Rs. {order.balance_due.toLocaleString('en-PK')}</bdi>
-                  </p>
-                  <p className="mt-0.5 urdu-data-text text-xs text-muted-foreground" dir="rtl">
-                    وصولی پر بقیہ رقم
-                  </p>
+              
+              {mockShop.address && (
+                <div className="flex items-start gap-2 text-neutral-600">
+                  <MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-neutral-400" />
+                  <span>{mockShop.address}</span>
                 </div>
               )}
 
-              {/* Fully paid badge */}
-              {order.payment_status === 'FULLY_PAID' && (
-                <div className="rounded-xl border border-status-advance-credit/20 bg-status-advance-credit/5 p-5">
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Payment Status
-                  </p>
-                  <p className="text-lg font-semibold text-status-advance-credit">
-                    Fully Paid ✓
-                  </p>
-                  <p className="mt-0.5 urdu-data-text text-xs text-muted-foreground" dir="rtl">
-                    مکمل ادائیگی ہو چکی ہے
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* ── Order summary ── */}
-            <div className="rounded-xl border border-border bg-card p-5">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Order Summary
-              </h2>
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-                <div>
-                  <dt className="text-xs text-muted-foreground">Garment</dt>
-                  <dd className="mt-0.5 font-medium text-foreground">
-                    {GARMENT_TYPE_LABELS[order.garment_type]}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Quantity</dt>
-                  <dd className="mt-0.5 font-medium text-foreground">
-                    {order.quantity} piece{order.quantity !== 1 ? 's' : ''}
-                  </dd>
-                </div>
-                {order.fabric_color && (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Fabric Color</dt>
-                    <dd className="mt-0.5 font-medium text-foreground capitalize">
-                      {order.fabric_color}
-                    </dd>
-                  </div>
-                )}
-                {order.fabric_brand && (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Fabric Brand</dt>
-                    <dd className="mt-0.5 font-medium text-foreground">{order.fabric_brand}</dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-
-            {/* ── Shop contact ── */}
-            <div className="rounded-xl border border-border bg-card p-5">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Shop Contact
-              </h2>
-              <div className="space-y-2 text-sm">
-                <p className="font-semibold text-foreground">{mockShop.name}</p>
-                {mockShop.address && (
-                  <div className="flex items-start gap-2 text-muted-foreground">
-                    <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-                    <span>{mockShop.address}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+              <div className="flex items-center gap-2 text-neutral-600">
+                <Phone className="h-3.5 w-3.5 flex-shrink-0 text-neutral-400" />
+                <a href={`tel:${mockShop.owner_phone}`} className="font-medium hover:underline">
                   <bdi dir="ltr">{mockShop.owner_phone}</bdi>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Privacy notice ── */}
-            <div className="flex items-start gap-3 rounded-xl border border-border bg-secondary/50 px-5 py-4 text-xs text-muted-foreground">
-              <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-              <p>
-                This tracking page shows only your order progress and schedule. Personal
-                measurements, contact details, and full account history are never displayed
-                publicly.
-              </p>
-            </div>
-
-            {/* ── WhatsApp CTA ── */}
-            {waLink && (
-              <div className="text-center pb-4">
-                <a
-                  href={waLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2.5 rounded-xl bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90 active:scale-95"
-                >
-                  <MessageSquare className="h-5 w-5" />
-                  Contact Shop about Order #{order.order_number}
                 </a>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Opens WhatsApp with your order number pre-filled
-                </p>
               </div>
-            )}
+
+              <div className="pt-2 border-t border-neutral-200/60 flex items-center gap-2 text-[11px] text-neutral-500">
+                <ShieldCheck className="h-3.5 w-3.5 text-gold-muted flex-shrink-0" />
+                <span>Customer measurements and accounts remain strictly private.</span>
+              </div>
+            </div>
+          </main>
+        )}
+
+        {/* ── 4. Fixed Bottom Action Bar ── */}
+        {order && waLink && (
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 backdrop-blur-md border-t border-neutral-200 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] sm:rounded-b-3xl">
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-[#25D366] hover:bg-[#20ba59] active:scale-[0.98] text-white font-semibold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all"
+            >
+              <MessageSquare className="h-5 w-5 fill-white text-white" />
+              <span>WhatsApp Us · Order #{order.order_number}</span>
+            </a>
           </div>
         )}
 
-        {/* Suppress personal info for screen readers */}
-        <p className="sr-only" aria-hidden="true">
+        {/* Screen-reader customer reference */}
+        <span className="sr-only" aria-hidden="true">
           {customer?.full_name}
-        </p>
-      </main>
-
-      {/* ── Minimal footer ── */}
-      <footer className="border-t border-border mt-8 px-4 py-6 text-center">
-        <p className="text-xs text-muted-foreground">
-          Powered by{' '}
-          <Link href="/" className="text-primary underline-offset-2 hover:underline">
-            Silaye Workshop OS
-          </Link>{' '}
-          · Secure & Private
-        </p>
-      </footer>
+        </span>
+      </div>
     </div>
   );
 }
+

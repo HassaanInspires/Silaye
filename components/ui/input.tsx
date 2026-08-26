@@ -42,7 +42,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative flex items-center">
           {leftIcon && (
-            <span className="pointer-events-none absolute left-3 flex items-center text-muted-foreground">
+            <span className="pointer-events-none absolute left-3.5 flex items-center text-muted-foreground">
               {leftIcon}
             </span>
           )}
@@ -51,16 +51,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             type={type}
             className={cn(
-              'flex h-10 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50',
-              leftIcon && 'pl-9',
-              rightIcon && 'pr-9',
-              error && 'border-destructive focus-visible:ring-destructive',
+              'flex h-11 w-full rounded-xl border border-white/10 bg-[#0B0C0E]/50 px-4 py-2 text-sm text-gray-200 placeholder:text-gray-500 transition-all focus:border-gold/50 focus:bg-[#0B0C0E] focus:outline-none focus:ring-1 focus:ring-gold/50 disabled:cursor-not-allowed disabled:opacity-50',
+              leftIcon && 'pl-10',
+              rightIcon && 'pr-10',
+              error && 'border-destructive focus:border-destructive focus:ring-destructive',
               className
             )}
             {...props}
           />
           {rightIcon && (
-            <span className="pointer-events-none absolute right-3 flex items-center text-muted-foreground">
+            <span className="pointer-events-none absolute right-3.5 flex items-center text-muted-foreground">
               {rightIcon}
             </span>
           )}

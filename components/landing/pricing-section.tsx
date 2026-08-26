@@ -99,58 +99,64 @@ function PricingCard({ tier, isAnnual }: PricingCardProps) {
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl border p-6 transition-transform hover:-translate-y-0.5 ${
+      className="premium-glass-card relative flex flex-col p-8 transition-transform hover:-translate-y-1"
+      style={
         tier.highlight
-          ? 'border-primary bg-card shadow-[0_0_40px_rgba(200,169,126,0.1)]'
-          : 'border-border bg-card'
-      }`}
+          ? {
+              border: '1px solid rgba(212, 175, 55, 0.5)',
+              boxShadow: '0 0 40px rgba(212, 175, 55, 0.15)',
+            }
+          : undefined
+      }
     >
       {/* Popular badge */}
       {tier.badge && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 shadow-sm">
-            <Zap className="h-3 w-3 text-primary-foreground" />
-            <span className="text-xs font-bold text-primary-foreground">{tier.badge}</span>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-gold bg-gold px-3.5 py-1 shadow-lg shadow-gold/25">
+            <Zap className="h-3 w-3 fill-current text-[#0B0C0E]" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0B0C0E]">
+              {tier.badge}
+            </span>
           </div>
         </div>
       )}
 
       {/* Tier identity */}
-      <div className="mb-5">
-        <h3 className="text-lg font-semibold text-foreground">{tier.name}</h3>
-        <p className="urdu-data-text text-sm text-muted-foreground mt-0.5" dir="rtl">
+      <div className="mb-6">
+        <h3 className="font-editorial text-2xl tracking-tight text-foreground">{tier.name}</h3>
+        <p className="urdu-data-text mt-0.5 text-sm text-muted-foreground" dir="rtl">
           {tier.nameUr}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">{tier.tagline}</p>
+        <p className="mt-1.5 text-xs text-muted-foreground">{tier.tagline}</p>
       </div>
 
       {/* Price block */}
-      <div className="mb-6 border-t border-border pt-5">
+      <div className="mb-6 border-t border-white/10 pt-5">
         <div className="flex items-baseline gap-1">
-          <span className="font-editorial text-4xl font-normal text-foreground">
+          <span className="font-editorial text-4xl font-normal text-foreground md:text-5xl">
             <bdi dir="ltr">{formatPKR(displayMonthly)}</bdi>
           </span>
           <span className="text-sm text-muted-foreground">/mo</span>
         </div>
         {isAnnual ? (
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1.5 text-xs text-muted-foreground">
             Billed annually ·{' '}
-            <span className="text-status-advance-credit font-semibold">
+            <span className="font-semibold text-status-advance-credit">
               Save {formatPKR(tier.monthlyPKR * 12 * ANNUAL_DISCOUNT)}/yr
             </span>
           </p>
         ) : (
-          <p className="mt-1 text-xs text-muted-foreground">Billed monthly · Cancel anytime</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">Billed monthly · Cancel anytime</p>
         )}
       </div>
 
       {/* Feature list */}
-      <ul className="mb-8 flex-1 space-y-2.5">
+      <ul className="mb-8 flex-1 space-y-3">
         {tier.features.map((feat) => (
           <li key={feat} className="flex items-start gap-2.5">
             <Check
               className={`mt-0.5 h-4 w-4 flex-shrink-0 ${
-                tier.highlight ? 'text-primary' : 'text-status-advance-credit'
+                tier.highlight ? 'text-primary' : 'text-primary/70'
               }`}
             />
             <span className="text-sm text-muted-foreground">{feat}</span>
@@ -163,8 +169,8 @@ function PricingCard({ tier, isAnnual }: PricingCardProps) {
         type="button"
         className={`w-full rounded-xl px-4 py-3 text-sm font-semibold transition-all active:scale-95 ${
           tier.highlight
-            ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-gold-hover'
-            : 'border border-border bg-card text-foreground hover:border-foreground/30 hover:bg-secondary'
+            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-gold-hover hover:shadow-primary/30'
+            : 'border border-white/10 bg-white/5 text-foreground hover:border-white/20 hover:bg-white/10'
         }`}
       >
         {tier.cta}
@@ -182,7 +188,7 @@ interface BillingToggleProps {
 
 function BillingToggle({ isAnnual, onToggle }: BillingToggleProps) {
   return (
-    <div className="inline-flex items-center gap-3 rounded-full border border-border bg-card p-1">
+    <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur-sm">
       <button
         type="button"
         onClick={() => onToggle(false)}
@@ -205,7 +211,7 @@ function BillingToggle({ isAnnual, onToggle }: BillingToggleProps) {
       >
         Annually
         {!isAnnual && (
-          <span className="absolute -top-2.5 -right-1 rounded-full bg-status-advance-credit px-1.5 py-0.5 text-[9px] font-bold text-white">
+          <span className="absolute -right-1 -top-2.5 rounded-full bg-status-advance-credit px-1.5 py-0.5 text-[9px] font-bold text-white">
             −20%
           </span>
         )}
@@ -222,17 +228,17 @@ export function PricingSection() {
   return (
     <section
       id="pricing"
-      className="bg-obsidian-bg py-24"
+      className="bg-ambient-dark px-6 py-32"
     >
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="mx-auto max-w-6xl">
         {/* Section header */}
-        <div className="mb-12 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5">
+        <div className="mb-16 text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 shadow-sm">
             <span className="text-xs font-bold uppercase tracking-widest text-primary">
               Transparent Pricing
             </span>
           </div>
-          <h2 className="font-editorial text-3xl font-normal leading-[1.15] tracking-[-0.01em] text-obsidian-text md:text-5xl">
+          <h2 className="font-editorial text-4xl tracking-tight text-obsidian-text md:text-5xl">
             Pricing without{' '}
             <em className="italic text-primary">complications.</em>
           </h2>
@@ -255,7 +261,7 @@ export function PricingSection() {
         </div>
 
         {/* Footer note */}
-        <p className="mt-10 text-center text-xs text-obsidian-text-muted">
+        <p className="mt-12 text-center text-xs text-obsidian-text-muted">
           All plans include 14-day free trial. Pricing in Pakistani Rupees (PKR).
           Annual plans billed as a single payment.
         </p>

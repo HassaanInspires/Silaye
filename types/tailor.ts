@@ -58,6 +58,12 @@ export type PocketConfig =
   | 'TWO_SIDES_NO_FRONT'
   | 'SECRET_ZIPPER_POCKET';
 
+export type PocketOption =
+  | 'FRONT_CHEST'
+  | 'LEFT_SIDE'
+  | 'RIGHT_SIDE'
+  | 'SECRET_ZIP';
+
 export type FrontPatti =
   | 'GUM_PATTI'
   | 'CHORI_PATTI'
@@ -120,7 +126,8 @@ export interface ShalwarKameezMeasurements {
 export interface StylePreferences {
   collar_style: CollarStyle;
   daman_style: DamanStyle;
-  pocket_config: PocketConfig;
+  pocket_config?: PocketConfig;
+  pockets?: string[];
   front_patti: FrontPatti;
   bottom_type: BottomType;
   stitch_type: StitchType;

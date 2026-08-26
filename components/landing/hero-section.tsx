@@ -71,65 +71,78 @@ const PREVIEW_ORDERS = [
 function WorkshopPreviewCard() {
   return (
     <div
-      className="relative mx-auto w-full max-w-sm rounded-2xl border border-obsidian-border bg-obsidian-card/80 p-4 shadow-2xl backdrop-blur-sm"
+      className="premium-glass-card relative mx-auto w-full max-w-sm overflow-hidden"
       aria-hidden="true"
     >
-      {/* Card header */}
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md border border-primary/30 bg-primary/10">
-            <Scissors className="h-3 w-3 text-primary" />
-          </div>
-          <span className="text-xs font-semibold text-foreground">Live Workshop Queue</span>
-        </div>
-        <div className="flex items-center gap-1 rounded-full border border-status-ready/30 bg-status-ready/10 px-2 py-0.5">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-status-ready" />
-          <span className="text-[10px] font-medium text-status-ready">Live</span>
-        </div>
+      {/* Mac-style desktop window header */}
+      <div className="mac-window-header">
+        <span className="mac-dot close" />
+        <span className="mac-dot minimize" />
+        <span className="mac-dot expand" />
+        <span className="ml-3 flex-1 text-center text-[11px] text-white/30">
+          silaye — live workshop queue
+        </span>
       </div>
 
-      {/* Order rows */}
-      <div className="space-y-2">
-        {PREVIEW_ORDERS.map((order) => (
-          <div
-            key={order.id}
-            className="flex items-center justify-between rounded-lg border border-obsidian-border bg-obsidian-card-elevated px-3 py-2"
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${order.stageDot}`}
-                />
-                <span className="truncate text-xs font-medium text-foreground">
-                  {order.customer}
-                </span>
+      {/* Card body */}
+      <div className="p-4">
+        {/* Card header */}
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md border border-primary/30 bg-primary/10">
+              <Scissors className="h-3 w-3 text-primary" />
+            </div>
+            <span className="text-xs font-semibold text-foreground">Live Workshop Queue</span>
+          </div>
+          <div className="flex items-center gap-1 rounded-full border border-status-ready/30 bg-status-ready/10 px-2 py-0.5">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-status-ready" />
+            <span className="text-[10px] font-medium text-status-ready">Live</span>
+          </div>
+        </div>
+
+        {/* Order rows */}
+        <div className="space-y-2">
+          {PREVIEW_ORDERS.map((order) => (
+            <div
+              key={order.id}
+              className="flex items-center justify-between rounded-lg border border-white/[0.05] bg-white/[0.03] px-3 py-2 backdrop-blur-sm"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${order.stageDot}`}
+                  />
+                  <span className="truncate text-xs font-medium text-foreground">
+                    {order.customer}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">{order.garment}</p>
               </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">{order.garment}</p>
-            </div>
-            <div className="ml-2 flex-shrink-0 text-right">
-              <p className={`text-[10px] font-semibold ${order.stageColor}`}>
-                {order.stageLabel}
-              </p>
-              <p className="text-[10px] text-muted-foreground">{order.due}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Measurement snippet */}
-      <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
-        <p className="text-[10px] text-muted-foreground">Saved Measurement · Ch. Aslam</p>
-        <div className="mt-1 flex gap-3">
-          {[
-            ['L', '42.50"'],
-            ['C', '38.00"'],
-            ['W', '34.25"'],
-          ].map(([label, val]) => (
-            <div key={label} className="text-center">
-              <p className="text-[9px] text-muted-foreground">{label}</p>
-              <p className="font-mono text-[10px] font-bold text-primary">{val}</p>
+              <div className="ml-2 flex-shrink-0 text-right">
+                <p className={`text-[10px] font-semibold ${order.stageColor}`}>
+                  {order.stageLabel}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{order.due}</p>
+              </div>
             </div>
           ))}
+        </div>
+
+        {/* Measurement snippet */}
+        <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+          <p className="text-[10px] text-muted-foreground">Saved Measurement · Ch. Aslam</p>
+          <div className="mt-1 flex gap-3">
+            {[
+              ['L', '42.50"'],
+              ['C', '38.00"'],
+              ['W', '34.25"'],
+            ].map(([label, val]) => (
+              <div key={label} className="text-center">
+                <p className="text-[9px] text-muted-foreground">{label}</p>
+                <p className="font-mono text-[10px] font-bold text-primary">{val}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -163,7 +176,7 @@ function ProofMetric({ value, suffix, label, prefix = '' }: MetricProps) {
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen overflow-hidden bg-obsidian-bg">
+    <section className="relative min-h-screen overflow-hidden bg-ambient-dark">
       {/* Ambient radial gold glow */}
       <div
         className="pointer-events-none absolute left-1/2 top-1/3 h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-30 blur-[140px]"
@@ -214,16 +227,13 @@ export function HeroSection() {
         <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
           {/* Left column: copy */}
           <div className="flex flex-col items-start">
-            {/* Gold micro-pill */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              <span className="text-xs font-bold uppercase tracking-widest text-primary">
-                Made for Bespoke Master Craftsmen
-              </span>
-            </div>
+            {/* All-caps overline — muted gold, ultra-wide tracking */}
+            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gold-muted">
+              EST. FOR THE SOUTH ASIAN MASTER
+            </p>
 
-            {/* H1 */}
-            <h1 className="font-editorial text-5xl font-normal leading-[1.06] tracking-[-0.02em] text-obsidian-text md:text-6xl lg:text-[4.25rem]">
+            {/* H1 — massive editorial serif, tightly tracked */}
+            <h1 className="font-editorial text-6xl font-normal leading-[1.02] tracking-tighter text-obsidian-text md:text-8xl">
               Your workshop deserves more than a{' '}
               <em className="italic text-primary">notebook.</em>
             </h1>
@@ -269,7 +279,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Right column: floating preview card */}
+          {/* Right column: floating premium glass terminal */}
           <div className="flex items-center justify-center lg:justify-end">
             <WorkshopPreviewCard />
           </div>

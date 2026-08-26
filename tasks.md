@@ -61,15 +61,39 @@
 ---
 
 ## Phase 9: Offline-First IndexedDB Synchronization
-- [ ] 9.1 Implement `initLocalDatabase()` in `@/lib/offline-db.ts` utilizing `idb` with stores for customers, measurements, orders, and mutation queue.
-- [ ] 9.2 Implement `SyncCoordinator` class to enqueue mutations locally and replay them via FIFO ordering upon network reconnect.
-- [ ] 9.3 Add online/offline event listeners and heartbeat polling with visual UI status pill in the top command bar.
+- [x] 9.1 Implement `initLocalDatabase()` in `@/lib/offline-db.ts` utilizing `idb` with stores for customers, measurements, orders, and mutation queue.
+- [x] 9.2 Implement `SyncCoordinator` class to enqueue mutations locally and replay them via FIFO ordering upon network reconnect.
+- [x] 9.3 Add online/offline event listeners and heartbeat polling with visual UI status pill in the top command bar.
 
 ---
 
 ## Phase 10: Landing Page & Public Customer Tracking Portal
 - [x] 10.1 Assemble luxury editorial marketing page (`app/page.tsx`) matching the dual-horizon theme (Obsidian Dark Hero, Raw Linen Bento Grid, Testimonials, Pricing).
 - [x] 10.2 Build public order tracking page (`app/track/[orderId]/page.tsx`) enabling customers to view live tailoring progress without logging in.
+- [x] 10.3 Refine global CSS with ambient lighting, carbon/titanium glassmorphism, and luxury typography.
+- [x] 10.4 Overhaul Bento Grid and Pricing cards with tactile borders and premium lighting.
+- [x] 10.5 Redesign Order Tracking portal into a mobile-first vertical timeline.
+- [x] 10.6 Overhaul internal authenticated dashboard UI primitives (Card, Input, AppShell, Scrollbars) with dark carbon & liquid titanium glassmorphism.
+- [x] 10.7 Redesign New Booking page (`app/orders/new/page.tsx`) with Progressive Disclosure (Tabs) and Sticky Order Summary & Payment Ledger sidebar, dense 3-column measurement grid, and glowing style chips.
+
+---
+
+## Phase 10.5: Internal UX Architecture Rescue
+- [x] 10.5.1 Build the calm "Command Dashboard" (Home view) for high-level metrics.
+- [x] 10.5.2 Replace the Pipeline Kanban with a List View + Slide-Out Inspector Drawer.
+- [x] 10.5.3 Refactor the "New Booking" page using Progressive Disclosure Tabs.
+- [x] 10.5.3.2 Refactor measurement intake fractions (0, ¼, ½, ¾) and style preference chips into sleek inline pill tags with multi-select pocket choices and human-readable bilingual strings.
+- [x] 10.5.3.3 Overhaul Measurement Intake Form into a Card-Free 2-Column Ledger with uncrushable Fractional Selector segmented controls, dual-input decimal synchronization, and keyboard navigation.
+- [x] 10.5.3.4 Fix measurement label squishing on 2-column grid: restructure MeasurementRow into a 2-tier cardless stack and enable fluid fractional pill controls.
+
+---
+
+## Phase 10.8: PostgreSQL / Supabase Schema Migrations & Serverless Client Layer
+- [x] 10.8.1 Create production-ready PostgreSQL migration `supabase/migrations/20260825000000_init_silaye_schema.sql` with native `gen_random_uuid()`, tables, indexes, triggers, and RLS policies.
+- [x] 10.8.2 Implement serverless database client adapter `lib/db.ts` with typed repository methods for customers, measurements, orders, and khata ledger.
+- [x] 10.8.3 Purge mock data auto-seeding in `lib/offline-db.ts` behind `NEXT_PUBLIC_SEED_MOCK_DATA === 'true'` environment flag.
+- [x] 10.8.4 Wire `lib/sync-coordinator.ts` to dispatch queued mutations to PostgreSQL repositories when online.
+- [x] 10.8.5 Build automated verification test suite `scripts/verify_db.ts` with dotenv auto-loading and comprehensive assertions.
 
 ---
 

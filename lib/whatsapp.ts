@@ -96,6 +96,7 @@ export interface WhatsAppReceiptPayload {
   bookingDate?: string;
   deliveryDate: string; // e.g. "28 Aug 2026"
   trialDate?: string;
+  pocketStylesUrdu?: string;
   totalAmount: number;
   advancePaid: number;
   balanceDue: number;
@@ -126,6 +127,7 @@ export function generateBookingReceiptMessage(data: WhatsAppReceiptPayload): str
     `📋 *آرڈر کی تفصیلات:*`,
     `▫️ *آرڈر نمبر:* #${data.orderNumber}`,
     `▫️ *آئٹم:* ${data.garmentTypeUrdu} (${data.quantity} عدد)`,
+    data.pocketStylesUrdu ? `▫️ *جیبیں:* ${data.pocketStylesUrdu}` : null,
     data.trialDate ? `▫️ *ٹرائل تاریخ:* ${data.trialDate}` : null,
     `▫️ *ڈیلیوری کی تاریخ:* ${data.deliveryDate}`,
     ``,
@@ -264,6 +266,31 @@ export function createReceiptPayload(
   const garmentUrdu = GARMENT_TYPE_URDU_MAP[order.garment_type] || 'مردانہ سوٹ';
   const trackingUrl = `https://silaye.pk/track/${order.order_number}`;
 
+  let pocketStylesUrdu: string | undefined;
+  if (order.snapshot_styles?.pockets && order.snapshot_styles.pockets.length > 0) {
+    const POCKET_MAP: Record<string, string> = {
+      FRONT_CHEST: 'سامنے جیب',
+      LEFT_SIDE: 'بائیں جیب',
+      RIGHT_SIDE: 'دائیں جیب',
+      SECRET_ZIP: 'موبائل زپ',
+      FRONT_ONLY: 'صرف سامنے جیب',
+      FRONT_ONE_SIDE: 'ایک طرف جیب',
+      FRONT_TWO_SIDES: 'دونوں طرف جیب',
+      TWO_SIDES_NO_FRONT: 'سائیڈ جیبیں',
+      SECRET_ZIPPER_POCKET: 'موبائل زپ',
+    };
+    pocketStylesUrdu = order.snapshot_styles.pockets.map((p) => POCKET_MAP[p] || p).join('، ');
+  } else if (order.snapshot_styles?.pocket_config) {
+    const POCKET_MAP: Record<string, string> = {
+      FRONT_ONLY: 'صرف سامنے جیب',
+      FRONT_ONE_SIDE: 'ایک طرف جیب',
+      FRONT_TWO_SIDES: 'دونوں طرف جیب',
+      TWO_SIDES_NO_FRONT: 'سائیڈ جیبیں',
+      SECRET_ZIPPER_POCKET: 'موبائل زپ',
+    };
+    pocketStylesUrdu = POCKET_MAP[order.snapshot_styles.pocket_config] || order.snapshot_styles.pocket_config;
+  }
+
   return {
     shopName,
     shopPhone,
@@ -276,6 +303,7 @@ export function createReceiptPayload(
     bookingDate: order.booking_date,
     deliveryDate: formattedDeliveryDate,
     trialDate: formattedTrialDate,
+    pocketStylesUrdu,
     totalAmount: order.total_amount,
     advancePaid: order.advance_paid,
     balanceDue: order.balance_due,

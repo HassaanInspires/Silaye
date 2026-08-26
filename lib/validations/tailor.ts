@@ -264,7 +264,8 @@ export const shalwarKameezMeasurementsSchema = z.object({
 export const stylePreferencesSchema = z.object({
   collar_style: collarStyleSchema.default('FULL_BAN'),
   daman_style: damanStyleSchema.default('CHORAS_DAMAN'),
-  pocket_config: pocketConfigSchema.default('FRONT_ONE_SIDE'),
+  pocket_config: pocketConfigSchema.optional().default('FRONT_ONE_SIDE'),
+  pockets: z.array(z.string()).default(['FRONT_CHEST', 'RIGHT_SIDE']),
   front_patti: frontPattiSchema.default('GUM_PATTI'),
   bottom_type: bottomTypeSchema.default('SHALWAR_TRADITIONAL'),
   stitch_type: stitchTypeSchema.default('DOUBLE_SILAI'),
