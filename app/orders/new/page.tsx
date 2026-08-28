@@ -526,33 +526,45 @@ export default function NewOrderPage() {
               className="w-full overflow-hidden"
             >
               {/* Stepper Tab Navigation Headers */}
-              <TabsList className="grid w-full grid-cols-3 gap-2 bg-[#121418] p-1.5 rounded-xl border border-white/5 h-auto mb-6">
+              <TabsList className="grid w-full grid-cols-3 gap-1 sm:gap-2 bg-[#121418] p-1 sm:p-1.5 rounded-xl border border-white/5 h-auto mb-6">
                 
                 {/* Tab 1 Trigger */}
                 <TabsTrigger
                   value="customer"
-                  className="flex flex-col items-center justify-center py-2.5 px-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:border-gold/30 border border-transparent transition-all"
+                  className="flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 sm:px-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:border-gold/30 border border-transparent transition-all min-w-0"
                 >
-                  <span className="text-xs md:text-sm font-semibold tracking-wide">1. Customer & Fabric</span>
-                  <span className="text-[10px] text-gray-400 font-urdu-sans mt-0.5">گاہک اور کپڑا</span>
+                  <span className="text-[10px] sm:text-xs md:text-sm font-semibold tracking-tight sm:tracking-wide truncate max-w-full">
+                    1. Customer & Fabric
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-gray-400 font-urdu-sans mt-0.5 truncate max-w-full">
+                    گاہک اور کپڑا
+                  </span>
                 </TabsTrigger>
 
                 {/* Tab 2 Trigger */}
                 <TabsTrigger
                   value="measurements"
-                  className="flex flex-col items-center justify-center py-2.5 px-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:border-gold/30 border border-transparent transition-all"
+                  className="flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 sm:px-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:border-gold/30 border border-transparent transition-all min-w-0"
                 >
-                  <span className="text-xs md:text-sm font-semibold tracking-wide">2. Measurements</span>
-                  <span className="text-[10px] text-gray-400 font-urdu-sans mt-0.5">ناپ اور کٹ</span>
+                  <span className="text-[10px] sm:text-xs md:text-sm font-semibold tracking-tight sm:tracking-wide truncate max-w-full">
+                    2. Measurements
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-gray-400 font-urdu-sans mt-0.5 truncate max-w-full">
+                    ناپ اور کٹ
+                  </span>
                 </TabsTrigger>
 
                 {/* Tab 3 Trigger */}
                 <TabsTrigger
                   value="billing"
-                  className="flex flex-col items-center justify-center py-2.5 px-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:border-gold/30 border border-transparent transition-all"
+                  className="flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 sm:px-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:border-gold/30 border border-transparent transition-all min-w-0"
                 >
-                  <span className="text-xs md:text-sm font-semibold tracking-wide">3. Billing & Assignment</span>
-                  <span className="text-[10px] text-gray-400 font-urdu-sans mt-0.5">بلنگ اور کاریگر</span>
+                  <span className="text-[10px] sm:text-xs md:text-sm font-semibold tracking-tight sm:tracking-wide truncate max-w-full">
+                    3. Billing & Assign
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-gray-400 font-urdu-sans mt-0.5 truncate max-w-full">
+                    بلنگ اور کاریگر
+                  </span>
                 </TabsTrigger>
               </TabsList>
 
@@ -1158,7 +1170,7 @@ export default function NewOrderPage() {
               RIGHT: FIXED/STICKY ORDER SUMMARY & FINANCIAL LEDGER (1/3 WIDTH)
               ================================================================ */}
           <aside className="lg:col-span-4">
-            <div className="flex flex-col gap-5 lg:sticky lg:top-20">
+            <div className="flex flex-col gap-5 static lg:sticky lg:top-20">
               
               {/* Main Summary Glass Card */}
               <div className="premium-glass-card p-5 flex flex-col gap-5 border border-border/80 shadow-2xl">

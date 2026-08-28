@@ -158,155 +158,155 @@ export default function DashboardPage() {
         </div>
 
         {/* ------------------------------------------------------------------ */}
-        {/* 2. TOP KPI METRICS RIBBON (4-Column Responsive Grid)               */}
+        {/* 2. TOP KPI METRICS RIBBON (2-Cols Mobile / 4-Cols Desktop Grid)     */}
         {/* ------------------------------------------------------------------ */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
           {/* Card 1: Active Queue */}
-          <div className="premium-glass-card p-5 relative overflow-hidden transition-all duration-200 hover:border-white/10 group">
-            <div className="flex items-center justify-between pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold tracking-wider uppercase text-gray-400">
+          <div className="premium-glass-card p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 hover:border-white/10 group">
+            <div className="flex items-center justify-between pb-2 sm:pb-3">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-gray-400">
                   Active Queue
                 </span>
-                <span className="font-urdu-sans text-xs text-gray-500" dir="rtl">
+                <span className="font-urdu-sans text-[11px] sm:text-xs text-gray-500 hidden xs:inline" dir="rtl">
                   زیر تکمیل
                 </span>
               </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,175,55,0.15)]">
-                <Scissors className="h-4 w-4" />
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,175,55,0.15)] shrink-0">
+                <Scissors className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight text-white">
+            <div className="space-y-1 sm:space-y-1.5">
+              <div className="flex items-baseline gap-1.5 sm:gap-2">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                   <bdi dir="ltr">42</bdi>
                 </span>
-                <span className="text-xs font-medium text-gray-400">Orders in Flow</span>
+                <span className="text-[11px] sm:text-xs font-medium text-gray-400">Orders in Flow</span>
               </div>
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                <span className="text-gray-400">Total Workshop Value</span>
-                <span className="font-semibold text-gold">
+              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
+                <span className="text-gray-400 truncate mr-1">Total Value</span>
+                <span className="font-semibold text-gold shrink-0">
                   <bdi dir="ltr">Rs. 148,000</bdi>
                 </span>
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-gray-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky-400" />
-              <span>7 In Cutting</span>
+            <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-gray-400 truncate">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
+              <span>7 Cut</span>
               <span className="text-gray-600">•</span>
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
-              <span>12 In Stitching</span>
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+              <span>12 Stitch</span>
             </div>
           </div>
 
           {/* Card 2: Due Today */}
-          <div className="premium-glass-card p-5 relative overflow-hidden transition-all duration-200 hover:border-amber-500/30 group border-amber-500/20 bg-gradient-to-br from-amber-500/[0.06] to-transparent">
-            <div className="flex items-center justify-between pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold tracking-wider uppercase text-amber-300">
+          <div className="premium-glass-card p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 hover:border-amber-500/30 group border-amber-500/20 bg-gradient-to-br from-amber-500/[0.06] to-transparent">
+            <div className="flex items-center justify-between pb-2 sm:pb-3">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-amber-300">
                   Due Today
                 </span>
-                <span className="font-urdu-sans text-xs text-amber-400/80" dir="rtl">
+                <span className="font-urdu-sans text-[11px] sm:text-xs text-amber-400/80 hidden xs:inline" dir="rtl">
                   آج کی ڈلیوری
                 </span>
               </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/15 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                <Clock className="h-4 w-4 animate-pulse" />
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/15 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)] shrink-0">
+                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-pulse" />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight text-amber-300">
+            <div className="space-y-1 sm:space-y-1.5">
+              <div className="flex items-baseline gap-1.5 sm:gap-2">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-amber-300">
                   <bdi dir="ltr">6</bdi>
                 </span>
-                <span className="text-xs font-semibold text-amber-400/90">Suits Scheduled</span>
+                <span className="text-[11px] sm:text-xs font-semibold text-amber-400/90">Suits Scheduled</span>
               </div>
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                <span className="text-gray-400">Due Today Value</span>
-                <span className="font-semibold text-amber-300">
+              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
+                <span className="text-gray-400 truncate mr-1">Due Value</span>
+                <span className="font-semibold text-amber-300 shrink-0">
                   <bdi dir="ltr">Rs. 21,000</bdi>
                 </span>
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-amber-400/80">
-              <Flame className="h-3 w-3 text-amber-400" />
-              <span>Ready for Final Pickup / Pressing</span>
+            <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-amber-400/80 truncate">
+              <Flame className="h-3 w-3 text-amber-400 shrink-0" />
+              <span>Ready for Final Pickup</span>
             </div>
           </div>
 
           {/* Card 3: Overdue */}
-          <div className="premium-glass-card p-5 relative overflow-hidden transition-all duration-200 hover:border-rose-500/40 group border-rose-500/20 bg-gradient-to-br from-rose-500/[0.06] to-transparent">
-            <div className="flex items-center justify-between pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold tracking-wider uppercase text-rose-300">
+          <div className="premium-glass-card p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 hover:border-rose-500/40 group border-rose-500/20 bg-gradient-to-br from-rose-500/[0.06] to-transparent">
+            <div className="flex items-center justify-between pb-2 sm:pb-3">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-rose-300">
                   Overdue
                 </span>
-                <span className="font-urdu-sans text-xs text-rose-400/80" dir="rtl">
+                <span className="font-urdu-sans text-[11px] sm:text-xs text-rose-400/80 hidden xs:inline" dir="rtl">
                   تاخیر شدہ
                 </span>
               </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/15 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
-                <AlertTriangle className="h-4 w-4" />
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/15 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.2)] shrink-0">
+                <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight text-rose-300">
+            <div className="space-y-1 sm:space-y-1.5">
+              <div className="flex items-baseline gap-1.5 sm:gap-2">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-rose-300">
                   <bdi dir="ltr">1</bdi>
                 </span>
-                <span className="text-xs font-semibold text-rose-400">Suit Delayed ⚠️</span>
+                <span className="text-[11px] sm:text-xs font-semibold text-rose-400">Delayed ⚠️</span>
               </div>
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                <span className="text-gray-400">Delayed Value</span>
-                <span className="font-semibold text-rose-300">
+              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
+                <span className="text-gray-400 truncate mr-1">Delayed</span>
+                <span className="font-semibold text-rose-300 shrink-0">
                   <bdi dir="ltr">Rs. 3,500</bdi>
                 </span>
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-rose-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
-              <span>Action Required • 1 Day Late</span>
+            <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-medium text-rose-400 truncate">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+              <span>1 Day Late</span>
             </div>
           </div>
 
           {/* Card 4: Unsettled Khata */}
-          <div className="premium-glass-card p-5 relative overflow-hidden transition-all duration-200 hover:border-white/10 group">
-            <div className="flex items-center justify-between pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold tracking-wider uppercase text-gray-400">
+          <div className="premium-glass-card p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 hover:border-white/10 group">
+            <div className="flex items-center justify-between pb-2 sm:pb-3">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-gray-400">
                   Unsettled Khata
                 </span>
-                <span className="font-urdu-sans text-xs text-gray-500" dir="rtl">
+                <span className="font-urdu-sans text-[11px] sm:text-xs text-gray-500 hidden xs:inline" dir="rtl">
                   واجب الادا
                 </span>
               </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.1)]">
-                <Wallet className="h-4 w-4" />
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.1)] shrink-0">
+                <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-rose-300">
+            <div className="space-y-1 sm:space-y-1.5">
+              <div className="flex items-baseline gap-1.5 sm:gap-2">
+                <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-rose-300">
                   <bdi dir="ltr">Rs. 68,500</bdi>
                 </span>
               </div>
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                <span className="text-gray-400">Debtors Balance</span>
-                <span className="font-medium text-gray-300">
-                  <bdi dir="ltr">14</bdi> Clients Pending
+              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
+                <span className="text-gray-400 truncate mr-1">Debtors</span>
+                <span className="font-medium text-gray-300 shrink-0">
+                  <bdi dir="ltr">14</bdi> Clients
                 </span>
               </div>
             </div>
-            <div className="mt-3 flex items-center justify-between text-[11px]">
+            <div className="mt-2 sm:mt-3 flex items-center justify-between text-[10px] sm:text-[11px]">
               <a
                 href="/khata"
                 className="inline-flex items-center gap-1 text-gold hover:text-gold-hover transition-colors font-medium"
               >
-                <span>Send Reminders</span>
+                <span>Remind</span>
                 <ChevronRight className="h-3 w-3" />
               </a>
-              <span className="font-urdu-sans text-xs text-gray-500" dir="rtl">
-                کھاتہ وصولی
+              <span className="font-urdu-sans text-[11px] sm:text-xs text-gray-500 hidden xs:inline" dir="rtl">
+                کھاتہ
               </span>
             </div>
           </div>
@@ -415,7 +415,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Table Container with required overflow-x-auto wrapper */}
-          <div className="overflow-x-auto w-full">
+          <div className="overflow-x-auto w-full touch-pan-x">
             <table className="w-full text-left text-sm border-collapse min-w-[760px]">
               <thead>
                 <tr className="border-b border-white/5 bg-white/[0.01] text-[11px] font-semibold uppercase tracking-wider text-gray-400">

@@ -920,7 +920,187 @@
   - `npm run build`: Static export compiled successfully, generating 23/23 routes into `out/`.
 
 * **Next Immediate Task:**
-  - Phase 11: Cross-Platform Native Scaffolding (`capacitor.config.ts`, Electron main & preload scaffolding, build scripts).
+  - Phase A, Sub-Phase 1 (Completed)
+
+---
+
+## Phase A: Enterprise Multi-Tenant Supabase Architecture (Phase A, Sub-Phase 1 Completed)
+* **Date:** 2026-08-27
+* **Tasks Completed:**
+  - `A.1.1` Cleaned dependencies: uninstalled `@neondatabase/serverless` and installed `@supabase/supabase-js`.
+  - `A.1.2` Created PostgreSQL migration `supabase/migrations/20260825000001_khata_rpc.sql` defining `append_khata_transaction` RPC function for atomic ledger insertion and customer balance synchronization with `SECURITY DEFINER`.
+  - `A.1.3` Implemented guarded singleton Supabase client `lib/supabase/client.ts` with static-export SSR guards (`getSupabaseClient()`, `isSupabaseConfigured()`) ensuring build and compilation pass even without environment variables.
+  - `A.1.4` Completely refactored `lib/db.ts`:
+    * Removed all Neon SQL tagged template literals.
+    * Replaced all repository queries (`customersDb`, `measurementsDb`, `ordersDb`, `khataDb`) with Supabase client chaining syntax (`.select()`, `.insert()`, `.update()`, `.delete()`, `.rpc()`).
+    * Implemented atomic `khataDb.append` via `supabase.rpc('append_khata_transaction', ...)`.
+    * Retained strict type transformations and mappers matching `@/types/tailor` with zero `any` types.
+    * Added architectural directive comments regarding Supabase RLS enforcement for multi-tenant isolation.
+  - `A.1.5` Updated `lib/sync-coordinator.ts` mutation dispatcher to route offline replay through the refactored Supabase repositories.
+  - `A.1.6` Updated `scripts/verify_db.ts` test suite to validate Supabase client, migrations, RPC, and repository fallbacks.
+  - `A.1.7` Zero-Trust Khata RPC Refactor:
+    * Redefined `append_khata_transaction` in `supabase/migrations/20260825000001_khata_rpc.sql` to strip client-supplied balances (`p_prev_balance`, `p_new_balance`).
+    * Added customer row locking (`SELECT khata_balance FROM customers WHERE id = p_customer_id FOR UPDATE`) to eliminate concurrent race conditions.
+    * Enforced server-side domain calculation (`MANUAL_DEBIT` $\to$ $+amount$, credits/payments/discounts $\to$ $-amount$).
+    * Refactored `khataDb.append` in `lib/db.ts` to omit balance arguments and consume server-calculated results.
+
+* **Active File Changes:**
+  - `package.json` [MODIFIED - removed @neondatabase/serverless, installed @supabase/supabase-js]
+  - `package-lock.json` [MODIFIED]
+  - `supabase/migrations/20260825000001_khata_rpc.sql` [MODIFIED - zero-trust balance calculation]
+  - `lib/supabase/client.ts` [NEW]
+  - `lib/db.ts` [MODIFIED - full refactor for Supabase & RPC update]
+  - `lib/sync-coordinator.ts` [MODIFIED - updated remoteDispatcher]
+  - `scripts/verify_db.ts` [MODIFIED - added zero-trust RPC assertions]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 type errors.
+  - `npx --yes tsx scripts/verify_db.ts`: 14/14 tests passed with 0 failures.
+  - `npm run build`: Static export compiled cleanly, generating all 23/23 pre-rendered routes into `out/` with zero runtime or compilation errors.
+
+* **Next Immediate Task:**
+  - Phase A, Sub-Phase 2 (Completed)
+
+---
+
+## Phase A: Authentication, RLS Lockdown & Database Integrity Patches (Phase A, Sub-Phase 2 Completed)
+* **Date:** 2026-08-28
+* **Tasks Completed:**
+  - `A.2.1` Created PostgreSQL migration `supabase/migrations/20260825000002_security_patches.sql`:
+    * Foreign key integrity: dropped cascading constraints and recreated foreign keys on `garment_orders` and `khata_transactions` with `ON DELETE RESTRICT` to prevent catastrophic accidental deletion of financial history and active orders.
+    * Replaced `append_khata_transaction` RPC with `SECURITY DEFINER`, `SET search_path = public`, strict caller authorization (`IF auth.uid() IS NOT NULL AND p_shop_id != auth.uid() THEN RAISE EXCEPTION ...`), strict row-level tenant locking (`FOR UPDATE` scoped to `auth.uid()`), and positive amount guard (`IF p_amount <= 0 THEN RAISE EXCEPTION 'Amount must be greater than zero'; END IF;`).
+  - `A.2.2` Locked down Row Level Security (RLS) policies across all tables:
+    * Dropped permissive beta policies on `customers`, `measurement_profiles`, `garment_orders`, and `khata_transactions`.
+    * Created strict policies `USING (shop_id = auth.uid()) WITH CHECK (shop_id = auth.uid())` for tenant boundary isolation.
+  - `A.2.3` Extended `lib/supabase/client.ts` with typed auth lifecycle helpers:
+    * Exported `getSession()`, `getCurrentUser()`, `signOut()`, `onAuthStateChange()`, and type re-exports (`Session`, `User`, `AuthChangeEvent`).
+  - `A.2.4` Built bespoke luxury Auth interface in `app/(auth)/login/page.tsx`:
+    * Obsidian dark glassmorphic card (`.premium-glass-card`, `bg-ambient-dark`, gold glow accents).
+    * Dual-mode switcher between "Sign In" (*لاگ ان*) and "Register Workshop" (*نیا اکاؤنٹ*).
+    * Password visibility toggles, loading state indicators, error/success banners, and offline fallback banner.
+  - `A.2.5` Updated `components/layout/app-shell.tsx`:
+    * Automated session check on mount via `getSession()` and `onAuthStateChange` listener.
+    * Public route whitelist guard (skips redirection on `/login`, `/track/*`, and `/`).
+    * Unauthenticated session redirection to `/login` when Supabase is configured.
+    * Authenticated user email display and 1-tap "Sign Out" button in desktop sidebar and mobile drawer.
+  - `A.2.6` Updated `scripts/verify_db.ts` test suite:
+    * Added assertions for `20260825000002_security_patches.sql`, foreign key `ON DELETE RESTRICT`, RPC search_path / caller auth / math guards, RLS `shop_id = auth.uid()`, and client auth session helpers.
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000002_security_patches.sql` [NEW]
+  - `lib/supabase/client.ts` [MODIFIED]
+  - `app/(auth)/login/page.tsx` [NEW]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 20/20 test assertions passed with 0 failures.
+  - `npx --yes tsx scripts/verify_phase9.ts`: 40/40 test assertions passed with 0 failures.
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 24/24 static routes into `out/` with zero runtime or SSR errors.
+
+* **Next Immediate Task:**
+  - Phase B, Sub-Phase 1 (Completed)
+
+---
+
+## Phase B: Core Architecture Patches & JWT Sync Polish (Phase B, Sub-Phase 1 Completed)
+* **Date:** 2026-08-28
+* **Tasks Completed:**
+  - `B.1.1` Created RPC Security Hotfix migration `supabase/migrations/20260825000003_rpc_auth_patch.sql`:
+    * Replaced `append_khata_transaction` RPC function to eliminate the NULL session bypass exploit under `SECURITY DEFINER`.
+    * Reconciled authorization with `shop_members` table membership lookup: `IF auth.uid() IS NULL OR NOT EXISTS (SELECT 1 FROM shop_members WHERE shop_members.shop_id = p_shop_id AND shop_members.user_id = auth.uid()) THEN RAISE EXCEPTION 'Unauthorized: Caller is not a verified member of this shop'; END IF;`.
+    * Retained row-level customer locking (`FOR UPDATE`), strict positive amount guard (`p_amount <= 0`), server-calculated `khata_balance`, and atomic ledger insert.
+  - `B.1.2` Implemented JWT Token Refresh & `AUTH_REQUIRED` state in `SyncCoordinator` (`lib/sync-coordinator.ts`) and `lib/supabase/client.ts`:
+    * Added `refreshSession()` helper method in `lib/supabase/client.ts` with static-export SSR safety.
+    * Extended `SyncStatus` union to `'ONLINE' | 'OFFLINE' | 'SYNCING' | 'AUTH_REQUIRED'`.
+    * Added proactive `refreshSession()` verification before dispatching queued mutations in `processQueue()`.
+    * Added auth error pause trap in `remoteDispatcher` and `processQueue()` to freeze the queue on expired/invalid JWT tokens without burning through `MAX_SYNC_RETRIES` (poison-pill prevention).
+    * Added reactive Supabase `onAuthStateChange` listener to resume offline mutation sync automatically upon `SIGNED_IN` / `TOKEN_REFRESHED`.
+  - `B.1.3` Created Future-Proof RLS Infrastructure migration `supabase/migrations/20260825000004_shop_members_rls.sql`:
+    * Created `shop_members` table (`id`, `shop_id`, `user_id`, `role`, `created_at`, `updated_at`) with unique constraints and role validation.
+    * Enabled RLS on `shop_members` with member read and owner management policies.
+    * Upgraded RLS policies on `customers`, `measurement_profiles`, `garment_orders`, and `khata_transactions` from direct `shop_id = auth.uid()` to `USING (EXISTS (SELECT 1 FROM shop_members WHERE shop_members.shop_id = table_name.shop_id AND shop_members.user_id = auth.uid())) WITH CHECK (EXISTS (...))`.
+    * Created `handle_new_user_shop_member()` trigger on `auth.users` to auto-provision registering users as `'OWNER'` in `shop_members` and backfilled existing accounts.
+  - `B.1.4` Updated `components/layout/app-shell.tsx`:
+    * Enhanced `ConnectionPill` with a dedicated rose-tinted `AUTH_REQUIRED` status badge with `Lock` icon linking directly to `/login`.
+  - `B.1.5` Updated automated test suites & ran builds:
+    * Extended `scripts/verify_db.ts` to 29 assertions covering all migrations, RPC security guards, `shop_members` RLS, and auth lifecycle methods.
+    * Verified 40/40 tests passing in `scripts/verify_phase9.ts`.
+    * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    * Verified static export build compiles 24/24 static routes into `out/` with zero runtime or SSR errors (`npm run build`).
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000003_rpc_auth_patch.sql` [NEW]
+  - `supabase/migrations/20260825000004_shop_members_rls.sql` [NEW]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/supabase/client.ts` [MODIFIED]
+  - `lib/sync-coordinator.ts` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 29/29 test assertions passed with 0 failures.
+  - `npx --yes tsx scripts/verify_phase9.ts`: 40/40 test assertions passed with 0 failures.
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 24/24 static routes into `out/` with zero runtime or SSR errors.
+
+* **Next Immediate Task:**
+  - Phase B, Sub-Phase 2 (Completed)
+
+---
+
+## Phase B: RLS Recursion Patch & Mobile UI Rescue (Phase B, Sub-Phase 2 Completed)
+* **Date:** 2026-08-28
+* **Tasks Completed:**
+  - `B.2.1` Created RLS Infinite Recursion Patch migration `supabase/migrations/20260825000005_rls_recursion_fix.sql`:
+    * Defined `STABLE`, `SECURITY DEFINER` helper function `public.is_shop_owner(p_shop_id UUID)` with `SET search_path = public` to securely check owner status without triggering recursive RLS evaluation on `shop_members`.
+    * Granted execute permissions on `is_shop_owner` to `authenticated` role.
+    * Dropped recursive policy and recreated `"Shop owners can manage memberships"` using `USING (public.is_shop_owner(shop_id)) WITH CHECK (public.is_shop_owner(shop_id))`.
+  - `B.2.2` Mobile UI Rescue on Dashboard (`app/dashboard/page.tsx`):
+    * Replaced `grid-cols-1 md:grid-cols-2 lg:grid-cols-4` KPI grid with responsive 2-column mobile and 4-column desktop layout (`grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5`).
+    * Refined card padding and badge typography (`p-3.5 sm:p-5`, `text-xl sm:text-2xl md:text-3xl`, hidden non-essential Urdu subtitles on extra-narrow viewports) to eliminate layout squishing and text truncation.
+    * Added `touch-pan-x` to Urgent Deliveries Watchlist table wrapper (`overflow-x-auto w-full touch-pan-x`) for smooth horizontal touch gesture navigation on mobile viewports.
+  - `B.2.3` Mobile UI Rescue on New Booking Intake (`app/orders/new/page.tsx`):
+    * Overhauled progressive disclosure tabs (`TabsList` & `TabsTrigger`) with responsive font scaling (`text-[10px] sm:text-xs md:text-sm`), compact padding (`py-2 sm:py-2.5 px-1 sm:px-2`), and `min-w-0 truncate` ensuring zero horizontal overflow or clipping on 320px screens.
+    * Configured right-hand summary & financial ledger sidebar container to unstick and cleanly stack beneath the form on mobile screens (`static lg:sticky lg:top-20`).
+  - `B.2.4` Mobile UI Rescue on Measurement Intake Form (`components/tailor/measurement-intake-form.tsx`):
+    * Verified 1-column mobile drop and 2-column desktop split (`grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3`) across Kameez, Optional Kameez, Shalwar, and Optional Shalwar sections.
+    * Added `min-w-0` to fractional pill selector container in `MeasurementRow` for flex-shrink safety on narrow viewports.
+  - `B.2.5` Automated Test Suite & Roadmap Update:
+    * Extended `scripts/verify_db.ts` to 32 assertions verifying `20260825000005_rls_recursion_fix.sql`, `is_shop_owner` function signature, and non-recursive RLS policy definitions.
+    * Verified all 32/32 tests pass in `scripts/verify_db.ts`.
+    * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    * Verified Next.js static export compiles 24/24 static routes in `out/` with zero runtime or SSR errors (`npm run build`).
+    * Updated `tasks.md` to prioritize **Phase C: Tailor Settings Dashboard & Workshop Preferences** as the immediate next milestone before Phase 11 Native Scaffolding.
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000005_rls_recursion_fix.sql` [NEW]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `components/tailor/measurement-intake-form.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 32/32 test assertions passed with 0 failures.
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 24/24 static routes into `out/` with zero runtime or SSR errors.
+
+* **Next Immediate Task:**
+  - Phase C (Task C.1): Workshop Identity & Shop Profile Settings (`app/settings/page.tsx`).
+
+
+
+
+
 
 
 

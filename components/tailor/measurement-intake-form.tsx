@@ -240,7 +240,7 @@ function MeasurementRow({
           )}
           aria-label={`${field.enLabel} / ${field.urLabel}`}
         />
-        <div className="flex-1 h-9">
+        <div className="flex-1 h-9 min-w-0">
           <FractionalPillSelector
             value={fractionPart}
             onChange={handleFractionChange}

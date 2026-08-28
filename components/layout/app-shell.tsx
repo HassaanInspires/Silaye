@@ -17,11 +17,20 @@ import {
   Menu,
   X,
   Sparkles,
+  LogOut,
+  Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { syncCoordinator, type SyncState } from '@/lib/sync-coordinator';
+import {
+  getSession,
+  signOut,
+  onAuthStateChange,
+  isSupabaseConfigured,
+  type User,
+} from '@/lib/supabase/client';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,7 +87,27 @@ function ConnectionPill() {
     }
   };
 
-  // 1. Syncing State
+  // 1. Auth Required State (Session Expired / Needs Login)
+  if (syncState.status === 'AUTH_REQUIRED') {
+    return (
+      <a
+        href="/login"
+        className={cn(
+          'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur-md transition-all duration-200 cursor-pointer',
+          'border-rose-500/40 bg-rose-500/15 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.15)] hover:bg-rose-500/25 hover:border-rose-500/60'
+        )}
+        role="status"
+        aria-live="polite"
+        aria-label="Authentication required to sync"
+        title="Session expired or login required. Click to log in and sync pending changes."
+      >
+        <Lock className="h-3 w-3 text-rose-400" aria-hidden="true" />
+        <span>Auth Required{syncState.pendingCount > 0 ? ` (${syncState.pendingCount})` : ''}</span>
+      </a>
+    );
+  }
+
+  // 2. Syncing State
   if (syncState.isSyncing || syncState.status === 'SYNCING') {
     return (
       <div
@@ -97,7 +126,7 @@ function ConnectionPill() {
     );
   }
 
-  // 2. Offline State
+  // 3. Offline State
   if (!syncState.isOnline || syncState.status === 'OFFLINE') {
     return (
       <div
@@ -217,6 +246,8 @@ function SidebarItem({ item, isActive, onNavigate }: SidebarItemProps) {
 export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState<boolean>(false);
   const [searchValue, setSearchValue] = React.useState<string>('');
+  const [currentUser, setCurrentUser] = React.useState<User | null>(null);
+  const [authChecked, setAuthChecked] = React.useState<boolean>(false);
 
   // Global '/' shortcut focuses the search input
   const searchRef = React.useRef<HTMLInputElement>(null);
@@ -234,6 +265,84 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Supabase Auth Session Lifecycle Check & Whitelist Guard
+  React.useEffect(() => {
+    let isMounted = true;
+
+    async function checkAuthSession() {
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
+      const isWhitelisted =
+        pathname === '/login' ||
+        pathname === '/login/' ||
+        pathname.startsWith('/login') ||
+        pathname.startsWith('/track') ||
+        pathname === '/' ||
+        pathname === '';
+
+      if (!isSupabaseConfigured()) {
+        // Local offline / demo development mode
+        if (isMounted) setAuthChecked(true);
+        return;
+      }
+
+      const session = await getSession();
+      if (!isMounted) return;
+
+      if (session) {
+        setCurrentUser(session.user);
+        setAuthChecked(true);
+      } else if (!isWhitelisted) {
+        window.location.href = '/login';
+      } else {
+        setAuthChecked(true);
+      }
+    }
+
+    checkAuthSession();
+
+    const { unsubscribe } = onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+      if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
+        const isWhitelisted =
+          pathname === '/login' ||
+          pathname === '/login/' ||
+          pathname.startsWith('/login') ||
+          pathname.startsWith('/track') ||
+          pathname === '/';
+        if (!isWhitelisted) {
+          window.location.href = '/login';
+        }
+      } else if (session) {
+        setCurrentUser(session.user);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [activeRoute]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.href = '/login';
+  };
+
+  if (!authChecked && isSupabaseConfigured()) {
+    return (
+      <div className="min-h-screen bg-ambient-dark flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold animate-pulse">
+            <Scissors className="h-5 w-5" />
+          </div>
+          <span className="text-xs text-gray-400">Verifying session...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-ambient-dark text-foreground flex flex-col md:flex-row font-sans">
@@ -280,20 +389,39 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           </nav>
         </div>
 
-        {/* Bottom Panel / Shop Info */}
-        <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
+        {/* Bottom Panel / Shop & User Auth */}
+        <div className="flex flex-col gap-2.5 border-t border-white/5 pt-4">
           <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] p-3 backdrop-blur-md">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/15 text-xs font-bold text-gold">
-                WM
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-xs font-bold text-gold">
+                {currentUser?.email ? currentUser.email.slice(0, 2).toUpperCase() : 'WM'}
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-medium text-gray-200">Wah Cantt Main</span>
-                <span className="text-[10px] text-gray-500">Master Counter</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-medium text-gray-200 truncate" title={currentUser?.email || 'Wah Cantt Main'}>
+                  {currentUser?.email || 'Wah Cantt Main'}
+                </span>
+                <span className="text-[10px] text-gray-500 truncate">
+                  {currentUser ? 'Authenticated Workshop' : 'Master Counter'}
+                </span>
               </div>
             </div>
-            <Sparkles className="h-3.5 w-3.5 text-gold/60" />
+            <Sparkles className="h-3.5 w-3.5 text-gold/60 shrink-0" />
           </div>
+
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex items-center justify-between rounded-xl border border-transparent px-3 py-2 text-xs font-medium text-gray-400 hover:border-white/5 hover:bg-white/[0.04] hover:text-rose-400 transition-all group cursor-pointer"
+            title="Sign Out of Session"
+          >
+            <div className="flex items-center gap-2">
+              <LogOut className="h-3.5 w-3.5 transition-colors group-hover:text-rose-400" />
+              <span>Sign Out</span>
+            </div>
+            <span className="font-urdu-sans text-[11px] opacity-70 group-hover:opacity-100 group-hover:text-rose-400" dir="rtl">
+              لاگ آؤٹ
+            </span>
+          </button>
         </div>
       </aside>
 
@@ -318,7 +446,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-white/10 hover:text-white"
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-white/10 hover:text-white cursor-pointer"
                   aria-label="Close menu"
                 >
                   <X className="h-5 w-5" />
@@ -337,7 +465,31 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
               </nav>
             </div>
 
-            <div className="border-t border-white/5 pt-4">
+            <div className="border-t border-white/5 pt-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-xs font-bold text-gold">
+                    {currentUser?.email ? currentUser.email.slice(0, 2).toUpperCase() : 'WM'}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-medium text-gray-200 truncate">
+                      {currentUser?.email || 'Wah Cantt Main'}
+                    </span>
+                    <span className="text-[10px] text-gray-500">
+                      {currentUser ? 'Authenticated' : 'Local Counter'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="rounded-lg p-2 text-gray-400 hover:bg-white/10 hover:text-rose-400 transition-colors cursor-pointer"
+                  title="Sign Out"
+                  aria-label="Sign Out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
               <ConnectionPill />
             </div>
           </div>
@@ -355,7 +507,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 md:hidden hover:bg-white/10"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 md:hidden hover:bg-white/10 cursor-pointer"
               aria-label="Open navigation menu"
             >
               <Menu className="h-4 w-4" />

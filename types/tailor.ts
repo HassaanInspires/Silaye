@@ -40,6 +40,15 @@ export type StaffRole =
   | 'PRESSMAN'
   | 'COUNTER_CLERK';
 
+export type ShopMemberRole =
+  | 'OWNER'
+  | 'STAFF'
+  | 'MANAGER'
+  | 'CUTTING_MASTER'
+  | 'STITCHER'
+  | 'PRESSMAN'
+  | 'COUNTER_CLERK';
+
 export type CollarStyle =
   | 'FULL_BAN'
   | 'HALF_BAN'
@@ -155,6 +164,18 @@ export interface Shop {
   receipt_header: string | null;
   receipt_footer: string | null;
   is_active: boolean;
+  created_at: string; // ISO 8601 timestamp
+  updated_at: string; // ISO 8601 timestamp
+}
+
+/**
+ * Shop Member & Role Assignment
+ */
+export interface ShopMember {
+  id: string; // UUID
+  shop_id: string; // UUID
+  user_id: string; // UUID
+  role: ShopMemberRole;
   created_at: string; // ISO 8601 timestamp
   updated_at: string; // ISO 8601 timestamp
 }

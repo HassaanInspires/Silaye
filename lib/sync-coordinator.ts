@@ -48,12 +48,17 @@ import {
   measurementsDb,
   khataDb,
 } from '@/lib/db';
+import {
+  isSupabaseConfigured,
+  refreshSession,
+  onAuthStateChange,
+} from '@/lib/supabase/client';
 
 // ==========================================
 // 1. Types & Constants
 // ==========================================
 
-export type SyncStatus = 'ONLINE' | 'OFFLINE' | 'SYNCING';
+export type SyncStatus = 'ONLINE' | 'OFFLINE' | 'SYNCING' | 'AUTH_REQUIRED';
 
 export interface SyncState {
   status: SyncStatus;
@@ -102,6 +107,7 @@ export function resolveConflict<T extends { updated_at?: string; [key: string]: 
 export class SyncCoordinator {
   private isOnline: boolean = true;
   private isSyncing: boolean = false;
+  private isAuthRequired: boolean = false;
   private pendingCount: number = 0;
   private failedCount: number = 0;
   private lastSyncTime: number | null = null;
@@ -109,11 +115,12 @@ export class SyncCoordinator {
   private listeners: Set<(state: SyncState) => void> = new Set();
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private isInitialized: boolean = false;
+  private authUnsubscribe: (() => void) | null = null;
 
   // Custom remote dispatch handler for testing, PostgreSQL serverless dispatch, and network transport
   public remoteDispatcher: (item: SyncQueueItem) => Promise<{ success: boolean; data?: unknown; error?: string }> =
     async (item) => {
-      // 1. Direct PostgreSQL serverless dispatch when database connection is configured
+      // 1. Direct Supabase / PostgreSQL dispatch when database connection is configured
       if (isDatabaseConfigured()) {
         try {
           const endpoint = item.endpoint;
@@ -126,7 +133,11 @@ export class SyncCoordinator {
           }
           if (endpoint.startsWith('/api/orders/') && (method === 'PATCH' || method === 'PUT')) {
             const parts = endpoint.split('/');
-            const orderId = parts[3] || (payload.id as string);
+            const orderId = parts[3] || (payload.id as string) || (payload.order_id as string);
+            if (endpoint.endsWith('/status') && payload.new_status) {
+              const data = await ordersDb.updateStatus(orderId, payload.new_status as OrderStatus);
+              return { success: true, data };
+            }
             const data = await ordersDb.update(orderId, payload as unknown as Parameters<typeof ordersDb.update>[1]);
             return { success: true, data };
           }
@@ -200,6 +211,28 @@ export class SyncCoordinator {
     window.addEventListener('online', () => this.handleNetworkChange(true));
     window.addEventListener('offline', () => this.handleNetworkChange(false));
 
+    // Listen to Supabase auth lifecycle events
+    if (isSupabaseConfigured()) {
+      const { unsubscribe } = onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session) {
+            this.isAuthRequired = false;
+            this.lastError = null;
+            this.notifyListeners();
+            if (this.isOnline && this.pendingCount > 0 && !this.isSyncing) {
+              this.processQueue().catch((err) => {
+                console.error('[SyncCoordinator] Post-auth sync failed:', err);
+              });
+            }
+          }
+        } else if (event === 'SIGNED_OUT') {
+          this.isAuthRequired = true;
+          this.notifyListeners();
+        }
+      });
+      this.authUnsubscribe = unsubscribe;
+    }
+
     await this.refreshQueueCounts();
     this.startHeartbeat();
   }
@@ -233,11 +266,21 @@ export class SyncCoordinator {
   }
 
   /**
+   * Manually flags auth required state (useful for simulations and testing).
+   */
+  public setAuthRequired(authRequired: boolean): void {
+    this.isAuthRequired = authRequired;
+    this.notifyListeners();
+  }
+
+  /**
    * Returns current snapshot of sync state.
    */
   public getState(): SyncState {
     let status: SyncStatus = 'ONLINE';
-    if (!this.isOnline) {
+    if (this.isAuthRequired) {
+      status = 'AUTH_REQUIRED';
+    } else if (!this.isOnline) {
       status = 'OFFLINE';
     } else if (this.isSyncing) {
       status = 'SYNCING';
@@ -333,6 +376,20 @@ export class SyncCoordinator {
       return { processed: 0, succeeded: 0, failed: 0, deadLettered: 0 };
     }
 
+    // 1. Proactive JWT session check & refresh before attempting remote dispatch
+    if (isSupabaseConfigured()) {
+      const { session, error: refreshError } = await refreshSession();
+      if (refreshError || !session) {
+        this.isAuthRequired = true;
+        this.lastError = refreshError
+          ? `Authentication required: ${refreshError.message}`
+          : 'Authentication required. Session expired or user logged out.';
+        this.notifyListeners();
+        return { processed: 0, succeeded: 0, failed: 0, deadLettered: 0 };
+      }
+      this.isAuthRequired = false;
+    }
+
     this.isSyncing = true;
     this.notifyListeners();
 
@@ -366,7 +423,26 @@ export class SyncCoordinator {
             await removeSyncQueueItem(item.id);
             result.succeeded++;
           } else {
-            // Failure: handle retry and dead-letter trap
+            // Check if error is authentication-related
+            const isAuthError =
+              dispatchRes.error &&
+              (dispatchRes.error.toLowerCase().includes('unauthorized') ||
+                dispatchRes.error.toLowerCase().includes('jwt') ||
+                dispatchRes.error.toLowerCase().includes('auth') ||
+                dispatchRes.error.includes('401'));
+
+            if (isAuthError) {
+              // Pause queue and mark AUTH_REQUIRED without burning retry limits
+              item.status = 'PENDING';
+              item.error_message = dispatchRes.error;
+              await updateSyncQueueItem(item);
+              this.isAuthRequired = true;
+              this.lastError = dispatchRes.error || null;
+              this.notifyListeners();
+              break;
+            }
+
+            // Standard failure: handle retry and dead-letter trap
             item.retry_count = (item.retry_count || 0) + 1;
             item.error_message = dispatchRes.error || 'Unknown dispatch error';
 
@@ -387,6 +463,23 @@ export class SyncCoordinator {
           }
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : 'Processing error';
+
+          const isAuthError =
+            msg.toLowerCase().includes('unauthorized') ||
+            msg.toLowerCase().includes('jwt') ||
+            msg.toLowerCase().includes('auth') ||
+            msg.includes('401');
+
+          if (isAuthError) {
+            item.status = 'PENDING';
+            item.error_message = msg;
+            await updateSyncQueueItem(item);
+            this.isAuthRequired = true;
+            this.lastError = msg;
+            this.notifyListeners();
+            break;
+          }
+
           item.retry_count = (item.retry_count || 0) + 1;
           item.error_message = msg;
 

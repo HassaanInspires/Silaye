@@ -88,12 +88,50 @@
 
 ---
 
-## Phase 10.8: PostgreSQL / Supabase Schema Migrations & Serverless Client Layer
-- [x] 10.8.1 Create production-ready PostgreSQL migration `supabase/migrations/20260825000000_init_silaye_schema.sql` with native `gen_random_uuid()`, tables, indexes, triggers, and RLS policies.
-- [x] 10.8.2 Implement serverless database client adapter `lib/db.ts` with typed repository methods for customers, measurements, orders, and khata ledger.
-- [x] 10.8.3 Purge mock data auto-seeding in `lib/offline-db.ts` behind `NEXT_PUBLIC_SEED_MOCK_DATA === 'true'` environment flag.
-- [x] 10.8.4 Wire `lib/sync-coordinator.ts` to dispatch queued mutations to PostgreSQL repositories when online.
-- [x] 10.8.5 Build automated verification test suite `scripts/verify_db.ts` with dotenv auto-loading and comprehensive assertions.
+## Phase A: Enterprise Multi-Tenant Supabase Architecture (Phase A, Sub-Phase 1)
+- [x] A.1.1 Clean Dependencies: Uninstall `@neondatabase/serverless` and install `@supabase/supabase-js`.
+- [x] A.1.2 Create Atomic Khata RPC migration `supabase/migrations/20260825000001_khata_rpc.sql` (`append_khata_transaction`).
+- [x] A.1.3 Create guarded singleton Supabase client `lib/supabase/client.ts` with static-export SSR safety.
+- [x] A.1.4 Refactor `lib/db.ts` to Supabase query chaining and RPC, with strict types and RLS comments.
+- [x] A.1.5 Update `lib/sync-coordinator.ts` mutation replay through Supabase repositories.
+- [x] A.1.6 Update `scripts/verify_db.ts` test suite and verify `npx tsc --noEmit` & static export.
+- [x] A.1.7 Zero-Trust Khata RPC Refactor: Server-side balance calculation with row-level locking (`FOR UPDATE`) in `append_khata_transaction`.
+
+---
+
+## Phase A: Authentication, RLS Lockdown & Database Integrity Patches (Phase A, Sub-Phase 2)
+- [x] A.2.1 Create Database Integrity Patch `supabase/migrations/20260825000002_security_patches.sql` with foreign key `ON DELETE RESTRICT` on customer history, search_path isolation, cross-tenant caller auth, row-level tenant locking, and positive amount guards in `append_khata_transaction` RPC.
+- [x] A.2.2 Lockdown Row Level Security (RLS) across `customers`, `measurement_profiles`, `garment_orders`, and `khata_transactions` with strict `USING (shop_id = auth.uid()) WITH CHECK (shop_id = auth.uid())` policies.
+- [x] A.2.3 Extend `lib/supabase/client.ts` with session and lifecycle methods (`getSession()`, `getCurrentUser()`, `signOut()`, `onAuthStateChange()`).
+- [x] A.2.4 Build bespoke tailor Auth screen at `app/(auth)/login/page.tsx` with email/password login, registration, bilingual Urdu/English labels, and offline bypass.
+- [x] A.2.5 Update `components/layout/app-shell.tsx` with session check on mount, public route whitelist (skipping `/login`, `/track/*`), redirect on unauthenticated sessions, and Sign Out action in sidebar & mobile drawer.
+- [x] A.2.6 Update automated verification suite `scripts/verify_db.ts` and verify 0 type errors (`npx tsc --noEmit`) and successful static build (`npm run build`).
+
+---
+
+## Phase B: Core Architecture Patches & JWT Sync Polish (Phase B, Sub-Phase 1)
+- [x] B.1.1 Create RPC Security Hotfix migration `supabase/migrations/20260825000003_rpc_auth_patch.sql` replacing `append_khata_transaction` to eliminate NULL bypass exploit and verify `shop_members` membership.
+- [x] B.1.2 Implement JWT Token Refresh & `AUTH_REQUIRED` state in `SyncCoordinator` (`lib/sync-coordinator.ts`) and `lib/supabase/client.ts` (`refreshSession()`), preventing retry limit burnout on expired sessions.
+- [x] B.1.3 Create Future-Proof RLS Infrastructure migration `supabase/migrations/20260825000004_shop_members_rls.sql` with `shop_members` table, `EXISTS (SELECT 1 FROM shop_members ...)` RLS policies across all 4 tables, and automatic user provisioning trigger on `auth.users`.
+- [x] B.1.4 Update ConnectionPill in `components/layout/app-shell.tsx` with dedicated `AUTH_REQUIRED` warning badge and direct login re-authentication link.
+- [x] B.1.5 Update automated database & sync verification suite `scripts/verify_db.ts` (29/29 tests passed), verify 0 TypeScript type errors (`npx tsc --noEmit`), and successful Next.js static build (`npm run build`).
+
+---
+
+## Phase B: RLS Recursion Patch & Mobile UI Rescue (Phase B, Sub-Phase 2)
+- [x] B.2.1 Create RLS Infinite Recursion Patch `supabase/migrations/20260825000005_rls_recursion_fix.sql` defining STABLE, `SECURITY DEFINER` helper function `public.is_shop_owner(p_shop_id UUID)` and non-recursive `shop_members` RLS policy.
+- [x] B.2.2 Mobile UI Rescue (`app/dashboard/page.tsx`): Responsive 2-column KPI grid on mobile (`grid-cols-2 md:grid-cols-4`) with compact card padding and `touch-pan-x` horizontal table wrapper.
+- [x] B.2.3 Mobile UI Rescue (`app/orders/new/page.tsx`): Responsive un-overflowable progressive disclosure tabs for 320px viewports (`text-[10px] sm:text-xs`) and unsticking sidebar on mobile (`static lg:sticky`).
+- [x] B.2.4 Mobile UI Rescue (`components/tailor/measurement-intake-form.tsx`): 1-column measurement grid on mobile (`grid-cols-1 md:grid-cols-2`) and flex-shrink protection on fractional pill selectors (`min-w-0`).
+- [x] B.2.5 Automated Verification Suite (`scripts/verify_db.ts`): Added 3 assertions for migration 5 and `is_shop_owner`, verified 32/32 tests pass, 0 type errors (`npx tsc --noEmit`), and static export passes (`npm run build`).
+
+---
+
+## Phase C: Tailor Settings Dashboard & Workshop Preferences
+- [ ] C.1 Workshop Identity & Shop Profile (`app/settings/page.tsx`): Shop name, Urdu title, phone number, physical address, NTN, and custom receipt header/footer branding notes.
+- [ ] C.2 Staff Management & Workshop Role Assignments: Add/edit master cutters, stitchers, pressmen, and counter clerks with role-based access status.
+- [ ] C.3 Garment Catalog & Default Stitching Rates: Configure baseline labor rates per garment type (Men Shalwar Kameez, Kurta, Waistcoat, Prince Suit, Ladies Suit) and fabric surcharges.
+- [ ] C.4 Thermal Printer & Hardware Preferences: Default slip format (58mm fabric staple tags vs 80mm customer invoice), auto-cut feed lines, and barcode token preferences.
 
 ---
 
