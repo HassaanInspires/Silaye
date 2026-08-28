@@ -23,6 +23,7 @@ import {
   getSupabaseUrl,
 } from '@/lib/supabase/client';
 import type {
+  Shop,
   Customer,
   MeasurementProfile,
   GarmentOrder,
@@ -135,6 +136,20 @@ export interface KhataTransactionRow {
   created_at: string | Date;
 }
 
+export interface ShopRow {
+  id: string;
+  name: string;
+  phone: string | null;
+  secondary_phone: string | null;
+  address: string | null;
+  city: string | null;
+  ntn_number: string | null;
+  receipt_header: string | null;
+  receipt_footer: string | null;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
 export function parseJson<T>(value: unknown, fallback: T): T {
   if (!value) return fallback;
   if (typeof value === 'object') return value as T;
@@ -244,6 +259,22 @@ export function mapKhataTransactionRow(row: KhataTransactionRow): KhataTransacti
     notes: row.notes,
     created_by: row.created_by,
     created_at: toIsoString(row.created_at),
+  };
+}
+
+export function mapShopRow(row: ShopRow): Shop {
+  return {
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    secondary_phone: row.secondary_phone,
+    address: row.address,
+    city: row.city || 'Wah Cantt',
+    ntn_number: row.ntn_number,
+    receipt_header: row.receipt_header,
+    receipt_footer: row.receipt_footer,
+    created_at: toIsoString(row.created_at),
+    updated_at: toIsoString(row.updated_at),
   };
 }
 
@@ -658,3 +689,76 @@ export const khataDb = {
     return data ? Number(data.khata_balance || 0) : 0;
   },
 };
+
+// ==========================================
+// 7. Workshop Profile & Shops Repository
+// ==========================================
+
+export const shopsDb = {
+  async getById(id: string): Promise<Shop | null> {
+    if (!isDatabaseConfigured()) return null;
+    const { data, error } = await supabase
+      .from('shops')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) {
+      throw new Error(`Failed to fetch shop by ID: ${error.message}`);
+    }
+    return data ? mapShopRow(data as ShopRow) : null;
+  },
+
+  async getCurrentShop(userId?: string): Promise<Shop | null> {
+    if (!isDatabaseConfigured()) return null;
+
+    let targetUserId = userId;
+    if (!targetUserId) {
+      const { data: userData } = await supabase.auth.getUser();
+      targetUserId = userData.user?.id;
+    }
+
+    if (!targetUserId) return null;
+
+    // Relational query: resolve shop_id from shop_members first
+    const { data: memberData, error: memberError } = await supabase
+      .from('shop_members')
+      .select('shop_id')
+      .eq('user_id', targetUserId)
+      .limit(1)
+      .maybeSingle();
+
+    if (memberError || !memberData?.shop_id) {
+      // Fallback: direct check by user ID if member lookup missed
+      return this.getById(targetUserId);
+    }
+
+    return this.getById(memberData.shop_id);
+  },
+
+  async update(id: string, updates: Partial<Shop>): Promise<Shop> {
+    const updatePayload: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (updates.name !== undefined) updatePayload.name = updates.name;
+    if (updates.phone !== undefined) updatePayload.phone = updates.phone;
+    if (updates.secondary_phone !== undefined) updatePayload.secondary_phone = updates.secondary_phone;
+    if (updates.address !== undefined) updatePayload.address = updates.address;
+    if (updates.city !== undefined) updatePayload.city = updates.city;
+    if (updates.ntn_number !== undefined) updatePayload.ntn_number = updates.ntn_number;
+    if (updates.receipt_header !== undefined) updatePayload.receipt_header = updates.receipt_header;
+    if (updates.receipt_footer !== undefined) updatePayload.receipt_footer = updates.receipt_footer;
+
+    const { data, error } = await supabase
+      .from('shops')
+      .update(updatePayload)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update shop: ${error.message}`);
+    }
+    return mapShopRow(data as ShopRow);
+  },
+};
+

@@ -128,7 +128,7 @@
 ---
 
 ## Phase C: Tailor Settings Dashboard & Workshop Preferences
-- [ ] C.1 Workshop Identity & Shop Profile (`app/settings/page.tsx`): Shop name, Urdu title, phone number, physical address, NTN, and custom receipt header/footer branding notes.
+- [x] C.1 Workshop Identity & Shop Profile (`app/settings/page.tsx`): Shop name, Urdu title, phone number, physical address, NTN, and custom receipt header/footer branding notes.
 - [ ] C.2 Staff Management & Workshop Role Assignments: Add/edit master cutters, stitchers, pressmen, and counter clerks with role-based access status.
 - [ ] C.3 Garment Catalog & Default Stitching Rates: Configure baseline labor rates per garment type (Men Shalwar Kameez, Kurta, Waistcoat, Prince Suit, Ladies Suit) and fabric surcharges.
 - [ ] C.4 Thermal Printer & Hardware Preferences: Default slip format (58mm fabric staple tags vs 80mm customer invoice), auto-cut feed lines, and barcode token preferences.

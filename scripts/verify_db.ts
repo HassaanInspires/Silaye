@@ -30,14 +30,17 @@ import {
   measurementsDb,
   ordersDb,
   khataDb,
+  shopsDb,
   mapCustomerRow,
   mapMeasurementProfileRow,
   mapGarmentOrderRow,
   mapKhataTransactionRow,
+  mapShopRow,
   type CustomerRow,
   type MeasurementProfileRow,
   type GarmentOrderRow,
   type KhataTransactionRow,
+  type ShopRow,
 } from '../lib/db';
 import {
   isSupabaseConfigured,
@@ -131,12 +134,22 @@ async function runVerification() {
     'RLS recursion fix migration exists at supabase/migrations/20260825000005_rls_recursion_fix.sql'
   );
 
+  const shopsTableMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000006_shops_table.sql'
+  );
+  assert(
+    fs.existsSync(shopsTableMigrationPath),
+    'Shops table migration exists at supabase/migrations/20260825000006_shops_table.sql'
+  );
+
   const migrationSql = fs.readFileSync(schemaMigrationPath, 'utf8');
   const rpcSql = fs.readFileSync(rpcMigrationPath, 'utf8');
   const securitySql = fs.readFileSync(securityPatchesMigrationPath, 'utf8');
   const rpcAuthPatchSql = fs.readFileSync(rpcAuthPatchMigrationPath, 'utf8');
   const shopMembersRlsSql = fs.readFileSync(shopMembersRlsMigrationPath, 'utf8');
   const rlsRecursionFixSql = fs.readFileSync(rlsRecursionFixMigrationPath, 'utf8');
+  const shopsTableSql = fs.readFileSync(shopsTableMigrationPath, 'utf8');
 
   // Verify Native UUID generator
   assert(
@@ -247,6 +260,32 @@ async function runVerification() {
       rlsRecursionFixSql.includes('USING (public.is_shop_owner(shop_id))') &&
       rlsRecursionFixSql.includes('WITH CHECK (public.is_shop_owner(shop_id))'),
     'Migration 20260825000005 eliminates RLS recursion using public.is_shop_owner(shop_id)'
+  );
+
+  // Verify Phase C Sub-Phase 1 Workshop Identity & Shops Table Migration
+  assert(
+    shopsTableSql.includes('CREATE TABLE IF NOT EXISTS public.shops') &&
+      shopsTableSql.includes('phone VARCHAR(32)') &&
+      shopsTableSql.includes('secondary_phone VARCHAR(32)') &&
+      shopsTableSql.includes('ntn_number VARCHAR(64)') &&
+      shopsTableSql.includes('receipt_header TEXT') &&
+      shopsTableSql.includes('receipt_footer TEXT'),
+    'Migration 20260825000006 creates shops table with contact, NTN, and receipt branding columns'
+  );
+
+  assert(
+    shopsTableSql.includes('ALTER TABLE public.shops ENABLE ROW LEVEL SECURITY') &&
+      shopsTableSql.includes('CREATE POLICY "Shop members can view their shop"') &&
+      shopsTableSql.includes('CREATE POLICY "Shop owners can update their shop"') &&
+      shopsTableSql.includes('public.is_shop_owner(id)'),
+    'Migration 20260825000006 enforces RLS on shops with member SELECT and owner UPDATE via is_shop_owner'
+  );
+
+  assert(
+    shopsTableSql.includes('INSERT INTO public.shops (id, name)') &&
+      shopsTableSql.includes('INSERT INTO public.shop_members (shop_id, user_id, role)') &&
+      shopsTableSql.includes('ON CONFLICT (id) DO NOTHING'),
+    'Migration 20260825000006 updates handle_new_user_shop_member() to provision shops record prior to shop_members and backfills existing shops'
   );
 
   // ----------------------------------------------------
@@ -437,6 +476,30 @@ async function runVerification() {
     'mapKhataTransactionRow correctly maps ledger type and balance_after'
   );
 
+  // Test Shop Row Mapper
+  const mockDbShopRow: ShopRow = {
+    id: '66666666-6666-4666-8666-666666666666',
+    name: 'Bespoke Executive Tailors',
+    phone: '03001234567',
+    secondary_phone: '03219876543',
+    address: 'Shop 10, Commercial Plaza, Wah Cantt',
+    city: 'Wah Cantt',
+    ntn_number: '7891234-5',
+    receipt_header: 'Bespoke Tailors - Premium Fit',
+    receipt_footer: 'Thank you / شکریہ',
+    created_at: '2026-08-25T10:00:00Z',
+    updated_at: '2026-08-25T10:00:00Z',
+  };
+  const mappedShop = mapShopRow(mockDbShopRow);
+  assert(
+    mappedShop.id === mockDbShopRow.id &&
+      mappedShop.name === 'Bespoke Executive Tailors' &&
+      mappedShop.phone === '03001234567' &&
+      mappedShop.secondary_phone === '03219876543' &&
+      mappedShop.ntn_number === '7891234-5',
+    'mapShopRow correctly maps all workshop profile fields and handles date strings'
+  );
+
   // ----------------------------------------------------
   // SECTION 4: Repository Fallback & Static Export Safety
   // ----------------------------------------------------
@@ -447,8 +510,11 @@ async function runVerification() {
       typeof measurementsDb.getByCustomerId === 'function' &&
       typeof ordersDb.getAll === 'function' &&
       typeof khataDb.getAll === 'function' &&
-      typeof khataDb.append === 'function',
-    'All Supabase repositories export complete typed CRUD interface'
+      typeof khataDb.append === 'function' &&
+      typeof shopsDb.getById === 'function' &&
+      typeof shopsDb.getCurrentShop === 'function' &&
+      typeof shopsDb.update === 'function',
+    'All Supabase repositories including shopsDb export complete typed CRUD interface'
   );
 
   // Test live network dispatch if environment is active and reachable

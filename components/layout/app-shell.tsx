@@ -59,6 +59,7 @@ const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { icon: PlusCircle, label: 'New Booking', labelUrdu: 'نیا آرڈر', route: '/orders/new' },
   { icon: Wallet, label: 'Khata Ledger', labelUrdu: 'کھاتہ رجسٹر', route: '/khata' },
   { icon: Tag, label: 'Print Station', labelUrdu: 'پرنٹنگ کاؤنٹر', route: '/print' },
+  { icon: Settings, label: 'Settings', labelUrdu: 'ترتیبات', route: '/settings' },
 ];
 
 // ---------------------------------------------------------------------------

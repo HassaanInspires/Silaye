@@ -1095,7 +1095,93 @@
   - `npm run build`: Static export compiled successfully, generating 24/24 static routes into `out/` with zero runtime or SSR errors.
 
 * **Next Immediate Task:**
-  - Phase C (Task C.1): Workshop Identity & Shop Profile Settings (`app/settings/page.tsx`).
+  - Phase C (Task C.1): Workshop Identity & Shop Profile Settings (Completed)
+
+---
+
+## Phase C: Tailor Settings Dashboard & Workshop Preferences (Phase C, Sub-Phase 1 Completed)
+* **Date:** 2026-08-28
+* **Tasks Completed:**
+  - `C.1.1` Created Database Migration `supabase/migrations/20260825000006_shops_table.sql`:
+    * Created `shops` table with `id` (UUID default `gen_random_uuid()`), `name` (`DEFAULT 'Bespoke Tailors'`), `phone`, `secondary_phone`, `address`, `city` (`DEFAULT 'Wah Cantt'`), `ntn_number`, `receipt_header`, `receipt_footer`, `created_at`, and `updated_at`.
+    * Attached `update_updated_at_column()` trigger on `shops`.
+    * Configured Row Level Security (RLS) on `shops` with member `SELECT` policy (matching `shop_members`) and owner `UPDATE` policy (`public.is_shop_owner(id)`).
+    * Updated `handle_new_user_shop_member()` trigger to auto-create default `shops` record FIRST before provisioning `shop_members` as `OWNER`.
+    * Added migration backfill to ensure existing `shop_members` records possess corresponding `shops` entries.
+  - `C.1.2` Extended Types & Database Repository Layer (`types/tailor.ts` & `lib/db.ts`):
+    * Updated `Shop` interface and declared `ShopRow` interface in `lib/db.ts`.
+    * Implemented `mapShopRow(row: ShopRow): Shop` mapper.
+    * Exported `shopsDb` repository module with `getById(id)`, relational `getCurrentShop(userId)` querying `shop_members` first to resolve user tenancy, and `update(id, updates)`.
+  - `C.1.3` Built Luxury Obsidian Dark Settings Interface (`app/settings/page.tsx`):
+    * Responsive dual-column layout (`bg-ambient-dark`, `.premium-glass-card`).
+    * Workshop Identity form (Name, Primary Phone, Secondary Counter Phone with Pakistani mobile formatting/validation, Physical Address, City, Tax NTN).
+    * Custom Receipt Header & Footer branding configuration textareas with bilingual Urdu/English labels.
+    * Live interactive Thermal Receipt Preview card (80mm simulated ticket updating in real time with header notes, address, phone numbers, order lines, and footer policies).
+    * Save changes action with loading spinner, auto-dismissing toast notification, and error handling.
+    * Navigation tabs with preview placeholders for Phase C.2 (*Staff & Roles*), Phase C.3 (*Garment Catalog & Rates*), and Phase C.4 (*Thermal Printer & Hardware*).
+  - `C.1.4` Updated App Navigation (`components/layout/app-shell.tsx`):
+    * Added Settings item (`/settings` - *ترتیبات*) to `NAV_ITEMS` in `components/layout/app-shell.tsx`, rendering in both desktop sidebar and mobile slide-out drawer.
+  - `C.1.5` Automated Test Suite & Production Build Verification:
+    * Extended `scripts/verify_db.ts` to 37 test assertions covering migration 6, RLS policies, trigger updates, mapper functions, and `shopsDb` repository methods (37/37 passed).
+    * Verified 35/35 assertions passed in `scripts/verify_phase6.ts`.
+    * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    * Verified production static export build generates 25/25 static routes in `out/` with zero runtime or SSR errors (`npm run build`).
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000006_shops_table.sql` [NEW]
+  - `app/settings/page.tsx` [NEW]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `components/track/order-tracking-view.tsx` [MODIFIED]
+  - `scripts/verify_phase6.ts` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 37/37 test assertions passed with 0 failures.
+  - `npx --yes tsx scripts/verify_phase6.ts`: 35/35 test assertions passed with 0 failures.
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 25/25 static routes into `out/` with zero runtime or SSR errors.
+
+* **Next Immediate Task:**
+  - Bespoke Favicon & Brand Icon Suite (Completed)
+
+---
+
+## Brand Asset Suite: Bespoke Favicon & Multi-Platform Icons (Completed)
+* **Date:** 2026-08-28
+* **Tasks Completed:**
+  - Created master scalable vector SVG at `public/favicon.svg` and `app/icon.svg` featuring an Obsidian Dark squircle base, gold gradient border, ambient radial glow, and an iconic master tailor shears / scissors forming an elegant monogram "S" with precision blades, loop handles, and a central gold pivot gem.
+  - Created Web Application Manifest `public/site.webmanifest` defining standalone PWA parameters, Obsidian `#0B0C0E` theme color, and multi-size icon mappings.
+  - Generated multi-resolution production assets via ImageMagick:
+    * `public/favicon.ico` (multi-size standard legacy icon: 16x16, 32x32, 48x48, 64x64)
+    * `public/apple-touch-icon.png` (180x180 high-DPI iOS web clip)
+    * `public/icon-192.png` (192x192 Android / PWA app icon)
+    * `public/icon-512.png` (512x512 high-res PWA splash & home screen icon)
+  - Updated Root Layout Metadata (`app/layout.tsx`) to link `icons` (`icon`, `apple`, `shortcut`) and `manifest` (`/site.webmanifest`).
+  - Verified static compilation and bundle placement across all 26 static export routes in `out/`.
+
+* **Active File Changes:**
+  - `public/favicon.svg` [NEW]
+  - `public/favicon.ico` [NEW]
+  - `public/apple-touch-icon.png` [NEW]
+  - `public/icon-192.png` [NEW]
+  - `public/icon-512.png` [NEW]
+  - `public/site.webmanifest` [NEW]
+  - `app/icon.svg` [NEW]
+  - `app/layout.tsx` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled 26/26 static routes, cleanly copying all favicon assets into `out/` with automated `<link rel="icon">` tags in `<head>`.
+
+* **Next Immediate Task:**
+  - Phase C (Task C.2): Staff Management & Workshop Role Assignments.
+
+
 
 
 

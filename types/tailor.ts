@@ -154,18 +154,21 @@ export interface StylePreferences {
 export interface Shop {
   id: string; // UUID
   name: string;
-  slug: string;
-  owner_name: string;
-  owner_phone: string;
-  address: string | null;
-  city: string;
-  country: string;
-  currency: string;
-  receipt_header: string | null;
-  receipt_footer: string | null;
-  is_active: boolean;
-  created_at: string; // ISO 8601 timestamp
-  updated_at: string; // ISO 8601 timestamp
+  phone?: string | null;
+  secondary_phone?: string | null;
+  address?: string | null;
+  city?: string;
+  ntn_number?: string | null;
+  receipt_header?: string | null;
+  receipt_footer?: string | null;
+  slug?: string;
+  owner_name?: string;
+  owner_phone?: string;
+  country?: string;
+  currency?: string;
+  is_active?: boolean;
+  created_at?: string; // ISO 8601 timestamp
+  updated_at?: string; // ISO 8601 timestamp
 }
 
 /**

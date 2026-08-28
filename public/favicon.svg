@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient: Obsidian Dark Depth -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#16181D" />
+      <stop offset="50%" stop-color="#0B0C0E" />
+      <stop offset="100%" stop-color="#050607" />
+    </linearGradient>
+
+    <!-- Outer Rim Gold Bevel Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5E296" stop-opacity="0.85" />
+      <stop offset="35%" stop-color="#D4AF37" stop-opacity="0.4" />
+      <stop offset="70%" stop-color="#A27D1B" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#4E3B0A" stop-opacity="0.8" />
+    </linearGradient>
+
+    <!-- Liquid Gold Primary Gradient for Main Blade/Loop -->
+    <linearGradient id="goldPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF6D6" />
+      <stop offset="25%" stop-color="#E5C358" />
+      <stop offset="60%" stop-color="#C59E2B" />
+      <stop offset="100%" stop-color="#826210" />
+    </linearGradient>
+
+    <!-- Liquid Gold Sheen Gradient for Cross Blade/Loop -->
+    <linearGradient id="goldSheen" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF7" />
+      <stop offset="30%" stop-color="#DFBD50" />
+      <stop offset="70%" stop-color="#B2871A" />
+      <stop offset="100%" stop-color="#694C07" />
+    </linearGradient>
+
+    <!-- Subtle Radial Ambient Glow -->
+    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#D4AF37" stop-opacity="0.22" />
+      <stop offset="60%" stop-color="#D4AF37" stop-opacity="0.06" />
+      <stop offset="100%" stop-color="#D4AF37" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Gold Accent Stroke -->
+    <linearGradient id="innerStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE899" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#997517" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- Soft Depth Shadow -->
+    <filter id="emblemShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.75" />
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#D4AF37" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Luxury Obsidian Squircle Base -->
+  <rect x="20" y="20" width="472" height="472" rx="108" ry="108" fill="url(#bgGrad)" />
+  <rect x="20" y="20" width="472" height="472" rx="108" ry="108" fill="none" stroke="url(#borderGrad)" stroke-width="4.5" />
+  <rect x="30" y="30" width="452" height="452" rx="98" ry="98" fill="none" stroke="url(#innerStroke)" stroke-width="1.5" />
+
+  <!-- Core Ambient Glow -->
+  <circle cx="256" cy="256" r="170" fill="url(#centerGlow)" />
+
+  <!-- Master Shears Emblem Forming Dynamic 'S' Curve -->
+  <g filter="url(#emblemShadow)">
+    <!-- Primary Shears Arm: Top-Right Blade to Bottom-Left Handle Loop -->
+    <g>
+      <!-- Blade (Top-Right) -->
+      <path
+        d="M 256 256 L 358 154 C 374 138 396 122 414 114 C 406 132 390 154 374 170 L 256 256 Z"
+        fill="url(#goldPrimary)"
+      />
+      <!-- Blade cutting edge highlight -->
+      <path
+        d="M 256 256 L 414 114 C 400 120 376 138 358 154 Z"
+        fill="#FFF9E0"
+        opacity="0.8"
+      />
+      <!-- Shaft to Loop -->
+      <path
+        d="M 256 256 L 194 318 C 190 322 186 324 180 324 C 150 324 126 348 126 378 C 126 408 150 432 180 432 C 210 432 234 408 234 378 C 234 372 232 368 228 364 L 256 256 Z"
+        fill="url(#goldPrimary)"
+      />
+      <!-- Handle Loop Inner Hole -->
+      <circle cx="180" cy="378" r="28" fill="#0B0C0E" stroke="url(#goldPrimary)" stroke-width="3" />
+    </g>
+
+    <!-- Secondary Shears Arm: Top-Left Handle Loop to Bottom-Right Blade -->
+    <g>
+      <!-- Shaft & Loop (Top-Left) -->
+      <path
+        d="M 256 256 L 194 194 C 190 190 186 188 180 188 C 150 188 126 164 126 134 C 126 104 150 80 180 80 C 210 80 234 104 234 134 C 234 140 232 144 228 148 L 256 256 Z"
+        fill="url(#goldSheen)"
+      />
+      <!-- Handle Loop Inner Hole -->
+      <circle cx="180" cy="134" r="28" fill="#0B0C0E" stroke="url(#goldSheen)" stroke-width="3" />
+
+      <!-- Blade (Bottom-Right) -->
+      <path
+        d="M 256 256 L 358 358 C 374 374 396 390 414 398 C 406 380 390 358 374 342 L 256 256 Z"
+        fill="url(#goldSheen)"
+      />
+      <!-- Blade cutting edge highlight -->
+      <path
+        d="M 256 256 L 414 398 C 400 392 376 374 358 358 Z"
+        fill="#FFF9E0"
+        opacity="0.8"
+      />
+    </g>
+
+    <!-- Interlocking Golden Thread & Needle Accent Curve -->
+    <path
+      d="M 180 106 C 280 90 380 180 340 280 C 310 355 230 390 180 406"
+      fill="none"
+      stroke="url(#goldPrimary)"
+      stroke-width="3.5"
+      stroke-linecap="round"
+      stroke-dasharray="8 6"
+      opacity="0.4"
+    />
+
+    <!-- Central Precision Gold Pivot Fastener / Jewel Stud -->
+    <circle cx="256" cy="256" r="20" fill="#08090B" stroke="url(#goldPrimary)" stroke-width="7" />
+    <circle cx="256" cy="256" r="10" fill="url(#goldPrimary)" />
+    <circle cx="254" cy="254" r="3" fill="#FFFFFF" opacity="0.9" />
+  </g>
+</svg>

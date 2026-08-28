@@ -110,7 +110,7 @@ export function OrderTrackingView() {
     : null;
 
   const waLink = order
-    ? buildWhatsAppInquiryLink(order.order_number, mockShop.owner_phone)
+    ? buildWhatsAppInquiryLink(order.order_number, mockShop.owner_phone || mockShop.phone || '0300-5551234')
     : null;
 
   return (
@@ -149,7 +149,7 @@ export function OrderTrackingView() {
 
         {/* ── Body Content ── */}
         {!order ? (
-          <OrderNotFound shopPhone={mockShop.owner_phone} />
+          <OrderNotFound shopPhone={mockShop.owner_phone || mockShop.phone || '0300-5551234'} />
         ) : (
           <main className="flex-1 flex flex-col">
             {/* ── 1. Order Details Card ── */}
