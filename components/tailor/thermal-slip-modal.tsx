@@ -24,6 +24,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarcodeRenderer } from '@/components/tailor/barcode-renderer';
+import { printerDb } from '@/lib/db';
 import {
   mapOrderToSlipData,
   generateFabricTagSlipText,
@@ -37,7 +38,7 @@ import {
   formatTimeDisplay,
   type EscPosSlipData,
 } from '@/lib/escpos';
-import type { GarmentOrder, Customer, Shop } from '@/types/tailor';
+import type { GarmentOrder, Customer, Shop, PrinterSettings, PrinterPaperWidth } from '@/types/tailor';
 
 export interface ThermalSlipModalProps {
   open: boolean;
@@ -45,7 +46,8 @@ export interface ThermalSlipModalProps {
   order?: GarmentOrder | null;
   customer?: Customer | null;
   shop?: Shop | null;
-  initialFormat?: '58mm' | '80mm';
+  initialFormat?: PrinterPaperWidth;
+  settings?: Partial<PrinterSettings> | null;
 }
 
 export function ThermalSlipModal({
@@ -54,29 +56,56 @@ export function ThermalSlipModal({
   order,
   customer,
   shop,
-  initialFormat = '58mm',
+  initialFormat,
+  settings,
 }: ThermalSlipModalProps) {
-  const [format, setFormat] = React.useState<'58mm' | '80mm'>(initialFormat);
+  const [format, setFormat] = React.useState<PrinterPaperWidth>(initialFormat || '80mm');
   const [isCopied, setIsCopied] = React.useState(false);
   const [isPrinting, setIsPrinting] = React.useState(false);
+  const [loadedSettings, setLoadedSettings] = React.useState<PrinterSettings | null>(null);
 
-  // Sync initialFormat when modal opens
+  // Load shop printer settings on open if not explicitly supplied
   React.useEffect(() => {
+    let isMounted = true;
     if (open) {
-      setFormat(initialFormat);
+      if (shop?.id && !settings) {
+        printerDb.getByShopId(shop.id).then((s) => {
+          if (isMounted && s) {
+            setLoadedSettings(s);
+            if (!initialFormat) {
+              setFormat(s.paper_width);
+            }
+          }
+        }).catch(() => {});
+      } else if (settings?.paper_width && !initialFormat) {
+        setFormat(settings.paper_width);
+      } else if (initialFormat) {
+        setFormat(initialFormat);
+      }
       setIsCopied(false);
     }
-  }, [open, initialFormat]);
+    return () => {
+      isMounted = false;
+    };
+  }, [open, initialFormat, settings, shop?.id]);
 
   if (!order) return null;
+
+  const effectiveSettings: Partial<PrinterSettings> = {
+    paper_width: format,
+    show_barcode: settings?.show_barcode ?? loadedSettings?.show_barcode ?? true,
+    show_qr_tracking: settings?.show_qr_tracking ?? loadedSettings?.show_qr_tracking ?? true,
+    show_urdu_labels: settings?.show_urdu_labels ?? loadedSettings?.show_urdu_labels ?? true,
+    feed_lines: settings?.feed_lines ?? loadedSettings?.feed_lines ?? 3,
+  };
 
   const slipData: EscPosSlipData = mapOrderToSlipData(order, customer || undefined, shop || undefined);
   const m = slipData.measurements || {};
   const is58 = format === '58mm';
 
   const plainText = is58
-    ? generateFabricTagSlipText(slipData)
-    : generateCustomerInvoiceSlipText(slipData);
+    ? generateFabricTagSlipText(slipData, effectiveSettings)
+    : generateCustomerInvoiceSlipText(slipData, effectiveSettings);
 
   const handleCopyText = async () => {
     try {
@@ -91,8 +120,8 @@ export function ThermalSlipModal({
 
   const handleDownloadBin = () => {
     const bytes = is58
-      ? buildFabricTagBinary(slipData)
-      : buildCustomerInvoiceBinary(slipData);
+      ? buildFabricTagBinary(slipData, effectiveSettings)
+      : buildCustomerInvoiceBinary(slipData, effectiveSettings);
     const filename = `${slipData.orderNumber}-${format}.bin`;
     downloadEscPosBinaryFile(bytes, filename);
   };
@@ -208,7 +237,14 @@ export function ThermalSlipModal({
                 </div>
 
                 <div className="border-t border-dashed border-black pt-1 space-y-0.5">
-                  <div className="font-bold">ITEM: {slipData.garmentType.toUpperCase()} ({slipData.quantity || 1} PAIR)</div>
+                  <div className="font-bold flex items-baseline justify-between gap-1">
+                    <span>ITEM: {slipData.garmentType.toUpperCase()} ({slipData.quantity || 1} PR)</span>
+                    {effectiveSettings.show_urdu_labels && slipData.garmentTypeUr && (
+                      <span className="font-urdu-sans text-[10px] text-neutral-800" dir="rtl">
+                        {slipData.garmentTypeUr}
+                      </span>
+                    )}
+                  </div>
                   {slipData.trialDate && (
                     <div>TRIAL: {formatDateDisplay(slipData.trialDate)}</div>
                   )}
@@ -265,19 +301,21 @@ export function ThermalSlipModal({
                   </div>
                 </div>
 
-                {/* Barcode */}
-                <div className="border-t border-dashed border-black pt-2 text-center">
-                  <BarcodeRenderer
-                    value={slipData.orderNumber}
-                    format="svg"
-                    height={40}
-                    moduleWidth={1.4}
-                    displayValue={true}
-                    barColor="#000000"
-                    backgroundColor="transparent"
-                  />
-                  <div className="text-center text-[10px] pt-1">================================</div>
-                </div>
+                {/* Barcode (if enabled) */}
+                {effectiveSettings.show_barcode !== false && (
+                  <div className="border-t border-dashed border-black pt-2 text-center">
+                    <BarcodeRenderer
+                      value={slipData.orderNumber}
+                      format="svg"
+                      height={40}
+                      moduleWidth={1.4}
+                      displayValue={true}
+                      barColor="#000000"
+                      backgroundColor="transparent"
+                    />
+                    <div className="text-center text-[10px] pt-1">================================</div>
+                  </div>
+                )}
               </div>
             ) : (
               /* ================= 80mm Customer Invoice Preview ================= */
@@ -314,8 +352,15 @@ export function ThermalSlipModal({
                     <span className="w-20 text-right">Amount</span>
                   </div>
                   <div className="pt-1 space-y-1 text-[11px]">
-                    <div className="flex justify-between">
-                      <span className="w-1/2 truncate font-medium">{slipData.garmentType}</span>
+                    <div className="flex justify-between items-start">
+                      <div className="w-1/2 min-w-0 pr-1">
+                        <div className="truncate font-medium">{slipData.garmentType}</div>
+                        {effectiveSettings.show_urdu_labels && slipData.garmentTypeUr && (
+                          <div className="font-urdu-sans text-[10px] text-neutral-600 truncate" dir="rtl">
+                            {slipData.garmentTypeUr}
+                          </div>
+                        )}
+                      </div>
                       <span className="w-12 text-center">{slipData.quantity || 1}</span>
                       <span className="w-16 text-right">{formatCurrency(slipData.stitchingRate || slipData.totalAmount)}</span>
                       <span className="w-20 text-right font-medium">{formatCurrency((slipData.stitchingRate || slipData.totalAmount) * (slipData.quantity || 1))}.00</span>
@@ -384,19 +429,27 @@ export function ThermalSlipModal({
                 </div>
 
                 {/* Barcode & Tracking */}
-                <div className="border-t border-dashed border-black pt-2 text-center">
-                  <div className="text-[10px] text-neutral-700 pb-1">Track Live: silaye.com/track/{slipData.orderNumber.replace(/[^a-zA-Z0-9]/g, '')}</div>
-                  <BarcodeRenderer
-                    value={slipData.orderNumber}
-                    format="svg"
-                    height={46}
-                    moduleWidth={1.8}
-                    displayValue={true}
-                    barColor="#000000"
-                    backgroundColor="transparent"
-                  />
-                  <div className="text-center text-[10px] pt-1">================================================</div>
-                </div>
+                {(effectiveSettings.show_qr_tracking !== false || effectiveSettings.show_barcode !== false) && (
+                  <div className="border-t border-dashed border-black pt-2 text-center">
+                    {effectiveSettings.show_qr_tracking !== false && (
+                      <div className="text-[10px] text-neutral-700 pb-1">
+                        Track Live: silaye.com/track/{slipData.orderNumber.replace(/[^a-zA-Z0-9]/g, '')}
+                      </div>
+                    )}
+                    {effectiveSettings.show_barcode !== false && (
+                      <BarcodeRenderer
+                        value={slipData.orderNumber}
+                        format="svg"
+                        height={46}
+                        moduleWidth={1.8}
+                        displayValue={true}
+                        barColor="#000000"
+                        backgroundColor="transparent"
+                      />
+                    )}
+                    <div className="text-center text-[10px] pt-1">================================================</div>
+                  </div>
+                )}
               </div>
             )}
           </div>

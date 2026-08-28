@@ -44,7 +44,7 @@ import {
   mockStaff,
   mockShop,
 } from '@/lib/mock-data';
-import { staffDb, ratesDb } from '@/lib/db';
+import { staffDb, ratesDb, printerDb, DEFAULT_PRINTER_SETTINGS } from '@/lib/db';
 import { calculateOrderFinancials, formatPakistaniPhone } from '@/lib/validations/tailor';
 import type {
   Customer,
@@ -52,6 +52,7 @@ import type {
   MeasurementProfile,
   ShopMember,
   GarmentRate,
+  PrinterSettings,
   ShalwarKameezMeasurements,
   StylePreferences,
   GarmentType,
@@ -283,20 +284,26 @@ export default function NewOrderPage() {
   // ── Modals & Draft status ─────────────────────────────────────────────
   const [isReceiptModalOpen, setIsReceiptModalOpen] = React.useState<boolean>(false);
   const [isThermalModalOpen, setIsThermalModalOpen] = React.useState<boolean>(false);
+  const [printerSettings, setPrinterSettings] = React.useState<PrinterSettings>({
+    id: 'ps-mock-default',
+    shop_id: mockShop.id,
+    ...DEFAULT_PRINTER_SETTINGS,
+  });
   const [newBookedOrder, setNewBookedOrder] = React.useState<GarmentOrder | null>(null);
   const [newBookedCustomer, setNewBookedCustomer] = React.useState<Customer | null>(null);
   const [draftSavedToast, setDraftSavedToast] = React.useState<boolean>(false);
 
   // --------------------------------------------------------------------------
-  // Load workshop staff & catalog rates dynamically
+  // Load workshop staff, catalog rates & printer settings dynamically
   // --------------------------------------------------------------------------
   React.useEffect(() => {
     let isMounted = true;
     async function loadWorkshopStaffAndRates() {
       try {
-        const [members, rates] = await Promise.all([
+        const [members, rates, pSettings] = await Promise.all([
           staffDb.getByShopId(mockShop.id),
           ratesDb.getByShopId(mockShop.id),
+          printerDb.getByShopId(mockShop.id),
         ]);
 
         if (isMounted) {
@@ -311,9 +318,12 @@ export default function NewOrderPage() {
               setDeliveryDate((prev) => prev || getFutureDateString(defaultRate.standard_delivery_days));
             }
           }
+          if (pSettings) {
+            setPrinterSettings(pSettings);
+          }
         }
       } catch (err) {
-        console.warn('Failed to load workshop staff or rates for order booking:', err);
+        console.warn('Failed to load workshop staff, rates, or printer settings for order booking:', err);
       }
     }
     loadWorkshopStaffAndRates();
@@ -565,7 +575,11 @@ export default function NewOrderPage() {
 
     setNewBookedOrder(newOrder);
     setNewBookedCustomer(effectiveCust);
-    setIsReceiptModalOpen(true);
+    if (printerSettings.auto_print_on_booking) {
+      setIsThermalModalOpen(true);
+    } else {
+      setIsReceiptModalOpen(true);
+    }
 
     try {
       confetti({
@@ -1680,7 +1694,8 @@ export default function NewOrderPage() {
           order={newBookedOrder}
           customer={newBookedCustomer}
           shop={mockShop}
-          initialFormat="58mm"
+          settings={printerSettings}
+          initialFormat={printerSettings.paper_width}
         />
       </div>
     </AppShell>

@@ -9,6 +9,7 @@ import type {
   Customer,
   Shop,
   ShalwarKameezMeasurements,
+  PrinterSettings,
 } from '@/types/tailor';
 
 // ============================================================================
@@ -222,7 +223,10 @@ export function formatTimeDisplay(dateStr?: string | null): string {
 /**
  * Generates the monospaced plain text for a 58mm (32-character) Fabric Staple Tag.
  */
-export function generateFabricTagSlipText(data: EscPosSlipData): string {
+export function generateFabricTagSlipText(
+  data: EscPosSlipData,
+  settings?: Partial<PrinterSettings>
+): string {
   const W = 32;
   const dividerDouble = '='.repeat(W);
   const dividerSingle = '-'.repeat(W);
@@ -300,9 +304,11 @@ export function generateFabricTagSlipText(data: EscPosSlipData): string {
   lines.push(dividerDouble);
 
   // Barcode & Token
-  lines.push(centerText('||||||||||||||||||||', W));
-  lines.push(centerText(`*${data.orderNumber}*`, W));
-  lines.push(dividerDouble);
+  if (settings?.show_barcode !== false) {
+    lines.push(centerText('||||||||||||||||||||', W));
+    lines.push(centerText(`*${data.orderNumber}*`, W));
+    lines.push(dividerDouble);
+  }
 
   return lines.join('\n');
 }
@@ -310,7 +316,10 @@ export function generateFabricTagSlipText(data: EscPosSlipData): string {
 /**
  * Generates the monospaced plain text for an 80mm (48-character) Customer Booking Invoice.
  */
-export function generateCustomerInvoiceSlipText(data: EscPosSlipData): string {
+export function generateCustomerInvoiceSlipText(
+  data: EscPosSlipData,
+  settings?: Partial<PrinterSettings>
+): string {
   const W = 48;
   const dividerDouble = '='.repeat(W);
   const dividerSingle = '-'.repeat(W);
@@ -377,11 +386,17 @@ export function generateCustomerInvoiceSlipText(data: EscPosSlipData): string {
   lines.push(dividerDouble);
 
   // Online Tracking & Barcode
-  const trackingUrl = data.publicTrackingUrl || `https://silaye.com/track/${data.orderNumber.replace(/[^a-zA-Z0-9]/g, '')}`;
-  lines.push(centerText(`Track Live: ${trackingUrl}`, W));
-  lines.push(centerText('||||||||||||||||||||||||||||||||', W));
-  lines.push(centerText(`*${data.orderNumber}*`, W));
-  lines.push(dividerDouble);
+  if (settings?.show_qr_tracking !== false) {
+    const trackingUrl = data.publicTrackingUrl || `https://silaye.com/track/${data.orderNumber.replace(/[^a-zA-Z0-9]/g, '')}`;
+    lines.push(centerText(`Track Live: ${trackingUrl}`, W));
+  }
+  if (settings?.show_barcode !== false) {
+    lines.push(centerText('||||||||||||||||||||||||||||||||', W));
+    lines.push(centerText(`*${data.orderNumber}*`, W));
+  }
+  if (settings?.show_qr_tracking !== false || settings?.show_barcode !== false) {
+    lines.push(dividerDouble);
+  }
 
   return lines.join('\n');
 }
@@ -515,11 +530,15 @@ export class EscPosBuilder {
 /**
  * Builds the complete raw ESC/POS binary stream for a 58mm Fabric Staple Tag.
  */
-export function buildFabricTagBinary(data: EscPosSlipData): Uint8Array {
+export function buildFabricTagBinary(
+  data: EscPosSlipData,
+  settings?: Partial<PrinterSettings>
+): Uint8Array {
   const builder = new EscPosBuilder('58mm');
   const W = 32;
   const m = data.measurements || {};
   const qty = data.quantity || 1;
+  const feedCount = settings?.feed_lines !== undefined ? settings.feed_lines : 3;
 
   // 1. Header
   builder.alignCenter().setBold(true);
@@ -597,11 +616,15 @@ export function buildFabricTagBinary(data: EscPosSlipData): Uint8Array {
   builder.addDivider('=');
 
   // 7. Barcode (Code 128)
-  builder.addCode128Barcode(data.orderNumber, 48, 2);
-  builder.addDivider('=');
+  if (settings?.show_barcode !== false) {
+    builder.addCode128Barcode(data.orderNumber, 48, 2);
+    builder.addDivider('=');
+  }
 
   // 8. Feed & Partial Cut
-  builder.feedLines(4);
+  if (feedCount > 0) {
+    builder.feedLines(feedCount);
+  }
   builder.cut(true);
 
   return builder.toUint8Array();
@@ -610,12 +633,16 @@ export function buildFabricTagBinary(data: EscPosSlipData): Uint8Array {
 /**
  * Builds the complete raw ESC/POS binary stream for an 80mm Customer Booking Invoice.
  */
-export function buildCustomerInvoiceBinary(data: EscPosSlipData): Uint8Array {
+export function buildCustomerInvoiceBinary(
+  data: EscPosSlipData,
+  settings?: Partial<PrinterSettings>
+): Uint8Array {
   const builder = new EscPosBuilder('80mm');
   const W = 48;
   const qty = data.quantity || 1;
   const widths: [number, number, number, number] = [24, 4, 8, 9];
   const status = data.paymentStatus || (data.balanceDue <= 0 ? 'PAID' : data.advancePaid > 0 ? 'PARTIAL' : 'BOOKED');
+  const feedCount = settings?.feed_lines !== undefined ? settings.feed_lines : 3;
 
   // 1. Header Branding
   builder.alignCenter().setBold(true);
@@ -673,14 +700,23 @@ export function buildCustomerInvoiceBinary(data: EscPosSlipData): Uint8Array {
   builder.addLine('  responsibility.');
   builder.addDivider('=');
 
-  const trackingUrl = data.publicTrackingUrl || `https://silaye.com/track/${data.orderNumber.replace(/[^a-zA-Z0-9]/g, '')}`;
-  builder.alignCenter();
-  builder.addLine(`Track Live: ${trackingUrl}`);
-  builder.addCode128Barcode(data.orderNumber, 48, 2);
-  builder.addDivider('=');
+  // 6. Online Tracking & Barcode
+  if (settings?.show_qr_tracking !== false) {
+    const trackingUrl = data.publicTrackingUrl || `https://silaye.com/track/${data.orderNumber.replace(/[^a-zA-Z0-9]/g, '')}`;
+    builder.alignCenter();
+    builder.addLine(`Track Live: ${trackingUrl}`);
+  }
+  if (settings?.show_barcode !== false) {
+    builder.addCode128Barcode(data.orderNumber, 48, 2);
+  }
+  if (settings?.show_qr_tracking !== false || settings?.show_barcode !== false) {
+    builder.addDivider('=');
+  }
 
-  // 6. Feed & Cut
-  builder.feedLines(4);
+  // 7. Feed & Cut
+  if (feedCount > 0) {
+    builder.feedLines(feedCount);
+  }
   builder.cut(true);
 
   return builder.toUint8Array();

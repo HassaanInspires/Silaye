@@ -33,6 +33,7 @@ import {
   shopsDb,
   staffDb,
   ratesDb,
+  printerDb,
   mapCustomerRow,
   mapMeasurementProfileRow,
   mapGarmentOrderRow,
@@ -40,6 +41,7 @@ import {
   mapShopRow,
   mapShopMemberRow,
   mapGarmentRateRow,
+  mapPrinterSettingsRow,
   type CustomerRow,
   type MeasurementProfileRow,
   type GarmentOrderRow,
@@ -47,6 +49,7 @@ import {
   type ShopRow,
   type ShopMemberRow,
   type GarmentRateRow,
+  type PrinterSettingsRow,
 } from '../lib/db';
 import {
   isSupabaseConfigured,
@@ -60,6 +63,8 @@ import type {
   ShopMemberRole,
   GarmentRate,
   GarmentType,
+  PrinterSettings,
+  PrinterPaperWidth,
 } from '../types/tailor';
 
 let passedTests = 0;
@@ -170,6 +175,15 @@ async function runVerification() {
     'Garment rates catalog migration exists at supabase/migrations/20260825000008_garment_rates.sql'
   );
 
+  const printerSettingsMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000009_printer_settings.sql'
+  );
+  assert(
+    fs.existsSync(printerSettingsMigrationPath),
+    'Thermal printer settings migration exists at supabase/migrations/20260825000009_printer_settings.sql'
+  );
+
   const migrationSql = fs.readFileSync(schemaMigrationPath, 'utf8');
   const rpcSql = fs.readFileSync(rpcMigrationPath, 'utf8');
   const securitySql = fs.readFileSync(securityPatchesMigrationPath, 'utf8');
@@ -179,6 +193,7 @@ async function runVerification() {
   const shopsTableSql = fs.readFileSync(shopsTableMigrationPath, 'utf8');
   const staffManagementSql = fs.readFileSync(staffManagementMigrationPath, 'utf8');
   const garmentRatesSql = fs.readFileSync(garmentRatesMigrationPath, 'utf8');
+  const printerSettingsSql = fs.readFileSync(printerSettingsMigrationPath, 'utf8');
 
   // Verify Native UUID generator
   assert(
@@ -379,6 +394,45 @@ async function runVerification() {
       garmentRatesSql.includes('CREATE POLICY "Shop owners can update garment rates"') &&
       garmentRatesSql.includes('public.is_shop_owner(shop_id)'),
     'Migration 20260825000008 enforces RLS on garment_rates with member SELECT and owner management via is_shop_owner'
+  );
+
+  // Verify Phase C Sub-Phase 4 Thermal Printer & Hardware Preferences Migration
+  assert(
+    printerSettingsSql.includes('CREATE TABLE IF NOT EXISTS public.printer_settings') &&
+      printerSettingsSql.includes('paper_width VARCHAR(10) NOT NULL DEFAULT \'80mm\'') &&
+      printerSettingsSql.includes('auto_print_on_booking BOOLEAN NOT NULL DEFAULT FALSE') &&
+      printerSettingsSql.includes('show_barcode BOOLEAN NOT NULL DEFAULT TRUE') &&
+      printerSettingsSql.includes('show_qr_tracking BOOLEAN NOT NULL DEFAULT TRUE') &&
+      printerSettingsSql.includes('show_urdu_labels BOOLEAN NOT NULL DEFAULT TRUE') &&
+      printerSettingsSql.includes('feed_lines INT NOT NULL DEFAULT 3') &&
+      printerSettingsSql.includes('CONSTRAINT unique_shop_printer_settings UNIQUE (shop_id)') &&
+      printerSettingsSql.includes('CONSTRAINT check_valid_paper_width CHECK (paper_width IN (\'58mm\', \'80mm\'))') &&
+      printerSettingsSql.includes('CONSTRAINT check_valid_feed_lines CHECK (feed_lines >= 0 AND feed_lines <= 10)'),
+    'Migration 20260825000009 creates printer_settings table with paper_width, auto_print, barcode, and feed_lines CHECK constraints'
+  );
+
+  assert(
+    printerSettingsSql.includes('CREATE OR REPLACE FUNCTION public.seed_default_printer_settings') &&
+      printerSettingsSql.includes('SECURITY DEFINER SET search_path = public') &&
+      printerSettingsSql.includes('GRANT EXECUTE ON FUNCTION public.seed_default_printer_settings(UUID) TO authenticated'),
+    'Migration 20260825000009 creates seed_default_printer_settings function with SECURITY DEFINER and authenticated execution permissions'
+  );
+
+  assert(
+    printerSettingsSql.includes('CREATE OR REPLACE FUNCTION public.handle_new_user_shop_member()') &&
+      printerSettingsSql.includes('PERFORM public.seed_default_garment_rates(v_shop_id);') &&
+      printerSettingsSql.includes('PERFORM public.seed_default_printer_settings(v_shop_id);'),
+    'Migration 20260825000009 implements sequential 4-step registration trigger (shops -> shop_members -> garment_rates -> printer_settings)'
+  );
+
+  assert(
+    printerSettingsSql.includes('ALTER TABLE public.printer_settings ENABLE ROW LEVEL SECURITY') &&
+      printerSettingsSql.includes('CREATE POLICY "Shop members can view printer settings"') &&
+      printerSettingsSql.includes('CREATE POLICY "Shop owners can insert printer settings"') &&
+      printerSettingsSql.includes('CREATE POLICY "Shop owners can update printer settings"') &&
+      printerSettingsSql.includes('CREATE POLICY "Shop owners can delete printer settings"') &&
+      printerSettingsSql.includes('public.is_shop_owner(shop_id)'),
+    'Migration 20260825000009 enforces RLS on printer_settings with member SELECT and owner CRUD policies'
   );
 
   // ----------------------------------------------------
@@ -638,6 +692,31 @@ async function runVerification() {
     'mapGarmentRateRow correctly converts database row numeric rates and days into typed GarmentRate entity'
   );
 
+  // Test Printer Settings Row Mapper
+  const mockDbPrinterRow: PrinterSettingsRow = {
+    id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    shop_id: '00000000-0000-4000-8000-000000000001',
+    paper_width: '58mm',
+    auto_print_on_booking: true,
+    show_barcode: true,
+    show_qr_tracking: false,
+    show_urdu_labels: true,
+    feed_lines: 4,
+    created_at: '2026-08-25T10:00:00Z',
+    updated_at: '2026-08-25T10:00:00Z',
+  };
+  const mappedPrinter = mapPrinterSettingsRow(mockDbPrinterRow);
+  assert(
+    mappedPrinter.id === mockDbPrinterRow.id &&
+      mappedPrinter.paper_width === '58mm' &&
+      mappedPrinter.auto_print_on_booking === true &&
+      mappedPrinter.show_barcode === true &&
+      mappedPrinter.show_qr_tracking === false &&
+      mappedPrinter.show_urdu_labels === true &&
+      mappedPrinter.feed_lines === 4,
+    'mapPrinterSettingsRow correctly converts database row booleans and feed lines into typed PrinterSettings entity'
+  );
+
   // ----------------------------------------------------
   // SECTION 4: Repository Fallback & Static Export Safety
   // ----------------------------------------------------
@@ -658,8 +737,11 @@ async function runVerification() {
       typeof ratesDb.getByShopId === 'function' &&
       typeof ratesDb.updateRate === 'function' &&
       typeof ratesDb.batchUpdateRates === 'function' &&
-      typeof ratesDb.resetDefaults === 'function',
-    'All Supabase repositories including shopsDb, staffDb, and ratesDb export complete typed CRUD interface'
+      typeof ratesDb.resetDefaults === 'function' &&
+      typeof printerDb.getByShopId === 'function' &&
+      typeof printerDb.update === 'function' &&
+      typeof printerDb.resetDefaults === 'function',
+    'All Supabase repositories including shopsDb, staffDb, ratesDb, and printerDb export complete typed CRUD interface'
   );
 
   // Test staffDb fallback
@@ -688,11 +770,45 @@ async function runVerification() {
     'ratesDb.resetDefaults safely returns 6 market default rate entities in offline fallback'
   );
 
+  // Test printerDb fallback
+  const fallbackPrinter = await printerDb.getByShopId('mock-shop-id');
+  assert(
+    fallbackPrinter !== null &&
+      typeof fallbackPrinter === 'object' &&
+      fallbackPrinter.paper_width === '80mm' &&
+      fallbackPrinter.feed_lines === 3 &&
+      fallbackPrinter.show_barcode === true,
+    'printerDb.getByShopId safely returns non-null default 80mm PrinterSettings object with feed_lines in offline mode'
+  );
+
+  const fallbackUpdatePrinter = await printerDb.update('mock-shop-id', {
+    paper_width: '58mm',
+    auto_print_on_booking: true,
+    feed_lines: 5,
+  });
+  assert(
+    fallbackUpdatePrinter.paper_width === '58mm' &&
+      fallbackUpdatePrinter.auto_print_on_booking === true &&
+      fallbackUpdatePrinter.feed_lines === 5,
+    'printerDb.update safely applies partial hardware preferences and returns updated PrinterSettings'
+  );
+
+  const fallbackResetPrinter = await printerDb.resetDefaults('mock-shop-id');
+  assert(
+    fallbackResetPrinter.paper_width === '80mm' &&
+      fallbackResetPrinter.auto_print_on_booking === false &&
+      fallbackResetPrinter.feed_lines === 3,
+    'printerDb.resetDefaults safely restores standard factory defaults in offline mode'
+  );
+
   // Test live network dispatch if environment is active and reachable
   if (isConfigured) {
     try {
       console.log('  Testing live Supabase repository connectivity...');
-      const customers = await customersDb.getAll();
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Network timeout (2.5s limit reached)')), 2500)
+      );
+      const customers = await Promise.race([customersDb.getAll(), timeoutPromise]);
       assert(Array.isArray(customers), 'Live Supabase customersDb.getAll() query executed successfully');
     } catch (networkErr: unknown) {
       console.warn(

@@ -30,17 +30,34 @@ import {
   TrendingUp,
   RotateCcw,
   Check,
+  Sliders,
+  QrCode,
+  Minus,
+  Plus,
+  Download,
+  Eye,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { shopsDb, staffDb, ratesDb } from '@/lib/db';
-import { mockShop } from '@/lib/mock-data';
-import type { Shop, ShopMember, ShopMemberRole, GarmentRate, GarmentType } from '@/types/tailor';
+import { shopsDb, staffDb, ratesDb, printerDb, DEFAULT_PRINTER_SETTINGS } from '@/lib/db';
+import { mockShop, mockOrders, mockCustomers } from '@/lib/mock-data';
+import type { Shop, ShopMember, ShopMemberRole, GarmentRate, GarmentType, PrinterSettings, PrinterPaperWidth } from '@/types/tailor';
 import { isValidPakistaniPhone } from '@/lib/whatsapp';
 import { getCurrentUser, isSupabaseConfigured } from '@/lib/supabase/client';
+import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
+import { BarcodeRenderer } from '@/components/tailor/barcode-renderer';
+import {
+  formatCurrency,
+  formatInch,
+  formatDateDisplay,
+  formatTimeDisplay,
+  downloadEscPosBinaryFile,
+  buildFabricTagBinary,
+  buildCustomerInvoiceBinary,
+} from '@/lib/escpos';
 
 const ROLE_METADATA: Record<
   ShopMemberRole,
@@ -197,6 +214,17 @@ export default function SettingsPage() {
   const [savingRates, setSavingRates] = React.useState<boolean>(false);
   const [resettingRates, setResettingRates] = React.useState<boolean>(false);
 
+  // Thermal Printer & Hardware State
+  const [printerSettings, setPrinterSettings] = React.useState<PrinterSettings>({
+    id: 'ps-mock-default',
+    shop_id: mockShop.id,
+    ...DEFAULT_PRINTER_SETTINGS,
+  });
+  const [printerLoading, setPrinterLoading] = React.useState<boolean>(false);
+  const [savingPrinter, setSavingPrinter] = React.useState<boolean>(false);
+  const [resettingPrinter, setResettingPrinter] = React.useState<boolean>(false);
+  const [isTestModalOpen, setIsTestModalOpen] = React.useState<boolean>(false);
+
   // Auto-dismiss notification after 4 seconds
   React.useEffect(() => {
     if (notification) {
@@ -274,11 +302,25 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Load thermal printer hardware preferences
+  const loadPrinterSettings = React.useCallback(async (shopId: string) => {
+    setPrinterLoading(true);
+    try {
+      const settings = await printerDb.getByShopId(shopId);
+      setPrinterSettings(settings);
+    } catch (err) {
+      console.warn('Failed to load printer settings:', err);
+    } finally {
+      setPrinterLoading(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     const shopId = shop.id || mockShop.id;
     loadStaff(shopId);
     loadRates(shopId);
-  }, [shop.id, loadStaff, loadRates]);
+    loadPrinterSettings(shopId);
+  }, [shop.id, loadStaff, loadRates, loadPrinterSettings]);
 
   const handleRateFieldChange = (
     garmentType: GarmentType,
@@ -322,13 +364,73 @@ export default function SettingsPage() {
         type: 'success',
       });
     } catch (err) {
-      console.error('Failed to reset default rates:', err);
+      console.error('Failed to reset garment rates:', err);
       setNotification({
-        message: err instanceof Error ? err.message : 'Failed to restore default market rates.',
+        message: err instanceof Error ? err.message : 'Failed to reset garment rates.',
         type: 'error',
       });
     } finally {
       setResettingRates(false);
+    }
+  };
+
+  const handlePaperWidthChange = (width: PrinterPaperWidth) => {
+    setPrinterSettings((prev) => ({ ...prev, paper_width: width }));
+  };
+
+  const handleTogglePrinterSetting = (
+    key: 'auto_print_on_booking' | 'show_barcode' | 'show_qr_tracking' | 'show_urdu_labels'
+  ) => {
+    setPrinterSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleFeedLinesChange = (delta: number) => {
+    setPrinterSettings((prev) => {
+      const current = typeof prev.feed_lines === 'number' ? prev.feed_lines : 3;
+      const next = Math.max(0, Math.min(10, current + delta));
+      return { ...prev, feed_lines: next };
+    });
+  };
+
+  const handleSavePrinterSettings = async () => {
+    setSavingPrinter(true);
+    try {
+      const shopId = shop.id || mockShop.id;
+      const updated = await printerDb.update(shopId, printerSettings);
+      setPrinterSettings(updated);
+      setNotification({
+        message: 'Thermal printer hardware preferences saved successfully!',
+        type: 'success',
+      });
+    } catch (err) {
+      console.error('Failed to save printer settings:', err);
+      setNotification({
+        message: err instanceof Error ? err.message : 'Failed to save printer settings.',
+        type: 'error',
+      });
+    } finally {
+      setSavingPrinter(false);
+    }
+  };
+
+  const handleResetPrinterSettings = async () => {
+    setResettingPrinter(true);
+    try {
+      const shopId = shop.id || mockShop.id;
+      const defaults = await printerDb.resetDefaults(shopId);
+      setPrinterSettings(defaults);
+      setNotification({
+        message: 'Restored standard 80mm thermal hardware defaults!',
+        type: 'success',
+      });
+    } catch (err) {
+      console.error('Failed to reset printer settings:', err);
+      setNotification({
+        message: err instanceof Error ? err.message : 'Failed to reset printer settings.',
+        type: 'error',
+      });
+    } finally {
+      setResettingPrinter(false);
     }
   };
 
@@ -1608,31 +1710,685 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Tab 4: Thermal Printer Placeholder (Phase C.4) */}
+        {/* Tab 4: Thermal Hardware & Printer Settings (Phase C.4) */}
         {activeTab === 'printer' && (
-          <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl p-8 text-center space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-gold/30 bg-gold/10 text-gold mx-auto">
-              <Printer className="h-6 w-6" />
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Header & Quick Action Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_20px_rgba(212,175,55,0.15)]">
+                  <Printer className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-editorial text-xl font-bold text-white tracking-tight">
+                      Thermal Hardware & Printer Settings
+                    </h2>
+                    <Badge className="border-gold/40 bg-gold/15 text-gold text-[10px] px-2 py-0.5">
+                      {printerSettings.paper_width} Active
+                    </Badge>
+                  </div>
+                  <p className="font-urdu-serif text-xs text-gold/80 mt-0.5" dir="rtl">
+                    تھرمل پرنٹر، سلائی ٹیگ، بارکوڈ اور ہارڈویئر ترتیبات
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetPrinterSettings}
+                  disabled={resettingPrinter || savingPrinter}
+                  className="border-white/10 hover:bg-white/5 text-gray-300 text-xs gap-1.5"
+                  title="Reset to 80mm default market hardware settings"
+                >
+                  <RotateCcw className={`h-3.5 w-3.5 ${resettingPrinter ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">Reset Defaults</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsTestModalOpen(true)}
+                  className="border-gold/30 bg-gold/10 hover:bg-gold/20 text-gold text-xs gap-1.5"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  <span>Test Slip</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={handleSavePrinterSettings}
+                  isLoading={savingPrinter}
+                  disabled={savingPrinter}
+                  className="bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold shadow-[0_0_20px_rgba(212,175,55,0.25)] text-xs gap-2"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Save Settings</span>
+                </Button>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-medium text-white">Thermal Printer & Hardware Preferences</h2>
-              <p className="font-urdu-serif text-sm text-gold/80 mt-0.5" dir="rtl">
-                تھرمل پرنٹر اور ہارڈویئر کنکشن (فیز C.4)
-              </p>
+
+            {/* Main 2-Column Responsive Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              {/* ── Left Column: Hardware Controls & Form (7 cols) ────── */}
+              <div className="lg:col-span-7 space-y-6">
+                
+                {/* 1. Paper Width Selector Card */}
+                <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                        <Sliders className="h-4 w-4 text-gold" />
+                        <span>Default Roll Width</span>
+                      </h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        Choose the default format for order slips and workshop tickets
+                      </p>
+                    </div>
+                    <span className="font-urdu-sans text-xs text-gold/80" dir="rtl">
+                      پرنٹر کاغذ کی چوڑائی
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* 58mm Fabric Tag Option */}
+                    <button
+                      type="button"
+                      onClick={() => handlePaperWidthChange('58mm')}
+                      className={`flex flex-col p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                        printerSettings.paper_width === '58mm'
+                          ? 'border-gold/60 bg-gold/10 text-white shadow-[0_0_20px_rgba(212,175,55,0.15)] ring-1 ring-gold/40'
+                          : 'border-white/5 bg-black/20 text-gray-400 hover:border-white/15 hover:text-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div
+                          className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
+                            printerSettings.paper_width === '58mm'
+                              ? 'border-gold/40 bg-gold/20 text-gold'
+                              : 'border-white/10 bg-white/5 text-gray-400'
+                          }`}
+                        >
+                          <Tag className="h-4 w-4" />
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={
+                            printerSettings.paper_width === '58mm'
+                              ? 'border-gold/50 text-gold bg-gold/10 text-[10px]'
+                              : 'border-white/10 text-gray-400 text-[10px]'
+                          }
+                        >
+                          58 mm • 32 Col
+                        </Badge>
+                      </div>
+                      <div className="text-xs font-bold text-white">58mm Fabric Staple Tag</div>
+                      <div className="font-urdu-sans text-[11px] text-gold/80 mt-0.5" dir="rtl">
+                        چھوٹا ٹیگ - ۳۲ کالم برائے کٹنگ کاریگر
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
+                        Compact 2-inch mini roll tag with 3×3 measurement matrix for cloth pinning and workshop workflow.
+                      </p>
+                    </button>
+
+                    {/* 80mm Customer Invoice Option */}
+                    <button
+                      type="button"
+                      onClick={() => handlePaperWidthChange('80mm')}
+                      className={`flex flex-col p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                        printerSettings.paper_width === '80mm'
+                          ? 'border-gold/60 bg-gold/10 text-white shadow-[0_0_20px_rgba(212,175,55,0.15)] ring-1 ring-gold/40'
+                          : 'border-white/5 bg-black/20 text-gray-400 hover:border-white/15 hover:text-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div
+                          className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
+                            printerSettings.paper_width === '80mm'
+                              ? 'border-gold/40 bg-gold/20 text-gold'
+                              : 'border-white/10 bg-white/5 text-gray-400'
+                          }`}
+                        >
+                          <Receipt className="h-4 w-4" />
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={
+                            printerSettings.paper_width === '80mm'
+                              ? 'border-gold/50 text-gold bg-gold/10 text-[10px]'
+                              : 'border-white/10 text-gray-400 text-[10px]'
+                          }
+                        >
+                          80 mm • 48 Col
+                        </Badge>
+                      </div>
+                      <div className="text-xs font-bold text-white">80mm Customer Invoice</div>
+                      <div className="font-urdu-sans text-[11px] text-gold/80 mt-0.5" dir="rtl">
+                        بڑا بل - ۴۸ کالم کسٹمر رسید
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
+                        Full-width 3-inch commercial roll with itemized financial breakdown, payment ledger, and customer terms.
+                      </p>
+                    </button>
+                  </div>
+                </Card>
+
+                {/* 2. Hardware Feature Toggles Card */}
+                <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-gold" />
+                        <span>Hardware & Print Behavior</span>
+                      </h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        Automations and receipt visual elements
+                      </p>
+                    </div>
+                    <span className="font-urdu-sans text-xs text-gold/80" dir="rtl">
+                      پرنٹنگ اور بارکوڈ آپشنز
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Toggle 1: Auto Print on Booking */}
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-black/20 hover:border-white/10 transition-colors">
+                      <div className="space-y-0.5 pr-4">
+                        <div className="text-xs font-semibold text-white flex items-center gap-2">
+                          <span>Auto-Print on Order Booking</span>
+                          {printerSettings.auto_print_on_booking && (
+                            <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[9px] px-1.5 py-0">
+                              Enabled
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-400 leading-tight">
+                          Automatically launch the thermal printing dialog immediately when a new booking is saved.
+                        </p>
+                        <span className="font-urdu-sans text-[10px] text-gold/70 block pt-0.5" dir="rtl">
+                          نئی بکنگ محفوظ ہوتے ہی خودکار پرنٹ ڈائیلاگ کھولیں
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePrinterSetting('auto_print_on_booking')}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          printerSettings.auto_print_on_booking ? 'bg-gold' : 'bg-white/15'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#0B0C0E] shadow ring-0 transition duration-200 ease-in-out ${
+                            printerSettings.auto_print_on_booking ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Toggle 2: Show Barcode */}
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-black/20 hover:border-white/10 transition-colors">
+                      <div className="space-y-0.5 pr-4">
+                        <div className="text-xs font-semibold text-white flex items-center gap-2">
+                          <span>Print Code 128 Barcode</span>
+                          {printerSettings.show_barcode && (
+                            <Badge className="bg-gold/15 text-gold border-gold/30 text-[9px] px-1.5 py-0">
+                              Active
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-400 leading-tight">
+                          Embed standard machine-scannable Code 128 barcode representing the order token on slips.
+                        </p>
+                        <span className="font-urdu-sans text-[10px] text-gold/70 block pt-0.5" dir="rtl">
+                          کپڑے کے ٹیگ اور رسید پر سکین کے لیے بارکوڈ پرنٹ کریں
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePrinterSetting('show_barcode')}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          printerSettings.show_barcode ? 'bg-gold' : 'bg-white/15'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#0B0C0E] shadow ring-0 transition duration-200 ease-in-out ${
+                            printerSettings.show_barcode ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Toggle 3: Show QR / Tracking */}
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-black/20 hover:border-white/10 transition-colors">
+                      <div className="space-y-0.5 pr-4">
+                        <div className="text-xs font-semibold text-white flex items-center gap-2">
+                          <span>Print Live Tracking URL</span>
+                          {printerSettings.show_qr_tracking && (
+                            <Badge className="bg-cyan-500/15 text-cyan-400 border-cyan-500/30 text-[9px] px-1.5 py-0">
+                              Active
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-400 leading-tight">
+                          Print direct online customer portal tracking URL on 80mm booking slips.
+                        </p>
+                        <span className="font-urdu-sans text-[10px] text-gold/70 block pt-0.5" dir="rtl">
+                          کسٹمر کے لیے آن لائن لائیو آرڈر ٹریکنگ لنک کی شمولیت
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePrinterSetting('show_qr_tracking')}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          printerSettings.show_qr_tracking ? 'bg-gold' : 'bg-white/15'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#0B0C0E] shadow ring-0 transition duration-200 ease-in-out ${
+                            printerSettings.show_qr_tracking ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Toggle 4: Urdu Dual Script Labels */}
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-black/20 hover:border-white/10 transition-colors">
+                      <div className="space-y-0.5 pr-4">
+                        <div className="text-xs font-semibold text-white flex items-center gap-2">
+                          <span>Bilingual Urdu Labels & Footers</span>
+                          {printerSettings.show_urdu_labels && (
+                            <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/30 text-[9px] px-1.5 py-0">
+                              Active
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-400 leading-tight">
+                          Display bilingual Urdu garment categories, receipt notices, and workshop notes.
+                        </p>
+                        <span className="font-urdu-sans text-[10px] text-gold/70 block pt-0.5" dir="rtl">
+                          رسید پر اردو عنوانات اور شکریہ کا پیغام دکھائیں
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePrinterSetting('show_urdu_labels')}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          printerSettings.show_urdu_labels ? 'bg-gold' : 'bg-white/15'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#0B0C0E] shadow ring-0 transition duration-200 ease-in-out ${
+                            printerSettings.show_urdu_labels ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* 3. Feed Lines & Cutter Margin Stepper Card */}
+                <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                        <Scissors className="h-4 w-4 text-gold" />
+                        <span>Auto-Cutter Paper Feed Margin</span>
+                      </h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        Blank line feeds before paper cut (prevents cutting through barcode/text)
+                      </p>
+                    </div>
+                    <span className="font-urdu-sans text-xs text-gold/80" dir="rtl">
+                      کاٹنے سے پہلے خالی لائنیں (۰ تا ۱۰)
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl border border-white/5 bg-black/20">
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-white flex items-center gap-2">
+                        <span>Current Line Feeds:</span>
+                        <span className="font-mono text-gold font-bold text-sm">
+                          {printerSettings.feed_lines} lines
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] text-gray-400">
+                        {Array.from({ length: 10 }).map((_, idx) => (
+                          <span
+                            key={idx}
+                            className={`h-2 w-2 rounded-full transition-all ${
+                              idx < (printerSettings.feed_lines ?? 3)
+                                ? 'bg-gold shadow-[0_0_6px_rgba(212,175,55,0.4)]'
+                                : 'bg-white/10'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Stepper Buttons */}
+                    <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl p-1">
+                      <button
+                        type="button"
+                        onClick={() => handleFeedLinesChange(-1)}
+                        disabled={(printerSettings.feed_lines ?? 3) <= 0}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <div className="w-10 text-center font-mono text-sm font-bold text-white">
+                        {printerSettings.feed_lines}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleFeedLinesChange(1)}
+                        disabled={(printerSettings.feed_lines ?? 3) >= 10}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* ── Right Column: Live Tactile Paper Preview (5 cols) ───── */}
+              <div className="lg:col-span-5 space-y-4">
+                <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl p-5 sticky top-24 space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-gold" />
+                      <h3 className="text-sm font-semibold text-white">Live Thermal Preview</h3>
+                    </div>
+                    <Badge variant="outline" className="border-gold/40 text-gold bg-gold/10 text-[10px]">
+                      {printerSettings.paper_width === '58mm' ? '58mm Roll Preview' : '80mm Roll Preview'}
+                    </Badge>
+                  </div>
+
+                  {/* Simulated Paper Roll Container */}
+                  <div className="flex justify-center bg-black/40 p-4 rounded-xl border border-white/5 overflow-x-auto">
+                    <div
+                      className={`bg-white text-black font-mono rounded shadow-2xl border border-neutral-300 p-4 text-[10px] leading-snug transition-all select-text ${
+                        printerSettings.paper_width === '58mm' ? 'w-[260px]' : 'w-[320px]'
+                      }`}
+                      style={{ color: '#000000', backgroundColor: '#FFFFFF' }}
+                    >
+                      {printerSettings.paper_width === '58mm' ? (
+                        /* 58mm Fabric Tag Live Preview */
+                        <div className="space-y-1">
+                          <div className="text-center font-bold tracking-tight">
+                            <div>================================</div>
+                            <div className="text-[11px] font-extrabold">{shop.name.toUpperCase()}</div>
+                            <div className="text-[9px]">FABRIC STAPLE TAG</div>
+                            <div>================================</div>
+                          </div>
+
+                          <div className="space-y-0.5 text-[10px]">
+                            <div className="flex justify-between">
+                              <span className="font-bold">Order #:</span>
+                              <span className="font-bold">DP-2026-0801</span>
+                            </div>
+                            <div className="flex justify-between text-neutral-700">
+                              <span>Date: 28-Aug-2026</span>
+                              <span>04:30 PM</span>
+                            </div>
+                            <div>Cust: <strong className="font-semibold">Tariq Khan</strong></div>
+                            <div>Phone: 0300-1234567</div>
+                          </div>
+
+                          <div className="border-t border-dashed border-black pt-1 space-y-0.5">
+                            <div className="font-bold flex items-baseline justify-between">
+                              <span>ITEM: SHALWAR KAMEEZ (1 PR)</span>
+                              {printerSettings.show_urdu_labels && (
+                                <span className="font-urdu-sans text-[9px] text-neutral-800" dir="rtl">
+                                  شلوار قمیض
+                                </span>
+                              )}
+                            </div>
+                            <div>DELIVERY: 04-Sep-2026</div>
+                          </div>
+
+                          {/* 3x3 Grid */}
+                          <div className="border-t border-dashed border-black pt-1">
+                            <div className="text-center font-bold text-[9px] pb-0.5">MEASUREMENTS (INCH)</div>
+                            <div className="grid grid-cols-3 text-center border border-black font-semibold text-[10px] divide-x divide-black bg-neutral-100/50">
+                              <div className="py-0.5">L: 40.50"</div>
+                              <div className="py-0.5">C: 38.00"</div>
+                              <div className="py-0.5">W: 36.00"</div>
+                            </div>
+                            <div className="grid grid-cols-3 text-center border-x border-b border-black font-semibold text-[10px] divide-x divide-black bg-neutral-100/50">
+                              <div className="py-0.5">T: 18.25"</div>
+                              <div className="py-0.5">B: 23.50"</div>
+                              <div className="py-0.5">G: 16.00"</div>
+                            </div>
+                            <div className="grid grid-cols-3 text-center border-x border-b border-black font-semibold text-[10px] divide-x divide-black bg-neutral-100/50">
+                              <div className="py-0.5">P: 08.50"</div>
+                              <div className="py-0.5">A: 15.00"</div>
+                              <div className="py-0.5">D: 22.00"</div>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-dashed border-black pt-1 space-y-0.5">
+                            <div className="flex justify-between">
+                              <span>Total: Rs. 1,800</span>
+                              <span>Adv: Rs. 1,000</span>
+                            </div>
+                            <div className="flex justify-between text-xs font-black">
+                              <span>BAL DUE:</span>
+                              <span>Rs. 800</span>
+                            </div>
+                          </div>
+
+                          {/* Live Barcode */}
+                          {printerSettings.show_barcode && (
+                            <div className="border-t border-dashed border-black pt-1 text-center">
+                              <BarcodeRenderer
+                                value="DP-2026-0801"
+                                format="svg"
+                                height={32}
+                                moduleWidth={1.2}
+                                displayValue={true}
+                                barColor="#000000"
+                                backgroundColor="transparent"
+                              />
+                              <div className="text-center text-[9px]">================================</div>
+                            </div>
+                          )}
+
+                          {/* Line Feeds margin simulation */}
+                          {printerSettings.feed_lines > 0 && (
+                            <div
+                              className="border-t border-dotted border-neutral-300 text-[8px] text-neutral-400 text-center flex items-center justify-center"
+                              style={{ height: `${printerSettings.feed_lines * 7}px` }}
+                            >
+                              ✂ [Cutter Feed: {printerSettings.feed_lines} lines]
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        /* 80mm Customer Invoice Live Preview */
+                        <div className="space-y-1.5">
+                          <div className="text-center font-bold tracking-tight">
+                            <div>========================================</div>
+                            <div className="text-xs font-black">{shop.name.toUpperCase()}</div>
+                            {shop.address && <div className="text-[9px] font-normal">{shop.address}</div>}
+                            {(shop.phone || shop.owner_phone) && (
+                              <div className="text-[9px] font-normal">Tel: {shop.phone || shop.owner_phone}</div>
+                            )}
+                            <div>========================================</div>
+                          </div>
+
+                          <div className="space-y-0.5 text-[10px]">
+                            <div className="flex justify-between">
+                              <span>Receipt #: <strong className="font-bold">DP-2026-0801</strong></span>
+                              <span>28-Aug-2026</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Cust: <strong className="font-bold">Tariq Khan</strong></span>
+                              <span>04:30 PM</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Phone: 0300-1234567</span>
+                              <span>Status: <strong className="font-bold">PARTIAL</strong></span>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-dashed border-black pt-1">
+                            <div className="flex justify-between font-bold text-[9px] pb-0.5 border-b border-black">
+                              <span className="w-1/2">Item Description</span>
+                              <span className="w-10 text-center">Qty</span>
+                              <span className="w-14 text-right">Rate</span>
+                              <span className="w-16 text-right">Amount</span>
+                            </div>
+                            <div className="pt-0.5 space-y-0.5 text-[10px]">
+                              <div className="flex justify-between items-start">
+                                <div className="w-1/2 min-w-0 pr-1">
+                                  <div className="truncate font-medium">Men Shalwar Kameez</div>
+                                  {printerSettings.show_urdu_labels && (
+                                    <div className="font-urdu-sans text-[9px] text-neutral-600 truncate" dir="rtl">
+                                      مردانہ شلوار قمیض
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="w-10 text-center">1</span>
+                                <span className="w-14 text-right">1,800</span>
+                                <span className="w-16 text-right font-medium">1,800.00</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-dashed border-black pt-1 space-y-0.5 text-[10px]">
+                            <div className="flex justify-between">
+                              <span>Subtotal:</span>
+                              <span>Rs. 1,800</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Advance Deposit (Cash):</span>
+                              <span>Rs. 1,000</span>
+                            </div>
+                            <div className="flex justify-between font-black text-[11px] pt-0.5 border-t border-black">
+                              <span>NET BALANCE DUE:</span>
+                              <span>Rs. 800</span>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-dashed border-black pt-1 text-[10px] flex justify-between font-bold">
+                            <span>Delivery Date:</span>
+                            <span>04-Sep-2026</span>
+                          </div>
+
+                          {printerSettings.show_urdu_labels && shop.receipt_footer && (
+                            <div className="border-t border-dashed border-black pt-1 text-[8px] text-neutral-600 font-urdu-sans text-center" dir="rtl">
+                              {shop.receipt_footer}
+                            </div>
+                          )}
+
+                          {/* Online Tracking & Barcode */}
+                          {(printerSettings.show_qr_tracking || printerSettings.show_barcode) && (
+                            <div className="border-t border-dashed border-black pt-1 text-center">
+                              {printerSettings.show_qr_tracking && (
+                                <div className="text-[9px] text-neutral-700 pb-0.5">
+                                  Track Live: silaye.com/track/DP20260801
+                                </div>
+                              )}
+                              {printerSettings.show_barcode && (
+                                <BarcodeRenderer
+                                  value="DP-2026-0801"
+                                  format="svg"
+                                  height={36}
+                                  moduleWidth={1.4}
+                                  displayValue={true}
+                                  barColor="#000000"
+                                  backgroundColor="transparent"
+                                />
+                              )}
+                              <div className="text-center text-[9px] pt-0.5">========================================</div>
+                            </div>
+                          )}
+
+                          {/* Line Feeds margin simulation */}
+                          {printerSettings.feed_lines > 0 && (
+                            <div
+                              className="border-t border-dotted border-neutral-300 text-[8px] text-neutral-400 text-center flex items-center justify-center"
+                              style={{ height: `${printerSettings.feed_lines * 7}px` }}
+                            >
+                              ✂ [Cutter Feed: {printerSettings.feed_lines} lines]
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsTestModalOpen(true)}
+                      className="flex-1 border-white/10 hover:bg-white/5 text-gray-300 text-xs gap-1.5"
+                    >
+                      <Printer className="h-3.5 w-3.5" />
+                      <span>Test Print Dialog</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const testSlipData = {
+                          shopName: shop.name,
+                          shopAddress: shop.address,
+                          shopPhone: shop.phone || shop.owner_phone,
+                          orderNumber: 'DP-2026-0801',
+                          bookingDate: '28-Aug-2026',
+                          bookingTime: '04:30 PM',
+                          customerName: 'Muhammad Tariq Khan',
+                          customerPhone: '0300-1234567',
+                          garmentType: 'Men Shalwar Kameez',
+                          garmentTypeUr: 'مردانہ شلوار قمیض',
+                          quantity: 1,
+                          deliveryDate: '2026-09-04',
+                          totalAmount: 1800,
+                          advancePaid: 1000,
+                          balanceDue: 800,
+                        };
+                        const bytes = printerSettings.paper_width === '58mm'
+                          ? buildFabricTagBinary(testSlipData, printerSettings)
+                          : buildCustomerInvoiceBinary(testSlipData, printerSettings);
+                        downloadEscPosBinaryFile(bytes, `test-slip-${printerSettings.paper_width}.bin`);
+                      }}
+                      className="border-white/10 hover:bg-white/5 text-gray-300 text-xs gap-1.5"
+                      title="Download raw ESC/POS binary stream for thermal printer hardware"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      <span>.bin</span>
+                    </Button>
+                  </div>
+                </Card>
+              </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-400 max-w-lg mx-auto">
-              Configure ESC/POS thermal printer roll dimensions (58mm fabric staple tags vs 80mm customer invoice), auto-cut line feeds, and barcode token preferences. Coming in Phase C.4.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => setActiveTab('profile')}
-              className="border-white/10 hover:bg-white/5 text-gray-300 text-xs"
-            >
-              Return to Workshop Profile
-            </Button>
-          </Card>
+          </div>
         )}
       </div>
+
+      {/* ========================================================================= */}
+      {/* Test Thermal Print Slip Modal                                             */}
+      {/* ========================================================================= */}
+      {isTestModalOpen && (
+        <ThermalSlipModal
+          open={isTestModalOpen}
+          onOpenChange={setIsTestModalOpen}
+          order={mockOrders[0]}
+          customer={mockCustomers[0]}
+          shop={shop}
+          settings={printerSettings}
+          initialFormat={printerSettings.paper_width}
+        />
+      )}
 
       {/* ========================================================================= */}
       {/* Add Staff Member Modal Dialog                                            */}

@@ -201,6 +201,24 @@ export interface GarmentRate {
   updated_at?: string; // ISO 8601 timestamp
 }
 
+export type PrinterPaperWidth = '58mm' | '80mm';
+
+/**
+ * Workshop Hardware & ESC/POS Thermal Printer Preferences
+ */
+export interface PrinterSettings {
+  id: string; // UUID
+  shop_id: string; // UUID
+  paper_width: PrinterPaperWidth;
+  auto_print_on_booking: boolean;
+  show_barcode: boolean;
+  show_qr_tracking: boolean;
+  show_urdu_labels: boolean;
+  feed_lines: number;
+  created_at?: string; // ISO 8601 timestamp
+  updated_at?: string; // ISO 8601 timestamp
+}
+
 /**
  * Staff & Workshop Operators
  */

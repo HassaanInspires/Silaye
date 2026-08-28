@@ -773,7 +773,6 @@ export default function OrdersQueuePage() {
         order={selectedPrintOrder}
         customer={selectedPrintOrder ? customerMap.get(selectedPrintOrder.customer_id) : null}
         shop={mockShop}
-        initialFormat="58mm"
       />
     </AppShell>
   );

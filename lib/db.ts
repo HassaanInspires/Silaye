@@ -27,6 +27,8 @@ import type {
   ShopMember,
   ShopMemberRole,
   GarmentRate,
+  PrinterSettings,
+  PrinterPaperWidth,
   Customer,
   MeasurementProfile,
   GarmentOrder,
@@ -173,6 +175,19 @@ export interface GarmentRateRow {
   standard_delivery_days: number;
   urgent_delivery_days: number;
   is_active: boolean;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
+export interface PrinterSettingsRow {
+  id: string;
+  shop_id: string;
+  paper_width: string;
+  auto_print_on_booking: boolean;
+  show_barcode: boolean;
+  show_qr_tracking: boolean;
+  show_urdu_labels: boolean;
+  feed_lines: number;
   created_at: string | Date;
   updated_at: string | Date;
 }
@@ -328,6 +343,21 @@ export function mapGarmentRateRow(row: GarmentRateRow): GarmentRate {
     standard_delivery_days: Number(row.standard_delivery_days || 7),
     urgent_delivery_days: Number(row.urgent_delivery_days || 3),
     is_active: Boolean(row.is_active),
+    created_at: toIsoString(row.created_at),
+    updated_at: toIsoString(row.updated_at),
+  };
+}
+
+export function mapPrinterSettingsRow(row: PrinterSettingsRow): PrinterSettings {
+  return {
+    id: row.id,
+    shop_id: row.shop_id,
+    paper_width: (row.paper_width === '58mm' ? '58mm' : '80mm') as PrinterPaperWidth,
+    auto_print_on_booking: Boolean(row.auto_print_on_booking),
+    show_barcode: row.show_barcode !== false,
+    show_qr_tracking: row.show_qr_tracking !== false,
+    show_urdu_labels: row.show_urdu_labels !== false,
+    feed_lines: typeof row.feed_lines === 'number' ? row.feed_lines : 3,
     created_at: toIsoString(row.created_at),
     updated_at: toIsoString(row.updated_at),
   };
@@ -1173,6 +1203,140 @@ export const ratesDb = {
       console.warn('Supabase network error in resetDefaults:', networkErr);
       return getMockGarmentRates(shopId);
     }
+  },
+};
+
+// ==========================================
+// 10. Thermal Printer & Hardware Repository
+// ==========================================
+
+export const DEFAULT_PRINTER_SETTINGS: Omit<PrinterSettings, 'id' | 'shop_id' | 'created_at' | 'updated_at'> = {
+  paper_width: '80mm',
+  auto_print_on_booking: false,
+  show_barcode: true,
+  show_qr_tracking: true,
+  show_urdu_labels: true,
+  feed_lines: 3,
+};
+
+export function getMockPrinterSettings(shopId: string): PrinterSettings {
+  return {
+    id: `ps-mock-${shopId ? shopId.substring(0, 8) : 'default'}`,
+    shop_id: shopId || 'a0000000-0000-0000-0000-000000000001',
+    ...DEFAULT_PRINTER_SETTINGS,
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z',
+  };
+}
+
+export const printerDb = {
+  async getByShopId(shopId: string): Promise<PrinterSettings> {
+    if (!shopId) {
+      return getMockPrinterSettings(shopId);
+    }
+
+    if (!isDatabaseConfigured()) {
+      return getMockPrinterSettings(shopId);
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('printer_settings')
+        .select('*')
+        .eq('shop_id', shopId)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Supabase printer_settings query error, using default settings:', error.message);
+        return getMockPrinterSettings(shopId);
+      }
+
+      if (!data) {
+        return getMockPrinterSettings(shopId);
+      }
+
+      return mapPrinterSettingsRow(data as PrinterSettingsRow);
+    } catch (networkErr) {
+      console.warn('Supabase network unreachable, using default printer settings:', networkErr);
+      return getMockPrinterSettings(shopId);
+    }
+  },
+
+  async update(
+    shopId: string,
+    updates: Partial<PrinterSettings>
+  ): Promise<PrinterSettings> {
+    const mockUpdated: PrinterSettings = {
+      id: `ps-mock-${shopId ? shopId.substring(0, 8) : 'default'}`,
+      shop_id: shopId || 'a0000000-0000-0000-0000-000000000001',
+      paper_width: updates.paper_width ?? DEFAULT_PRINTER_SETTINGS.paper_width,
+      auto_print_on_booking: updates.auto_print_on_booking ?? DEFAULT_PRINTER_SETTINGS.auto_print_on_booking,
+      show_barcode: updates.show_barcode ?? DEFAULT_PRINTER_SETTINGS.show_barcode,
+      show_qr_tracking: updates.show_qr_tracking ?? DEFAULT_PRINTER_SETTINGS.show_qr_tracking,
+      show_urdu_labels: updates.show_urdu_labels ?? DEFAULT_PRINTER_SETTINGS.show_urdu_labels,
+      feed_lines: updates.feed_lines ?? DEFAULT_PRINTER_SETTINGS.feed_lines,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (!isDatabaseConfigured() || !shopId) {
+      return mockUpdated;
+    }
+
+    try {
+      const updatePayload: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
+      if (updates.paper_width !== undefined) updatePayload.paper_width = updates.paper_width;
+      if (updates.auto_print_on_booking !== undefined) updatePayload.auto_print_on_booking = updates.auto_print_on_booking;
+      if (updates.show_barcode !== undefined) updatePayload.show_barcode = updates.show_barcode;
+      if (updates.show_qr_tracking !== undefined) updatePayload.show_qr_tracking = updates.show_qr_tracking;
+      if (updates.show_urdu_labels !== undefined) updatePayload.show_urdu_labels = updates.show_urdu_labels;
+      if (updates.feed_lines !== undefined) updatePayload.feed_lines = updates.feed_lines;
+
+      const { data, error } = await supabase
+        .from('printer_settings')
+        .update(updatePayload)
+        .eq('shop_id', shopId)
+        .select()
+        .maybeSingle();
+
+      if (error || !data) {
+        // Upsert fallback
+        const upsertPayload = {
+          shop_id: shopId,
+          paper_width: updates.paper_width ?? DEFAULT_PRINTER_SETTINGS.paper_width,
+          auto_print_on_booking: updates.auto_print_on_booking ?? DEFAULT_PRINTER_SETTINGS.auto_print_on_booking,
+          show_barcode: updates.show_barcode ?? DEFAULT_PRINTER_SETTINGS.show_barcode,
+          show_qr_tracking: updates.show_qr_tracking ?? DEFAULT_PRINTER_SETTINGS.show_qr_tracking,
+          show_urdu_labels: updates.show_urdu_labels ?? DEFAULT_PRINTER_SETTINGS.show_urdu_labels,
+          feed_lines: updates.feed_lines ?? DEFAULT_PRINTER_SETTINGS.feed_lines,
+          updated_at: new Date().toISOString(),
+        };
+
+        const { data: upsertData, error: upsertError } = await supabase
+          .from('printer_settings')
+          .upsert(upsertPayload, { onConflict: 'shop_id' })
+          .select()
+          .single();
+
+        if (upsertError || !upsertData) {
+          console.warn('Failed to upsert printer settings, returning local fallback:', upsertError?.message);
+          return mockUpdated;
+        }
+
+        return mapPrinterSettingsRow(upsertData as PrinterSettingsRow);
+      }
+
+      return mapPrinterSettingsRow(data as PrinterSettingsRow);
+    } catch (networkErr) {
+      console.warn('Supabase network error in printerDb.update, using local fallback:', networkErr);
+      return mockUpdated;
+    }
+  },
+
+  async resetDefaults(shopId: string): Promise<PrinterSettings> {
+    return this.update(shopId, DEFAULT_PRINTER_SETTINGS);
   },
 };
 

@@ -1279,8 +1279,60 @@
   - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
   - `npm run build`: Static export compiled successfully, generating 26/26 static routes into `out/` with zero runtime or SSR errors.
 
+---
+
+## Phase C: Sub-Phase C.4 - Thermal Printer & Hardware Preferences (Completed)
+* **Date:** 2026-08-28
+* **Tasks Completed:**
+  - `C.4.1` Created Migration `supabase/migrations/20260825000009_printer_settings.sql`:
+    * Created `public.printer_settings` table with columns: `id`, `shop_id` (FK to `public.shops`), `paper_width` (`'58mm' | '80mm'`), `auto_print_on_booking`, `show_barcode`, `show_qr_tracking`, `show_urdu_labels`, `feed_lines` (0–10), and timestamps.
+    * Added constraints: `unique_shop_printer_settings` (UNIQUE on `shop_id`), `check_valid_paper_width` (`paper_width IN ('58mm', '80mm')`), and `check_valid_feed_lines` (`feed_lines >= 0 AND feed_lines <= 10`).
+    * Enabled Row Level Security (RLS) with member `SELECT` policy and owner `INSERT`, `UPDATE`, `DELETE` policies using `public.is_shop_owner(shop_id)`.
+    * Implemented `public.seed_default_printer_settings(p_shop_id UUID)` with `SECURITY DEFINER SET search_path = public` and granted execution permissions to `authenticated` role.
+    * Updated user registration trigger `handle_new_user_shop_member()` with the unified 4-step sequence: (1) `public.shops`, (2) `public.shop_members` (as 'OWNER'), (3) `public.seed_default_garment_rates()`, (4) `public.seed_default_printer_settings()`.
+    * Added backfill loop provisioning `printer_settings` for all existing workshops.
+  - `C.4.2` Typed Repository and Non-Null Offline Resiliency (`types/tailor.ts`, `lib/db.ts`):
+    * Declared `PrinterPaperWidth` (`'58mm' | '80mm'`) and `PrinterSettings` interface in `types/tailor.ts`.
+    * Declared `PrinterSettingsRow` interface, `mapPrinterSettingsRow` converter, and `DEFAULT_PRINTER_SETTINGS` fallback in `lib/db.ts`.
+    * Exported `printerDb` repository module (`getByShopId`, `update`, `resetDefaults`) with resilient non-null merging ensuring offline UI calls never encounter undefined property crashes.
+  - `C.4.3` ESC/POS Raw Binary and HTML Print Separation (`lib/escpos.ts`, `components/tailor/thermal-slip-modal.tsx`):
+    * Updated slip text formatters and binary stream builders (`generateFabricTagSlipText`, `generateCustomerInvoiceSlipText`, `buildFabricTagBinary`, `buildCustomerInvoiceBinary`) to accept optional `PrinterSettings`.
+    * Kept raw byte builders strictly ASCII-clean for high hardware compatibility across thermal printer character code pages while honoring dynamic barcode tokens, tracking links, and auto-cut feed lines.
+    * Enhanced HTML/CSS printable preview in `components/tailor/thermal-slip-modal.tsx` with rich bilingual Urdu typography (`font-urdu-sans`), conditioned on `show_urdu_labels`, `show_barcode`, `show_qr_tracking`, and dynamic paper width.
+  - `C.4.4` Interactive Thermal Hardware Settings UI & Live Paper Preview (`app/settings/page.tsx`):
+    * Activated Tab 4 ("Thermal Hardware & Printer Settings" / *تھرمل پرنٹر اور ہارڈویئر ترتیبات*).
+    * Built 2-column layout: (Left) Paper roll width segmented toggle (58mm Fabric Tag vs 80mm Invoice), 4 feature toggles (Auto-Print on Booking, Code 128 Barcode, Live Tracking URL, Urdu Dual-Script Labels), and 0–10 line cutter feed margin stepper; (Right) Tactile monospaced thermal paper receipt preview updating in real-time with direct Test Print and `.bin` download actions.
+    * Added "Reset Defaults" and "Save Settings" with animated feedback.
+  - `C.4.5` Booking Flow & Print Station Integration (`app/orders/new/page.tsx`, `app/print/page.tsx`, `app/orders/page.tsx`):
+    * Dynamically loaded shop's `printer_settings` on order booking; if `auto_print_on_booking` is enabled, order submission immediately launches the thermal printing modal.
+    * Updated batch print station (`app/print/page.tsx`) to load workshop printer settings and pass effective configuration to preview modals.
+  - `C.4.6` Automated Verification & Production Build:
+    * Extended `scripts/verify_db.ts` to 60 test assertions covering Migration 9 DDL, 3 CHECK constraints, 4 RLS policies, 4-step registration trigger, row mappers, and `printerDb` methods (60/60 passed).
+    * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    * Verified production static export build generates 26/26 static routes into `out/` with zero runtime or SSR errors (`npm run build`).
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000009_printer_settings.sql` [NEW]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `lib/escpos.ts` [MODIFIED]
+  - `components/tailor/thermal-slip-modal.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `app/print/page.tsx` [MODIFIED]
+  - `app/orders/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 60/60 test assertions passed with 0 failures.
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 26/26 static routes into `out/` with zero runtime or SSR errors.
+
 * **Next Immediate Task:**
-  - Phase C (Task C.4): Thermal Printer & Hardware Preferences (`app/settings/page.tsx`).
+  - Phase 11 (Task 11.1): Scaffold Capacitor configuration (`capacitor.config.ts`) and Android project assets (`npx cap add android`).
+
 
 
 

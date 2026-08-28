@@ -131,7 +131,7 @@
 - [x] C.1 Workshop Identity & Shop Profile (`app/settings/page.tsx`): Shop name, Urdu title, phone number, physical address, NTN, and custom receipt header/footer branding notes.
 - [x] C.2 Staff Management & Workshop Role Assignments (`supabase/migrations/20260825000007_staff_management.sql`, `lib/db.ts`, `app/settings/page.tsx`, `app/orders/new/page.tsx`): Helper RPCs (get_shop_members, add_shop_staff_member, remove_shop_member), staffDb repository, Staff & Roles directory tab, Add Craftsman modal, and dynamic booking assignment sync.
 - [x] C.3 Garment Catalog & Default Stitching Rates (`supabase/migrations/20260825000008_garment_rates.sql`, `lib/db.ts`, `app/settings/page.tsx`, `app/orders/new/page.tsx`): Database matrix table with 4 mathematical CHECK constraints, SECURITY DEFINER reset/seed RPCs, ratesDb repository, Catalog Matrix tab with market defaults, and idempotent urgent surcharge order booking integration.
-- [ ] C.4 Thermal Printer & Hardware Preferences: Default slip format (58mm fabric staple tags vs 80mm customer invoice), auto-cut feed lines, and barcode token preferences.
+- [x] C.4 Thermal Printer & Hardware Preferences (`supabase/migrations/20260825000009_printer_settings.sql`, `lib/db.ts`, `lib/escpos.ts`, `components/tailor/thermal-slip-modal.tsx`, `app/settings/page.tsx`, `app/orders/new/page.tsx`, `app/print/page.tsx`): Database table with CHECK constraints, seed/reset trigger integration, printerDb repository with non-null offline fallback, ASCII raw binary ESC/POS formatting, Tab 4 settings UI with live thermal paper preview, auto-print on booking, and test slip printing.
 
 ---
 

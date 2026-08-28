@@ -43,7 +43,8 @@ import {
   buildFabricTagBinary,
   downloadEscPosBinaryFile,
 } from '@/lib/escpos';
-import type { GarmentOrder, Customer, OrderStatus, GarmentType } from '@/types/tailor';
+import { printerDb, DEFAULT_PRINTER_SETTINGS } from '@/lib/db';
+import type { GarmentOrder, Customer, OrderStatus, GarmentType, PrinterSettings, PrinterPaperWidth } from '@/types/tailor';
 
 // ============================================================================
 // Helper formatters & lookup maps
@@ -78,10 +79,37 @@ export default function PrintStationPage() {
   const [urgencyFilter, setUrgencyFilter] = React.useState<string>('ALL');
   const [selectedOrderIds, setSelectedOrderIds] = React.useState<Set<string>>(new Set());
 
+  // Hardware & Printer Settings state
+  const [printerSettings, setPrinterSettings] = React.useState<PrinterSettings>({
+    id: 'ps-mock-default',
+    shop_id: mockShop.id,
+    ...DEFAULT_PRINTER_SETTINGS,
+  });
+
   // Modal preview state
   const [activeModalOrder, setActiveModalOrder] = React.useState<GarmentOrder | null>(null);
-  const [activeModalFormat, setActiveModalFormat] = React.useState<'58mm' | '80mm'>('58mm');
+  const [activeModalFormat, setActiveModalFormat] = React.useState<PrinterPaperWidth>('80mm');
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  // Load workshop printer settings
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadSettings() {
+      try {
+        const settings = await printerDb.getByShopId(mockShop.id);
+        if (isMounted && settings) {
+          setPrinterSettings(settings);
+          setActiveModalFormat(settings.paper_width);
+        }
+      } catch (err) {
+        console.warn('Failed to load printer settings in print station:', err);
+      }
+    }
+    loadSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Customer map
   const customerMap = React.useMemo(() => {
@@ -562,6 +590,7 @@ export default function PrintStationPage() {
           order={activeModalOrder}
           customer={activeModalOrder ? customerMap.get(activeModalOrder.customer_id) || activeModalOrder.customer : null}
           shop={mockShop}
+          settings={printerSettings}
           initialFormat={activeModalFormat}
         />
       </div>
