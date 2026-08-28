@@ -24,6 +24,7 @@ import {
   FileText,
   Clock,
   Layers,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppShell } from '@/components/layout/app-shell';
@@ -43,16 +44,25 @@ import {
   mockStaff,
   mockShop,
 } from '@/lib/mock-data';
+import { staffDb, ratesDb } from '@/lib/db';
 import { calculateOrderFinancials, formatPakistaniPhone } from '@/lib/validations/tailor';
 import type {
   Customer,
   GarmentOrder,
   MeasurementProfile,
+  ShopMember,
+  GarmentRate,
   ShalwarKameezMeasurements,
   StylePreferences,
   GarmentType,
   FabricSource,
 } from '@/types/tailor';
+
+function getFutureDateString(days: number): string {
+  const target = new Date();
+  target.setDate(target.getDate() + days);
+  return target.toISOString().split('T')[0];
+}
 
 // ---------------------------------------------------------------------------
 // Default measurement values (spec mid-range defaults, quarter-inch aligned)
@@ -243,6 +253,10 @@ export default function NewOrderPage() {
   const [fabricBrand, setFabricBrand] = React.useState<string>('');
   const [fabricNotes, setFabricNotes] = React.useState<string>('');
 
+  // ── Garment Catalog Rates & Urgent Rush State ──────────────────────────
+  const [garmentRates, setGarmentRates] = React.useState<GarmentRate[]>([]);
+  const [isUrgent, setIsUrgent] = React.useState<boolean>(false);
+
   // ── Measurements & styles ─────────────────────────────────────────────
   const [measurements, setMeasurements] = React.useState<ShalwarKameezMeasurements>(DEFAULT_MEASUREMENTS);
   const [stylePreferences, setStylePreferences] = React.useState<StylePreferences>(DEFAULT_STYLES);
@@ -252,13 +266,14 @@ export default function NewOrderPage() {
   const [activeField, setActiveField] = React.useState<keyof ShalwarKameezMeasurements | null>(null);
 
   // ── Financials ─────────────────────────────────────────────────────────
-  const [stitchingRate, setStitchingRate] = React.useState<number>(3000);
+  const [stitchingRate, setStitchingRate] = React.useState<number>(1800);
   const [fabricCharges, setFabricCharges] = React.useState<number>(0);
   const [addonsCharges, setAddonsCharges] = React.useState<number>(0);
   const [discountAmount, setDiscountAmount] = React.useState<number>(0);
   const [advancePaid, setAdvancePaid] = React.useState<number>(0);
 
   // ── Staff assignment ──────────────────────────────────────────────────
+  const [staffList, setStaffList] = React.useState<ShopMember[]>([]);
   const [assignedCutterId, setAssignedCutterId] = React.useState<string>('');
   const [assignedStitcherId, setAssignedStitcherId] = React.useState<string>('');
 
@@ -271,6 +286,41 @@ export default function NewOrderPage() {
   const [newBookedOrder, setNewBookedOrder] = React.useState<GarmentOrder | null>(null);
   const [newBookedCustomer, setNewBookedCustomer] = React.useState<Customer | null>(null);
   const [draftSavedToast, setDraftSavedToast] = React.useState<boolean>(false);
+
+  // --------------------------------------------------------------------------
+  // Load workshop staff & catalog rates dynamically
+  // --------------------------------------------------------------------------
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadWorkshopStaffAndRates() {
+      try {
+        const [members, rates] = await Promise.all([
+          staffDb.getByShopId(mockShop.id),
+          ratesDb.getByShopId(mockShop.id),
+        ]);
+
+        if (isMounted) {
+          if (members && members.length > 0) {
+            setStaffList(members);
+          }
+          if (rates && rates.length > 0) {
+            setGarmentRates(rates);
+            const defaultRate = rates.find((r) => r.garment_type === 'MEN_SHALWAR_KAMEEZ') || rates[0];
+            if (defaultRate) {
+              setStitchingRate(defaultRate.base_stitching_rate);
+              setDeliveryDate((prev) => prev || getFutureDateString(defaultRate.standard_delivery_days));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load workshop staff or rates for order booking:', err);
+      }
+    }
+    loadWorkshopStaffAndRates();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // --------------------------------------------------------------------------
   // Customer auto-lookup: fires when phone reaches 10–11 digits
@@ -313,6 +363,16 @@ export default function NewOrderPage() {
   }, [phone]);
 
   // --------------------------------------------------------------------------
+  // Active Garment Rate & Surcharge Derivations
+  // --------------------------------------------------------------------------
+  const activeGarmentRate = React.useMemo(() => {
+    return garmentRates.find((r) => r.garment_type === garmentType);
+  }, [garmentRates, garmentType]);
+
+  const urgentSurcharge = isUrgent && activeGarmentRate ? activeGarmentRate.urgent_surcharge * quantity : 0;
+  const effectiveAddonsCharges = addonsCharges + urgentSurcharge;
+
+  // --------------------------------------------------------------------------
   // Real-time financial derivation (memoised)
   // --------------------------------------------------------------------------
   const financials = React.useMemo(
@@ -321,12 +381,31 @@ export default function NewOrderPage() {
         stitching_rate: stitchingRate,
         quantity:       quantity,
         fabric_charges: fabricCharges,
-        addons_charges: addonsCharges,
+        addons_charges: effectiveAddonsCharges,
         discount_amount: discountAmount,
         advance_paid:   advancePaid,
       }),
-    [stitchingRate, quantity, fabricCharges, addonsCharges, discountAmount, advancePaid]
+    [stitchingRate, quantity, fabricCharges, effectiveAddonsCharges, discountAmount, advancePaid]
   );
+
+  const handleGarmentTypeChange = (newType: GarmentType) => {
+    setGarmentType(newType);
+    const rate = garmentRates.find((r) => r.garment_type === newType);
+    if (rate) {
+      setStitchingRate(rate.base_stitching_rate);
+      const days = isUrgent ? rate.urgent_delivery_days : rate.standard_delivery_days;
+      setDeliveryDate(getFutureDateString(days));
+    }
+  };
+
+  const handleToggleUrgent = (newUrgentState: boolean) => {
+    setIsUrgent(newUrgentState);
+    const rate = garmentRates.find((r) => r.garment_type === garmentType);
+    if (rate) {
+      const days = newUrgentState ? rate.urgent_delivery_days : rate.standard_delivery_days;
+      setDeliveryDate(getFutureDateString(days));
+    }
+  };
 
   // Credit balance when advance exceeds total (overpayment)
   const isOverpayment = advancePaid > financials.total_amount && financials.total_amount > 0;
@@ -335,9 +414,27 @@ export default function NewOrderPage() {
   // Selected Garment Info
   const selectedGarmentOption = GARMENT_TYPE_OPTIONS.find((g) => g.value === garmentType) || GARMENT_TYPE_OPTIONS[0];
 
-  // Selected Staff Info
-  const cuttingMasters = mockStaff.filter((s) => s.role === 'CUTTING_MASTER' && s.is_active);
-  const stitchers = mockStaff.filter((s) => s.role === 'STITCHER' && s.is_active);
+  // Selected Staff Info (Dynamic from staffDb with mock fallback)
+  const cuttingMasters = React.useMemo(() => {
+    if (staffList.length > 0) {
+      const filtered = staffList.filter(
+        (s) => s.role === 'CUTTING_MASTER' || s.role === 'OWNER' || s.role === 'MANAGER'
+      );
+      return filtered.length > 0 ? filtered : staffList;
+    }
+    return mockStaff.filter((s) => s.role === 'CUTTING_MASTER' && s.is_active);
+  }, [staffList]);
+
+  const stitchers = React.useMemo(() => {
+    if (staffList.length > 0) {
+      const filtered = staffList.filter(
+        (s) => s.role === 'STITCHER' || s.role === 'OWNER' || s.role === 'MANAGER'
+      );
+      return filtered.length > 0 ? filtered : staffList;
+    }
+    return mockStaff.filter((s) => s.role === 'STITCHER' && s.is_active);
+  }, [staffList]);
+
   const selectedCutter = cuttingMasters.find((s) => s.id === assignedCutterId);
   const selectedStitcher = stitchers.find((s) => s.id === assignedStitcherId);
 
@@ -376,7 +473,15 @@ export default function NewOrderPage() {
     setCustomerAddress('');
     setGarmentType('MEN_SHALWAR_KAMEEZ');
     setQuantity(1);
-    setDeliveryDate('');
+    setIsUrgent(false);
+    const defaultRate = garmentRates.find((r) => r.garment_type === 'MEN_SHALWAR_KAMEEZ');
+    if (defaultRate) {
+      setStitchingRate(defaultRate.base_stitching_rate);
+      setDeliveryDate(getFutureDateString(defaultRate.standard_delivery_days));
+    } else {
+      setStitchingRate(1800);
+      setDeliveryDate(getFutureDateString(7));
+    }
     setTrialDate('');
     setFabricSource('CUSTOMER');
     setFabricColor('');
@@ -384,7 +489,6 @@ export default function NewOrderPage() {
     setFabricNotes('');
     setMeasurements(DEFAULT_MEASUREMENTS);
     setStylePreferences(DEFAULT_STYLES);
-    setStitchingRate(3000);
     setFabricCharges(0);
     setAddonsCharges(0);
     setDiscountAmount(0);
@@ -443,7 +547,7 @@ export default function NewOrderPage() {
       fabric_notes: fabricNotes || null,
       stitching_rate: stitchingRate,
       fabric_charges: fabricCharges,
-      addons_charges: addonsCharges,
+      addons_charges: effectiveAddonsCharges,
       discount_amount: discountAmount,
       total_amount: financials.total_amount,
       advance_paid: financials.advance_paid,
@@ -693,7 +797,7 @@ export default function NewOrderPage() {
                         <div className="relative">
                           <select
                             value={garmentType}
-                            onChange={(e) => setGarmentType(e.target.value as GarmentType)}
+                            onChange={(e) => handleGarmentTypeChange(e.target.value as GarmentType)}
                             className="h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-sm font-medium text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                           >
                             {GARMENT_TYPE_OPTIONS.map((opt) => (
@@ -724,6 +828,64 @@ export default function NewOrderPage() {
                           />
                         </bdi>
                       </div>
+                    </div>
+
+                    {/* Urgent Rush Order Dynamic Toggle Pill */}
+                    <div className={cn(
+                      'flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-3.5 transition-all',
+                      isUrgent
+                        ? 'border-status-stitching/50 bg-status-stitching/10 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-status-stitching/30'
+                        : 'border-border/70 bg-card-elevated/60'
+                    )}>
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-all',
+                          isUrgent
+                            ? 'border-status-stitching/40 bg-status-stitching/20 text-status-stitching shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                            : 'border-border/60 bg-white/5 text-muted-foreground'
+                        )}>
+                          <Zap className={cn('h-4 w-4', isUrgent && 'animate-pulse')} />
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-foreground">Urgent Rush Order / ارجنٹ سلائی</span>
+                            {activeGarmentRate && (
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  'text-[10px] font-mono',
+                                  isUrgent
+                                    ? 'border-status-stitching/50 bg-status-stitching/20 text-status-stitching font-bold'
+                                    : 'border-border text-muted-foreground'
+                                )}
+                              >
+                                +Rs. {activeGarmentRate.urgent_surcharge}
+                              </Badge>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-muted-foreground">
+                            {isUrgent && activeGarmentRate
+                              ? `Express turnaround in ${activeGarmentRate.urgent_delivery_days} days (Target: ${deliveryDate || 'N/A'})`
+                              : activeGarmentRate
+                              ? `Standard turnaround: ${activeGarmentRate.standard_delivery_days} days`
+                              : 'Compress timeline and apply urgent surcharge'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleUrgent(!isUrgent)}
+                        className={cn(
+                          'px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto shrink-0',
+                          isUrgent
+                            ? 'border-status-stitching/50 bg-status-stitching text-background shadow-md'
+                            : 'border-border/80 bg-card/80 text-muted-foreground hover:text-foreground hover:border-border'
+                        )}
+                      >
+                        <Zap className="h-3.5 w-3.5" />
+                        <span>{isUrgent ? 'Urgent Rush Active' : 'Enable Urgent Rush'}</span>
+                      </button>
                     </div>
 
                     {/* Delivery & Trial Dates */}
@@ -952,9 +1114,16 @@ export default function NewOrderPage() {
                   <div className="flex flex-col gap-5">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-card-elevated/60 p-3">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Stitching Rate (Per Suit) / سلائی ریٹ
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Stitching Rate (Per Suit) / سلائی ریٹ
+                          </label>
+                          {activeGarmentRate && (
+                            <span className="text-[10px] text-muted-foreground font-mono">
+                              Catalog: Rs. {activeGarmentRate.base_stitching_rate}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">PKR</span>
                           <bdi dir="ltr" className="inline-flex w-full">
@@ -999,7 +1168,7 @@ export default function NewOrderPage() {
 
                       <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-card-elevated/60 p-3">
                         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Addon Charges / اضافی چارجز
+                          Custom Addons / اضافی کام
                         </label>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">PKR</span>
@@ -1016,7 +1185,7 @@ export default function NewOrderPage() {
                           </bdi>
                         </div>
                         <span className="text-[11px] text-muted-foreground">
-                          Special buttons, embroidery, or express emergency rush
+                          Special embroidery, pocket piping, or fancy buttons
                         </span>
                       </div>
 
@@ -1043,6 +1212,21 @@ export default function NewOrderPage() {
                         </span>
                       </div>
                     </div>
+
+                    {/* Urgent Rush Surcharge Live Notification Bar */}
+                    {isUrgent && activeGarmentRate && (
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-status-stitching/40 bg-status-stitching/10 p-3 text-xs text-status-stitching">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 shrink-0 animate-pulse" />
+                          <span className="font-semibold">
+                            Urgent Rush Surcharge Applied: Rs. {activeGarmentRate.urgent_surcharge} × {quantity} = Rs. {urgentSurcharge.toLocaleString('en-PK')}
+                          </span>
+                        </div>
+                        <span className="text-[11px] opacity-80">
+                          Timeline compressed to {activeGarmentRate.urgent_delivery_days} days
+                        </span>
+                      </div>
+                    )}
 
                     {/* Advance Payment Intake */}
                     <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1092,11 +1276,15 @@ export default function NewOrderPage() {
                           className="h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                         >
                           <option value="">— Unassigned —</option>
-                          {cuttingMasters.map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.name} ({s.phone})
-                            </option>
-                          ))}
+                          {cuttingMasters.map((s) => {
+                            const displayName = s.name || s.email?.split('@')[0] || 'Craftsman';
+                            const roleTag = s.role === 'OWNER' ? ' (Owner)' : s.role === 'MANAGER' ? ' (Manager)' : '';
+                            return (
+                              <option key={s.id} value={s.id}>
+                                {displayName}{roleTag}
+                              </option>
+                            );
+                          })}
                         </select>
                         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       </div>
@@ -1114,11 +1302,15 @@ export default function NewOrderPage() {
                           className="h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                         >
                           <option value="">— Unassigned —</option>
-                          {stitchers.map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.name} ({s.phone})
-                            </option>
-                          ))}
+                          {stitchers.map((s) => {
+                            const displayName = s.name || s.email?.split('@')[0] || 'Craftsman';
+                            const roleTag = s.role === 'OWNER' ? ' (Owner)' : s.role === 'MANAGER' ? ' (Manager)' : '';
+                            return (
+                              <option key={s.id} value={s.id}>
+                                {displayName}{roleTag}
+                              </option>
+                            );
+                          })}
                         </select>
                         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       </div>
@@ -1185,9 +1377,17 @@ export default function NewOrderPage() {
                       {customerName.trim() || 'New Customer'}
                     </h3>
                   </div>
-                  <Badge variant="status-booked" className="text-[11px] font-mono font-semibold">
-                    {selectedGarmentOption.en} × {quantity}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    {isUrgent && (
+                      <Badge variant="status-stitching" className="text-[10px] gap-1 px-1.5 py-0.5">
+                        <Zap className="h-3 w-3" />
+                        Urgent
+                      </Badge>
+                    )}
+                    <Badge variant="status-booked" className="text-[11px] font-mono font-semibold">
+                      {selectedGarmentOption.en} × {quantity}
+                    </Badge>
+                  </div>
                 </div>
 
                 {/* Delivery Date preview */}
@@ -1196,13 +1396,18 @@ export default function NewOrderPage() {
                     <CalendarDays className="h-3.5 w-3.5 text-primary" />
                     Target Delivery:
                   </span>
-                  <span className="font-semibold text-foreground">
+                  <div className="flex items-center gap-1.5 font-semibold text-foreground">
                     {deliveryDate ? (
                       <bdi dir="ltr">{deliveryDate}</bdi>
                     ) : (
                       <span className="text-muted-foreground/60 italic">Not set</span>
                     )}
-                  </span>
+                    {isUrgent && activeGarmentRate && (
+                      <span className="text-[10px] text-status-stitching font-bold">
+                        ({activeGarmentRate.urgent_delivery_days}d rush)
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Live Financial Ledger */}
@@ -1230,12 +1435,31 @@ export default function NewOrderPage() {
                       value={fabricCharges}
                       readOnly
                     />
-                    <FinancialRow
-                      label="Addon Charges"
-                      urLabel="اضافی چارجز"
-                      value={addonsCharges}
-                      readOnly
-                    />
+                    {addonsCharges > 0 && (
+                      <FinancialRow
+                        label="Custom Addons"
+                        urLabel="اضافی چارجز"
+                        value={addonsCharges}
+                        readOnly
+                      />
+                    )}
+                    {urgentSurcharge > 0 && (
+                      <FinancialRow
+                        label="Urgent Rush Surcharge"
+                        urLabel="ارجنٹ سلائی چارجز"
+                        value={urgentSurcharge}
+                        readOnly
+                        highlight="amber"
+                      />
+                    )}
+                    {addonsCharges === 0 && urgentSurcharge === 0 && (
+                      <FinancialRow
+                        label="Addon Charges"
+                        urLabel="اضافی چارجز"
+                        value={0}
+                        readOnly
+                      />
+                    )}
                     {discountAmount > 0 && (
                       <FinancialRow
                         label="Discount"
@@ -1338,13 +1562,13 @@ export default function NewOrderPage() {
                       {selectedCutter && (
                         <div className="bg-white/5 border border-white/10 text-gray-200 px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5">
                           <Scissors className="h-3 w-3 text-primary" />
-                          <span>Cutter: {selectedCutter.name}</span>
+                          <span>Cutter: {selectedCutter.name || selectedCutter.email?.split('@')[0] || 'Assigned'}</span>
                         </div>
                       )}
                       {selectedStitcher && (
                         <div className="bg-white/5 border border-white/10 text-gray-200 px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5">
                           <Layers className="h-3 w-3 text-status-stitching" />
-                          <span>Stitcher: {selectedStitcher.name}</span>
+                          <span>Stitcher: {selectedStitcher.name || selectedStitcher.email?.split('@')[0] || 'Assigned'}</span>
                         </div>
                       )}
                     </div>

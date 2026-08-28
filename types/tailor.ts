@@ -179,8 +179,26 @@ export interface ShopMember {
   shop_id: string; // UUID
   user_id: string; // UUID
   role: ShopMemberRole;
+  email?: string | null;
+  name?: string | null;
   created_at: string; // ISO 8601 timestamp
   updated_at: string; // ISO 8601 timestamp
+}
+
+/**
+ * Garment Catalog & Default Stitching Rates
+ */
+export interface GarmentRate {
+  id: string; // UUID
+  shop_id: string; // UUID
+  garment_type: GarmentType;
+  base_stitching_rate: number;
+  urgent_surcharge: number;
+  standard_delivery_days: number;
+  urgent_delivery_days: number;
+  is_active: boolean;
+  created_at?: string; // ISO 8601 timestamp
+  updated_at?: string; // ISO 8601 timestamp
 }
 
 /**
@@ -191,6 +209,7 @@ export interface Staff {
   shop_id: string; // UUID
   name: string;
   phone: string;
+  email?: string | null;
   role: StaffRole;
   is_active: boolean;
   created_at: string; // ISO 8601 timestamp

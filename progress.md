@@ -1179,7 +1179,110 @@
   - `npm run build`: Static export compiled 26/26 static routes, cleanly copying all favicon assets into `out/` with automated `<link rel="icon">` tags in `<head>`.
 
 * **Next Immediate Task:**
-  - Phase C (Task C.2): Staff Management & Workshop Role Assignments.
+  - Phase C (Task C.2): Staff Management & Workshop Role Assignments (Completed)
+
+---
+
+## Phase C: Tailor Settings Dashboard & Workshop Preferences (Phase C, Sub-Phase 2 Completed)
+* **Date:** 2026-08-28
+* **Tasks Completed:**
+  - `C.2.1` Created Database Migration `supabase/migrations/20260825000007_staff_management.sql`:
+    * Implemented `get_shop_members(p_shop_id UUID)` helper RPC returning staff member details with emails joined from `auth.users`, verifying active shop membership.
+    * Implemented `add_shop_staff_member(p_shop_id UUID, p_email VARCHAR, p_role VARCHAR)` helper RPC allowing shop owners (`is_shop_owner`) to assign/invite registered users to shop roles with role validation and upsert logic.
+    * Implemented `remove_shop_member(p_shop_id UUID, p_member_id UUID)` helper RPC with `is_shop_owner` security check and strict protection preventing self-removal of the primary workshop `OWNER`.
+    * Granted execution privileges on all three functions to the `authenticated` Supabase role.
+  - `C.2.2` Extended Types & Database Repository Layer (`types/tailor.ts` & `lib/db.ts`):
+    * Extended `ShopMember` and `Staff` interfaces in `types/tailor.ts` with optional `email` and `name` properties.
+    * Declared `ShopMemberRow` interface and `mapShopMemberRow` converter in `lib/db.ts`.
+    * Exported `staffDb` repository module with `getByShopId(shopId)`, `addStaff(shopId, email, role)`, and `removeStaff(shopId, memberId)` with graceful offline mock fallbacks and network error traps.
+  - `C.2.3` Activated Staff & Roles Management Tab (`app/settings/page.tsx`):
+    * Built top workshop staff metrics ribbon (Total Staff, Cutting Masters, Stitchers, Support & Counter Clerks).
+    * Built search and role filter bar with instant real-time filtering.
+    * Built Staff Directory list displaying member avatars/initials, names/emails, luxury role badges (`Owner`, `Manager`, `Cutting Master`, `Stitcher`, `Pressman`, `Counter Clerk`, `Staff`), and bilingual Urdu descriptions (*مالک*, *ماسٹر کٹر*, *درزی*, *استری والا*, *کاؤنٹر کلرک*).
+    * Built "Add Workshop Craftsman" modal dialog (`Dialog`) with email validation and interactive role selection cards.
+    * Built Remove Craftsman confirmation dialog with protection preventing deletion of the primary owner.
+    * Integrated loading skeletons and auto-dismissing toast alerts.
+  - `C.2.4` Synchronized Order Booking Staff Selectors (`app/orders/new/page.tsx`):
+    * Dynamically loaded active workshop staff members via `staffDb.getByShopId()`.
+    * Dynamically derived `cuttingMasters` and `stitchers` dropdown options with fallback to master craftsmen.
+    * Updated Order Summary sidebar to display assigned operator names cleanly.
+  - `C.2.5` Automated Test Suite & Production Build Verification:
+    * Extended `scripts/verify_db.ts` to 44 test assertions covering Migration 7, RPC signatures, security definitions, mapper functions, and `staffDb` CRUD methods (44/44 passed).
+    * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    * Verified production static export build compiles 26/26 static routes into `out/` with zero runtime or SSR errors (`npm run build`).
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000007_staff_management.sql` [NEW]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 44/44 test assertions passed with 0 failures.
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 26/26 static routes into `out/` with zero runtime or SSR errors.
+
+* **Next Immediate Task:**
+  - Phase C (Task C.3): Garment Catalog & Default Stitching Rates (Completed)
+
+---
+
+## Phase C: Tailor Settings Dashboard & Workshop Preferences (Phase C, Sub-Phase 3 Completed)
+* **Date:** 2026-08-28
+* **Tasks Completed:**
+  - `C.3.1` Created Database Migration `supabase/migrations/20260825000008_garment_rates.sql`:
+    * Created `garment_rates` table with `id UUID PRIMARY KEY`, `shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE`, `garment_type VARCHAR(50) NOT NULL`, `base_stitching_rate NUMERIC(10, 2) NOT NULL DEFAULT 1500.00`, `urgent_surcharge NUMERIC(10, 2) NOT NULL DEFAULT 500.00`, `standard_delivery_days INT NOT NULL DEFAULT 7`, `urgent_delivery_days INT NOT NULL DEFAULT 3`, `is_active BOOLEAN NOT NULL DEFAULT TRUE`, and timestamps.
+    * Added `CONSTRAINT unique_shop_garment_rate UNIQUE (shop_id, garment_type)`.
+    * Enforced 4 mandatory mathematical and timeline CHECK constraints:
+      - `CONSTRAINT check_positive_stitching_rate CHECK (base_stitching_rate >= 0.00)`
+      - `CONSTRAINT check_positive_urgent_surcharge CHECK (urgent_surcharge >= 0.00)`
+      - `CONSTRAINT check_valid_standard_days CHECK (standard_delivery_days > 0)`
+      - `CONSTRAINT check_valid_urgent_days CHECK (urgent_delivery_days > 0 AND urgent_delivery_days <= standard_delivery_days)`
+    * Configured Row Level Security (RLS): shop members can `SELECT` via `shop_members` membership; shop owners can `INSERT`, `UPDATE`, `DELETE` via `public.is_shop_owner(shop_id)`.
+    * Implemented `seed_default_garment_rates(p_shop_id UUID)` and `reset_default_garment_rates(p_shop_id UUID)` helper RPCs with `SECURITY DEFINER SET search_path = public`, authenticated grants, and owner authentication verification.
+    * Updated `handle_new_user_shop_member()` trigger to auto-seed default garment rates upon workshop creation and backfilled all existing shops.
+  - `C.3.2` Extended Types & Database Repository Layer (`types/tailor.ts` & `lib/db.ts`):
+    * Declared `GarmentRate` interface in `types/tailor.ts`.
+    * Declared `GarmentRateRow` interface, `mapGarmentRateRow` converter, and `DEFAULT_MARKET_RATES` matrix in `lib/db.ts`.
+    * Exported `ratesDb` repository module with `getByShopId(shopId)`, `updateRate(shopId, rate)`, `batchUpdateRates(shopId, rates)`, and `resetDefaults(shopId)` with network error traps and fallback mocks.
+  - `C.3.3` Activated Garment Catalog Matrix Tab (`app/settings/page.tsx`):
+    * Built top catalog metrics ribbon (Active Garments, Avg Stitching Rate, Urgent Surcharge, Avg Turnaround).
+    * Built Action Bar with "Save Rate Matrix" (batch upsert with toast notification) and "Restore Market Defaults" (confirm modal invoking `ratesDb.resetDefaults`).
+    * Built 6 interactive rate cards for all garment types (Men Shalwar Kameez, Men Kurta, Waistcoat, Prince Suit, Trouser Shirt, Ladies Suit) with bilingual Urdu/English labels, base stitching rate inputs, urgent surcharge inputs, standard/urgent timeline steppers, active toggle switch, and dynamic calculation preview.
+  - `C.3.4` Synchronized Order Booking Dynamic Pricing & Idempotent Surcharge Math (`app/orders/new/page.tsx`):
+    * Dynamically loaded shop's garment rate matrix on mount via `ratesDb.getByShopId()`.
+    * Integrated `handleGarmentTypeChange` to auto-populate default base stitching rate and compute default delivery date based on standard turnaround days.
+    * Built Urgent Rush Order toggle pill in Tab 1 with pulse icon, status badge, and live turnaround badge.
+    * Implemented idempotent urgent rush surcharge math: `urgentSurcharge = isUrgent && activeGarmentRate ? activeGarmentRate.urgent_surcharge * quantity : 0` and `effectiveAddonsCharges = addonsCharges + urgentSurcharge`, keeping user-entered custom addons untangled and uncorrupted on repeated toggles.
+    * Enhanced Tab 3 and sticky Summary Sidebar Financial Ledger with itemized urgent rush surcharge row, amber highlights, and timeline badges.
+  - `C.3.5` Automated Test Suite & Production Build Verification:
+    * Extended `scripts/verify_db.ts` to 51 test assertions covering Migration 8 DDL, 4 mathematical CHECK constraints, RPC signatures, RLS policies, mapper functions, and `ratesDb` repository fallback and reset methods (51/51 passed).
+    * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    * Verified production static export build compiles 26/26 static routes into `out/` with zero runtime or SSR errors (`npm run build`).
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000008_garment_rates.sql` [NEW]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 51/51 test assertions passed with 0 failures.
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 26/26 static routes into `out/` with zero runtime or SSR errors.
+
+* **Next Immediate Task:**
+  - Phase C (Task C.4): Thermal Printer & Hardware Preferences (`app/settings/page.tsx`).
+
+
 
 
 

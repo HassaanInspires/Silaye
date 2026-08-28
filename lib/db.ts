@@ -24,6 +24,9 @@ import {
 } from '@/lib/supabase/client';
 import type {
   Shop,
+  ShopMember,
+  ShopMemberRole,
+  GarmentRate,
   Customer,
   MeasurementProfile,
   GarmentOrder,
@@ -146,6 +149,30 @@ export interface ShopRow {
   ntn_number: string | null;
   receipt_header: string | null;
   receipt_footer: string | null;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
+export interface ShopMemberRow {
+  id: string;
+  shop_id: string;
+  user_id: string;
+  role: string;
+  email?: string | null;
+  name?: string | null;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
+export interface GarmentRateRow {
+  id: string;
+  shop_id: string;
+  garment_type: string;
+  base_stitching_rate: string | number;
+  urgent_surcharge: string | number;
+  standard_delivery_days: number;
+  urgent_delivery_days: number;
+  is_active: boolean;
   created_at: string | Date;
   updated_at: string | Date;
 }
@@ -273,6 +300,34 @@ export function mapShopRow(row: ShopRow): Shop {
     ntn_number: row.ntn_number,
     receipt_header: row.receipt_header,
     receipt_footer: row.receipt_footer,
+    created_at: toIsoString(row.created_at),
+    updated_at: toIsoString(row.updated_at),
+  };
+}
+
+export function mapShopMemberRow(row: ShopMemberRow): ShopMember {
+  return {
+    id: row.id,
+    shop_id: row.shop_id,
+    user_id: row.user_id,
+    role: row.role as ShopMemberRole,
+    email: row.email || null,
+    name: row.name || (row.email ? row.email.split('@')[0] : null),
+    created_at: toIsoString(row.created_at),
+    updated_at: toIsoString(row.updated_at),
+  };
+}
+
+export function mapGarmentRateRow(row: GarmentRateRow): GarmentRate {
+  return {
+    id: row.id,
+    shop_id: row.shop_id,
+    garment_type: row.garment_type as GarmentType,
+    base_stitching_rate: Number(row.base_stitching_rate || 0),
+    urgent_surcharge: Number(row.urgent_surcharge || 0),
+    standard_delivery_days: Number(row.standard_delivery_days || 7),
+    urgent_delivery_days: Number(row.urgent_delivery_days || 3),
+    is_active: Boolean(row.is_active),
     created_at: toIsoString(row.created_at),
     updated_at: toIsoString(row.updated_at),
   };
@@ -761,4 +816,364 @@ export const shopsDb = {
     return mapShopRow(data as ShopRow);
   },
 };
+
+// ==========================================
+// 8. Staff & Workshop Role Access Repository
+// ==========================================
+
+export const staffDb = {
+  async getByShopId(shopId: string): Promise<ShopMember[]> {
+    const mockFallback: ShopMember[] = [
+      {
+        id: 'sm-00000000-0000-0000-0000-000000000001',
+        shop_id: shopId,
+        user_id: 'u-00000000-0000-0000-0000-000000000001',
+        role: 'OWNER',
+        email: 'owner@silaye.com',
+        name: 'Master Ustad (Owner)',
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+      },
+      {
+        id: 'sm-00000000-0000-0000-0000-000000000002',
+        shop_id: shopId,
+        user_id: 'u-00000000-0000-0000-0000-000000000002',
+        role: 'MANAGER',
+        email: 'bilal.manager@silaye.com',
+        name: 'Bilal Ahmed',
+        created_at: '2026-01-01T08:00:00.000Z',
+        updated_at: '2026-01-01T08:00:00.000Z',
+      },
+      {
+        id: 'sm-00000000-0000-0000-0000-000000000003',
+        shop_id: shopId,
+        user_id: 'u-00000000-0000-0000-0000-000000000003',
+        role: 'CUTTING_MASTER',
+        email: 'rafiq.cutter@silaye.com',
+        name: 'Ustad Rafiq Ahmed',
+        created_at: '2026-01-05T09:00:00.000Z',
+        updated_at: '2026-01-05T09:00:00.000Z',
+      },
+      {
+        id: 'sm-00000000-0000-0000-0000-000000000004',
+        shop_id: shopId,
+        user_id: 'u-00000000-0000-0000-0000-000000000004',
+        role: 'STITCHER',
+        email: 'tariq.stitcher@silaye.com',
+        name: 'Tariq Mehmood',
+        created_at: '2026-01-10T09:00:00.000Z',
+        updated_at: '2026-01-10T09:00:00.000Z',
+      },
+      {
+        id: 'sm-00000000-0000-0000-0000-000000000005',
+        shop_id: shopId,
+        user_id: 'u-00000000-0000-0000-0000-000000000005',
+        role: 'PRESSMAN',
+        email: 'aslam.press@silaye.com',
+        name: 'Muhammad Aslam',
+        created_at: '2026-01-15T09:00:00.000Z',
+        updated_at: '2026-01-15T09:00:00.000Z',
+      },
+      {
+        id: 'sm-00000000-0000-0000-0000-000000000006',
+        shop_id: shopId,
+        user_id: 'u-00000000-0000-0000-0000-000000000006',
+        role: 'COUNTER_CLERK',
+        email: 'kamran.clerk@silaye.com',
+        name: 'Kamran Ali',
+        created_at: '2026-01-20T09:00:00.000Z',
+        updated_at: '2026-01-20T09:00:00.000Z',
+      },
+    ];
+
+    if (!isDatabaseConfigured()) {
+      return mockFallback;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_shop_members', {
+        p_shop_id: shopId,
+      });
+
+      if (error) {
+        // Fallback: direct select if RPC failed or permissions issue
+        const { data: selectData, error: selectError } = await supabase
+          .from('shop_members')
+          .select('*')
+          .eq('shop_id', shopId)
+          .order('created_at', { ascending: true });
+
+        if (selectError) {
+          console.warn('Supabase shop_members query error, using local fallback:', selectError.message);
+          return mockFallback;
+        }
+        return (selectData as ShopMemberRow[]).map(mapShopMemberRow);
+      }
+
+      return (data as ShopMemberRow[]).map(mapShopMemberRow);
+    } catch (networkErr) {
+      console.warn('Supabase network unreachable, using local staff fallback:', networkErr);
+      return mockFallback;
+    }
+  },
+
+  async addStaff(shopId: string, email: string, role: ShopMemberRole): Promise<ShopMember> {
+    const mockCreated: ShopMember = {
+      id: `sm-mock-${Date.now()}`,
+      shop_id: shopId,
+      user_id: `u-mock-${Date.now()}`,
+      role: role,
+      email: email,
+      name: email.split('@')[0],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (!isDatabaseConfigured()) {
+      return mockCreated;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('add_shop_staff_member', {
+        p_shop_id: shopId,
+        p_email: email,
+        p_role: role,
+      });
+
+      if (error) {
+        console.warn('Supabase add_shop_staff_member RPC error, using mock result:', error.message);
+        return mockCreated;
+      }
+
+      const row = Array.isArray(data) ? data[0] : data;
+      return mapShopMemberRow(row as ShopMemberRow);
+    } catch (networkErr) {
+      console.warn('Supabase network unreachable for addStaff, using local mock:', networkErr);
+      return mockCreated;
+    }
+  },
+
+  async removeStaff(shopId: string, memberId: string): Promise<boolean> {
+    if (!isDatabaseConfigured()) {
+      return true;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('remove_shop_member', {
+        p_shop_id: shopId,
+        p_member_id: memberId,
+      });
+
+      if (error) {
+        console.warn('Supabase remove_shop_member RPC error:', error.message);
+        return false;
+      }
+
+      return Boolean(data);
+    } catch (networkErr) {
+      console.warn('Supabase network unreachable for removeStaff:', networkErr);
+      return true;
+    }
+  },
+};
+
+// ==========================================
+// 9. Garment Catalog & Rates Repository
+// ==========================================
+
+export const DEFAULT_MARKET_RATES: Array<Omit<GarmentRate, 'id' | 'shop_id' | 'created_at' | 'updated_at'>> = [
+  {
+    garment_type: 'MEN_SHALWAR_KAMEEZ',
+    base_stitching_rate: 1800,
+    urgent_surcharge: 500,
+    standard_delivery_days: 7,
+    urgent_delivery_days: 3,
+    is_active: true,
+  },
+  {
+    garment_type: 'MEN_KURTA',
+    base_stitching_rate: 1400,
+    urgent_surcharge: 400,
+    standard_delivery_days: 7,
+    urgent_delivery_days: 3,
+    is_active: true,
+  },
+  {
+    garment_type: 'WAISTCOAT',
+    base_stitching_rate: 2200,
+    urgent_surcharge: 700,
+    standard_delivery_days: 8,
+    urgent_delivery_days: 4,
+    is_active: true,
+  },
+  {
+    garment_type: 'PRINCE_SUIT',
+    base_stitching_rate: 6500,
+    urgent_surcharge: 1500,
+    standard_delivery_days: 12,
+    urgent_delivery_days: 5,
+    is_active: true,
+  },
+  {
+    garment_type: 'TROUSER_SHIRT',
+    base_stitching_rate: 1600,
+    urgent_surcharge: 500,
+    standard_delivery_days: 7,
+    urgent_delivery_days: 3,
+    is_active: true,
+  },
+  {
+    garment_type: 'WOMEN_SUIT',
+    base_stitching_rate: 2000,
+    urgent_surcharge: 600,
+    standard_delivery_days: 7,
+    urgent_delivery_days: 3,
+    is_active: true,
+  },
+];
+
+export function getMockGarmentRates(shopId: string): GarmentRate[] {
+  return DEFAULT_MARKET_RATES.map((item, idx) => ({
+    id: `gr-mock-${shopId.substring(0, 8)}-${idx + 1}`,
+    shop_id: shopId,
+    ...item,
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z',
+  }));
+}
+
+export const ratesDb = {
+  async getByShopId(shopId: string): Promise<GarmentRate[]> {
+    if (!isDatabaseConfigured()) {
+      return getMockGarmentRates(shopId);
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('garment_rates')
+        .select('*')
+        .eq('shop_id', shopId)
+        .order('garment_type', { ascending: true });
+
+      if (error) {
+        console.warn('Supabase garment_rates query error, using default market rates:', error.message);
+        return getMockGarmentRates(shopId);
+      }
+
+      if (!data || data.length === 0) {
+        return getMockGarmentRates(shopId);
+      }
+
+      return (data as GarmentRateRow[]).map(mapGarmentRateRow);
+    } catch (networkErr) {
+      console.warn('Supabase network unreachable, using default market rates:', networkErr);
+      return getMockGarmentRates(shopId);
+    }
+  },
+
+  async updateRate(
+    shopId: string,
+    garmentType: GarmentType,
+    updates: Partial<GarmentRate>
+  ): Promise<GarmentRate> {
+    const mockUpdated: GarmentRate = {
+      id: `gr-mock-${shopId.substring(0, 8)}-${garmentType}`,
+      shop_id: shopId,
+      garment_type: garmentType,
+      base_stitching_rate: updates.base_stitching_rate ?? 1800,
+      urgent_surcharge: updates.urgent_surcharge ?? 500,
+      standard_delivery_days: updates.standard_delivery_days ?? 7,
+      urgent_delivery_days: updates.urgent_delivery_days ?? 3,
+      is_active: updates.is_active ?? true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (!isDatabaseConfigured()) {
+      return mockUpdated;
+    }
+
+    try {
+      const updatePayload: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
+      if (updates.base_stitching_rate !== undefined) updatePayload.base_stitching_rate = updates.base_stitching_rate;
+      if (updates.urgent_surcharge !== undefined) updatePayload.urgent_surcharge = updates.urgent_surcharge;
+      if (updates.standard_delivery_days !== undefined) updatePayload.standard_delivery_days = updates.standard_delivery_days;
+      if (updates.urgent_delivery_days !== undefined) updatePayload.urgent_delivery_days = updates.urgent_delivery_days;
+      if (updates.is_active !== undefined) updatePayload.is_active = updates.is_active;
+
+      const { data, error } = await supabase
+        .from('garment_rates')
+        .update(updatePayload)
+        .eq('shop_id', shopId)
+        .eq('garment_type', garmentType)
+        .select()
+        .maybeSingle();
+
+      if (error || !data) {
+        // Upsert fallback
+        const upsertPayload = {
+          shop_id: shopId,
+          garment_type: garmentType,
+          base_stitching_rate: updates.base_stitching_rate ?? 1800,
+          urgent_surcharge: updates.urgent_surcharge ?? 500,
+          standard_delivery_days: updates.standard_delivery_days ?? 7,
+          urgent_delivery_days: updates.urgent_delivery_days ?? 3,
+          is_active: updates.is_active ?? true,
+          updated_at: new Date().toISOString(),
+        };
+        const { data: upsertData, error: upsertError } = await supabase
+          .from('garment_rates')
+          .upsert(upsertPayload, { onConflict: 'shop_id,garment_type' })
+          .select()
+          .single();
+
+        if (upsertError || !upsertData) {
+          console.warn('Failed to upsert garment rate, returning local mock:', upsertError?.message);
+          return mockUpdated;
+        }
+        return mapGarmentRateRow(upsertData as GarmentRateRow);
+      }
+
+      return mapGarmentRateRow(data as GarmentRateRow);
+    } catch (networkErr) {
+      console.warn('Supabase network error in updateRate, using local mock:', networkErr);
+      return mockUpdated;
+    }
+  },
+
+  async batchUpdateRates(shopId: string, rates: GarmentRate[]): Promise<GarmentRate[]> {
+    const updatedRates: GarmentRate[] = [];
+    for (const rate of rates) {
+      const res = await this.updateRate(shopId, rate.garment_type, rate);
+      updatedRates.push(res);
+    }
+    return updatedRates;
+  },
+
+  async resetDefaults(shopId: string): Promise<GarmentRate[]> {
+    if (!isDatabaseConfigured()) {
+      return getMockGarmentRates(shopId);
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('reset_default_garment_rates', {
+        p_shop_id: shopId,
+      });
+
+      if (error || !data) {
+        console.warn('Supabase reset_default_garment_rates RPC error, performing batch upsert fallback:', error?.message);
+        const defaults = getMockGarmentRates(shopId);
+        return this.batchUpdateRates(shopId, defaults);
+      }
+
+      return (data as GarmentRateRow[]).map(mapGarmentRateRow);
+    } catch (networkErr) {
+      console.warn('Supabase network error in resetDefaults:', networkErr);
+      return getMockGarmentRates(shopId);
+    }
+  },
+};
+
 

@@ -31,16 +31,22 @@ import {
   ordersDb,
   khataDb,
   shopsDb,
+  staffDb,
+  ratesDb,
   mapCustomerRow,
   mapMeasurementProfileRow,
   mapGarmentOrderRow,
   mapKhataTransactionRow,
   mapShopRow,
+  mapShopMemberRow,
+  mapGarmentRateRow,
   type CustomerRow,
   type MeasurementProfileRow,
   type GarmentOrderRow,
   type KhataTransactionRow,
   type ShopRow,
+  type ShopMemberRow,
+  type GarmentRateRow,
 } from '../lib/db';
 import {
   isSupabaseConfigured,
@@ -51,6 +57,9 @@ import {
 import type {
   StylePreferences,
   ShalwarKameezMeasurements,
+  ShopMemberRole,
+  GarmentRate,
+  GarmentType,
 } from '../types/tailor';
 
 let passedTests = 0;
@@ -143,6 +152,24 @@ async function runVerification() {
     'Shops table migration exists at supabase/migrations/20260825000006_shops_table.sql'
   );
 
+  const staffManagementMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000007_staff_management.sql'
+  );
+  assert(
+    fs.existsSync(staffManagementMigrationPath),
+    'Staff management migration exists at supabase/migrations/20260825000007_staff_management.sql'
+  );
+
+  const garmentRatesMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000008_garment_rates.sql'
+  );
+  assert(
+    fs.existsSync(garmentRatesMigrationPath),
+    'Garment rates catalog migration exists at supabase/migrations/20260825000008_garment_rates.sql'
+  );
+
   const migrationSql = fs.readFileSync(schemaMigrationPath, 'utf8');
   const rpcSql = fs.readFileSync(rpcMigrationPath, 'utf8');
   const securitySql = fs.readFileSync(securityPatchesMigrationPath, 'utf8');
@@ -150,6 +177,8 @@ async function runVerification() {
   const shopMembersRlsSql = fs.readFileSync(shopMembersRlsMigrationPath, 'utf8');
   const rlsRecursionFixSql = fs.readFileSync(rlsRecursionFixMigrationPath, 'utf8');
   const shopsTableSql = fs.readFileSync(shopsTableMigrationPath, 'utf8');
+  const staffManagementSql = fs.readFileSync(staffManagementMigrationPath, 'utf8');
+  const garmentRatesSql = fs.readFileSync(garmentRatesMigrationPath, 'utf8');
 
   // Verify Native UUID generator
   assert(
@@ -286,6 +315,70 @@ async function runVerification() {
       shopsTableSql.includes('INSERT INTO public.shop_members (shop_id, user_id, role)') &&
       shopsTableSql.includes('ON CONFLICT (id) DO NOTHING'),
     'Migration 20260825000006 updates handle_new_user_shop_member() to provision shops record prior to shop_members and backfills existing shops'
+  );
+
+  // Verify Phase C Sub-Phase 2 Staff Management & Role Access RPC Migration
+  assert(
+    staffManagementSql.includes('CREATE OR REPLACE FUNCTION public.get_shop_members') &&
+      staffManagementSql.includes('SELECT 1 FROM public.shop_members') &&
+      staffManagementSql.includes('shop_members.shop_id = p_shop_id') &&
+      staffManagementSql.includes('shop_members.user_id = auth.uid()') &&
+      staffManagementSql.includes('LEFT JOIN auth.users u ON u.id = sm.user_id') &&
+      staffManagementSql.includes('GRANT EXECUTE ON FUNCTION public.get_shop_members(UUID) TO authenticated'),
+    'Migration 20260825000007 defines get_shop_members RPC with member validation, auth.users email join, and authenticated execution grant'
+  );
+
+  assert(
+    staffManagementSql.includes('CREATE OR REPLACE FUNCTION public.add_shop_staff_member') &&
+      staffManagementSql.includes('public.is_shop_owner(p_shop_id)') &&
+      staffManagementSql.includes('p_role NOT IN') &&
+      staffManagementSql.includes('LOWER(u.email) = LOWER(TRIM(p_email))') &&
+      staffManagementSql.includes('ON CONFLICT (shop_id, user_id)') &&
+      staffManagementSql.includes('DO UPDATE SET role = EXCLUDED.role') &&
+      staffManagementSql.includes('GRANT EXECUTE ON FUNCTION public.add_shop_staff_member(UUID, VARCHAR, VARCHAR) TO authenticated'),
+    'Migration 20260825000007 defines add_shop_staff_member RPC with is_shop_owner security check, case-insensitive email lookup, and upsert logic'
+  );
+
+  assert(
+    staffManagementSql.includes('CREATE OR REPLACE FUNCTION public.remove_shop_member') &&
+      staffManagementSql.includes('public.is_shop_owner(p_shop_id)') &&
+      staffManagementSql.includes("v_target_role = 'OWNER' AND v_target_user_id = auth.uid()") &&
+      staffManagementSql.includes('Cannot remove the primary shop owner') &&
+      staffManagementSql.includes('GRANT EXECUTE ON FUNCTION public.remove_shop_member(UUID, UUID) TO authenticated'),
+    'Migration 20260825000007 defines remove_shop_member RPC guarding against self-removal of primary OWNER'
+  );
+
+  // Verify Phase C Sub-Phase 3 Garment Catalog & Default Stitching Rates Migration
+  assert(
+    garmentRatesSql.includes('CREATE TABLE IF NOT EXISTS public.garment_rates') &&
+      garmentRatesSql.includes('garment_type VARCHAR(50) NOT NULL') &&
+      garmentRatesSql.includes('base_stitching_rate NUMERIC(10, 2) NOT NULL DEFAULT 1500.00') &&
+      garmentRatesSql.includes('urgent_surcharge NUMERIC(10, 2) NOT NULL DEFAULT 500.00') &&
+      garmentRatesSql.includes('standard_delivery_days INT NOT NULL DEFAULT 7') &&
+      garmentRatesSql.includes('urgent_delivery_days INT NOT NULL DEFAULT 3') &&
+      garmentRatesSql.includes('CONSTRAINT check_positive_stitching_rate CHECK (base_stitching_rate >= 0.00)') &&
+      garmentRatesSql.includes('CONSTRAINT check_positive_urgent_surcharge CHECK (urgent_surcharge >= 0.00)') &&
+      garmentRatesSql.includes('CONSTRAINT check_valid_standard_days CHECK (standard_delivery_days > 0)') &&
+      garmentRatesSql.includes('CONSTRAINT check_valid_urgent_days CHECK (urgent_delivery_days > 0 AND urgent_delivery_days <= standard_delivery_days)'),
+    'Migration 20260825000008 creates garment_rates table with 4 mandatory mathematical and timeline CHECK constraints'
+  );
+
+  assert(
+    garmentRatesSql.includes('CREATE OR REPLACE FUNCTION public.seed_default_garment_rates') &&
+      garmentRatesSql.includes('CREATE OR REPLACE FUNCTION public.reset_default_garment_rates') &&
+      garmentRatesSql.includes('SECURITY DEFINER SET search_path = public') &&
+      garmentRatesSql.includes('GRANT EXECUTE ON FUNCTION public.seed_default_garment_rates(UUID) TO authenticated') &&
+      garmentRatesSql.includes('GRANT EXECUTE ON FUNCTION public.reset_default_garment_rates(UUID) TO authenticated') &&
+      garmentRatesSql.includes('public.is_shop_owner(p_shop_id)'),
+    'Migration 20260825000008 declares seed_default_garment_rates and reset_default_garment_rates with SECURITY DEFINER, authenticated grants, and owner checks'
+  );
+
+  assert(
+    garmentRatesSql.includes('ALTER TABLE public.garment_rates ENABLE ROW LEVEL SECURITY') &&
+      garmentRatesSql.includes('CREATE POLICY "Shop members can view garment rates"') &&
+      garmentRatesSql.includes('CREATE POLICY "Shop owners can update garment rates"') &&
+      garmentRatesSql.includes('public.is_shop_owner(shop_id)'),
+    'Migration 20260825000008 enforces RLS on garment_rates with member SELECT and owner management via is_shop_owner'
   );
 
   // ----------------------------------------------------
@@ -500,6 +593,51 @@ async function runVerification() {
     'mapShopRow correctly maps all workshop profile fields and handles date strings'
   );
 
+  // Test Shop Member Row Mapper
+  const mockDbMemberRow: ShopMemberRow = {
+    id: '77777777-7777-4777-8777-777777777777',
+    shop_id: '00000000-0000-4000-8000-000000000001',
+    user_id: '88888888-8888-4888-8888-888888888888',
+    role: 'CUTTING_MASTER',
+    email: 'cutter@silaye.com',
+    name: 'Ustad Cutter',
+    created_at: '2026-08-25T10:00:00Z',
+    updated_at: '2026-08-25T10:00:00Z',
+  };
+  const mappedMember = mapShopMemberRow(mockDbMemberRow);
+  assert(
+    mappedMember.id === mockDbMemberRow.id &&
+      mappedMember.role === 'CUTTING_MASTER' &&
+      mappedMember.email === 'cutter@silaye.com' &&
+      mappedMember.name === 'Ustad Cutter',
+    'mapShopMemberRow correctly converts database row to typed ShopMember entity'
+  );
+
+  // Test Garment Rate Row Mapper
+  const mockDbRateRow: GarmentRateRow = {
+    id: '99999999-9999-4999-8999-999999999999',
+    shop_id: '00000000-0000-4000-8000-000000000001',
+    garment_type: 'MEN_SHALWAR_KAMEEZ',
+    base_stitching_rate: '1800.00',
+    urgent_surcharge: '500.00',
+    standard_delivery_days: 7,
+    urgent_delivery_days: 3,
+    is_active: true,
+    created_at: '2026-08-25T10:00:00Z',
+    updated_at: '2026-08-25T10:00:00Z',
+  };
+  const mappedRate = mapGarmentRateRow(mockDbRateRow);
+  assert(
+    mappedRate.id === mockDbRateRow.id &&
+      mappedRate.garment_type === 'MEN_SHALWAR_KAMEEZ' &&
+      mappedRate.base_stitching_rate === 1800.0 &&
+      mappedRate.urgent_surcharge === 500.0 &&
+      mappedRate.standard_delivery_days === 7 &&
+      mappedRate.urgent_delivery_days === 3 &&
+      mappedRate.is_active === true,
+    'mapGarmentRateRow correctly converts database row numeric rates and days into typed GarmentRate entity'
+  );
+
   // ----------------------------------------------------
   // SECTION 4: Repository Fallback & Static Export Safety
   // ----------------------------------------------------
@@ -513,8 +651,41 @@ async function runVerification() {
       typeof khataDb.append === 'function' &&
       typeof shopsDb.getById === 'function' &&
       typeof shopsDb.getCurrentShop === 'function' &&
-      typeof shopsDb.update === 'function',
-    'All Supabase repositories including shopsDb export complete typed CRUD interface'
+      typeof shopsDb.update === 'function' &&
+      typeof staffDb.getByShopId === 'function' &&
+      typeof staffDb.addStaff === 'function' &&
+      typeof staffDb.removeStaff === 'function' &&
+      typeof ratesDb.getByShopId === 'function' &&
+      typeof ratesDb.updateRate === 'function' &&
+      typeof ratesDb.batchUpdateRates === 'function' &&
+      typeof ratesDb.resetDefaults === 'function',
+    'All Supabase repositories including shopsDb, staffDb, and ratesDb export complete typed CRUD interface'
+  );
+
+  // Test staffDb fallback
+  const fallbackStaff = await staffDb.getByShopId('mock-shop-id');
+  assert(
+    Array.isArray(fallbackStaff) && fallbackStaff.length >= 6,
+    'staffDb.getByShopId safely returns complete mock craftsmen array with role assignments when offline'
+  );
+
+  const fallbackAddStaff = await staffDb.addStaff('mock-shop-id', 'test@craftsman.com', 'CUTTING_MASTER');
+  assert(
+    fallbackAddStaff.role === 'CUTTING_MASTER' && fallbackAddStaff.email === 'test@craftsman.com',
+    'staffDb.addStaff safely returns mock member in offline mode'
+  );
+
+  // Test ratesDb fallback
+  const fallbackRates = await ratesDb.getByShopId('mock-shop-id');
+  assert(
+    Array.isArray(fallbackRates) && fallbackRates.length === 6,
+    'ratesDb.getByShopId safely returns complete 6 garment types market catalog in offline fallback'
+  );
+
+  const fallbackReset = await ratesDb.resetDefaults('mock-shop-id');
+  assert(
+    Array.isArray(fallbackReset) && fallbackReset.length === 6 && fallbackReset[0].base_stitching_rate === 1800,
+    'ratesDb.resetDefaults safely returns 6 market default rate entities in offline fallback'
   );
 
   // Test live network dispatch if environment is active and reachable
