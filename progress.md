@@ -1331,7 +1331,69 @@
   - `npm run build`: Static export compiled successfully, generating 26/26 static routes into `out/` with zero runtime or SSR errors.
 
 * **Next Immediate Task:**
+  - Phase D (Task D.1): Founder's Super Admin Panel & Platform Command Center (Completed)
+
+---
+
+## Phase D: Multi-Tenant Platform Operations & Founder Super Admin (Phase D, Sub-Phase 1 Completed)
+* **Date:** 2026-08-28
+* **Tasks Completed:**
+  - `D.1.1` Created Database Migration `supabase/migrations/20260825000010_super_admin.sql`:
+    * Added `status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'` to `public.shops` with `CONSTRAINT check_valid_shop_status CHECK (status IN ('ACTIVE', 'SUSPENDED', 'TRIAL', 'EXPIRED'))`.
+    * Created `public.system_admins` table (`id UUID PRIMARY KEY`, `user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE`, `role VARCHAR(50) DEFAULT 'SUPER_ADMIN'`, `created_at TIMESTAMPTZ`, `CONSTRAINT unique_system_admin UNIQUE (user_id)`).
+    * Implemented STABLE `public.is_super_admin()` helper function with `SECURITY DEFINER SET search_path = public` checking caller `auth.uid()` existence in `system_admins`.
+    * Configured Row Level Security (RLS) on `system_admins` restricting SELECT/MODIFY strictly to super admins.
+    * Implemented `public.get_platform_metrics()` RPC with `SECURITY DEFINER` returning aggregated platform statistics with safe `COALESCE` arithmetic (`total_shops`, `active_shops`, `suspended_shops`, `total_users`, `total_orders`, `total_khata_volume`).
+    * Implemented `public.get_all_shops_admin()` RPC returning table of all shops joined with owner emails from `auth.users`, distinct order counts (`COUNT(DISTINCT go.id)`), and member counts (`COUNT(DISTINCT sm.id)`).
+    * Implemented `public.set_shop_status_admin(p_shop_id, p_status)` RPC with super admin validation and target status checks.
+    * Added initial founder super admin bootstrap query: `INSERT INTO public.system_admins (user_id) SELECT id FROM auth.users ORDER BY created_at ASC LIMIT 1 ON CONFLICT (user_id) DO NOTHING;`.
+    * Granted execution privileges on all functions to `authenticated` role.
+  - `D.1.2` Extended Types & Database Repository Layer (`types/tailor.ts` & `lib/db.ts`):
+    * Declared `ShopStatus` union (`'ACTIVE' | 'SUSPENDED' | 'TRIAL' | 'EXPIRED'`) and updated `Shop` interface with `status?: ShopStatus;`.
+    * Declared `PlatformMetrics`, `AdminShopOverview`, and `SystemAdmin` interfaces in `types/tailor.ts`.
+    * Declared `ShopRow.status`, `AdminShopOverviewRow`, and `mapAdminShopOverviewRow` converter in `lib/db.ts`.
+    * Implemented offline mock generators `getMockPlatformMetrics()` and `getMockAdminShops()` covering diverse workshops across Pakistani hubs (Wah Cantt, Lahore, Karachi, Rawalpindi, Islamabad, Peshawar, Faisalabad, Multan).
+    * Exported `adminDb` repository module with `checkIsSuperAdmin()`, `getPlatformMetrics()`, `getAllShops()`, and `setShopStatus()` with non-throwing error handling and optimistic offline state updates.
+  - `D.1.3` Application Shell & Tenant Suspension Guard (`components/layout/app-shell.tsx`):
+    * Added super admin verification on session load, displaying a dedicated "Platform Admin / سپر ایڈمن" link in the desktop sidebar and mobile drawer.
+    * Implemented active workshop suspension detection: if `shop.status === 'SUSPENDED'`, renders an unbypassable suspension alert banner across the workspace informing operators to contact platform billing/support.
+  - `D.1.4` Built Super Admin Command Center Dashboard (`app/admin/page.tsx`):
+    * Executive Obsidian Dark control center (`bg-ambient-dark`, `.premium-glass-card`, gold/cyan accents, and Urdu typography).
+    * Built 403 Access Denied Glass Gate: verifies caller super admin privileges; if unauthorized, renders a 403 Access Denied glass card with return CTA to `/dashboard`.
+    * Built Top KPI Command Ribbon (4 Metric Cards):
+      1. *Registered Workshops* (*کل درزی ورکشاپس*) with Active/Suspended badges.
+      2. *Platform Craftsmen* (*فعال کاریگر*) across Pakistan.
+      3. *Total Orders Processed* (*کل آرڈرز*) with lifetime throughput.
+      4. *Market Udhaar Tracked* (*مارکیٹ ادھار والیوم*) with formatted currency.
+    * Built Workshop Supervision & Governance Table:
+      - Search bar with instant multi-field filtering (Shop Name, City, Owner Email).
+      - Status filter tabs (`All`, `Active`, `Suspended`, `Trial`).
+      - High-density table columns: Name & Token, City, Owner Email & Phone, Status Badge (`ACTIVE` - emerald, `SUSPENDED` - rose, `TRIAL` - amber, `EXPIRED` - slate), Craftsmen Count, Orders Count, and Registration Date.
+      - 1-Tap Quick Governance Actions ("Suspend", "Reactivate", "Set Trial").
+      - Status Mutation Confirmation Dialog (`Dialog`) with danger/success prompts and toast notifications.
+  - `D.1.5` Automated Test Suite & Production Build Verification:
+    * Extended `scripts/verify_db.ts` to 71 test assertions covering Migration 10 DDL, `system_admins` RLS, STABLE `is_super_admin()`, 3 RPC signatures, `AdminShopOverviewRow` mappers, and `adminDb` methods (71/71 passed).
+    * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    * Verified production static export build compiles 27/27 static routes (including `/admin` at 6.93 kB) into `out/` with zero runtime or SSR errors (`npm run build`).
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000010_super_admin.sql` [NEW]
+  - `app/admin/page.tsx` [NEW]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 71/71 test assertions passed with 0 failures.
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 27/27 static routes into `out/` with zero runtime or SSR errors.
+
+* **Next Immediate Task:**
   - Phase 11 (Task 11.1): Scaffold Capacitor configuration (`capacitor.config.ts`) and Android project assets (`npx cap add android`).
+
 
 
 

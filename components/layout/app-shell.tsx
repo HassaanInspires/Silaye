@@ -19,11 +19,14 @@ import {
   Sparkles,
   LogOut,
   Lock,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { syncCoordinator, type SyncState } from '@/lib/sync-coordinator';
+import { adminDb, shopsDb } from '@/lib/db';
 import {
   getSession,
   signOut,
@@ -249,6 +252,8 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const [searchValue, setSearchValue] = React.useState<string>('');
   const [currentUser, setCurrentUser] = React.useState<User | null>(null);
   const [authChecked, setAuthChecked] = React.useState<boolean>(false);
+  const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
+  const [shopStatus, setShopStatus] = React.useState<string>('ACTIVE');
 
   // Global '/' shortcut focuses the search input
   const searchRef = React.useRef<HTMLInputElement>(null);
@@ -281,6 +286,14 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         pathname === '/' ||
         pathname === '';
 
+      // Check Super Admin privilege safely
+      try {
+        const isSuper = await adminDb.checkIsSuperAdmin();
+        if (isMounted) setIsSuperAdmin(isSuper);
+      } catch {
+        if (isMounted) setIsSuperAdmin(false);
+      }
+
       if (!isSupabaseConfigured()) {
         // Local offline / demo development mode
         if (isMounted) setAuthChecked(true);
@@ -293,6 +306,16 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       if (session) {
         setCurrentUser(session.user);
         setAuthChecked(true);
+
+        // Fetch tenant shop status
+        try {
+          const shop = await shopsDb.getCurrentShop(session.user.id);
+          if (isMounted && shop?.status) {
+            setShopStatus(shop.status);
+          }
+        } catch {
+          // Ignore
+        }
       } else if (!isWhitelisted) {
         window.location.href = '/login';
       } else {
@@ -306,6 +329,8 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       if (!isMounted) return;
       if (event === 'SIGNED_OUT') {
         setCurrentUser(null);
+        setIsSuperAdmin(false);
+        setShopStatus('ACTIVE');
         const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
         const isWhitelisted =
           pathname === '/login' ||
@@ -318,6 +343,9 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         }
       } else if (session) {
         setCurrentUser(session.user);
+        adminDb.checkIsSuperAdmin().then((isSuper) => {
+          if (isMounted) setIsSuperAdmin(isSuper);
+        });
       }
     });
 
@@ -387,6 +415,37 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 isActive={activeRoute === item.route}
               />
             ))}
+
+            {isSuperAdmin && (
+              <div className="flex flex-col gap-1.5 pt-3 mt-1 border-t border-white/5">
+                <span className="px-3 text-[10px] font-semibold uppercase tracking-wider text-cyan-400">
+                  Platform Admin
+                </span>
+                <a
+                  href="/admin"
+                  aria-current={activeRoute === '/admin' ? 'page' : undefined}
+                  className={cn(
+                    'group flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-150',
+                    activeRoute === '/admin'
+                      ? 'border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.15)]'
+                      : 'border border-transparent text-gray-400 hover:border-cyan-500/20 hover:bg-cyan-500/[0.06] hover:text-cyan-200'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck
+                      className={cn(
+                        'h-4 w-4 transition-colors',
+                        activeRoute === '/admin' ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
+                      )}
+                    />
+                    <span>Super Admin</span>
+                  </div>
+                  <span className="font-urdu-sans text-xs text-cyan-400/80" dir="rtl">
+                    ایڈمن پینل
+                  </span>
+                </a>
+              </div>
+            )}
           </nav>
         </div>
 
@@ -463,6 +522,38 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                     onNavigate={() => setMobileMenuOpen(false)}
                   />
                 ))}
+
+                {isSuperAdmin && (
+                  <div className="flex flex-col gap-1.5 pt-3 mt-1 border-t border-white/5">
+                    <span className="px-3 text-[10px] font-semibold uppercase tracking-wider text-cyan-400">
+                      Platform Admin
+                    </span>
+                    <a
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      aria-current={activeRoute === '/admin' ? 'page' : undefined}
+                      className={cn(
+                        'group flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-150',
+                        activeRoute === '/admin'
+                          ? 'border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.15)]'
+                          : 'border border-transparent text-gray-400 hover:border-cyan-500/20 hover:bg-cyan-500/[0.06] hover:text-cyan-200'
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <ShieldCheck
+                          className={cn(
+                            'h-4 w-4 transition-colors',
+                            activeRoute === '/admin' ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
+                          )}
+                        />
+                        <span>Super Admin</span>
+                      </div>
+                      <span className="font-urdu-sans text-xs text-cyan-400/80" dir="rtl">
+                        ایڈمن پینل
+                      </span>
+                    </a>
+                  </div>
+                )}
               </nav>
             </div>
 
@@ -552,6 +643,20 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
 
         {/* Scrollable Main Viewport */}
         <main className="flex-1 p-4 md:p-8" id="main-content">
+          {shopStatus === 'SUSPENDED' && activeRoute !== '/admin' && (
+            <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 backdrop-blur-xl flex items-start gap-3 shadow-[0_0_25px_rgba(244,63,94,0.15)] animate-fade-in">
+              <ShieldAlert className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
+              <div className="flex flex-col gap-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-rose-300">Workshop Account Suspended</span>
+                  <span className="font-urdu-sans text-rose-400" dir="rtl">ورکشاپ اکاؤنٹ معطل ہے</span>
+                </div>
+                <p className="text-gray-300">
+                  This workshop account is currently suspended by Silaye Platform Operations. Order creation and new workflows are locked. Please contact support at <span className="font-mono text-rose-300">support@silaye.pk</span> or contact the platform administrator to restore your access.
+                </p>
+              </div>
+            </div>
+          )}
           {children}
         </main>
       </div>

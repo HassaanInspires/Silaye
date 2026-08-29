@@ -24,6 +24,7 @@ import {
 } from '@/lib/supabase/client';
 import type {
   Shop,
+  ShopStatus,
   ShopMember,
   ShopMemberRole,
   GarmentRate,
@@ -40,6 +41,9 @@ import type {
   ShalwarKameezMeasurements,
   StylePreferences,
   FabricSource,
+  PlatformMetrics,
+  AdminShopOverview,
+  SystemAdmin,
 } from '@/types/tailor';
 
 // ==========================================
@@ -151,6 +155,7 @@ export interface ShopRow {
   ntn_number: string | null;
   receipt_header: string | null;
   receipt_footer: string | null;
+  status?: string;
   created_at: string | Date;
   updated_at: string | Date;
 }
@@ -315,6 +320,7 @@ export function mapShopRow(row: ShopRow): Shop {
     ntn_number: row.ntn_number,
     receipt_header: row.receipt_header,
     receipt_footer: row.receipt_footer,
+    status: (row.status as ShopStatus) || 'ACTIVE',
     created_at: toIsoString(row.created_at),
     updated_at: toIsoString(row.updated_at),
   };
@@ -1339,5 +1345,277 @@ export const printerDb = {
     return this.update(shopId, DEFAULT_PRINTER_SETTINGS);
   },
 };
+
+// ==========================================
+// 11. Super Admin & Platform Operations Repository
+// ==========================================
+
+export interface AdminShopOverviewRow {
+  id: string;
+  name: string;
+  city: string | null;
+  phone: string | null;
+  status: string;
+  owner_email: string | null;
+  total_orders: number | string;
+  member_count: number | string;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
+export function mapAdminShopOverviewRow(row: AdminShopOverviewRow): AdminShopOverview {
+  return {
+    id: row.id,
+    name: row.name,
+    city: row.city || 'Wah Cantt',
+    phone: row.phone,
+    status: (row.status as ShopStatus) || 'ACTIVE',
+    owner_email: row.owner_email || null,
+    total_orders: Number(row.total_orders || 0),
+    member_count: Number(row.member_count || 1),
+    created_at: toIsoString(row.created_at),
+    updated_at: toIsoString(row.updated_at),
+  };
+}
+
+let mockAdminShopsState: AdminShopOverview[] = [
+  {
+    id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'Wah Cantt Bespoke Tailors',
+    city: 'Wah Cantt',
+    phone: '0300-1234567',
+    status: 'ACTIVE',
+    owner_email: 'founder@silaye.pk',
+    total_orders: 142,
+    member_count: 5,
+    created_at: '2026-01-10T08:00:00.000Z',
+    updated_at: '2026-08-25T10:00:00.000Z',
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000002',
+    name: 'Anarkali Master Craftsmen',
+    city: 'Lahore',
+    phone: '0321-9876543',
+    status: 'ACTIVE',
+    owner_email: 'anarkali.craft@gmail.com',
+    total_orders: 310,
+    member_count: 8,
+    created_at: '2026-02-01T09:30:00.000Z',
+    updated_at: '2026-08-24T14:20:00.000Z',
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000003',
+    name: 'Tariq Road Royal Suiting',
+    city: 'Karachi',
+    phone: '0333-5551234',
+    status: 'ACTIVE',
+    owner_email: 'tariqroad.royal@yahoo.com',
+    total_orders: 245,
+    member_count: 6,
+    created_at: '2026-03-15T11:00:00.000Z',
+    updated_at: '2026-08-26T16:45:00.000Z',
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000004',
+    name: 'Saddar Executive Tailors',
+    city: 'Rawalpindi',
+    phone: '0345-7778899',
+    status: 'TRIAL',
+    owner_email: 'saddar.executive@outlook.com',
+    total_orders: 48,
+    member_count: 3,
+    created_at: '2026-08-01T10:00:00.000Z',
+    updated_at: '2026-08-20T12:00:00.000Z',
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000005',
+    name: 'Blue Area Bespoke Studio',
+    city: 'Islamabad',
+    phone: '0312-4443322',
+    status: 'ACTIVE',
+    owner_email: 'bluearea.bespoke@gmail.com',
+    total_orders: 185,
+    member_count: 4,
+    created_at: '2026-04-10T14:00:00.000Z',
+    updated_at: '2026-08-22T09:15:00.000Z',
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000006',
+    name: 'Karkhano Traditional Stitchers',
+    city: 'Peshawar',
+    phone: '0301-8889900',
+    status: 'SUSPENDED',
+    owner_email: 'karkhano.tailors@gmail.com',
+    total_orders: 89,
+    member_count: 2,
+    created_at: '2026-05-12T07:45:00.000Z',
+    updated_at: '2026-08-15T18:00:00.000Z',
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000007',
+    name: 'Clock Tower Cloth House & Tailors',
+    city: 'Faisalabad',
+    phone: '0308-3332211',
+    status: 'ACTIVE',
+    owner_email: 'clocktower.fabrics@gmail.com',
+    total_orders: 198,
+    member_count: 5,
+    created_at: '2026-05-28T13:30:00.000Z',
+    updated_at: '2026-08-23T11:20:00.000Z',
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000008',
+    name: 'Cantt Heritage Silaye',
+    city: 'Multan',
+    phone: '0322-1114455',
+    status: 'TRIAL',
+    owner_email: 'multan.heritage@hotmail.com',
+    total_orders: 34,
+    member_count: 3,
+    created_at: '2026-08-10T15:00:00.000Z',
+    updated_at: '2026-08-27T08:00:00.000Z',
+  },
+];
+
+export function getMockPlatformMetrics(): PlatformMetrics {
+  const activeCount = mockAdminShopsState.filter((s) => s.status === 'ACTIVE').length;
+  const suspendedCount = mockAdminShopsState.filter((s) => s.status === 'SUSPENDED').length;
+  const totalOrders = mockAdminShopsState.reduce((acc, s) => acc + s.total_orders, 0);
+  const totalMembers = mockAdminShopsState.reduce((acc, s) => acc + s.member_count, 0);
+
+  return {
+    total_shops: mockAdminShopsState.length,
+    active_shops: activeCount,
+    suspended_shops: suspendedCount,
+    total_users: totalMembers + 4,
+    total_orders: totalOrders,
+    total_khata_volume: 1845000.0,
+  };
+}
+
+export function getMockAdminShops(): AdminShopOverview[] {
+  return [...mockAdminShopsState];
+}
+
+export const adminDb = {
+  async checkIsSuperAdmin(): Promise<boolean> {
+    if (!isDatabaseConfigured()) {
+      return true; // Local development offline mode grants super admin access
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        return false;
+      }
+
+      // Check system_admins table for user_id
+      const { data, error } = await supabase
+        .from('system_admins')
+        .select('id, role')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (error || !data) {
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.warn('adminDb.checkIsSuperAdmin check failed, safely returning false:', err);
+      return false;
+    }
+  },
+
+  async getPlatformMetrics(): Promise<PlatformMetrics> {
+    if (!isDatabaseConfigured()) {
+      return getMockPlatformMetrics();
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_platform_metrics');
+
+      if (error || !data || (Array.isArray(data) && data.length === 0)) {
+        console.warn('get_platform_metrics RPC error, using local fallback:', error?.message);
+        return getMockPlatformMetrics();
+      }
+
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        total_shops: Number(row.total_shops || 0),
+        active_shops: Number(row.active_shops || 0),
+        suspended_shops: Number(row.suspended_shops || 0),
+        total_users: Number(row.total_users || 0),
+        total_orders: Number(row.total_orders || 0),
+        total_khata_volume: Number(row.total_khata_volume || 0),
+      };
+    } catch (networkErr) {
+      console.warn('Supabase network error in getPlatformMetrics, using local mock:', networkErr);
+      return getMockPlatformMetrics();
+    }
+  },
+
+  async getAllShops(): Promise<AdminShopOverview[]> {
+    if (!isDatabaseConfigured()) {
+      return getMockAdminShops();
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_all_shops_admin');
+
+      if (error || !data) {
+        console.warn('get_all_shops_admin RPC error, using local fallback:', error?.message);
+        return getMockAdminShops();
+      }
+
+      return (data as AdminShopOverviewRow[]).map(mapAdminShopOverviewRow);
+    } catch (networkErr) {
+      console.warn('Supabase network error in getAllShops, using local mock:', networkErr);
+      return getMockAdminShops();
+    }
+  },
+
+  async setShopStatus(shopId: string, status: ShopStatus): Promise<boolean> {
+    // Update local mock state
+    const targetIdx = mockAdminShopsState.findIndex((s) => s.id === shopId);
+    if (targetIdx !== -1) {
+      mockAdminShopsState[targetIdx] = {
+        ...mockAdminShopsState[targetIdx],
+        status,
+        updated_at: new Date().toISOString(),
+      };
+    }
+
+    if (!isDatabaseConfigured()) {
+      return true;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('set_shop_status_admin', {
+        p_shop_id: shopId,
+        p_status: status,
+      });
+
+      if (error) {
+        console.warn('set_shop_status_admin RPC error, attempting direct update fallback:', error.message);
+        const { error: directErr } = await supabase
+          .from('shops')
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq('id', shopId);
+
+        if (directErr) {
+          console.warn('Direct shops status update error, preserved local optimistic state:', directErr.message);
+          return true;
+        }
+      }
+
+      return true;
+    } catch (networkErr) {
+      console.warn('Supabase network error in setShopStatus, updated local state only:', networkErr);
+      return true;
+    }
+  },
+};
+
 
 

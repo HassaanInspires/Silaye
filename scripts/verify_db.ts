@@ -34,6 +34,7 @@ import {
   staffDb,
   ratesDb,
   printerDb,
+  adminDb,
   mapCustomerRow,
   mapMeasurementProfileRow,
   mapGarmentOrderRow,
@@ -42,6 +43,7 @@ import {
   mapShopMemberRow,
   mapGarmentRateRow,
   mapPrinterSettingsRow,
+  mapAdminShopOverviewRow,
   type CustomerRow,
   type MeasurementProfileRow,
   type GarmentOrderRow,
@@ -50,6 +52,7 @@ import {
   type ShopMemberRow,
   type GarmentRateRow,
   type PrinterSettingsRow,
+  type AdminShopOverviewRow,
 } from '../lib/db';
 import {
   isSupabaseConfigured,
@@ -65,6 +68,10 @@ import type {
   GarmentType,
   PrinterSettings,
   PrinterPaperWidth,
+  ShopStatus,
+  PlatformMetrics,
+  AdminShopOverview,
+  SystemAdmin,
 } from '../types/tailor';
 
 let passedTests = 0;
@@ -184,6 +191,15 @@ async function runVerification() {
     'Thermal printer settings migration exists at supabase/migrations/20260825000009_printer_settings.sql'
   );
 
+  const superAdminMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000010_super_admin.sql'
+  );
+  assert(
+    fs.existsSync(superAdminMigrationPath),
+    'Super admin & platform command center migration exists at supabase/migrations/20260825000010_super_admin.sql'
+  );
+
   const migrationSql = fs.readFileSync(schemaMigrationPath, 'utf8');
   const rpcSql = fs.readFileSync(rpcMigrationPath, 'utf8');
   const securitySql = fs.readFileSync(securityPatchesMigrationPath, 'utf8');
@@ -194,6 +210,7 @@ async function runVerification() {
   const staffManagementSql = fs.readFileSync(staffManagementMigrationPath, 'utf8');
   const garmentRatesSql = fs.readFileSync(garmentRatesMigrationPath, 'utf8');
   const printerSettingsSql = fs.readFileSync(printerSettingsMigrationPath, 'utf8');
+  const superAdminSql = fs.readFileSync(superAdminMigrationPath, 'utf8');
 
   // Verify Native UUID generator
   assert(
@@ -433,6 +450,54 @@ async function runVerification() {
       printerSettingsSql.includes('CREATE POLICY "Shop owners can delete printer settings"') &&
       printerSettingsSql.includes('public.is_shop_owner(shop_id)'),
     'Migration 20260825000009 enforces RLS on printer_settings with member SELECT and owner CRUD policies'
+  );
+
+  // Verify Phase D Sub-Phase 1 Super Admin & Platform Operations Migration
+  assert(
+    superAdminSql.includes('status VARCHAR(20) NOT NULL DEFAULT \'ACTIVE\'') &&
+      superAdminSql.includes('CONSTRAINT check_valid_shop_status') &&
+      superAdminSql.includes('CHECK (status IN (\'ACTIVE\', \'SUSPENDED\', \'TRIAL\', \'EXPIRED\'))'),
+    'Migration 20260825000010 adds status column and check_valid_shop_status constraint to public.shops'
+  );
+
+  assert(
+    superAdminSql.includes('CREATE TABLE IF NOT EXISTS public.system_admins') &&
+      superAdminSql.includes('user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE') &&
+      superAdminSql.includes('role VARCHAR(50) NOT NULL DEFAULT \'SUPER_ADMIN\'') &&
+      superAdminSql.includes('CONSTRAINT unique_system_admin UNIQUE (user_id)'),
+    'Migration 20260825000010 creates public.system_admins table with unique user_id constraint'
+  );
+
+  assert(
+    superAdminSql.includes('CREATE OR REPLACE FUNCTION public.is_super_admin()') &&
+      superAdminSql.includes('RETURNS BOOLEAN') &&
+      superAdminSql.includes('STABLE') &&
+      superAdminSql.includes('SECURITY DEFINER') &&
+      superAdminSql.includes('SET search_path = public') &&
+      superAdminSql.includes('GRANT EXECUTE ON FUNCTION public.is_super_admin() TO authenticated'),
+    'Migration 20260825000010 creates STABLE SECURITY DEFINER helper function public.is_super_admin()'
+  );
+
+  assert(
+    superAdminSql.includes('CREATE OR REPLACE FUNCTION public.get_platform_metrics()') &&
+      superAdminSql.includes('total_shops BIGINT') &&
+      superAdminSql.includes('active_shops BIGINT') &&
+      superAdminSql.includes('suspended_shops BIGINT') &&
+      superAdminSql.includes('total_users BIGINT') &&
+      superAdminSql.includes('total_orders BIGINT') &&
+      superAdminSql.includes('total_khata_volume NUMERIC(12, 2)') &&
+      superAdminSql.includes('COALESCE('),
+    'Migration 20260825000010 declares get_platform_metrics RPC with safe COALESCE aggregated counts'
+  );
+
+  assert(
+    superAdminSql.includes('CREATE OR REPLACE FUNCTION public.get_all_shops_admin()') &&
+      superAdminSql.includes('owner_email VARCHAR') &&
+      superAdminSql.includes('COUNT(DISTINCT go.id)::BIGINT AS total_orders') &&
+      superAdminSql.includes('COUNT(DISTINCT sm.id)::BIGINT AS member_count') &&
+      superAdminSql.includes('CREATE OR REPLACE FUNCTION public.set_shop_status_admin') &&
+      superAdminSql.includes('INSERT INTO public.system_admins (user_id)'),
+    'Migration 20260825000010 declares get_all_shops_admin, set_shop_status_admin RPCs and founder bootstrap query'
   );
 
   // ----------------------------------------------------
@@ -717,6 +782,31 @@ async function runVerification() {
     'mapPrinterSettingsRow correctly converts database row booleans and feed lines into typed PrinterSettings entity'
   );
 
+  // Test Admin Shop Overview Row Mapper
+  const mockDbAdminShopRow: AdminShopOverviewRow = {
+    id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    name: 'Anarkali Master Craftsmen',
+    city: 'Lahore',
+    phone: '03219876543',
+    status: 'ACTIVE',
+    owner_email: 'anarkali@craftsmen.pk',
+    total_orders: '310',
+    member_count: '8',
+    created_at: '2026-08-25T10:00:00Z',
+    updated_at: '2026-08-25T10:00:00Z',
+  };
+  const mappedAdminShop = mapAdminShopOverviewRow(mockDbAdminShopRow);
+  assert(
+    mappedAdminShop.id === mockDbAdminShopRow.id &&
+      mappedAdminShop.name === 'Anarkali Master Craftsmen' &&
+      mappedAdminShop.city === 'Lahore' &&
+      mappedAdminShop.status === 'ACTIVE' &&
+      mappedAdminShop.owner_email === 'anarkali@craftsmen.pk' &&
+      mappedAdminShop.total_orders === 310 &&
+      mappedAdminShop.member_count === 8,
+    'mapAdminShopOverviewRow correctly converts database row counts and status into typed AdminShopOverview entity'
+  );
+
   // ----------------------------------------------------
   // SECTION 4: Repository Fallback & Static Export Safety
   // ----------------------------------------------------
@@ -799,6 +889,40 @@ async function runVerification() {
       fallbackResetPrinter.auto_print_on_booking === false &&
       fallbackResetPrinter.feed_lines === 3,
     'printerDb.resetDefaults safely restores standard factory defaults in offline mode'
+  );
+
+  // Test adminDb fallback
+  const isSuperAdminResult = await adminDb.checkIsSuperAdmin();
+  assert(
+    typeof isSuperAdminResult === 'boolean',
+    'adminDb.checkIsSuperAdmin safely evaluates super admin state without throwing runtime exceptions'
+  );
+
+  const fallbackMetrics = await adminDb.getPlatformMetrics();
+  assert(
+    fallbackMetrics !== null &&
+      typeof fallbackMetrics.total_shops === 'number' &&
+      typeof fallbackMetrics.active_shops === 'number' &&
+      typeof fallbackMetrics.total_orders === 'number' &&
+      typeof fallbackMetrics.total_khata_volume === 'number' &&
+      fallbackMetrics.total_shops >= 8,
+    'adminDb.getPlatformMetrics safely returns complete platform-wide metrics aggregation in offline fallback'
+  );
+
+  const fallbackShops = await adminDb.getAllShops();
+  assert(
+    Array.isArray(fallbackShops) &&
+      fallbackShops.length >= 8 &&
+      fallbackShops.some((s) => s.city === 'Lahore') &&
+      fallbackShops.some((s) => s.city === 'Wah Cantt'),
+    'adminDb.getAllShops safely returns multi-tenant workshop overview list across diverse Pakistani cities'
+  );
+
+  const testShopId = fallbackShops[0]?.id || 'a0000000-0000-0000-0000-000000000001';
+  const statusMutationResult = await adminDb.setShopStatus(testShopId, 'SUSPENDED');
+  assert(
+    statusMutationResult === true,
+    'adminDb.setShopStatus safely mutates workshop lifecycle status with optimistic offline state'
   );
 
   // Test live network dispatch if environment is active and reachable

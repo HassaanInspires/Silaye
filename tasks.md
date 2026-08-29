@@ -135,6 +135,15 @@
 
 ---
 
+## Phase D: Multi-Tenant Platform Operations & Founder Super Admin (Phase D, Sub-Phase 1)
+- [x] D.1.1 Database Migration & Super Admin Security (`supabase/migrations/20260825000010_super_admin.sql`): Add `status` with `check_valid_shop_status` CHECK constraint to `shops`, `system_admins` table, STABLE `is_super_admin()` helper with `SECURITY DEFINER`, RLS lockdown, `get_platform_metrics()`, `get_all_shops_admin()` with distinct join counts, `set_shop_status_admin()`, and founder bootstrap query.
+- [x] D.1.2 Type System & Repository Layer (`types/tailor.ts`, `lib/db.ts`): Declare `ShopStatus`, `PlatformMetrics`, `AdminShopOverview`, `SystemAdmin` types; export `adminDb` repository with `checkIsSuperAdmin()`, `getPlatformMetrics()`, `getAllShops()`, `setShopStatus()`, and rich offline mock fallbacks.
+- [x] D.1.3 Application Shell & Tenant Suspension Guard (`components/layout/app-shell.tsx`): Super Admin sidebar & mobile drawer link for verified admins, and tenant suspension alert banner for workshops in `SUSPENDED` status.
+- [x] D.1.4 Super Admin Command Center Dashboard (`app/admin/page.tsx`): Executive Obsidian Dark control center with 4 KPI summary cards (Registered Workshops, Platform Craftsmen, Orders Tailored, Udhaar Volume), multi-field search, status filter tabs (`All`, `Active`, `Suspended`, `Trial`), 1-tap quick actions with confirmation dialog (`Dialog`), and 403 Access Denied glass gate for unauthorized users.
+- [x] D.1.5 Automated Database Verification Suite & Production Build (`scripts/verify_db.ts`): Added Section 9 assertions for migration 10, schema, RPCs, mappers, and `adminDb` (71/71 tests passing), verified 0 type errors (`npx tsc --noEmit`), and verified Next.js static export compilation into `out/` (27/27 static routes generated).
+
+---
+
 ## Phase 11: Cross-Platform Native Scaffolding
 - [ ] 11.1 Scaffold Capacitor configuration (`capacitor.config.ts`) and Android project assets (`npx cap add android`).
 - [ ] 11.2 Scaffold Electron main and preload processes (`electron/main.cjs`, `electron/preload.cjs`).
@@ -147,3 +156,4 @@
 - [ ] 12.1 Run full typecheck (`npx tsc --noEmit`) and resolve any interface or prop discrepancies.
 - [ ] 12.2 Run static export build (`npm run build`) to verify `out/` directory generation with zero runtime errors.
 - [ ] 12.3 Verify responsive rendering on mobile viewports (Android Webview) and desktop window dimensions (Electron).
+

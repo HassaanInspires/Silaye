@@ -148,6 +148,8 @@ export interface StylePreferences {
 // 3. Database Schema Models (PostgreSQL Entities)
 // ==========================================
 
+export type ShopStatus = 'ACTIVE' | 'SUSPENDED' | 'TRIAL' | 'EXPIRED';
+
 /**
  * Tenant / Workshop Shop
  */
@@ -167,6 +169,7 @@ export interface Shop {
   country?: string;
   currency?: string;
   is_active?: boolean;
+  status?: ShopStatus;
   created_at?: string; // ISO 8601 timestamp
   updated_at?: string; // ISO 8601 timestamp
 }
@@ -379,3 +382,37 @@ export interface SyncQueueItem {
   status: 'PENDING' | 'PROCESSING' | 'FAILED';
   error_message?: string;
 }
+
+// ==========================================
+// 4. Super Admin & Platform Operations
+// ==========================================
+
+export interface SystemAdmin {
+  id: string; // UUID
+  user_id: string; // UUID
+  role: string;
+  created_at: string; // ISO 8601 timestamp
+}
+
+export interface PlatformMetrics {
+  total_shops: number;
+  active_shops: number;
+  suspended_shops: number;
+  total_users: number;
+  total_orders: number;
+  total_khata_volume: number;
+}
+
+export interface AdminShopOverview {
+  id: string; // UUID
+  name: string;
+  city: string;
+  phone: string | null;
+  status: ShopStatus;
+  owner_email: string | null;
+  total_orders: number;
+  member_count: number;
+  created_at: string; // ISO 8601 timestamp
+  updated_at: string; // ISO 8601 timestamp
+}
+
