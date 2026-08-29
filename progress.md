@@ -1392,7 +1392,57 @@
   - `npm run build`: Static export compiled successfully, generating 27/27 static routes into `out/` with zero runtime or SSR errors.
 
 * **Next Immediate Task:**
-  - Phase 11 (Task 11.1): Scaffold Capacitor configuration (`capacitor.config.ts`) and Android project assets (`npx cap add android`).
+  - Phase 11 (Completed)
+
+---
+
+## Phase 11: Cross-Platform Native Scaffolding (Completed)
+* **Date:** 2026-08-29
+* **Tasks Completed:**
+  - `11.1` Scaffolded Capacitor configuration (`capacitor.config.ts`) and Android project assets (`npx cap add android`):
+    * Configured `appId: 'pk.silaye.app'`, `appName: 'Silaye Master Tailor OS'`, and `webDir: 'out'`.
+    * Configured Dark Mode status bar (`#0B0C0E`) and adaptive keyboard resize modes (`KeyboardResize.Body`, `KeyboardStyle.Dark`).
+    * Configured Android cleartext traffic (`android:usesCleartextTraffic="true"`) in `android/app/src/main/AndroidManifest.xml` for local network thermal printer communication.
+  - `11.2` Scaffolded Electron main and preload processes (`electron/main.cjs`, `electron/preload.cjs`, `types/electron.d.ts`):
+    * Configured BrowserWindow with Obsidian Dark window chrome, minimum dimensions (1024x700), dark theme, and custom icon.
+    * Implemented deep routing & reload fallback handler for Next.js trailing slash static export files on `did-fail-load` (error code -6 on `file://` URIs).
+    * Implemented protocol-whitelisted external URL opening (`https:`, `http:`, `mailto:`, `tel:`) via `setWindowOpenHandler` and IPC handler `open-external-url`.
+    * Implemented IPC endpoints for raw ESC/POS thermal printing (`print-raw-escpos`), offline cache & storage data clearing (`clear-offline-cache`), and desktop app version reporting (`get-app-version`).
+    * Exposed secure `window.electronAPI` bridge via `contextBridge.exposeInMainWorld()` in `electron/preload.cjs`.
+    * Declared strict TypeScript types for `window.electronAPI` in `types/electron.d.ts`.
+    * Upgraded `lib/whatsapp.ts` `openWhatsAppLink` to utilize typed Capacitor and Electron bridges.
+  - `11.3` Configured `package.json` with cross-platform scripts and `electron-builder` configuration:
+    * Added `main: "electron/main.cjs"`.
+    * Added scripts: `"desktop:dev"`, `"desktop:build"`, `"mobile:sync"`, `"mobile:open"`, `"mobile:run"`.
+    * Configured `build` block for `electron-builder` targeting Windows NSIS x64 installer with desktop shortcuts and custom start menu branding.
+  - `11.4` Set up GitHub Actions CI/CD workflow (`.github/workflows/build-artifacts.yml`):
+    * Configured automated multi-target compilation on release tag pushes (`v*`) and manual workflow dispatch.
+    * Configured `build-windows-exe` on `windows-latest` to build static assets and package Windows NSIS installer `.exe`.
+    * Configured `build-android-apk` on `ubuntu-latest` with Java JDK 17, `chmod +x gradlew`, and `./gradlew assembleDebug` to package Android debug `.apk`.
+    * Uploaded release artifacts via `actions/upload-artifact@v4`.
+
+* **Active File Changes:**
+  - `capacitor.config.ts` [NEW]
+  - `electron/main.cjs` [NEW]
+  - `electron/preload.cjs` [NEW]
+  - `types/electron.d.ts` [NEW]
+  - `.github/workflows/build-artifacts.yml` [NEW]
+  - `android/` [NEW - native Android project]
+  - `android/app/src/main/AndroidManifest.xml` [MODIFIED]
+  - `package.json` [MODIFIED]
+  - `lib/whatsapp.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 27/27 static routes into `out/` with zero runtime errors.
+  - `npx cap sync android`: Web assets and plugins synchronized successfully in 0.708s.
+  - `npx --yes tsx scripts/verify_db.ts`: 71/71 test assertions passed with 0 failures.
+
+* **Next Immediate Task:**
+  - Phase 12 (Task 12.1): Run full typecheck (`npx tsc --noEmit`) and resolve any interface or prop discrepancies.
+
 
 
 

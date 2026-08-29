@@ -348,38 +348,29 @@ export function buildWhatsAppLink(rawPhone: string, rawMessage: string): string 
  * - Web Browser: opens window.open(url, '_blank', 'noopener,noreferrer')
  */
 export async function openWhatsAppLink(url: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+
   // 1. Check if running inside Electron Desktop Runtime
-  if (typeof window !== 'undefined') {
-    const win = window as unknown as {
-      electronAPI?: { openExternal: (targetUrl: string) => Promise<void> | void };
-      Capacitor?: { isNativePlatform: () => boolean };
-    };
-
-    if (win.electronAPI?.openExternal) {
-      await win.electronAPI.openExternal(url);
-      return;
-    }
-
-    // 2. Check if running inside Capacitor Mobile Runtime
-    if (win.Capacitor?.isNativePlatform()) {
-      try {
-        // Safe dynamic import for environments where @capacitor/app-launcher is available
-        const moduleName = '@capacitor/app-launcher';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const capacitorLauncher: any = await import(/* webpackIgnore: true */ moduleName).catch(() => null);
-        if (capacitorLauncher?.AppLauncher) {
-          const canOpen = await capacitorLauncher.AppLauncher.canOpenUrl({ url });
-          if (canOpen?.value) {
-            await capacitorLauncher.AppLauncher.openUrl({ url });
-            return;
-          }
-        }
-      } catch {
-        // Fallback to standard window.open if plugin unavailable or throws
-      }
-    }
-
-    // 3. Fallback for Standard Web Browser
-    window.open(url, '_blank', 'noopener,noreferrer');
+  if (window.electronAPI?.openExternal) {
+    await window.electronAPI.openExternal(url);
+    return;
   }
+
+  // 2. Check if running inside Capacitor Mobile Runtime
+  if (window.Capacitor?.isNativePlatform()) {
+    try {
+      const { AppLauncher } = await import('@capacitor/app-launcher');
+      const canOpen = await AppLauncher.canOpenUrl({ url });
+      if (canOpen?.value) {
+        await AppLauncher.openUrl({ url });
+        return;
+      }
+    } catch {
+      // Fallback to standard window.open if plugin is unavailable or fails
+    }
+  }
+
+  // 3. Fallback for Standard Web Browser
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
+

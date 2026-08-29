@@ -11,6 +11,7 @@
 # Production build artifacts
 /build
 /dist
+/dist-electron
 
 # Debug logs
 npm-debug.log*
