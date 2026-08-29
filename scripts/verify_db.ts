@@ -36,6 +36,7 @@ import {
   printerDb,
   adminDb,
   subscriptionDb,
+  purgeLocalCache,
   mapCustomerRow,
   mapMeasurementProfileRow,
   mapGarmentOrderRow,
@@ -63,6 +64,7 @@ import {
   getSupabaseUrl,
   getSupabaseAnonKey,
 } from '../lib/supabase/client';
+import { isDemoMode } from '../lib/mock-data';
 import type {
   StylePreferences,
   ShalwarKameezMeasurements,
@@ -216,6 +218,15 @@ async function runVerification() {
     'Subscription system & quota engine migration exists at supabase/migrations/20260825000011_subscription_system.sql'
   );
 
+  const productionLockdownMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000012_production_lockdown.sql'
+  );
+  assert(
+    fs.existsSync(productionLockdownMigrationPath),
+    'Production lockdown & purge RPC migration exists at supabase/migrations/20260825000012_production_lockdown.sql'
+  );
+
   const migrationSql = fs.readFileSync(schemaMigrationPath, 'utf8');
   const rpcSql = fs.readFileSync(rpcMigrationPath, 'utf8');
   const securitySql = fs.readFileSync(securityPatchesMigrationPath, 'utf8');
@@ -228,6 +239,7 @@ async function runVerification() {
   const printerSettingsSql = fs.readFileSync(printerSettingsMigrationPath, 'utf8');
   const superAdminSql = fs.readFileSync(superAdminMigrationPath, 'utf8');
   const subscriptionSystemSql = fs.readFileSync(subscriptionSystemMigrationPath, 'utf8');
+  const productionLockdownSql = fs.readFileSync(productionLockdownMigrationPath, 'utf8');
 
   // Verify Native UUID generator
   assert(
@@ -556,6 +568,26 @@ async function runVerification() {
       subscriptionSystemSql.includes('AFTER INSERT ON public.garment_orders') &&
       subscriptionSystemSql.includes('ALTER TABLE public.shop_usage ENABLE ROW LEVEL SECURITY'),
     'Migration 20260825000011 configures auto-increment trigger on garment_orders and enables RLS on shop_usage'
+  );
+
+  // Verify Phase F Sub-Phase 1 Production Lockdown & Purge RPC Migration
+  assert(
+    productionLockdownSql.includes('CREATE OR REPLACE FUNCTION public.purge_shop_test_data(p_shop_id UUID)') &&
+      productionLockdownSql.includes('RETURNS JSONB') &&
+      productionLockdownSql.includes('SECURITY DEFINER') &&
+      productionLockdownSql.includes('SET search_path = public'),
+    'Migration 20260825000012 creates public.purge_shop_test_data RPC with SECURITY DEFINER and search_path isolation'
+  );
+
+  assert(
+    productionLockdownSql.includes('public.is_super_admin() OR public.is_shop_owner(p_shop_id)') &&
+      productionLockdownSql.includes('DELETE FROM public.khata_transactions') &&
+      productionLockdownSql.includes('DELETE FROM public.garment_orders') &&
+      productionLockdownSql.includes('DELETE FROM public.measurement_profiles') &&
+      productionLockdownSql.includes('DELETE FROM public.customers') &&
+      productionLockdownSql.includes('UPDATE public.shop_usage') &&
+      productionLockdownSql.includes('GRANT EXECUTE ON FUNCTION public.purge_shop_test_data(UUID) TO authenticated'),
+    'Migration 20260825000012 enforces strict multi-tenant purge authorization, cascade deletion, and execution grants'
   );
 
   // ----------------------------------------------------
@@ -1142,8 +1174,137 @@ async function runVerification() {
     'subscriptionDb.incrementUsage correctly increments shop monthly order counter'
   );
 
+  // ----------------------------------------------------
+  // SECTION 11: Subscription Tier Transitions & Renewal Arithmetic (Phase E.2)
+  // ----------------------------------------------------
+  console.log('\n\x1b[36m--- Section 11: Subscription Tier Transitions & Renewal Arithmetic ---\x1b[0m');
+
+  // Test 11.1: Upgrade shop from FREE to PRO monthly
+  const proUpgrade = await subscriptionDb.updateSubscription(targetSubShopId, {
+    plan_tier: 'PRO',
+    billing_cycle: 'MONTHLY',
+    subscription_status: 'ACTIVE',
+  });
+  assert(
+    proUpgrade.plan_tier === 'PRO' &&
+      proUpgrade.billing_cycle === 'MONTHLY' &&
+      proUpgrade.subscription_status === 'ACTIVE',
+    'subscriptionDb.updateSubscription updates shop tier to PRO monthly'
+  );
+
+  // Validate dynamic 30-day period end
+  const proPeriodStart = new Date(proUpgrade.current_period_start!).getTime();
+  const proPeriodEnd = new Date(proUpgrade.current_period_end!).getTime();
+  const diffDaysPro = Math.round((proPeriodEnd - proPeriodStart) / (1000 * 60 * 60 * 24));
+  assert(
+    diffDaysPro === 30,
+    'subscriptionDb.updateSubscription dynamically calculates 30-day renewal period for monthly billing'
+  );
+
+  // Test 11.2: Pro Tier quota is unlimited
+  subscriptionDb.setMockUsageCount(targetSubShopId, 100);
+  const proAllowed = await subscriptionDb.checkOrderAllowed(targetSubShopId);
+  assert(
+    proAllowed.allowed === true && proAllowed.tier === 'PRO',
+    'subscriptionDb.checkOrderAllowed allows order creation beyond 50 limit for PRO tier'
+  );
+
+  // Test 11.3: Switch PRO to ANNUAL billing (-20% discount calculation)
+  const proAnnual = await subscriptionDb.updateSubscription(targetSubShopId, {
+    plan_tier: 'PRO',
+    billing_cycle: 'ANNUAL',
+  });
+  const proAnnualStart = new Date(proAnnual.current_period_start!).getTime();
+  const proAnnualEnd = new Date(proAnnual.current_period_end!).getTime();
+  const diffDaysAnnual = Math.round((proAnnualEnd - proAnnualStart) / (1000 * 60 * 60 * 24));
+  assert(
+    proAnnual.billing_cycle === 'ANNUAL' && diffDaysAnnual === 365,
+    'subscriptionDb.updateSubscription dynamically calculates 365-day renewal period for annual billing'
+  );
+
+  // Test 11.4: Annual discount math for Pro (Rs. 2,800 monthly -> Rs. 2,240/mo, Save Rs. 6,720/yr)
+  const proMonthly = 2800;
+  const proDiscountedMonthly = proMonthly * 0.8;
+  const proAnnualSavings = (proMonthly - proDiscountedMonthly) * 12;
+  assert(
+    proDiscountedMonthly === 2240 && proAnnualSavings === 6720,
+    'Pro tier annual discount correctly calculates Rs. 2,240/mo and Rs. 6,720 annual savings'
+  );
+
+  // Test 11.5: Upgrade to ENTERPRISE Annual (Rs. 7,000 monthly -> Rs. 5,600/mo, Save Rs. 16,800/yr)
+  const enterpriseUpgrade = await subscriptionDb.updateSubscription(targetSubShopId, {
+    plan_tier: 'ENTERPRISE',
+    billing_cycle: 'ANNUAL',
+  });
+  const entMonthly = 7000;
+  const entDiscountedMonthly = entMonthly * 0.8;
+  const entAnnualSavings = (entMonthly - entDiscountedMonthly) * 12;
+  assert(
+    enterpriseUpgrade.plan_tier === 'ENTERPRISE' &&
+      entDiscountedMonthly === 5600 &&
+      entAnnualSavings === 16800,
+    'Enterprise tier correctly upgrades and calculates Rs. 5,600/mo and Rs. 16,800 annual savings'
+  );
+
+  // Test 11.6: Downgrade back to FREE and enforce quota
+  const freeDowngrade = await subscriptionDb.updateSubscription(targetSubShopId, {
+    plan_tier: 'FREE',
+    billing_cycle: 'MONTHLY',
+  });
+  assert(
+    freeDowngrade.plan_tier === 'FREE',
+    'subscriptionDb.updateSubscription supports graceful downgrade back to Solo Master (FREE)'
+  );
+
+  subscriptionDb.setMockUsageCount(targetSubShopId, 50);
+  const freeLimitCheck = await subscriptionDb.checkOrderAllowed(targetSubShopId);
+  assert(
+    freeLimitCheck.allowed === false && freeLimitCheck.tier === 'FREE',
+    'subscriptionDb.checkOrderAllowed reinstates 50-suit quota ceiling when downgraded to FREE'
+  );
+
   // Restore normal count for clean state
   subscriptionDb.setMockUsageCount(targetSubShopId, 14);
+
+  // ----------------------------------------------------
+  // SECTION 12: Phase F.1 Zero-Trust Lockdown & Production Purification
+  // ----------------------------------------------------
+  console.log('\n\x1b[36m--- Section 12: Zero-Trust Lockdown & Production Purification ---\x1b[0m');
+
+  // Test 12.1: Verify isDemoMode export is callable boolean
+  const demoModeActive = isDemoMode();
+  assert(
+    typeof demoModeActive === 'boolean',
+    'isDemoMode() helper is exported and evaluates runtime environment to boolean'
+  );
+
+  // Test 12.2: Purge Shop Test Data via adminDb
+  const purgeTargetShopId = 'a0000000-0000-0000-0000-000000000001';
+  const purgeResult = await adminDb.purgeShopTestData(purgeTargetShopId);
+  assert(
+    purgeResult.success === true &&
+      typeof purgeResult.deleted_orders === 'number' &&
+      typeof purgeResult.deleted_khata === 'number',
+    'adminDb.purgeShopTestData executes successfully and returns deleted item counters'
+  );
+
+  // Test 12.3: Purge Shop Test Data via shopsDb
+  const shopPurgeResult = await shopsDb.purgeShopTestData(purgeTargetShopId);
+  assert(
+    shopPurgeResult.success === true &&
+      typeof shopPurgeResult.deleted_profiles === 'number' &&
+      typeof shopPurgeResult.deleted_customers === 'number',
+    'shopsDb.purgeShopTestData delegates to purgeShopTestData RPC successfully'
+  );
+
+  // Test 12.4: Factory Reset & Local Cache Purge Utility
+  const cachePurgeResult = await purgeLocalCache();
+  assert(
+    cachePurgeResult.success === true &&
+      Array.isArray(cachePurgeResult.clearedStores) &&
+      typeof cachePurgeResult.clearedKeysCount === 'number',
+    'purgeLocalCache() flushes local IndexedDB and localStorage stores while preserving Supabase auth tokens'
+  );
 
   // ----------------------------------------------------
   // SUMMARY

@@ -29,6 +29,8 @@ import {
   PlayCircle,
   PauseCircle,
   XCircle,
+  Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppShell } from '@/components/layout/app-shell';
@@ -108,6 +110,12 @@ export default function SuperAdminDashboardPage() {
   const [targetStatus, setTargetStatus] = React.useState<ShopStatus | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = React.useState<boolean>(false);
   const [updatingStatus, setUpdatingStatus] = React.useState<boolean>(false);
+
+  // Purge Test Data Dialog State
+  const [shopToPurge, setShopToPurge] = React.useState<AdminShopOverview | null>(null);
+  const [purgeDialogOpen, setPurgeDialogOpen] = React.useState<boolean>(false);
+  const [purgeConfirmInput, setPurgeConfirmInput] = React.useState<string>('');
+  const [purgingData, setPurgingData] = React.useState<boolean>(false);
 
   // Toast Notification
   const [toastMessage, setToastMessage] = React.useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
@@ -204,6 +212,60 @@ export default function SuperAdminDashboardPage() {
       showToast('Error', 'An unexpected error occurred while modifying status.', 'error');
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handleOpenPurgeDialog = (shop: AdminShopOverview) => {
+    setShopToPurge(shop);
+    setPurgeConfirmInput('');
+    setPurgeDialogOpen(true);
+  };
+
+  const handleConfirmPurge = async () => {
+    if (!shopToPurge) return;
+    if (purgeConfirmInput.trim().toUpperCase() !== 'PURGE') {
+      showToast('Validation Error', 'Please type PURGE in all caps to confirm.', 'error');
+      return;
+    }
+
+    setPurgingData(true);
+    try {
+      const result = await adminDb.purgeShopTestData(shopToPurge.id);
+      if (result.success) {
+        // Optimistically update orders count for this workshop
+        setShops((prev) =>
+          prev.map((s) =>
+            s.id === shopToPurge.id ? { ...s, total_orders: 0, updated_at: new Date().toISOString() } : s
+          )
+        );
+
+        // Update platform metrics
+        if (metrics) {
+          const updatedTotalOrders = shops
+            .map((s) => (s.id === shopToPurge.id ? 0 : s.total_orders))
+            .reduce((acc, count) => acc + count, 0);
+          setMetrics({
+            ...metrics,
+            total_orders: updatedTotalOrders,
+          });
+        }
+
+        showToast(
+          'Purge Completed',
+          `Purged test data for "${shopToPurge.name}". Deleted ${result.deleted_orders} orders and ${result.deleted_khata} khata entries.`,
+          'success'
+        );
+        setPurgeDialogOpen(false);
+        setShopToPurge(null);
+        setPurgeConfirmInput('');
+      } else {
+        showToast('Purge Failed', 'Could not purge test data. Try again.', 'error');
+      }
+    } catch (err) {
+      console.error('Purge error:', err);
+      showToast('Purge Error', err instanceof Error ? err.message : 'An error occurred during data purge.', 'error');
+    } finally {
+      setPurgingData(false);
     }
   };
 
@@ -658,6 +720,18 @@ export default function SuperAdminDashboardPage() {
                                 <span>Trial</span>
                               </Button>
                             )}
+
+                            {/* Purge Test Data Button */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenPurgeDialog(shop)}
+                              className="h-7 px-2 text-[11px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30"
+                              title="Purge Workshop Test Data"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-1" />
+                              <span>Purge</span>
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -746,6 +820,92 @@ export default function SuperAdminDashboardPage() {
                 )}
               >
                 {updatingStatus ? 'Updating...' : `Confirm ${targetStatus}`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ------------------------------------------------------------------- */}
+        {/* TWO-STEP PURGE TEST DATA CONFIRMATION MODAL                         */}
+        {/* ------------------------------------------------------------------- */}
+        <Dialog open={purgeDialogOpen} onOpenChange={setPurgeDialogOpen}>
+          <DialogContent className="max-w-md bg-[#0F1115]/95 border-rose-500/30 backdrop-blur-2xl shadow-[0_0_50px_rgba(244,63,94,0.15)]">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-500/40 bg-rose-500/15 text-rose-400">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="font-editorial text-xl text-white">
+                    Purge Workshop Test Data
+                  </DialogTitle>
+                  <span className="font-urdu-sans text-xs text-rose-400" dir="rtl">
+                    ٹیسٹ ڈیٹا ڈیلیٹ کرنے کی تصدیق
+                  </span>
+                </div>
+              </div>
+              <DialogDescription className="text-xs text-gray-300 leading-relaxed pt-2 space-y-2">
+                <p>
+                  You are about to permanently purge all test records for{' '}
+                  <strong className="text-white">{shopToPurge?.name}</strong>.
+                </p>
+                <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-[11px] text-rose-300 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
+                    <span>Irreversible Action:</span>
+                  </p>
+                  <ul className="list-disc list-inside space-y-0.5 opacity-90 pl-1">
+                    <li>Deletes all test orders & status audit progression logs</li>
+                    <li>Deletes all test customer measurement profiles</li>
+                    <li>Deletes all test Khata financial ledger transactions</li>
+                    <li>Deletes test customer directory accounts</li>
+                    <li>Resets monthly tailoring usage quota count to 0</li>
+                  </ul>
+                  <p className="font-urdu-sans text-rose-400 pt-1" dir="rtl">
+                    تمام کسٹمرز، آرڈرز اور کھاتہ رجسٹر مکمل ڈیلیٹ ہو جائے گا۔
+                  </p>
+                </div>
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2.5 text-[11px] text-emerald-300">
+                  <span className="font-medium">Safely Retained:</span> Workshop profile settings, craftsman accounts, garment rates, and printer hardware preferences are preserved.
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-2 pt-2">
+              <label className="text-xs text-gray-300 flex items-center justify-between font-medium">
+                <span>Type <strong className="text-rose-400 font-mono">PURGE</strong> to confirm:</span>
+                <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                  تصدیق کے لیے PURGE لکھیں
+                </span>
+              </label>
+              <Input
+                type="text"
+                placeholder="PURGE"
+                value={purgeConfirmInput}
+                onChange={(e) => setPurgeConfirmInput(e.target.value)}
+                className="bg-black/50 border-rose-500/30 focus:border-rose-500 text-white font-mono text-center uppercase tracking-widest text-sm h-10"
+                autoComplete="off"
+              />
+            </div>
+
+            <DialogFooter className="gap-2 pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPurgeDialogOpen(false)}
+                disabled={purgingData}
+                className="border-white/10 text-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleConfirmPurge}
+                disabled={purgingData || purgeConfirmInput.trim().toUpperCase() !== 'PURGE'}
+                className="font-semibold bg-rose-500 hover:bg-rose-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {purgingData ? 'Purging Data...' : 'Purge Workshop Data'}
               </Button>
             </DialogFooter>
           </DialogContent>

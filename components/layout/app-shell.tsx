@@ -21,12 +21,15 @@ import {
   Lock,
   ShieldCheck,
   ShieldAlert,
+  Crown,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { syncCoordinator, type SyncState } from '@/lib/sync-coordinator';
 import { adminDb, shopsDb } from '@/lib/db';
+import type { PlanTier, Shop } from '@/types/tailor';
 import {
   getSession,
   signOut,
@@ -254,6 +257,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const [authChecked, setAuthChecked] = React.useState<boolean>(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
   const [shopStatus, setShopStatus] = React.useState<string>('ACTIVE');
+  const [shopPlanTier, setShopPlanTier] = React.useState<PlanTier>('FREE');
 
   // Global '/' shortcut focuses the search input
   const searchRef = React.useRef<HTMLInputElement>(null);
@@ -270,6 +274,27 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Real-time plan upgrade / subscription event listener
+  React.useEffect(() => {
+    const handlePlanUpdated = (e: Event) => {
+      const customEvent = e as CustomEvent<{ plan_tier?: PlanTier; shop?: Shop }>;
+      if (customEvent.detail?.plan_tier) {
+        setShopPlanTier(customEvent.detail.plan_tier);
+      } else if (customEvent.detail?.shop?.plan_tier) {
+        setShopPlanTier(customEvent.detail.shop.plan_tier);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('silaye:plan-updated', handlePlanUpdated);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('silaye:plan-updated', handlePlanUpdated);
+      }
+    };
   }, []);
 
   // Supabase Auth Session Lifecycle Check & Whitelist Guard
@@ -294,6 +319,17 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         if (isMounted) setIsSuperAdmin(false);
       }
 
+      // Fetch tenant shop status & subscription plan
+      try {
+        const initialShop = await shopsDb.getCurrentShop();
+        if (isMounted && initialShop) {
+          if (initialShop.status) setShopStatus(initialShop.status);
+          if (initialShop.plan_tier) setShopPlanTier(initialShop.plan_tier);
+        }
+      } catch {
+        // Ignore fallback
+      }
+
       if (!isSupabaseConfigured()) {
         // Local offline / demo development mode
         if (isMounted) setAuthChecked(true);
@@ -307,11 +343,12 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         setCurrentUser(session.user);
         setAuthChecked(true);
 
-        // Fetch tenant shop status
+        // Fetch tenant shop status & tier for authenticated user
         try {
           const shop = await shopsDb.getCurrentShop(session.user.id);
-          if (isMounted && shop?.status) {
-            setShopStatus(shop.status);
+          if (isMounted && shop) {
+            if (shop.status) setShopStatus(shop.status);
+            if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
           }
         } catch {
           // Ignore
@@ -331,6 +368,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         setCurrentUser(null);
         setIsSuperAdmin(false);
         setShopStatus('ACTIVE');
+        setShopPlanTier('FREE');
         const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
         const isWhitelisted =
           pathname === '/login' ||
@@ -345,6 +383,11 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         setCurrentUser(session.user);
         adminDb.checkIsSuperAdmin().then((isSuper) => {
           if (isMounted) setIsSuperAdmin(isSuper);
+        });
+        shopsDb.getCurrentShop(session.user.id).then((shop) => {
+          if (isMounted && shop?.plan_tier) {
+            setShopPlanTier(shop.plan_tier);
+          }
         });
       }
     });
@@ -398,9 +441,21 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 </span>
               </div>
             </a>
-            <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium tracking-wider text-gray-400 uppercase">
-              Pro
-            </span>
+            {shopPlanTier === 'PRO' ? (
+              <span className="rounded-full border border-gold/50 bg-gold/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-gold uppercase shadow-[0_0_10px_rgba(212,175,55,0.2)] flex items-center gap-1">
+                <Crown className="h-3 w-3" />
+                <span>Pro</span>
+              </span>
+            ) : shopPlanTier === 'ENTERPRISE' ? (
+              <span className="rounded-full border border-cyan-500/40 bg-cyan-500/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-cyan-300 uppercase shadow-[0_0_10px_rgba(6,182,212,0.2)] flex items-center gap-1">
+                <Sparkles className="h-3 w-3" />
+                <span>Enterprise</span>
+              </span>
+            ) : (
+              <span className="rounded-full border border-slate-500/40 bg-slate-500/15 px-2 py-0.5 text-[10px] font-medium tracking-wider text-slate-300 uppercase">
+                Free
+              </span>
+            )}
           </div>
 
           {/* Navigation Items */}
@@ -497,12 +552,29 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           <div className="relative flex w-72 max-w-xs flex-1 flex-col justify-between border-r border-white/10 bg-[#0B0C0E]/95 p-6 backdrop-blur-2xl shadow-2xl">
             <div className="flex flex-col gap-6">
               <div className="flex items-center justify-between">
-                <a href="/dashboard" className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold">
-                    <Scissors className="h-4 w-4" />
-                  </div>
-                  <span className="font-editorial text-xl font-medium text-white">Silaye</span>
-                </a>
+                <div className="flex items-center gap-2">
+                  <a href="/dashboard" className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold">
+                      <Scissors className="h-4 w-4" />
+                    </div>
+                    <span className="font-editorial text-xl font-medium text-white">Silaye</span>
+                  </a>
+                  {shopPlanTier === 'PRO' ? (
+                    <span className="rounded-full border border-gold/50 bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-gold uppercase shadow-[0_0_10px_rgba(212,175,55,0.2)] flex items-center gap-1">
+                      <Crown className="h-2.5 w-2.5" />
+                      <span>Pro</span>
+                    </span>
+                  ) : shopPlanTier === 'ENTERPRISE' ? (
+                    <span className="rounded-full border border-cyan-500/40 bg-cyan-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-cyan-300 uppercase shadow-[0_0_10px_rgba(6,182,212,0.2)] flex items-center gap-1">
+                      <Sparkles className="h-2.5 w-2.5" />
+                      <span>Enterprise</span>
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-slate-500/40 bg-slate-500/15 px-1.5 py-0.5 text-[9px] font-medium tracking-wider text-slate-300 uppercase">
+                      Free
+                    </span>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}

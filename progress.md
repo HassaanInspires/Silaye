@@ -1489,7 +1489,111 @@
   - `npm run build`: Static export compiled successfully, generating 27/27 static routes into `out/` with zero runtime errors.
 
 * **Next Immediate Task:**
-  - Phase E, Sub-Phase E.2: Subscription Tier Management UI & Billing Settings
+  - Phase E, Sub-Phase E.2: Subscription Tier Management UI & Billing Settings (Completed)
+
+---
+
+## Phase E: Multi-Tier SaaS Monetization & Quota Engine (Sub-Phase E.2 Completed)
+* **Date:** 2026-08-29
+* **Tasks Completed:**
+  - `E.2.1` Real-Time Cross-Component Plan Synchronization (`lib/db.ts`, `components/layout/app-shell.tsx`):
+    * Dispatched custom window event `silaye:plan-updated` in `subscriptionDb.updateSubscription()` with updated tier payload.
+    * Added dynamic renewal date calculation in `subscriptionDb.updateSubscription()` (+30 days for MONTHLY, +365 days for ANNUAL billing).
+    * Added event listener in `AppShell` for `silaye:plan-updated` to dynamically synchronize the active workshop plan tier without requiring full page reloads.
+    * Implemented dynamic plan badges in desktop sidebar and mobile drawer header (`FREE` in slate, `PRO` in gold with Crown icon, `ENTERPRISE` in cyan with Sparkles icon).
+  - `E.2.2` Settings Dashboard: Billing & Subscriptions Tab (`app/settings/page.tsx`):
+    * Added Tab 5 button: **Billing & Subscriptions** (*بلنگ اور سبسکرپشن*) to the Settings tab bar with active plan pill indicator.
+    * Built **Active Plan & Usage Overview Widget** (`.premium-glass-card`):
+      - Active plan badge (`Solo Master (Free)`, `Multi-Counter Workshop (Pro)`, `Enterprise Tailor House`).
+      - Subscription status badge (`Active` / `Trial Period` / `Past Due`).
+      - Renewal countdown timer pill (e.g. `Quota cycle resets in 30 days`).
+      - Visual monthly tailoring quota progress meter bar (e.g. `14 / 50 Suits Tailored` for Free, glowing `∞ Unlimited Capacity` for Pro/Enterprise).
+    * Built **Transparent PKR Subscription Matrix**:
+      - Monthly vs Annual toggle with glowing `-20% Save` / `20% بچت` badge.
+      - 3 Responsive Tier Cards:
+        1. **Solo Master (Free / بنیادی)**: Rs. 0 / mo, 50 Suits/Month ceiling, 1 Counter Terminal.
+        2. **Multi-Counter Workshop (Pro / پیشہ ورانہ)**: Rs. 2,800 / mo (Rs. 2,240 / mo annual, Save Rs. 6,720/yr), Unlimited suits, 5 craftsmen roles, 58mm/80mm thermal slips, custom catalog rates, SMS/WhatsApp alerts. "MOST POPULAR" gold halo card.
+        3. **Enterprise Tailor House (حویلی / انٹرپرائز)**: Rs. 7,000 / mo (Rs. 5,600 / mo annual, Save Rs. 16,800/yr), Unlimited Everything, Multi-Branch, Super Admin Telemetry, Priority 24/7 Support.
+      - Dynamic context-aware CTA buttons ("Current Plan", "Upgrade to Pro", "Upgrade to Enterprise", "Switch to Annual", "Downgrade to Free").
+  - `E.2.3` Subscription Upgrade Confirmation Dialog & Confetti Workflow (`app/settings/page.tsx`):
+    * Built confirmation modal dialog rendering selected plan metadata, billing frequency, total calculated PKR charge, and activated capabilities checklist.
+    * Integrated SSR-safe `canvas-confetti` celebration trigger (`typeof window !== 'undefined'`) firing gold, cyan, and emerald particles upon successful subscription upgrade.
+    * Real-time optimistic state updates and toast notification alerts.
+  - `E.2.4` Automated Test Suite & Static Export (`scripts/verify_db.ts`):
+    * Added Section 11 test assertions verifying tier transitions (`FREE` ➔ `PRO` ➔ `ENTERPRISE` ➔ `FREE`), dynamic 30-day/365-day period calculations, 20% annual discount calculations, and quota enforcement.
+    * Executed full test suite: **91/91 tests passed** in `scripts/verify_db.ts`.
+    * Executed TypeScript check: **0 type errors** (`npx tsc --noEmit`).
+    * Executed Next.js build: **27/27 static routes generated** cleanly (`npm run build`).
+
+* **Active File Changes:**
+  - `lib/db.ts` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 91/91 test assertions passed (0 failures).
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 27/27 static routes into `out/` with zero runtime errors.
+
+* **Next Immediate Task:**
+  - Phase F: Production Hardening, Zero-Trust Lockdown & Security Operations (Sub-Phase F.1 Completed)
+
+---
+
+## Phase F: Production Hardening, Zero-Trust Lockdown & Security Operations (Sub-Phase F.1 Completed)
+* **Date:** 2026-08-29
+* **Tasks Completed:**
+  - `F.1.1` Production Database Purification & Test Data Segregation (`lib/mock-data.ts`, `lib/db.ts`):
+    * Exported `isDemoMode()` in `lib/mock-data.ts` evaluating explicit demo flags (`NEXT_PUBLIC_DEMO_MODE`), browser auth token presence, and development environment.
+    * Gated mock datasets behind `isDemoMode()` to prevent test data leakage into authenticated production sessions.
+    * Built Factory Reset & Local Cache Purge utility `purgeLocalCache()` in `lib/db.ts` to flush IndexedDB (`silaye_offline_db`), `localStorage` keys matching `silaye:*` (strictly preserving active Supabase auth tokens `sb-*`), `sessionStorage`, and browser `CacheStorage` API, while dispatching cross-component event `silaye:cache-purged`.
+  - `F.1.2` Cascade-Safe Purge RPC (`supabase/migrations/20260825000012_production_lockdown.sql`):
+    * Created helper RPC `public.purge_shop_test_data(p_shop_id UUID)` with `SECURITY DEFINER SET search_path = public`.
+    * Enforced strict multi-tenant authorization: `public.is_super_admin() OR public.is_shop_owner(p_shop_id)`.
+    * Implemented cascade-safe deletion respecting PostgreSQL foreign key `ON DELETE RESTRICT` constraints:
+      1. `khata_transactions` (both direct shop and customer referenced)
+      2. `garment_orders`
+      3. `measurement_profiles`
+      4. `customers`
+      5. `shop_usage` orders count reset to 0 for current billing period.
+    * Explicitly preserved core workshop configuration records: `shops`, `shop_members`, `garment_rates`, `printer_settings`.
+    * Granted execution permissions to `authenticated` users.
+    * Implemented `adminDb.purgeShopTestData()` and `shopsDb.purgeShopTestData()` repository methods with offline mock simulation resilience.
+  - `F.1.3` Super Admin Command Center Purge Action & Pre-Flight Gate (`app/admin/page.tsx`):
+    * Fortified 403 access gate to ensure platform telemetry and workshop queries do not fire before super admin status is verified.
+    * Added "Purge Test Data" button on workshop rows in the table.
+    * Implemented two-step Confirmation Modal requiring typing `"PURGE"` to execute tenant purge, displaying English and Urdu warnings, and refreshing platform metrics on completion.
+  - `F.1.4` Settings Dashboard Workshop Profile Danger Zone (`app/settings/page.tsx`):
+    * Added "Workshop Reset & Data Purification (Danger Zone)" card in Tab 1 (Workshop Profile).
+    * Built "Flush Local Cache" button invoking `purgeLocalCache()` to clear offline stores while retaining session auth.
+    * Built "Reset Workshop Data" button with confirmation modal requiring typing `"PURGE"` to purge test data before going live.
+  - `F.1.5` Verification Suite & Static Export Compilation (`scripts/verify_db.ts`):
+    * Added Section 12 test assertions for migration 12 DDL, `isDemoMode()` export, `purgeShopTestData` execution, and `purgeLocalCache` execution.
+    * Executed full test suite: **98/98 tests passed** in `scripts/verify_db.ts`.
+    * Executed TypeScript check: **0 type errors** (`npx tsc --noEmit`).
+    * Executed Next.js build: **27/27 static routes generated** cleanly into `out/` (`npm run build`).
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000012_production_lockdown.sql` [NEW]
+  - `lib/mock-data.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `app/admin/page.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 98/98 test assertions passed (0 failures).
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 27/27 static routes into `out/` with zero runtime errors.
+
+* **Next Immediate Task:**
+  - Phase 12: Production Verification & Build Checks (Final Release Validation)
+
 
 
 

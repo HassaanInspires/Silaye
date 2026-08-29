@@ -36,15 +36,32 @@ import {
   Plus,
   Download,
   Eye,
+  CreditCard,
+  Layers,
+  ArrowRight,
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { cn } from '@/lib/utils';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { shopsDb, staffDb, ratesDb, printerDb, DEFAULT_PRINTER_SETTINGS } from '@/lib/db';
+import { shopsDb, staffDb, ratesDb, printerDb, subscriptionDb, purgeLocalCache, DEFAULT_PRINTER_SETTINGS } from '@/lib/db';
 import { mockShop, mockOrders, mockCustomers } from '@/lib/mock-data';
-import type { Shop, ShopMember, ShopMemberRole, GarmentRate, GarmentType, PrinterSettings, PrinterPaperWidth } from '@/types/tailor';
+import type {
+  Shop,
+  ShopMember,
+  ShopMemberRole,
+  GarmentRate,
+  GarmentType,
+  PrinterSettings,
+  PrinterPaperWidth,
+  PlanTier,
+  BillingCycle,
+  SubscriptionStatus,
+  ShopUsage,
+} from '@/types/tailor';
 import { isValidPakistaniPhone } from '@/lib/whatsapp';
 import { getCurrentUser, isSupabaseConfigured } from '@/lib/supabase/client';
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
@@ -183,16 +200,105 @@ const GARMENT_METADATA: Record<
   },
 };
 
+interface PricingPlanMeta {
+  tier: PlanTier;
+  title: string;
+  urTitle: string;
+  tagline: string;
+  monthlyPKR: number;
+  annualMonthlyPKR: number;
+  highlight: boolean;
+  badge?: string;
+  badgeUr?: string;
+  features: string[];
+  maxOrdersPerMonth: number | 'unlimited';
+}
+
+const PRICING_PLANS: PricingPlanMeta[] = [
+  {
+    tier: 'FREE',
+    title: 'Solo Master',
+    urTitle: 'سولو ماسٹر (بنیادی)',
+    tagline: 'For independent single-counter masters & small shops',
+    monthlyPKR: 0,
+    annualMonthlyPKR: 0,
+    highlight: false,
+    maxOrdersPerMonth: 50,
+    features: [
+      '50 Suits per Month Quota',
+      '1 Counter Booking Terminal',
+      'Standard Measurement Vault',
+      '1-Click WhatsApp Receipts',
+      'Offline IndexedDB Synchronization',
+    ],
+  },
+  {
+    tier: 'PRO',
+    title: 'Multi-Counter Workshop',
+    urTitle: 'ورکشاپ پلان (پیشہ ورانہ)',
+    tagline: 'For busy workshops & high-volume master craftsmen',
+    monthlyPKR: 2800,
+    annualMonthlyPKR: 2240,
+    highlight: true,
+    badge: 'MOST POPULAR',
+    badgeUr: 'سب سے مقبول',
+    maxOrdersPerMonth: 'unlimited',
+    features: [
+      'Unlimited Suits & Orders Every Month',
+      'Up to 5 Craftsmen Roles & Assignments',
+      '58mm & 80mm ESC/POS Thermal Printing',
+      'Custom Garment Catalog & Surcharges',
+      'SMS & 1-Click WhatsApp Ready Alerts',
+      'Slide-Out Order Inspector Drawer',
+    ],
+  },
+  {
+    tier: 'ENTERPRISE',
+    title: 'Enterprise Tailor House',
+    urTitle: 'حویلی / انٹرپرائز',
+    tagline: 'For multi-branch luxury fashion houses & tailoring chains',
+    monthlyPKR: 7000,
+    annualMonthlyPKR: 5600,
+    highlight: false,
+    badge: 'MAX CAPACITY',
+    badgeUr: 'لامحدود گنجائش',
+    maxOrdersPerMonth: 'unlimited',
+    features: [
+      'Unlimited Everything (Suits & Branches)',
+      'Multi-Branch Consolidated Dashboard',
+      'Super Admin Telemetry & Audit Logs',
+      'Priority 24/7 Phone & WhatsApp Support',
+      'Custom Receipt Header & Footer Branding',
+      'Dedicated Bespoke Tailoring Account Manager',
+    ],
+  },
+];
+
 export default function SettingsPage() {
   const [shop, setShop] = React.useState<Shop>(mockShop);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [saving, setSaving] = React.useState<boolean>(false);
-  const [activeTab, setActiveTab] = React.useState<'profile' | 'staff' | 'catalog' | 'printer'>('profile');
+  const [activeTab, setActiveTab] = React.useState<'profile' | 'staff' | 'catalog' | 'printer' | 'billing'>('profile');
   const [notification, setNotification] = React.useState<{
     message: string;
     type: 'success' | 'error' | 'info';
   } | null>(null);
   const [phoneError, setPhoneError] = React.useState<string | null>(null);
+
+  // Subscription & Billing State
+  const [shopUsage, setShopUsage] = React.useState<ShopUsage>({
+    id: 'su-mock-default',
+    shop_id: mockShop.id,
+    billing_month: new Date().toISOString().substring(0, 7) + '-01',
+    orders_count: 14,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  const [usageLoading, setUsageLoading] = React.useState<boolean>(false);
+  const [isAnnual, setIsAnnual] = React.useState<boolean>(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = React.useState<boolean>(false);
+  const [selectedUpgradeTier, setSelectedUpgradeTier] = React.useState<PlanTier | null>(null);
+  const [upgrading, setUpgrading] = React.useState<boolean>(false);
 
   // Staff Management State
   const [staffMembers, setStaffMembers] = React.useState<ShopMember[]>([]);
@@ -224,6 +330,12 @@ export default function SettingsPage() {
   const [savingPrinter, setSavingPrinter] = React.useState<boolean>(false);
   const [resettingPrinter, setResettingPrinter] = React.useState<boolean>(false);
   const [isTestModalOpen, setIsTestModalOpen] = React.useState<boolean>(false);
+
+  // Danger Zone & Workshop Reset State
+  const [isResetModalOpen, setIsResetModalOpen] = React.useState<boolean>(false);
+  const [resetConfirmInput, setResetConfirmInput] = React.useState<string>('');
+  const [purgingWorkshop, setPurgingWorkshop] = React.useState<boolean>(false);
+  const [flushingCache, setFlushingCache] = React.useState<boolean>(false);
 
   // Auto-dismiss notification after 4 seconds
   React.useEffect(() => {
@@ -315,12 +427,152 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Load monthly usage statistics
+  const loadUsage = React.useCallback(async (shopId: string) => {
+    setUsageLoading(true);
+    try {
+      const usage = await subscriptionDb.getShopUsage(shopId);
+      setShopUsage(usage);
+    } catch (err) {
+      console.warn('Failed to load shop usage:', err);
+    } finally {
+      setUsageLoading(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     const shopId = shop.id || mockShop.id;
     loadStaff(shopId);
     loadRates(shopId);
     loadPrinterSettings(shopId);
-  }, [shop.id, loadStaff, loadRates, loadPrinterSettings]);
+    loadUsage(shopId);
+  }, [shop.id, loadStaff, loadRates, loadPrinterSettings, loadUsage]);
+
+  // Safe Confetti Celebration Trigger
+  const triggerCelebration = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#D4AF37', '#E5C158', '#00E5FF', '#10B981', '#FFFFFF'],
+        });
+      } catch (err) {
+        console.warn('Confetti execution failed:', err);
+      }
+    }
+  };
+
+  const handleOpenUpgradeModal = (tier: PlanTier) => {
+    setSelectedUpgradeTier(tier);
+    setIsUpgradeModalOpen(true);
+  };
+
+  const handleConfirmUpgrade = async () => {
+    if (!selectedUpgradeTier) return;
+    setUpgrading(true);
+
+    try {
+      const cycle: BillingCycle = isAnnual ? 'ANNUAL' : 'MONTHLY';
+      const shopId = shop.id || mockShop.id;
+      const updated = await subscriptionDb.updateSubscription(shopId, {
+        plan_tier: selectedUpgradeTier,
+        billing_cycle: cycle,
+        subscription_status: 'ACTIVE',
+      });
+
+      setShop((prev) => ({
+        ...prev,
+        ...updated,
+        plan_tier: selectedUpgradeTier,
+        billing_cycle: cycle,
+        subscription_status: 'ACTIVE',
+      }));
+
+      // Trigger celebratory confetti
+      triggerCelebration();
+
+      setIsUpgradeModalOpen(false);
+      setSelectedUpgradeTier(null);
+
+      const targetPlanMeta = PRICING_PLANS.find((p) => p.tier === selectedUpgradeTier);
+      const planName = targetPlanMeta?.title || selectedUpgradeTier;
+
+      setNotification({
+        message: `🎉 Subscription activated! Workshop upgraded to ${planName} (${cycle === 'ANNUAL' ? 'Annual Billing −20%' : 'Monthly Billing'}).`,
+        type: 'success',
+      });
+    } catch (err) {
+      console.error('Failed to update subscription:', err);
+      setNotification({
+        message: err instanceof Error ? err.message : 'Failed to update subscription. Please try again.',
+        type: 'error',
+      });
+    } finally {
+      setUpgrading(false);
+    }
+  };
+
+  const handleFlushLocalCache = async () => {
+    setFlushingCache(true);
+    try {
+      const result = await purgeLocalCache();
+      setNotification({
+        message: `Local cache successfully cleared (${result.clearedStores.join(', ')}). Active session preserved.`,
+        type: 'success',
+      });
+    } catch (err) {
+      console.error('Failed to flush local cache:', err);
+      setNotification({
+        message: 'Failed to flush local cache. Please check browser permissions.',
+        type: 'error',
+      });
+    } finally {
+      setFlushingCache(false);
+    }
+  };
+
+  const handleOpenResetModal = () => {
+    setResetConfirmInput('');
+    setIsResetModalOpen(true);
+  };
+
+  const handleConfirmWorkshopReset = async () => {
+    if (resetConfirmInput.trim().toUpperCase() !== 'PURGE') {
+      setNotification({
+        message: 'Please type PURGE in all caps to confirm workshop data reset.',
+        type: 'error',
+      });
+      return;
+    }
+
+    setPurgingWorkshop(true);
+    try {
+      const shopId = shop.id || mockShop.id;
+      const result = await shopsDb.purgeShopTestData(shopId);
+      await purgeLocalCache();
+
+      // Refresh usage & staff
+      await loadUsage(shopId);
+      await loadStaff(shopId);
+
+      setNotification({
+        message: `Workshop data purged! Removed ${result.deleted_orders} orders, ${result.deleted_profiles} measurement profiles, and ${result.deleted_khata} khata records.`,
+        type: 'success',
+      });
+      setIsResetModalOpen(false);
+      setResetConfirmInput('');
+    } catch (err) {
+      console.error('Failed to reset workshop data:', err);
+      setNotification({
+        message: err instanceof Error ? err.message : 'Failed to reset workshop data.',
+        type: 'error',
+      });
+    } finally {
+      setPurgingWorkshop(false);
+    }
+  };
 
   const handleRateFieldChange = (
     garmentType: GarmentType,
@@ -716,15 +968,37 @@ export default function SettingsPage() {
             onClick={() => setActiveTab('printer')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'printer'
-                ? 'bg-gold/15 text-gold border border-gold/30'
+                ? 'bg-gold/15 text-gold border border-gold/30 shadow-[0_0_15px_rgba(212,175,55,0.15)]'
                 : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
             }`}
           >
             <Printer className="h-4 w-4" />
             <span>Thermal Printer</span>
             <span className="font-urdu-sans text-[11px] opacity-70">(پرنٹر)</span>
-            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/10 text-gray-300">
-              Phase C.4
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('billing')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'billing'
+                ? 'bg-gold/15 text-gold border border-gold/30 shadow-[0_0_15px_rgba(212,175,55,0.15)]'
+                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+            }`}
+          >
+            <CreditCard className="h-4 w-4" />
+            <span>Billing & Subscriptions</span>
+            <span className="font-urdu-sans text-[11px] opacity-70">(بلنگ اور سبسکرپشن)</span>
+            <span
+              className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full border ${
+                shop.plan_tier === 'PRO'
+                  ? 'border-gold/40 bg-gold/20 text-gold shadow-[0_0_8px_rgba(212,175,55,0.2)]'
+                  : shop.plan_tier === 'ENTERPRISE'
+                  ? 'border-cyan-500/40 bg-cyan-500/20 text-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.2)]'
+                  : 'border-slate-500/40 bg-slate-500/20 text-slate-300'
+              }`}
+            >
+              {shop.plan_tier || 'FREE'}
             </span>
           </button>
         </div>
@@ -940,6 +1214,58 @@ export default function SettingsPage() {
                     <span>Save Workshop Settings</span>
                   </Button>
                 </CardFooter>
+              </Card>
+
+              {/* Section 4: Danger Zone - Workshop Reset & Data Purification */}
+              <Card className="border-rose-500/20 bg-[#0B0C0E]/70 backdrop-blur-xl">
+                <CardHeader>
+                  <CardTitle className="text-base text-rose-300 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-rose-400" />
+                    <span>Workshop Reset & Data Purification</span>
+                    <span className="font-urdu-serif text-xs text-rose-400/90 -mt-0.5" dir="rtl">
+                      ورکشاپ ڈیٹا ری سیٹ اور صفائی
+                    </span>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-gray-400">
+                    Purge development test orders, measurements, and Khata transactions before launching production operations.
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-3.5 text-xs text-gray-300 space-y-2">
+                    <p className="font-medium text-rose-300">
+                      Ready to go live with genuine customer orders?
+                    </p>
+                    <p className="text-[11px] text-gray-400 leading-relaxed">
+                      Purging test data will delete all dummy orders, customer profiles, and Khata financial entries while safely retaining your workshop identity, staff members, catalog rates, and printer hardware preferences.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleFlushLocalCache}
+                      disabled={flushingCache}
+                      className="border-white/10 hover:bg-white/5 text-gray-300 text-xs gap-2"
+                    >
+                      <RotateCcw className={cn("h-3.5 w-3.5", flushingCache && "animate-spin text-gold")} />
+                      <span>{flushingCache ? 'Flushing Cache...' : 'Flush Local Cache'}</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleOpenResetModal}
+                      className="border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold gap-2 shadow-[0_0_15px_rgba(244,63,94,0.15)]"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-rose-400" />
+                      <span>Reset Workshop Data</span>
+                    </Button>
+                  </div>
+                </CardContent>
               </Card>
             </form>
 
@@ -2373,6 +2699,345 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
+        {/* Tab 5: Billing & Subscriptions */}
+        {activeTab === 'billing' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            {/* Active Plan & Usage Overview Widget */}
+            <div className="premium-glass-card p-6 sm:p-8 rounded-2xl relative overflow-hidden border border-white/10 bg-[#0F1115]/80 backdrop-blur-2xl">
+              {/* Background ambient lighting */}
+              <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 rounded-full bg-gold/5 blur-3xl pointer-events-none" />
+
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-white/5 relative z-10">
+                {/* Current Plan Badge & Identity */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">
+                      Current Subscription Plan
+                    </span>
+                    {/* Status Badge */}
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                        shop.subscription_status === 'ACTIVE'
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                          : shop.subscription_status === 'TRIALING'
+                          ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                          : 'border-rose-500/30 bg-rose-500/10 text-rose-400'
+                      }`}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                      <span>{shop.subscription_status === 'ACTIVE' ? 'Active / فعال' : shop.subscription_status === 'TRIALING' ? 'Trial Period' : 'Past Due'}</span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {shop.plan_tier === 'PRO' ? (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gold/40 bg-gold/15 text-gold shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                        <Crown className="h-5 w-5 text-gold" />
+                        <span className="font-editorial text-xl sm:text-2xl font-bold tracking-tight">
+                          Multi-Counter Workshop (Pro)
+                        </span>
+                      </div>
+                    ) : shop.plan_tier === 'ENTERPRISE' ? (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                        <Sparkles className="h-5 w-5 text-cyan-400" />
+                        <span className="font-editorial text-xl sm:text-2xl font-bold tracking-tight">
+                          Enterprise Tailor House
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-500/40 bg-slate-500/15 text-slate-200">
+                        <Store className="h-5 w-5 text-slate-400" />
+                        <span className="font-editorial text-xl sm:text-2xl font-bold tracking-tight">
+                          Solo Master (Free)
+                        </span>
+                      </div>
+                    )}
+                    <span className="font-urdu-serif text-sm text-gold/80" dir="rtl">
+                      {shop.plan_tier === 'PRO' ? 'ورکشاپ پلان (پیشہ ورانہ)' : shop.plan_tier === 'ENTERPRISE' ? 'حویلی / انٹرپرائز' : 'سولو ماسٹر (بنیادی)'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Renewal & Billing Frequency Details */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-gray-300">
+                    <Clock className="h-4 w-4 text-gold shrink-0" />
+                    <span>
+                      {(() => {
+                        if (!shop.current_period_end) {
+                          return 'Quota resets on 1st of next month';
+                        }
+                        const end = new Date(shop.current_period_end);
+                        const now = new Date();
+                        const diffDays = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+                        return `Quota cycle resets in ${diffDays} days (${end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})`;
+                      })()}
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-gray-400 font-mono">
+                    <CreditCard className="h-3.5 w-3.5 text-gray-400" />
+                    <span>{shop.billing_cycle === 'ANNUAL' ? 'Annual Cycle (-20%)' : 'Monthly Cycle'}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Meter Progress Bar */}
+              <div className="pt-6 space-y-3 relative z-10">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <span className="text-gray-300 font-medium flex items-center gap-1.5">
+                    <TrendingUp className="h-4 w-4 text-gold" />
+                    <span>Monthly Tailoring Quota Meter</span>
+                    <span className="font-urdu-sans text-xs text-gold/70" dir="rtl">(ماہانہ کوٹہ)</span>
+                  </span>
+
+                  {shop.plan_tier === 'FREE' ? (
+                    <span className="font-semibold text-white">
+                      <bdi dir="ltr" className="text-gold font-bold">{shopUsage.orders_count}</bdi> / 50 Suits Tailored
+                      <span className="text-xs text-gray-400 ml-1.5">({Math.min(100, Math.round((shopUsage.orders_count / 50) * 100))}% used)</span>
+                    </span>
+                  ) : (
+                    <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
+                      <bdi dir="ltr" className="font-bold">{shopUsage.orders_count}</bdi> Suits Tailored
+                      <span className="text-xs text-emerald-400/80 font-normal">· Unlimited Capacity (لامحدود)</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Visual Meter Bar */}
+                <div className="h-3 w-full rounded-full bg-white/10 overflow-hidden relative">
+                  {shop.plan_tier === 'FREE' ? (
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${
+                        shopUsage.orders_count >= 50
+                          ? 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.5)]'
+                          : shopUsage.orders_count >= 40
+                          ? 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)]'
+                          : 'bg-gradient-to-r from-gold to-amber-400 shadow-[0_0_12px_rgba(212,175,55,0.4)]'
+                      }`}
+                      style={{ width: `${Math.min(100, Math.round((shopUsage.orders_count / 50) * 100))}%` }}
+                    />
+                  ) : (
+                    <div className="h-full w-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-pulse" />
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-gray-400 pt-0.5">
+                  <span>
+                    {shop.plan_tier === 'FREE'
+                      ? '50 suits monthly ceiling. Upgrade to Pro for unlimited suits & 5 staff roles.'
+                      : 'All quota caps unlocked. Tailor unlimited customer suits without limits.'}
+                  </span>
+                  {shop.plan_tier === 'FREE' && shopUsage.orders_count >= 40 && (
+                    <span className="text-amber-400 font-medium">
+                      ⚠️ Approaching monthly limit ({50 - shopUsage.orders_count} suits remaining)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Pricing Matrix */}
+            <div className="space-y-6">
+              <div className="text-center space-y-3 max-w-2xl mx-auto">
+                <div className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3.5 py-1 text-gold text-xs font-semibold tracking-wider uppercase">
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>Transparent PKR Subscriptions</span>
+                </div>
+                <h2 className="font-editorial text-2xl sm:text-4xl text-white font-medium tracking-tight">
+                  Tailoring capacity without <em className="italic text-gold">complications.</em>
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400">
+                  Select the workshop tier suited to your craftsmen and counter volume. All plans in Pakistani Rupees.
+                </p>
+
+                {/* Billing Toggle */}
+                <div className="pt-2">
+                  <div className="inline-flex items-center gap-2 p-1.5 rounded-full bg-[#121316] border border-white/10 backdrop-blur-md shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => setIsAnnual(false)}
+                      className={`px-5 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                        !isAnnual
+                          ? 'bg-gold text-[#0B0C0E] shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      Monthly (ماہانہ)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAnnual(true)}
+                      className={`relative px-5 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isAnnual
+                          ? 'bg-gold text-[#0B0C0E] shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <span>Annually (سالانہ)</span>
+                      <span className="rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-1.5 py-0.5 text-[10px] font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                        −20% Save
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3 Pricing Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch pt-4">
+                {PRICING_PLANS.map((plan) => {
+                  const isCurrentTier = shop.plan_tier === plan.tier;
+                  const isCurrentCycle = isAnnual ? shop.billing_cycle === 'ANNUAL' : shop.billing_cycle === 'MONTHLY';
+                  const isExactCurrent = isCurrentTier && isCurrentCycle;
+
+                  const displayPrice = isAnnual ? plan.annualMonthlyPKR : plan.monthlyPKR;
+                  const savings = plan.monthlyPKR > 0 && isAnnual ? (plan.monthlyPKR - plan.annualMonthlyPKR) * 12 : 0;
+
+                  return (
+                    <div
+                      key={plan.tier}
+                      className={`premium-glass-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative transition-all duration-300 hover:-translate-y-1 ${
+                        plan.highlight
+                          ? 'border-gold/60 shadow-[0_0_40px_rgba(212,175,55,0.15)] bg-[#14151a]'
+                          : 'border-white/10 bg-[#0F1115]/80'
+                      }`}
+                    >
+                      {/* Popular Badge */}
+                      {plan.badge && (
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                          <div className="inline-flex items-center gap-1.5 rounded-full border border-gold bg-gold px-3.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0B0C0E] shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+                            <Crown className="h-3 w-3 fill-current" />
+                            <span>{plan.badge}</span>
+                            <span className="font-urdu-sans text-[9px] -mt-0.5" dir="rtl">({plan.badgeUr})</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-6">
+                        {/* Plan Title & Identity */}
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-editorial text-2xl font-bold text-white tracking-tight">
+                              {plan.title}
+                            </h3>
+                            {isExactCurrent && (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-semibold">
+                                Active Plan
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-urdu-serif text-xs text-gold/80 mt-0.5" dir="rtl">
+                            {plan.urTitle}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                            {plan.tagline}
+                          </p>
+                        </div>
+
+                        {/* Price Block */}
+                        <div className="border-t border-white/10 pt-5 space-y-1">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-editorial text-3xl sm:text-4xl font-normal text-white">
+                              <bdi dir="ltr">Rs. {displayPrice.toLocaleString('en-PK')}</bdi>
+                            </span>
+                            <span className="text-xs text-gray-400">/ month</span>
+                          </div>
+
+                          {plan.monthlyPKR === 0 ? (
+                            <p className="text-[11px] text-gray-400">Free forever · No credit card required</p>
+                          ) : isAnnual ? (
+                            <p className="text-[11px] text-gray-400">
+                              Billed annually (<bdi dir="ltr">Rs. {(displayPrice * 12).toLocaleString('en-PK')}/yr</bdi>) ·{' '}
+                              <span className="font-semibold text-emerald-400">
+                                Save Rs. {savings.toLocaleString('en-PK')}/yr
+                              </span>
+                            </p>
+                          ) : (
+                            <p className="text-[11px] text-gray-400">Billed monthly · Cancel or switch anytime</p>
+                          )}
+                        </div>
+
+                        {/* Feature List */}
+                        <div className="space-y-3 pt-2">
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                            Included Capabilities
+                          </span>
+                          <ul className="space-y-2.5">
+                            {plan.features.map((feat) => (
+                              <li key={feat} className="flex items-start gap-2.5 text-xs text-gray-300">
+                                <div
+                                  className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                                    plan.highlight ? 'bg-gold/20 text-gold' : 'bg-white/10 text-gray-300'
+                                  }`}
+                                >
+                                  <Check className="h-2.5 w-2.5 stroke-[3]" />
+                                </div>
+                                <span className="leading-snug">{feat}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      {/* CTA Action */}
+                      <div className="pt-8 mt-auto">
+                        {isExactCurrent ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled
+                            className="w-full border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-semibold text-xs py-5 opacity-80 cursor-default"
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                            <span>Current Plan (موجودہ پلان)</span>
+                          </Button>
+                        ) : plan.tier === 'FREE' ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => handleOpenUpgradeModal(plan.tier)}
+                            className="w-full border-white/10 hover:bg-white/5 text-gray-300 font-semibold text-xs py-5 cursor-pointer"
+                          >
+                            <span>Downgrade to Free</span>
+                          </Button>
+                        ) : isCurrentTier && !isExactCurrent ? (
+                          <Button
+                            type="button"
+                            variant="default"
+                            onClick={() => handleOpenUpgradeModal(plan.tier)}
+                            className="w-full bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold text-xs py-5 shadow-[0_0_20px_rgba(212,175,55,0.2)] cursor-pointer"
+                          >
+                            <span>Switch to {isAnnual ? 'Annual (−20%)' : 'Monthly'}</span>
+                          </Button>
+                        ) : plan.tier === 'PRO' ? (
+                          <Button
+                            type="button"
+                            variant="default"
+                            onClick={() => handleOpenUpgradeModal(plan.tier)}
+                            className="w-full bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs py-5 shadow-[0_0_25px_rgba(212,175,55,0.3)] cursor-pointer gap-1.5"
+                          >
+                            <Crown className="h-4 w-4" />
+                            <span>Upgrade to Pro (پرو پلان حاصل کریں)</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => handleOpenUpgradeModal(plan.tier)}
+                            className="w-full border-cyan-500/40 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 font-bold text-xs py-5 shadow-[0_0_20px_rgba(6,182,212,0.15)] cursor-pointer gap-1.5"
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            <span>Upgrade to Enterprise</span>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -2577,6 +3242,240 @@ export default function SettingsPage() {
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 <span>Remove Staff</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* Subscription Upgrade & Activation Modal                                   */}
+      {/* ========================================================================= */}
+      {isUpgradeModalOpen && selectedUpgradeTier && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-2xl border border-white/10 bg-[#121316] p-6 shadow-2xl space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border ${
+                    selectedUpgradeTier === 'PRO'
+                      ? 'border-gold/40 bg-gold/15 text-gold'
+                      : selectedUpgradeTier === 'ENTERPRISE'
+                      ? 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300'
+                      : 'border-slate-500/40 bg-slate-500/15 text-slate-300'
+                  }`}
+                >
+                  {selectedUpgradeTier === 'PRO' ? (
+                    <Crown className="h-5 w-5" />
+                  ) : selectedUpgradeTier === 'ENTERPRISE' ? (
+                    <Sparkles className="h-5 w-5" />
+                  ) : (
+                    <Store className="h-5 w-5" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-editorial text-lg font-bold text-white tracking-tight">
+                    Confirm Subscription Plan
+                  </h3>
+                  <p className="font-urdu-serif text-xs text-gold/80 -mt-0.5" dir="rtl">
+                    پلان کی تصدیق اور فوری ایکٹیویشن
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsUpgradeModalOpen(false);
+                  setSelectedUpgradeTier(null);
+                }}
+                className="text-gray-400 hover:text-white rounded-lg p-1 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Plan Details & Pricing Summary Card */}
+            {(() => {
+              const meta = PRICING_PLANS.find((p) => p.tier === selectedUpgradeTier);
+              if (!meta) return null;
+
+              const monthlyPrice = isAnnual ? meta.annualMonthlyPKR : meta.monthlyPKR;
+              const totalPrice = isAnnual ? meta.annualMonthlyPKR * 12 : meta.monthlyPKR;
+
+              return (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-white/10 bg-black/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">Selected Plan:</span>
+                      <span className="text-sm font-bold text-white">{meta.title}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">Billing Frequency:</span>
+                      <span className="text-xs font-semibold text-gold">
+                        {isAnnual ? 'Annually (−20% Discount)' : 'Monthly'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-white/5 pt-2">
+                      <span className="text-xs text-gray-300">Amount Due:</span>
+                      <div className="text-right">
+                        <span className="text-base font-bold text-white">
+                          <bdi dir="ltr">Rs. {monthlyPrice.toLocaleString('en-PK')}</bdi> / mo
+                        </span>
+                        {isAnnual && meta.monthlyPKR > 0 && (
+                          <div className="text-[10px] text-emerald-400">
+                            Total: <bdi dir="ltr">Rs. {totalPrice.toLocaleString('en-PK')}</bdi> billed for 1 year
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Highlights checklist */}
+                  <div className="space-y-2 pt-1">
+                    <span className="text-xs font-medium text-gray-300">Activated Features:</span>
+                    <ul className="space-y-1.5 text-xs text-gray-400">
+                      {meta.features.slice(0, 4).map((f) => (
+                        <li key={f} className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-gold shrink-0" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <p className="text-[11px] text-gray-400 italic">
+                    Subscription upgrades take effect immediately. Monthly quota will be adjusted in real time.
+                  </p>
+                </div>
+              );
+            })()}
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsUpgradeModalOpen(false);
+                  setSelectedUpgradeTier(null);
+                }}
+                disabled={upgrading}
+                className="border-white/10 hover:bg-white/5 text-gray-300 text-xs cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="default"
+                onClick={handleConfirmUpgrade}
+                isLoading={upgrading}
+                disabled={upgrading}
+                className="bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs shadow-[0_0_20px_rgba(212,175,55,0.25)] gap-1.5 cursor-pointer"
+              >
+                <Check className="h-4 w-4" />
+                <span>Confirm & Activate Subscription</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* WORKSHOP RESET / PURGE TEST DATA CONFIRMATION MODAL                 */}
+      {/* ------------------------------------------------------------------ */}
+      {isResetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-2xl border border-rose-500/30 bg-[#0F1115]/95 p-6 backdrop-blur-2xl shadow-[0_0_50px_rgba(244,63,94,0.2)] space-y-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-500/40 bg-rose-500/15 text-rose-400">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-editorial text-lg font-bold text-white">
+                    Reset Workshop Data
+                  </h3>
+                  <p className="font-urdu-sans text-xs text-rose-400" dir="rtl">
+                    ورکشاپ ٹیسٹ ڈیٹا صفائی
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsResetModalOpen(false)}
+                className="text-gray-400 hover:text-white rounded-lg p-1 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-gray-300">
+              <p>
+                You are initiating a permanent data purification for <strong className="text-white">{shop.name}</strong>.
+              </p>
+
+              <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-[11px] text-rose-300 space-y-1">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
+                  <span>Will Be Deleted:</span>
+                </p>
+                <ul className="list-disc list-inside space-y-0.5 opacity-90 pl-1">
+                  <li>All test orders and production queue records</li>
+                  <li>All customer measurement profiles</li>
+                  <li>All Khata financial transactions & balances</li>
+                  <li>Customer directory contacts</li>
+                  <li>Monthly tailoring quota usage reset to 0</li>
+                </ul>
+                <p className="font-urdu-sans text-rose-400 pt-1" dir="rtl">
+                  تمام کسٹمرز، آرڈرز اور کھاتہ رجسٹر مکمل ڈیلیٹ ہو جائے گا۔
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2.5 text-[11px] text-emerald-300">
+                <span className="font-medium">Retained Safely:</span> Workshop profile settings, staff accounts, catalog rates, and printer hardware preferences.
+              </div>
+
+              <div className="space-y-1.5 pt-1">
+                <label className="text-xs text-gray-300 flex items-center justify-between font-medium">
+                  <span>Type <strong className="text-rose-400 font-mono">PURGE</strong> to confirm:</span>
+                  <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                    تصدیق کے لیے PURGE لکھیں
+                  </span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="PURGE"
+                  value={resetConfirmInput}
+                  onChange={(e) => setResetConfirmInput(e.target.value)}
+                  className="bg-black/50 border-rose-500/30 focus:border-rose-500 text-white font-mono text-center uppercase tracking-widest text-sm h-10"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsResetModalOpen(false)}
+                disabled={purgingWorkshop}
+                className="border-white/10 text-gray-300 text-xs cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={handleConfirmWorkshopReset}
+                disabled={purgingWorkshop || resetConfirmInput.trim().toUpperCase() !== 'PURGE'}
+                className="font-semibold bg-rose-500 hover:bg-rose-600 text-white text-xs shadow-[0_0_20px_rgba(244,63,94,0.3)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {purgingWorkshop ? 'Purging Workshop...' : 'Purge All Test Data'}
               </Button>
             </div>
           </div>

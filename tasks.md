@@ -144,11 +144,24 @@
 
 ---
 
-## Phase E: Multi-Tier SaaS Monetization & Quota Engine (Phase E, Sub-Phase E.1)
+## Phase E: Multi-Tier SaaS Monetization & Quota Engine
 - [x] E.1.1 Database Migration & Subscription Schema (`supabase/migrations/20260825000011_subscription_system.sql`): Extend `public.shops` with `plan_tier` ('FREE' | 'PRO' | 'ENTERPRISE'), `billing_cycle`, `subscription_status`, and Stripe metadata columns; create `public.shop_usage` table with monthly aggregation; declare STABLE `check_order_creation_allowed` RPC with safe `COALESCE` quota lookup and 50-suit Free tier ceiling; configure auto-increment `trg_increment_shop_order_usage` trigger on `garment_orders` and historical usage backfill.
 - [x] E.1.2 Domain Types & Repositories (`types/tailor.ts`, `lib/db.ts`, `lib/mock-data.ts`): Declare `PlanTier`, `SubscriptionStatus`, `BillingCycle`, `ShopUsage` types; extend `Shop` interface; implement `mapShopUsageRow` and `subscriptionDb` repository with `getShopUsage()`, `checkOrderAllowed()`, `updateSubscription()`, `incrementUsage()`, and offline development state.
 - [x] E.1.3 Booking Quota Guard & Upgrade Interlock (`app/orders/new/page.tsx`): Pre-flight `subscriptionDb.checkOrderAllowed` guard blocking order creation when Free tier quota (50/50) is reached; luxury Obsidian Dark Quota Reached Dialog with 50/50 visual progress bar, Pro tier feature breakdown, and upgrade CTA to `/settings`.
 - [x] E.1.4 Automated Verification Suite & Static Export Compilation (`scripts/verify_db.ts`): Added Section 6 database assertions for subscription migration DDL, `shop_usage` table, mappers, quota checks, and tier updates (83/83 tests passing); verified 0 type errors (`npx tsc --noEmit`); and verified Next.js static export compilation into `out/` (27/27 static routes generated).
+- [x] E.2.1 Real-Time Cross-Component Plan Sync (`lib/db.ts`, `components/layout/app-shell.tsx`): Dispatched `silaye:plan-updated` custom event in `subscriptionDb.updateSubscription()`, dynamic date calculations (+30d monthly, +365d annual), and added event listener in `AppShell` with dynamic desktop sidebar & mobile drawer plan badges (`FREE`, `PRO`, `ENTERPRISE`).
+- [x] E.2.2 Settings Dashboard: Billing & Subscriptions Tab (`app/settings/page.tsx`): Built Tab 5 with Active Plan & Usage Widget (tier badge, status indicator, monthly quota progress meter, countdown to renewal date), 3-tier PKR pricing comparison cards (Solo Master Free Rs. 0, Multi-Counter Workshop Pro Rs. 2,800/mo, Enterprise Tailor House Rs. 7,000/mo) with Monthly vs Annual toggle (−20% savings), and SSR-safe canvas-confetti celebration.
+- [x] E.2.3 Subscription Upgrade & Activation Workflow (`app/settings/page.tsx`): Built the Subscription Upgrade Confirmation Dialog displaying billing frequency summary, annual savings breakdown, activated feature checklist, and real-time subscription update execution.
+- [x] E.2.4 Automated Test Suite & Static Export Compilation (`scripts/verify_db.ts`): Added Section 11 test assertions for tier transitions, annual discount math, and quota enforcement (91/91 tests passing); verified 0 type errors (`npx tsc --noEmit`); and verified Next.js static export compilation into `out/` (27/27 static routes generated).
+
+---
+
+## Phase F: Production Hardening, Zero-Trust Lockdown & Security Operations
+- [x] F.1.1 Production Database Purification & Test Data Segregation (`lib/mock-data.ts`, `lib/db.ts`): Gated mock datasets behind `isDemoMode()`, enforced live Supabase multi-tenant table queries for authenticated users, and built factory reset / cache purge utility `purgeLocalCache()`.
+- [x] F.1.2 Cascade-Safe Purge RPC (`supabase/migrations/20260825000012_production_lockdown.sql`): Created `public.purge_shop_test_data(p_shop_id UUID)` with `SECURITY DEFINER SET search_path = public`, multi-tenant role validation (`is_super_admin() OR is_shop_owner()`), cascade deletion (`khata_transactions` -> `garment_orders` -> `measurement_profiles` -> `customers` -> `shop_usage.orders_count = 0`), and preservation of `shops`, `shop_members`, `garment_rates`, `printer_settings`.
+- [x] F.1.3 Super Admin Command Center Purge Action & Pre-Flight Gate (`app/admin/page.tsx`): Fortified 403 access gate to block telemetry queries before super admin verification; added "Purge Test Data" button on workshop table rows with two-step modal requiring typing `"PURGE"`.
+- [x] F.1.4 Settings Workshop Profile Danger Zone (`app/settings/page.tsx`): Added "Workshop Reset & Data Purification" card in Tab 1 with "Purge Workshop Data" (requiring typing `"PURGE"`) and "Flush Local Cache" buttons.
+- [x] F.1.5 Verification Suite & Static Export Compilation (`scripts/verify_db.ts`): Added Section 12 test assertions for migration 12 DDL, purge RPC execution, cache flush, and demo mode evaluation (98/98 tests passing); verified 0 TypeScript errors (`npx tsc --noEmit`); and verified static export compilation into `out/` (27/27 static routes generated).
 
 ---
 
@@ -161,8 +174,9 @@
 ---
 
 ## Phase 12: Production Verification & Build Checks
-- [ ] 12.1 Run full typecheck (`npx tsc --noEmit`) and resolve any interface or prop discrepancies.
-- [ ] 12.2 Run static export build (`npm run build`) to verify `out/` directory generation with zero runtime errors.
-- [ ] 12.3 Verify responsive rendering on mobile viewports (Android Webview) and desktop window dimensions (Electron).
+- [x] 12.1 Run full typecheck (`npx tsc --noEmit`) and resolve any interface or prop discrepancies.
+- [x] 12.2 Run static export build (`npm run build`) to verify `out/` directory generation with zero runtime errors.
+- [x] 12.3 Verify responsive rendering on mobile viewports (Android Webview) and desktop window dimensions (Electron).
+
 
 

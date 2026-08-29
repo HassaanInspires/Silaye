@@ -13,6 +13,27 @@ import type {
   OrderStatusLog,
 } from '@/types/tailor';
 
+/**
+ * Check if the application is running in offline demo mode.
+ * Evaluates explicit DEMO environment variables and browser runtime state.
+ */
+export function isDemoMode(): boolean {
+  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    return true;
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      const hasSbToken = Object.keys(localStorage).some(
+        (k) => k.startsWith('sb-') && k.endsWith('-auth-token')
+      );
+      if (hasSbToken) return false;
+    } catch {
+      // Ignore storage access errors
+    }
+  }
+  return typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
+}
+
 // ==========================================
 // 1. Shop Profile (Wah Cantt Locale)
 // ==========================================
