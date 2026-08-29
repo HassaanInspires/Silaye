@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install Dependencies
@@ -27,7 +27,7 @@ jobs:
         run: npm run build
 
       - name: Compile Windows NSIS Installer
-        run: npx electron-builder --win nsis --x64
+        run: npx electron-builder --win nsis --x64 --publish never
 
       - name: Upload Windows .exe Artifact
         uses: actions/upload-artifact@v4
@@ -46,7 +46,7 @@ jobs:
       - name: Setup Node.js LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Setup Java JDK 17
@@ -63,7 +63,6 @@ jobs:
 
       - name: Sync Capacitor Android
         run: |
-          npx cap add android || true
           npx cap sync android
 
       - name: Make Gradle Wrapper Executable
