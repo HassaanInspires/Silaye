@@ -183,5 +183,16 @@
 - [x] 12.2 Run static export build (`npm run build`) to verify `out/` directory generation with zero runtime errors.
 - [x] 12.3 Verify responsive rendering on mobile viewports (Android Webview) and desktop window dimensions (Electron).
 
+---
+
+## Phase 13: Automated Cloud Release Build & Cross-Platform Distribution (v1.0.0)
+- [x] 13.1 Commit release snapshot `chore(release): v1.0.0 - clean-slate zero-mock production build` and push to `origin/main`.
+- [x] 13.2 Create annotated release tag `v1.0.0` and force-push to remote to trigger GitHub Actions CI/CD pipeline (`build-artifacts.yml`).
+- [x] 13.3 Compile Windows Desktop Installer (`.exe`) on GitHub Actions `windows-latest` runner with Electron Builder NSIS x64.
+- [x] 13.4 Compile Android Native Package (`.apk`) on GitHub Actions `ubuntu-latest` runner with Capacitor 8 and Java JDK 21.
+- [x] 13.5 Download compiled cross-platform production binaries into `./release-binaries/` via GitHub CLI (`gh`).
+- [x] 13.6 Verify binary integrity and checksums (`Silaye Master Tailor OS Setup 1.0.0.exe` [167 MB], `app-debug.apk` [5.4 MB]).
+
+
 
 
