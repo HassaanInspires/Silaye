@@ -30,6 +30,12 @@ export const mockShop: Shop = {
   receipt_header: 'سِلائی ماسٹر ٹیلرز اینڈ فیبرکس - واہ کینٹ\nماہر سلائی برائے مردانہ شلوار قمیض و واسکٹ',
   receipt_footer: 'شکریہ! مال کی واپسی یا تبدیلی 7 یوم کے اندر ممکن ہے۔\nپتہ: مین بازار واہ کینٹ | رابطہ: 0300-5551234',
   is_active: true,
+  status: 'ACTIVE',
+  plan_tier: 'FREE',
+  billing_cycle: 'MONTHLY',
+  subscription_status: 'ACTIVE',
+  current_period_start: '2026-08-01T00:00:00.000Z',
+  current_period_end: '2026-08-31T23:59:59.000Z',
   created_at: '2026-01-01T08:00:00.000Z',
   updated_at: '2026-01-01T08:00:00.000Z',
 };

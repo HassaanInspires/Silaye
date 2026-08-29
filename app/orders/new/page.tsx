@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   User,
   Phone,
@@ -25,6 +26,8 @@ import {
   Clock,
   Layers,
   Zap,
+  Crown,
+  Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppShell } from '@/components/layout/app-shell';
@@ -44,7 +47,7 @@ import {
   mockStaff,
   mockShop,
 } from '@/lib/mock-data';
-import { staffDb, ratesDb, printerDb, DEFAULT_PRINTER_SETTINGS } from '@/lib/db';
+import { staffDb, ratesDb, printerDb, subscriptionDb, DEFAULT_PRINTER_SETTINGS } from '@/lib/db';
 import { calculateOrderFinancials, formatPakistaniPhone } from '@/lib/validations/tailor';
 import type {
   Customer,
@@ -57,6 +60,7 @@ import type {
   StylePreferences,
   GarmentType,
   FabricSource,
+  PlanTier,
 } from '@/types/tailor';
 
 function getFutureDateString(days: number): string {
@@ -284,6 +288,14 @@ export default function NewOrderPage() {
   // ── Modals & Draft status ─────────────────────────────────────────────
   const [isReceiptModalOpen, setIsReceiptModalOpen] = React.useState<boolean>(false);
   const [isThermalModalOpen, setIsThermalModalOpen] = React.useState<boolean>(false);
+  const [isQuotaModalOpen, setIsQuotaModalOpen] = React.useState<boolean>(false);
+  const [quotaDetails, setQuotaDetails] = React.useState<{
+    currentCount: number;
+    maxLimit: number;
+    tier: PlanTier;
+    reason?: string;
+  } | null>(null);
+  const [isCheckingQuota, setIsCheckingQuota] = React.useState<boolean>(false);
   const [printerSettings, setPrinterSettings] = React.useState<PrinterSettings>({
     id: 'ps-mock-default',
     shop_id: mockShop.id,
@@ -517,8 +529,28 @@ export default function NewOrderPage() {
     }, 3000);
   };
 
-  const handleBookOrder = () => {
+  const handleBookOrder = async () => {
     if (!customerName.trim() || !deliveryDate) return;
+
+    // ── Pre-flight Subscription Quota Check ─────────────────────────────────
+    setIsCheckingQuota(true);
+    try {
+      const quotaCheck = await subscriptionDb.checkOrderAllowed(mockShop.id);
+      if (!quotaCheck.allowed) {
+        setQuotaDetails({
+          currentCount: quotaCheck.currentCount,
+          maxLimit: quotaCheck.maxLimit,
+          tier: quotaCheck.tier,
+          reason: quotaCheck.reason || 'Monthly order quota reached (50/50). Upgrade to Pro for unlimited suits.',
+        });
+        setIsQuotaModalOpen(true);
+        return;
+      }
+    } catch (err) {
+      console.warn('Subscription quota check error, continuing gracefully:', err);
+    } finally {
+      setIsCheckingQuota(false);
+    }
 
     const orderNum = `DP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const effectiveCust: Customer = foundCustomer || {
@@ -572,6 +604,9 @@ export default function NewOrderPage() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
+    // Increment monthly quota count
+    await subscriptionDb.incrementUsage(mockShop.id);
 
     setNewBookedOrder(newOrder);
     setNewBookedCustomer(effectiveCust);
@@ -1595,17 +1630,18 @@ export default function NewOrderPage() {
                     type="button"
                     variant="default"
                     size="lg"
-                    disabled={!isFormValidToBook}
+                    disabled={!isFormValidToBook || isCheckingQuota}
+                    isLoading={isCheckingQuota}
                     onClick={handleBookOrder}
                     className={cn(
                       'w-full h-11 text-sm font-bold tracking-wide shadow-lg transition-all duration-200 gap-2',
-                      isFormValidToBook
+                      isFormValidToBook && !isCheckingQuota
                         ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(200,169,126,0.3)]'
                         : 'opacity-50 cursor-not-allowed'
                     )}
                   >
                     <Sparkles className="h-4 w-4" />
-                    <span>✨ Confirm & Book Suit</span>
+                    <span>{isCheckingQuota ? 'Verifying Quota...' : '✨ Confirm & Book Suit'}</span>
                   </Button>
 
                   {!isFormValidToBook && (
@@ -1667,12 +1703,13 @@ export default function NewOrderPage() {
             <Button
               variant="default"
               size="sm"
-              disabled={!isFormValidToBook}
+              disabled={!isFormValidToBook || isCheckingQuota}
+              isLoading={isCheckingQuota}
               onClick={handleBookOrder}
               className="gap-1.5 text-xs font-semibold"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Book Order
+              <span>{isCheckingQuota ? 'Verifying...' : 'Book Order'}</span>
             </Button>
           </div>
         </div>
@@ -1697,6 +1734,108 @@ export default function NewOrderPage() {
           settings={printerSettings}
           initialFormat={printerSettings.paper_width}
         />
+
+        {/* Monthly Quota Exceeded Luxury Obsidian Dark Dialog */}
+        {isQuotaModalOpen && quotaDetails && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+            <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-gold/40 bg-[#0F1115]/95 p-6 sm:p-8 shadow-[0_0_50px_rgba(212,175,55,0.2)]">
+              {/* Decorative radial top glow */}
+              <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-gold/15 blur-3xl" />
+
+              {/* Header */}
+              <div className="relative z-10 flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-gold/40 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+                    <Crown className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-bold text-foreground">Monthly Quota Reached</h2>
+                      <Badge variant="outline" className="border-gold/50 bg-gold/10 text-gold text-[10px] uppercase tracking-wider font-semibold">
+                        Free Tier
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Maximum monthly suit quota exhausted
+                    </p>
+                  </div>
+                </div>
+                <span dir="rtl" lang="ur" className="font-urdu-serif text-lg leading-urdu-display text-gold">
+                  ماہانہ کوٹہ مکمل
+                </span>
+              </div>
+
+              {/* Body */}
+              <div className="relative z-10 space-y-5 py-5">
+                {/* Progress meter */}
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="flex items-center justify-between text-xs mb-2">
+                    <span className="font-medium text-gray-300">Monthly Usage Consumption</span>
+                    <span className="font-mono font-bold text-gold">
+                      {quotaDetails.currentCount} / {quotaDetails.maxLimit} Suits (100%)
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 via-gold to-yellow-300 shadow-[0_0_12px_rgba(212,175,55,0.6)] transition-all duration-500"
+                      style={{ width: `${Math.min(100, (quotaDetails.currentCount / quotaDetails.maxLimit) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Free tier accommodates up to 50 orders per calendar month. You have tailored {quotaDetails.currentCount} suits this month.
+                  </p>
+                </div>
+
+                {/* Feature comparison / upgrade value */}
+                <div className="space-y-2.5 rounded-xl border border-gold/20 bg-gold/[0.04] p-4 text-xs">
+                  <p className="font-semibold text-gold flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Unlock Unlimited Growth with Pro Workshop:
+                  </p>
+                  <ul className="space-y-1.5 text-gray-300">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-gold flex-shrink-0" />
+                      <span><strong>Unlimited Suits & Orders</strong> without monthly ceiling</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-gold flex-shrink-0" />
+                      <span><strong>Multi-Staff & Role Assignment</strong> (Cutters, Stitchers, Pressers)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-gold flex-shrink-0" />
+                      <span><strong>Hardware Thermal ESC/POS</strong> direct receipt & tag printing</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-gold flex-shrink-0" />
+                      <span><strong>Custom WhatsApp & Slip Branding</strong> with Urdu typography</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Footer CTAs */}
+              <div className="relative z-10 flex flex-col sm:flex-row items-center justify-end gap-2 border-t border-white/10 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsQuotaModalOpen(false)}
+                  className="w-full sm:w-auto text-xs"
+                >
+                  Dismiss / سمجھ گیا
+                </Button>
+                <Link href="/settings" className="w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    className="w-full sm:w-auto bg-gradient-to-r from-gold to-amber-500 text-black font-bold text-xs hover:opacity-90 shadow-[0_0_20px_rgba(212,175,55,0.4)] gap-1.5"
+                  >
+                    <Crown className="h-3.5 w-3.5" />
+                    <span>Upgrade to Pro Workshop →</span>
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

@@ -1441,7 +1441,56 @@
   - `npx --yes tsx scripts/verify_db.ts`: 71/71 test assertions passed with 0 failures.
 
 * **Next Immediate Task:**
-  - Phase 12 (Task 12.1): Run full typecheck (`npx tsc --noEmit`) and resolve any interface or prop discrepancies.
+  - Phase E (Sub-Phase E.1 - Subscription Schema & Monthly Usage Quota Engine)
+
+---
+
+## Phase E: Multi-Tier SaaS Monetization & Quota Engine (Sub-Phase E.1 Completed)
+* **Date:** 2026-08-29
+* **Tasks Completed:**
+  - `E.1.1` Database Migration & Subscription Schema (`supabase/migrations/20260825000011_subscription_system.sql`):
+    * Extended `public.shops` with billing columns: `plan_tier` ('FREE' | 'PRO' | 'ENTERPRISE'), `billing_cycle` ('MONTHLY' | 'ANNUAL'), `subscription_status` ('ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'TRIALING'), `stripe_customer_id`, `stripe_subscription_id`, `current_period_start`, `current_period_end`.
+    * Added check constraints `check_valid_plan_tier`, `check_valid_sub_status`, `check_valid_billing_cycle` and indexes `idx_shops_plan_tier`, `idx_shops_subscription_status`.
+    * Created `public.shop_usage` table with `(shop_id, billing_month)` unique constraint and `orders_count`.
+    * Created STABLE `SECURITY DEFINER` function `public.check_order_creation_allowed(p_shop_id UUID)` with safe `COALESCE(orders_count, 0)` lookup enforcing a strict 50-order ceiling on the Free tier.
+    * Created auto-increment trigger `trg_increment_shop_order_usage` on `public.garment_orders` calling `public.handle_increment_shop_order_usage()`.
+    * Configured RLS policies on `shop_usage` for authenticated shop members and super admins.
+    * Implemented idempotent historical usage backfill from existing `public.garment_orders`.
+  - `E.1.2` Domain Types & Repositories (`types/tailor.ts`, `lib/db.ts`, `lib/mock-data.ts`):
+    * Declared `PlanTier`, `SubscriptionStatus`, `BillingCycle`, and `ShopUsage` types.
+    * Extended `Shop` interface with optional subscription attributes.
+    * Implemented `mapShopUsageRow` and upgraded `mapShopRow` to handle all billing fields.
+    * Exported `subscriptionDb` repository with `getShopUsage()`, `checkOrderAllowed()`, `updateSubscription()`, `incrementUsage()`, and `setMockUsageCount()`.
+    * Added safe offline fallback behaviors with in-memory monthly usage tracking.
+  - `E.1.3` Booking Flow Guard & Quota Reached Interlock (`app/orders/new/page.tsx`):
+    * Integrated pre-flight `subscriptionDb.checkOrderAllowed(mockShop.id)` verification into `handleBookOrder`.
+    * Added `isCheckingQuota` disabled states and loading spinners to desktop and mobile booking action buttons.
+    * Built luxury Obsidian Dark "Monthly Quota Reached" Dialog with 50/50 visual progress bar, Pro tier feature highlights (Unlimited suits, multi-staff roles, thermal slips, custom branding), and CTA to `/settings`.
+    * Handled automatic usage counter increments via `subscriptionDb.incrementUsage(mockShop.id)` upon successful order booking.
+  - `E.1.4` Automated Verification Suite & Static Export (`scripts/verify_db.ts`):
+    * Added Section 6 database assertions for subscription migration DDL, `shop_usage` table, mappers, quota checks, and tier updates.
+    * Executed full test suite: **83/83 tests passed** in `scripts/verify_db.ts`.
+    * Executed TypeScript check: **0 type errors** (`npx tsc --noEmit`).
+    * Executed Next.js build: **27/27 static routes generated** cleanly (`npm run build`).
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000011_subscription_system.sql` [NEW]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/mock-data.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 83/83 test assertions passed (0 failures).
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 27/27 static routes into `out/` with zero runtime errors.
+
+* **Next Immediate Task:**
+  - Phase E, Sub-Phase E.2: Subscription Tier Management UI & Billing Settings
+
 
 
 

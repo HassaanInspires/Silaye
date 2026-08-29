@@ -25,6 +25,10 @@ import {
 import type {
   Shop,
   ShopStatus,
+  PlanTier,
+  SubscriptionStatus,
+  BillingCycle,
+  ShopUsage,
   ShopMember,
   ShopMemberRole,
   GarmentRate,
@@ -156,6 +160,22 @@ export interface ShopRow {
   receipt_header: string | null;
   receipt_footer: string | null;
   status?: string;
+  plan_tier?: string;
+  billing_cycle?: string;
+  subscription_status?: string;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  current_period_start?: string | Date;
+  current_period_end?: string | Date;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
+export interface ShopUsageRow {
+  id: string;
+  shop_id: string;
+  billing_month: string | Date;
+  orders_count: number | string;
   created_at: string | Date;
   updated_at: string | Date;
 }
@@ -321,6 +341,24 @@ export function mapShopRow(row: ShopRow): Shop {
     receipt_header: row.receipt_header,
     receipt_footer: row.receipt_footer,
     status: (row.status as ShopStatus) || 'ACTIVE',
+    plan_tier: (row.plan_tier as PlanTier) || 'FREE',
+    billing_cycle: (row.billing_cycle as BillingCycle) || 'MONTHLY',
+    subscription_status: (row.subscription_status as SubscriptionStatus) || 'ACTIVE',
+    stripe_customer_id: row.stripe_customer_id || null,
+    stripe_subscription_id: row.stripe_subscription_id || null,
+    current_period_start: row.current_period_start ? toIsoString(row.current_period_start) : undefined,
+    current_period_end: row.current_period_end ? toIsoString(row.current_period_end) : undefined,
+    created_at: toIsoString(row.created_at),
+    updated_at: toIsoString(row.updated_at),
+  };
+}
+
+export function mapShopUsageRow(row: ShopUsageRow): ShopUsage {
+  return {
+    id: row.id,
+    shop_id: row.shop_id,
+    billing_month: toDateString(row.billing_month),
+    orders_count: Number(row.orders_count || 0),
     created_at: toIsoString(row.created_at),
     updated_at: toIsoString(row.updated_at),
   };
@@ -788,15 +826,21 @@ export const khataDb = {
 export const shopsDb = {
   async getById(id: string): Promise<Shop | null> {
     if (!isDatabaseConfigured()) return null;
-    const { data, error } = await supabase
-      .from('shops')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-    if (error) {
-      throw new Error(`Failed to fetch shop by ID: ${error.message}`);
+    try {
+      const { data, error } = await supabase
+        .from('shops')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) {
+        console.warn('Supabase shops getById query error, returning null:', error.message);
+        return null;
+      }
+      return data ? mapShopRow(data as ShopRow) : null;
+    } catch (networkErr) {
+      console.warn('Supabase network unreachable in shopsDb.getById:', networkErr);
+      return null;
     }
-    return data ? mapShopRow(data as ShopRow) : null;
   },
 
   async getCurrentShop(userId?: string): Promise<Shop | null> {
@@ -838,6 +882,14 @@ export const shopsDb = {
     if (updates.ntn_number !== undefined) updatePayload.ntn_number = updates.ntn_number;
     if (updates.receipt_header !== undefined) updatePayload.receipt_header = updates.receipt_header;
     if (updates.receipt_footer !== undefined) updatePayload.receipt_footer = updates.receipt_footer;
+    if (updates.status !== undefined) updatePayload.status = updates.status;
+    if (updates.plan_tier !== undefined) updatePayload.plan_tier = updates.plan_tier;
+    if (updates.billing_cycle !== undefined) updatePayload.billing_cycle = updates.billing_cycle;
+    if (updates.subscription_status !== undefined) updatePayload.subscription_status = updates.subscription_status;
+    if (updates.stripe_customer_id !== undefined) updatePayload.stripe_customer_id = updates.stripe_customer_id;
+    if (updates.stripe_subscription_id !== undefined) updatePayload.stripe_subscription_id = updates.stripe_subscription_id;
+    if (updates.current_period_start !== undefined) updatePayload.current_period_start = updates.current_period_start;
+    if (updates.current_period_end !== undefined) updatePayload.current_period_end = updates.current_period_end;
 
     const { data, error } = await supabase
       .from('shops')
@@ -1617,5 +1669,200 @@ export const adminDb = {
   },
 };
 
+// ==========================================
+// 12. Subscription Schema & Monthly Usage Quota Repository
+// ==========================================
 
+const mockShopUsageState: Record<string, { orders_count: number; billing_month: string }> = {
+  'a0000000-0000-0000-0000-000000000001': {
+    orders_count: 14,
+    billing_month: new Date().toISOString().substring(0, 7) + '-01',
+  },
+};
 
+export const subscriptionDb = {
+  /**
+   * Fetch workshop usage for the specified month (defaults to current calendar month YYYY-MM-01).
+   */
+  async getShopUsage(shopId: string, monthDate?: string): Promise<ShopUsage> {
+    const currentMonthStr = monthDate || (new Date().toISOString().substring(0, 7) + '-01');
+
+    const defaultFallback: ShopUsage = {
+      id: `su-mock-${shopId.substring(0, 8)}-${currentMonthStr}`,
+      shop_id: shopId,
+      billing_month: currentMonthStr,
+      orders_count: mockShopUsageState[shopId]?.orders_count ?? 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (!isDatabaseConfigured()) {
+      return defaultFallback;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('shop_usage')
+        .select('*')
+        .eq('shop_id', shopId)
+        .eq('billing_month', currentMonthStr)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Supabase shop_usage query error, using local fallback:', error.message);
+        return defaultFallback;
+      }
+
+      if (!data) {
+        return defaultFallback;
+      }
+
+      return mapShopUsageRow(data as ShopUsageRow);
+    } catch (networkErr) {
+      console.warn('Supabase network unreachable in getShopUsage, using local fallback:', networkErr);
+      return defaultFallback;
+    }
+  },
+
+  /**
+   * Pre-flight quota check to determine if an order creation is allowed.
+   * Pro & Enterprise tiers have unlimited allowances.
+   * Free tier is capped at 50 orders per calendar month.
+   */
+  async checkOrderAllowed(shopId: string): Promise<{
+    allowed: boolean;
+    currentCount: number;
+    maxLimit: number;
+    tier: PlanTier;
+    reason?: string;
+  }> {
+    let tier: PlanTier = 'FREE';
+    try {
+      const shop = await shopsDb.getById(shopId);
+      if (shop?.plan_tier) {
+        tier = shop.plan_tier;
+      }
+    } catch {
+      tier = 'FREE';
+    }
+
+    // Unlimited for PRO and ENTERPRISE
+    if (tier === 'PRO' || tier === 'ENTERPRISE') {
+      const usage = await this.getShopUsage(shopId);
+      return {
+        allowed: true,
+        currentCount: usage.orders_count,
+        maxLimit: Infinity,
+        tier,
+      };
+    }
+
+    // FREE Tier Quota Enforcement (50 max orders/month)
+    const maxLimit = 50;
+
+    if (isDatabaseConfigured()) {
+      try {
+        const { error: rpcError } = await supabase.rpc('check_order_creation_allowed', {
+          p_shop_id: shopId,
+        });
+
+        const usage = await this.getShopUsage(shopId);
+
+        if (rpcError) {
+          if (rpcError.message && rpcError.message.includes('Monthly order quota reached')) {
+            return {
+              allowed: false,
+              currentCount: usage.orders_count,
+              maxLimit,
+              tier: 'FREE',
+              reason: rpcError.message,
+            };
+          }
+          console.warn('check_order_creation_allowed RPC network error, falling back to local evaluation:', rpcError.message);
+        } else {
+          if (usage.orders_count >= maxLimit) {
+            return {
+              allowed: false,
+              currentCount: usage.orders_count,
+              maxLimit,
+              tier: 'FREE',
+              reason: 'Monthly order quota reached (50/50). Upgrade to Pro for unlimited suits.',
+            };
+          }
+
+          return {
+            allowed: true,
+            currentCount: usage.orders_count,
+            maxLimit,
+            tier: 'FREE',
+          };
+        }
+      } catch (err) {
+        console.warn('check_order_creation_allowed RPC network error, evaluating local state:', err);
+      }
+    }
+
+    // Offline / Local Evaluation
+    const usage = await this.getShopUsage(shopId);
+    if (usage.orders_count >= maxLimit) {
+      return {
+        allowed: false,
+        currentCount: usage.orders_count,
+        maxLimit,
+        tier: 'FREE',
+        reason: 'Monthly order quota reached (50/50). Upgrade to Pro for unlimited suits.',
+      };
+    }
+
+    return {
+      allowed: true,
+      currentCount: usage.orders_count,
+      maxLimit,
+      tier: 'FREE',
+    };
+  },
+
+  /**
+   * Update workshop subscription tier, billing cycle, or status.
+   */
+  async updateSubscription(
+    shopId: string,
+    updates: {
+      plan_tier?: PlanTier;
+      billing_cycle?: BillingCycle;
+      subscription_status?: SubscriptionStatus;
+      stripe_customer_id?: string;
+      stripe_subscription_id?: string;
+    }
+  ): Promise<Shop> {
+    return shopsDb.update(shopId, updates);
+  },
+
+  /**
+   * Increment usage count for offline mock simulation or testing.
+   */
+  async incrementUsage(shopId: string, monthDate?: string): Promise<number> {
+    const currentMonthStr = monthDate || (new Date().toISOString().substring(0, 7) + '-01');
+
+    if (!mockShopUsageState[shopId]) {
+      mockShopUsageState[shopId] = {
+        orders_count: 0,
+        billing_month: currentMonthStr,
+      };
+    }
+
+    mockShopUsageState[shopId].orders_count += 1;
+    return mockShopUsageState[shopId].orders_count;
+  },
+
+  /**
+   * Set specific usage count for testing quota enforcement triggers.
+   */
+  setMockUsageCount(shopId: string, count: number): void {
+    const currentMonthStr = new Date().toISOString().substring(0, 7) + '-01';
+    mockShopUsageState[shopId] = {
+      orders_count: count,
+      billing_month: currentMonthStr,
+    };
+  },
+};

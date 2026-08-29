@@ -144,6 +144,14 @@
 
 ---
 
+## Phase E: Multi-Tier SaaS Monetization & Quota Engine (Phase E, Sub-Phase E.1)
+- [x] E.1.1 Database Migration & Subscription Schema (`supabase/migrations/20260825000011_subscription_system.sql`): Extend `public.shops` with `plan_tier` ('FREE' | 'PRO' | 'ENTERPRISE'), `billing_cycle`, `subscription_status`, and Stripe metadata columns; create `public.shop_usage` table with monthly aggregation; declare STABLE `check_order_creation_allowed` RPC with safe `COALESCE` quota lookup and 50-suit Free tier ceiling; configure auto-increment `trg_increment_shop_order_usage` trigger on `garment_orders` and historical usage backfill.
+- [x] E.1.2 Domain Types & Repositories (`types/tailor.ts`, `lib/db.ts`, `lib/mock-data.ts`): Declare `PlanTier`, `SubscriptionStatus`, `BillingCycle`, `ShopUsage` types; extend `Shop` interface; implement `mapShopUsageRow` and `subscriptionDb` repository with `getShopUsage()`, `checkOrderAllowed()`, `updateSubscription()`, `incrementUsage()`, and offline development state.
+- [x] E.1.3 Booking Quota Guard & Upgrade Interlock (`app/orders/new/page.tsx`): Pre-flight `subscriptionDb.checkOrderAllowed` guard blocking order creation when Free tier quota (50/50) is reached; luxury Obsidian Dark Quota Reached Dialog with 50/50 visual progress bar, Pro tier feature breakdown, and upgrade CTA to `/settings`.
+- [x] E.1.4 Automated Verification Suite & Static Export Compilation (`scripts/verify_db.ts`): Added Section 6 database assertions for subscription migration DDL, `shop_usage` table, mappers, quota checks, and tier updates (83/83 tests passing); verified 0 type errors (`npx tsc --noEmit`); and verified Next.js static export compilation into `out/` (27/27 static routes generated).
+
+---
+
 ## Phase 11: Cross-Platform Native Scaffolding
 - [x] 11.1 Scaffold Capacitor configuration (`capacitor.config.ts`) and Android project assets (`npx cap add android`).
 - [x] 11.2 Scaffold Electron main and preload processes (`electron/main.cjs`, `electron/preload.cjs`).
@@ -156,4 +164,5 @@
 - [ ] 12.1 Run full typecheck (`npx tsc --noEmit`) and resolve any interface or prop discrepancies.
 - [ ] 12.2 Run static export build (`npm run build`) to verify `out/` directory generation with zero runtime errors.
 - [ ] 12.3 Verify responsive rendering on mobile viewports (Android Webview) and desktop window dimensions (Electron).
+
 

@@ -150,6 +150,12 @@ export interface StylePreferences {
 
 export type ShopStatus = 'ACTIVE' | 'SUSPENDED' | 'TRIAL' | 'EXPIRED';
 
+export type PlanTier = 'FREE' | 'PRO' | 'ENTERPRISE';
+
+export type SubscriptionStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'TRIALING';
+
+export type BillingCycle = 'MONTHLY' | 'ANNUAL';
+
 /**
  * Tenant / Workshop Shop
  */
@@ -170,8 +176,27 @@ export interface Shop {
   currency?: string;
   is_active?: boolean;
   status?: ShopStatus;
+  plan_tier?: PlanTier;
+  billing_cycle?: BillingCycle;
+  subscription_status?: SubscriptionStatus;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  current_period_start?: string; // ISO 8601 timestamp
+  current_period_end?: string; // ISO 8601 timestamp
   created_at?: string; // ISO 8601 timestamp
   updated_at?: string; // ISO 8601 timestamp
+}
+
+/**
+ * Monthly Quota & Usage Metering for Workshop
+ */
+export interface ShopUsage {
+  id: string; // UUID
+  shop_id: string; // UUID
+  billing_month: string; // YYYY-MM-DD (e.g. '2026-08-01')
+  orders_count: number;
+  created_at: string; // ISO 8601 timestamp
+  updated_at: string; // ISO 8601 timestamp
 }
 
 /**

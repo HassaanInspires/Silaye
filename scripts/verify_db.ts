@@ -35,6 +35,7 @@ import {
   ratesDb,
   printerDb,
   adminDb,
+  subscriptionDb,
   mapCustomerRow,
   mapMeasurementProfileRow,
   mapGarmentOrderRow,
@@ -44,6 +45,7 @@ import {
   mapGarmentRateRow,
   mapPrinterSettingsRow,
   mapAdminShopOverviewRow,
+  mapShopUsageRow,
   type CustomerRow,
   type MeasurementProfileRow,
   type GarmentOrderRow,
@@ -53,6 +55,7 @@ import {
   type GarmentRateRow,
   type PrinterSettingsRow,
   type AdminShopOverviewRow,
+  type ShopUsageRow,
 } from '../lib/db';
 import {
   isSupabaseConfigured,
@@ -72,6 +75,10 @@ import type {
   PlatformMetrics,
   AdminShopOverview,
   SystemAdmin,
+  PlanTier,
+  SubscriptionStatus,
+  BillingCycle,
+  ShopUsage,
 } from '../types/tailor';
 
 let passedTests = 0;
@@ -200,6 +207,15 @@ async function runVerification() {
     'Super admin & platform command center migration exists at supabase/migrations/20260825000010_super_admin.sql'
   );
 
+  const subscriptionSystemMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000011_subscription_system.sql'
+  );
+  assert(
+    fs.existsSync(subscriptionSystemMigrationPath),
+    'Subscription system & quota engine migration exists at supabase/migrations/20260825000011_subscription_system.sql'
+  );
+
   const migrationSql = fs.readFileSync(schemaMigrationPath, 'utf8');
   const rpcSql = fs.readFileSync(rpcMigrationPath, 'utf8');
   const securitySql = fs.readFileSync(securityPatchesMigrationPath, 'utf8');
@@ -211,6 +227,7 @@ async function runVerification() {
   const garmentRatesSql = fs.readFileSync(garmentRatesMigrationPath, 'utf8');
   const printerSettingsSql = fs.readFileSync(printerSettingsMigrationPath, 'utf8');
   const superAdminSql = fs.readFileSync(superAdminMigrationPath, 'utf8');
+  const subscriptionSystemSql = fs.readFileSync(subscriptionSystemMigrationPath, 'utf8');
 
   // Verify Native UUID generator
   assert(
@@ -498,6 +515,47 @@ async function runVerification() {
       superAdminSql.includes('CREATE OR REPLACE FUNCTION public.set_shop_status_admin') &&
       superAdminSql.includes('INSERT INTO public.system_admins (user_id)'),
     'Migration 20260825000010 declares get_all_shops_admin, set_shop_status_admin RPCs and founder bootstrap query'
+  );
+
+  // Verify Phase E Sub-Phase 1 Subscription Schema & Monthly Usage Quota Engine Migration
+  assert(
+    subscriptionSystemSql.includes("plan_tier VARCHAR(20) NOT NULL DEFAULT 'FREE'") &&
+      subscriptionSystemSql.includes("billing_cycle VARCHAR(20) DEFAULT 'MONTHLY'") &&
+      subscriptionSystemSql.includes("subscription_status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE'") &&
+      subscriptionSystemSql.includes('stripe_customer_id VARCHAR(255)') &&
+      subscriptionSystemSql.includes('stripe_subscription_id VARCHAR(255)') &&
+      subscriptionSystemSql.includes('check_valid_plan_tier') &&
+      subscriptionSystemSql.includes("CHECK (plan_tier IN ('FREE', 'PRO', 'ENTERPRISE'))") &&
+      subscriptionSystemSql.includes('check_valid_sub_status') &&
+      subscriptionSystemSql.includes("CHECK (subscription_status IN ('ACTIVE', 'PAST_DUE', 'CANCELED', 'TRIALING'))"),
+    'Migration 20260825000011 extends public.shops with plan_tier, billing_cycle, subscription_status and CHECK constraints'
+  );
+
+  assert(
+    subscriptionSystemSql.includes('CREATE TABLE IF NOT EXISTS public.shop_usage') &&
+      subscriptionSystemSql.includes('shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE') &&
+      subscriptionSystemSql.includes('billing_month DATE NOT NULL') &&
+      subscriptionSystemSql.includes('orders_count INT NOT NULL DEFAULT 0') &&
+      subscriptionSystemSql.includes('CONSTRAINT unique_shop_billing_month UNIQUE (shop_id, billing_month)'),
+    'Migration 20260825000011 creates public.shop_usage table with unique shop_id and billing_month constraint'
+  );
+
+  assert(
+    subscriptionSystemSql.includes('CREATE OR REPLACE FUNCTION public.check_order_creation_allowed(p_shop_id UUID)') &&
+      subscriptionSystemSql.includes('SECURITY DEFINER') &&
+      subscriptionSystemSql.includes('SET search_path = public') &&
+      subscriptionSystemSql.includes('COALESCE(orders_count, 0) INTO v_orders_count') &&
+      subscriptionSystemSql.includes('IF COALESCE(v_orders_count, 0) >= 50 THEN') &&
+      subscriptionSystemSql.includes("RAISE EXCEPTION 'Monthly order quota reached (50/50). Upgrade to Pro for unlimited suits.'"),
+    'Migration 20260825000011 declares check_order_creation_allowed RPC with safe COALESCE quota lookup and 50-order ceiling'
+  );
+
+  assert(
+    subscriptionSystemSql.includes('CREATE OR REPLACE FUNCTION public.handle_increment_shop_order_usage()') &&
+      subscriptionSystemSql.includes('CREATE TRIGGER trg_increment_shop_order_usage') &&
+      subscriptionSystemSql.includes('AFTER INSERT ON public.garment_orders') &&
+      subscriptionSystemSql.includes('ALTER TABLE public.shop_usage ENABLE ROW LEVEL SECURITY'),
+    'Migration 20260825000011 configures auto-increment trigger on garment_orders and enables RLS on shop_usage'
   );
 
   // ----------------------------------------------------
@@ -976,6 +1034,116 @@ async function runVerification() {
     resetSyncState.status === 'ONLINE' || resetSyncState.status === 'OFFLINE',
     'SyncCoordinator.setAuthRequired(false) correctly restores online/offline status'
   );
+
+  // ----------------------------------------------------
+  // SECTION 6: Subscription Schema & Monthly Usage Quota Engine
+  // ----------------------------------------------------
+  console.log('\n\x1b[36m--- Section 6: Subscription Schema & Monthly Quota Engine ---\x1b[0m');
+
+  // Test mapShopRow with subscription fields
+  const mockShopRow: ShopRow = {
+    id: 's-00000000-0000-0000-0000-000000000001',
+    name: 'Bespoke Master Tailors',
+    phone: '0300-1234567',
+    secondary_phone: null,
+    address: 'Main Market',
+    city: 'Wah Cantt',
+    ntn_number: '1234567-8',
+    receipt_header: 'Welcome',
+    receipt_footer: 'Thank you',
+    status: 'ACTIVE',
+    plan_tier: 'FREE',
+    billing_cycle: 'MONTHLY',
+    subscription_status: 'ACTIVE',
+    stripe_customer_id: 'cus_test123',
+    stripe_subscription_id: 'sub_test123',
+    current_period_start: new Date('2026-08-01T00:00:00.000Z'),
+    current_period_end: new Date('2026-08-31T23:59:59.000Z'),
+    created_at: new Date('2026-01-01T00:00:00.000Z'),
+    updated_at: new Date('2026-01-01T00:00:00.000Z'),
+  };
+
+  const mappedSubShop = mapShopRow(mockShopRow);
+  assert(
+    mappedSubShop.plan_tier === 'FREE' &&
+      mappedSubShop.billing_cycle === 'MONTHLY' &&
+      mappedSubShop.subscription_status === 'ACTIVE' &&
+      mappedSubShop.stripe_customer_id === 'cus_test123' &&
+      mappedSubShop.stripe_subscription_id === 'sub_test123',
+    'mapShopRow correctly maps all subscription and billing attributes to Shop interface'
+  );
+
+  // Test mapShopUsageRow
+  const mockUsageRow: ShopUsageRow = {
+    id: 'u-00000000-0000-0000-0000-000000000001',
+    shop_id: 's-00000000-0000-0000-0000-000000000001',
+    billing_month: '2026-08-01',
+    orders_count: '38',
+    created_at: '2026-08-01T00:00:00.000Z',
+    updated_at: '2026-08-25T00:00:00.000Z',
+  };
+
+  const mappedUsage = mapShopUsageRow(mockUsageRow);
+  assert(
+    mappedUsage.id === 'u-00000000-0000-0000-0000-000000000001' &&
+      mappedUsage.billing_month === '2026-08-01' &&
+      mappedUsage.orders_count === 38,
+    'mapShopUsageRow parses numeric orders_count and maps to typed ShopUsage entity'
+  );
+
+  // Test subscriptionDb.getShopUsage fallback
+  const targetSubShopId = 'a0000000-0000-0000-0000-000000000001';
+  const initialUsage = await subscriptionDb.getShopUsage(targetSubShopId);
+  assert(
+    initialUsage !== null &&
+      typeof initialUsage.orders_count === 'number' &&
+      typeof initialUsage.billing_month === 'string',
+    'subscriptionDb.getShopUsage safely returns ShopUsage metrics with formatted billing_month in offline fallback'
+  );
+
+  // Test subscriptionDb.checkOrderAllowed under normal FREE tier (< 50)
+  subscriptionDb.setMockUsageCount(targetSubShopId, 14);
+  const quotaUnderLimit = await subscriptionDb.checkOrderAllowed(targetSubShopId);
+  assert(
+    quotaUnderLimit.allowed === true &&
+      quotaUnderLimit.currentCount === 14 &&
+      quotaUnderLimit.maxLimit === 50 &&
+      quotaUnderLimit.tier === 'FREE',
+    'subscriptionDb.checkOrderAllowed permits booking under Free tier limit (14/50)'
+  );
+
+  // Test subscriptionDb.checkOrderAllowed when FREE quota is reached (>= 50)
+  subscriptionDb.setMockUsageCount(targetSubShopId, 50);
+  const quotaAtLimit = await subscriptionDb.checkOrderAllowed(targetSubShopId);
+  assert(
+    quotaAtLimit.allowed === false &&
+      quotaAtLimit.currentCount === 50 &&
+      quotaAtLimit.maxLimit === 50 &&
+      quotaAtLimit.tier === 'FREE' &&
+      typeof quotaAtLimit.reason === 'string',
+    'subscriptionDb.checkOrderAllowed blocks order creation when Free tier quota reached (50/50)'
+  );
+
+  // Test subscriptionDb.checkOrderAllowed when quota exceeds limit (51/50)
+  subscriptionDb.setMockUsageCount(targetSubShopId, 51);
+  const quotaOverLimit = await subscriptionDb.checkOrderAllowed(targetSubShopId);
+  assert(
+    quotaOverLimit.allowed === false &&
+      quotaOverLimit.currentCount === 51 &&
+      quotaOverLimit.maxLimit === 50,
+    'subscriptionDb.checkOrderAllowed blocks order creation when Free tier quota exceeded (51/50)'
+  );
+
+  // Test subscriptionDb.incrementUsage
+  const countBefore = (await subscriptionDb.getShopUsage(targetSubShopId)).orders_count;
+  const countAfter = await subscriptionDb.incrementUsage(targetSubShopId);
+  assert(
+    countAfter === countBefore + 1,
+    'subscriptionDb.incrementUsage correctly increments shop monthly order counter'
+  );
+
+  // Restore normal count for clean state
+  subscriptionDb.setMockUsageCount(targetSubShopId, 14);
 
   // ----------------------------------------------------
   // SUMMARY
