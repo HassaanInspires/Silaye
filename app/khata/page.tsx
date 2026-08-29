@@ -11,25 +11,23 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/app-shell';
+import { Button } from '@/components/ui/button';
 import { KhataLedgerView } from '@/components/tailor/khata-ledger-view';
 import { KhataEntryModal } from '@/components/tailor/khata-entry-modal';
 import { CustomerKhataDetailModal } from '@/components/tailor/customer-khata-detail-modal';
 import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal';
-import {
-  mockCustomers as initialMockCustomers,
-  mockKhataTransactions as initialMockTransactions,
-  mockOrders as initialMockOrders,
-  mockStaff as initialMockStaff,
-  mockShop,
-} from '@/lib/mock-data';
-import type { Customer, KhataTransaction, GarmentOrder, Staff } from '@/types/tailor';
+import { customersDb, khataDb, ordersDb, staffDb, shopsDb } from '@/lib/db';
+import { mockShop as defaultMockShop } from '@/lib/mock-data';
+import type { Customer, KhataTransaction, GarmentOrder, Staff, Shop } from '@/types/tailor';
 
 export default function KhataPage() {
-  // In-memory local state
-  const [customers, setCustomers] = React.useState<Customer[]>(initialMockCustomers);
-  const [transactions, setTransactions] = React.useState<KhataTransaction[]>(initialMockTransactions);
-  const [orders] = React.useState<GarmentOrder[]>(initialMockOrders);
-  const [staff] = React.useState<Staff[]>(initialMockStaff);
+  // Live state
+  const [customers, setCustomers] = React.useState<Customer[]>([]);
+  const [transactions, setTransactions] = React.useState<KhataTransaction[]>([]);
+  const [orders, setOrders] = React.useState<GarmentOrder[]>([]);
+  const [staff, setStaff] = React.useState<Staff[]>([]);
+  const [shop, setShop] = React.useState<Shop | null>(null);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
 
   // Modal states
   const [entryModalOpen, setEntryModalOpen] = React.useState<boolean>(false);
@@ -46,6 +44,54 @@ export default function KhataPage() {
     message: string;
     type: 'success' | 'info';
   } | null>(null);
+
+  // Live repository initialization
+  React.useEffect(() => {
+    let isMounted = true;
+
+    async function loadKhataData() {
+      setIsLoading(true);
+      try {
+        const currentShop = await shopsDb.getCurrentShop();
+        if (!isMounted) return;
+        setShop(currentShop || defaultMockShop);
+
+        const targetShopId = currentShop?.id || defaultMockShop.id;
+        const [loadedCustomers, loadedTransactions, loadedOrders, loadedStaff] = await Promise.all([
+          customersDb.getByShopId(targetShopId),
+          khataDb.getByShopId(targetShopId),
+          ordersDb.getByShopId(targetShopId),
+          staffDb.getByShopId(targetShopId),
+        ]);
+
+        if (isMounted) {
+          setCustomers(loadedCustomers);
+          setTransactions(loadedTransactions);
+          setOrders(loadedOrders);
+          const mappedStaff: Staff[] = loadedStaff.map((m) => ({
+            id: m.id,
+            shop_id: m.shop_id,
+            name: m.name || 'Workshop Member',
+            phone: '',
+            role: (m.role === 'OWNER' ? 'MANAGER' : m.role) as Staff['role'],
+            is_active: true,
+            created_at: m.created_at,
+          }));
+          setStaff(mappedStaff);
+        }
+      } catch (err) {
+        console.warn('Khata ledger data fetch error:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadKhataData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Auto-dismiss notification
   React.useEffect(() => {
@@ -122,6 +168,11 @@ export default function KhataPage() {
       );
     }
 
+    // Persist via khataDb RPC
+    khataDb.append(txData).catch((err) => {
+      console.warn('Khata append RPC error:', err);
+    });
+
     const customerName =
       customers.find((c) => c.id === txData.customer_id)?.full_name || 'Customer';
 
@@ -147,30 +198,36 @@ export default function KhataPage() {
 
   return (
     <AppShell activeRoute="/khata">
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6 md:p-8 pt-4 sm:pt-6">
         {/* Page Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-5">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h1 className="font-editorial text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-                Khata & Financial Ledger
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white flex items-center gap-3">
+                <span>Khata & Financial Ledger</span>
+                <span className="font-urdu-serif text-lg font-normal text-gold/80" dir="rtl">
+                  کھاتہ و مالیاتی لیجر
+                </span>
               </h1>
-              <span className="font-editorial text-lg text-primary">•</span>
-              <span className="urdu-data-text text-lg text-primary font-medium" dir="rtl">
-                کھاتہ و مالیاتی لیجر
-              </span>
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-gray-400">
               Market receivables, advance deposits, and double-entry aligned audit trails for customer accounts.
             </p>
           </div>
 
-          {/* Quick stats indicator */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-1.5 text-xs text-primary">
-              <Sparkles className="h-4 w-4" />
-              <span>Immutable Ledger Active</span>
-            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => handleOpenNewTransaction()}
+              className="gap-2 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span>New Khata Entry</span>
+              <span className="font-urdu-sans text-xs opacity-80" dir="rtl">
+                نیا اندراج
+              </span>
+            </Button>
           </div>
         </div>
 
@@ -182,17 +239,51 @@ export default function KhataPage() {
           </div>
         )}
 
+        {/* Zero-Mock Clean-Slate Empty State */}
+        {!isLoading && customers.length === 0 && transactions.length === 0 && (
+          <div className="premium-glass-card p-10 sm:p-16 flex flex-col items-center justify-center text-center space-y-4 border-gold/20 shadow-[0_0_30px_rgba(212,175,55,0.08)] my-8">
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+              <Wallet className="h-8 w-8 text-gold" />
+            </div>
+            <div className="space-y-1.5 max-w-md">
+              <h2 className="text-xl font-bold text-white">Khata Register is Clear</h2>
+              <p className="font-urdu-serif text-sm text-gold/90" dir="rtl">
+                کھاتہ رجسٹر بالکل صاف ہے
+              </p>
+              <p className="text-xs sm:text-sm text-gray-400">
+                No outstanding market receivables or advance ledger entries recorded. Record customer advance payments or balance adjustments with zero hassle.
+              </p>
+            </div>
+            <div className="pt-2">
+              <Button
+                variant="default"
+                size="md"
+                onClick={() => handleOpenNewTransaction()}
+                className="gap-2 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_25px_rgba(212,175,55,0.3)] transition-all hover:scale-105"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>New Khata Entry</span>
+                <span className="font-urdu-sans text-xs opacity-80" dir="rtl">
+                  پہلا کھاتہ اندراج
+                </span>
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Main Master Ledger View */}
-        <KhataLedgerView
-          customers={customers}
-          transactions={transactions}
-          orders={orders}
-          staff={staff}
-          shop={mockShop}
-          onOpenNewTransaction={handleOpenNewTransaction}
-          onOpenCustomerDetail={handleOpenCustomerDetail}
-          onOpenWhatsAppReminder={handleOpenWhatsAppReminder}
-        />
+        {(customers.length > 0 || transactions.length > 0) && (
+          <KhataLedgerView
+            customers={customers}
+            transactions={transactions}
+            orders={orders}
+            staff={staff}
+            shop={shop || defaultMockShop}
+            onOpenNewTransaction={handleOpenNewTransaction}
+            onOpenCustomerDetail={handleOpenCustomerDetail}
+            onOpenWhatsAppReminder={handleOpenWhatsAppReminder}
+          />
+        )}
 
         {/* 1. Transaction Entry Modal */}
         <KhataEntryModal
@@ -202,7 +293,7 @@ export default function KhataPage() {
           selectedCustomerId={selectedEntryCustomer?.id}
           orders={orders}
           staff={staff}
-          shop={mockShop}
+          shop={shop || defaultMockShop}
           onSubmitTransaction={handleSubmitTransaction}
         />
 
@@ -214,7 +305,7 @@ export default function KhataPage() {
           transactions={transactions}
           orders={orders}
           staff={staff}
-          shop={mockShop}
+          shop={shop || defaultMockShop}
           onOpenNewEntry={(c) => {
             setSelectedEntryCustomer(c);
             setEntryModalOpen(true);
@@ -230,7 +321,7 @@ export default function KhataPage() {
           open={whatsAppModalOpen}
           onOpenChange={setWhatsAppModalOpen}
           customer={currentWhatsAppCustomer}
-          shop={mockShop}
+          shop={shop || defaultMockShop}
           initialTemplate="khata"
         />
       </div>

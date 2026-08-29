@@ -22,6 +22,7 @@ import {
   isSupabaseConfigured,
   getSupabaseUrl,
 } from '@/lib/supabase/client';
+import { isDemoMode } from '@/lib/mock-data';
 import type {
   Shop,
   ShopStatus,
@@ -412,6 +413,29 @@ export function mapPrinterSettingsRow(row: PrinterSettingsRow): PrinterSettings 
 // ==========================================
 
 export const customersDb = {
+  async getByShopId(shopId: string): Promise<Customer[]> {
+    if (isDatabaseConfigured()) {
+      try {
+        const liveCustomers = await this.getAll(shopId);
+        if (typeof window !== 'undefined' && liveCustomers.length > 0) {
+          import('@/lib/offline-db').then(({ saveLocalCustomer }) => {
+            liveCustomers.forEach((c) => saveLocalCustomer(c).catch(() => {}));
+          }).catch(() => {});
+        }
+        return liveCustomers;
+      } catch (err) {
+        console.warn('customersDb.getByShopId live query failed, falling back to local cache:', err);
+      }
+    }
+    try {
+      const { getLocalCustomers } = await import('@/lib/offline-db');
+      const localCustomers = await getLocalCustomers();
+      return localCustomers.filter((c) => !shopId || c.shop_id === shopId);
+    } catch {
+      return [];
+    }
+  },
+
   async getAll(shopId?: string): Promise<Customer[]> {
     if (!isDatabaseConfigured()) return [];
     let query = supabase.from('customers').select('*');
@@ -604,6 +628,29 @@ export const measurementsDb = {
 // ==========================================
 
 export const ordersDb = {
+  async getByShopId(shopId: string): Promise<GarmentOrder[]> {
+    if (isDatabaseConfigured()) {
+      try {
+        const liveOrders = await this.getAll(shopId);
+        if (typeof window !== 'undefined' && liveOrders.length > 0) {
+          import('@/lib/offline-db').then(({ saveLocalOrder }) => {
+            liveOrders.forEach((o) => saveLocalOrder(o).catch(() => {}));
+          }).catch(() => {});
+        }
+        return liveOrders;
+      } catch (err) {
+        console.warn('ordersDb.getByShopId live query failed, falling back to local cache:', err);
+      }
+    }
+    try {
+      const { getLocalOrders } = await import('@/lib/offline-db');
+      const localOrders = await getLocalOrders();
+      return localOrders.filter((o) => !shopId || o.shop_id === shopId);
+    } catch {
+      return [];
+    }
+  },
+
   async getAll(shopId?: string): Promise<GarmentOrder[]> {
     if (!isDatabaseConfigured()) return [];
     let query = supabase.from('garment_orders').select('*');
@@ -766,6 +813,24 @@ export const ordersDb = {
 // ==========================================
 
 export const khataDb = {
+  async getByShopId(shopId: string): Promise<KhataTransaction[]> {
+    if (isDatabaseConfigured()) {
+      try {
+        const liveTransactions = await this.getAll(undefined, shopId);
+        return liveTransactions;
+      } catch (err) {
+        console.warn('khataDb.getByShopId live query failed, falling back to local cache:', err);
+      }
+    }
+    try {
+      const { getLocalKhataTransactions } = await import('@/lib/offline-db');
+      const localTxs = await getLocalKhataTransactions();
+      return localTxs.filter((t) => !shopId || t.shop_id === shopId);
+    } catch {
+      return [];
+    }
+  },
+
   async getAll(customerId?: string, shopId?: string): Promise<KhataTransaction[]> {
     if (!isDatabaseConfigured()) return [];
     let query = supabase.from('khata_transactions').select('*');
@@ -1614,7 +1679,7 @@ export function getMockAdminShops(): AdminShopOverview[] {
 export const adminDb = {
   async checkIsSuperAdmin(): Promise<boolean> {
     if (!isDatabaseConfigured()) {
-      return true; // Local development offline mode grants super admin access
+      return isDemoMode();
     }
 
     try {
@@ -1623,7 +1688,22 @@ export const adminDb = {
         return false;
       }
 
-      // Check system_admins table for user_id
+      // Check founder email direct match or founder metadata
+      if (
+        session.user.email === 'founder@silaye.pk' ||
+        session.user.user_metadata?.is_platform_founder === true ||
+        session.user.user_metadata?.is_platform_founder === 'true'
+      ) {
+        return true;
+      }
+
+      // Check via is_super_admin RPC
+      const { data: isSuperRpc, error: rpcError } = await supabase.rpc('is_super_admin');
+      if (!rpcError && typeof isSuperRpc === 'boolean') {
+        return isSuperRpc;
+      }
+
+      // Fallback check in system_admins table for user_id
       const { data, error } = await supabase
         .from('system_admins')
         .select('id, role')
@@ -1643,15 +1723,19 @@ export const adminDb = {
 
   async getPlatformMetrics(): Promise<PlatformMetrics> {
     if (!isDatabaseConfigured()) {
-      return getMockPlatformMetrics();
+      return isDemoMode()
+        ? getMockPlatformMetrics()
+        : { total_shops: 0, active_shops: 0, suspended_shops: 0, total_users: 0, total_orders: 0, total_khata_volume: 0 };
     }
 
     try {
       const { data, error } = await supabase.rpc('get_platform_metrics');
 
       if (error || !data || (Array.isArray(data) && data.length === 0)) {
-        console.warn('get_platform_metrics RPC error, using local fallback:', error?.message);
-        return getMockPlatformMetrics();
+        console.warn('get_platform_metrics RPC error:', error?.message);
+        return isDemoMode()
+          ? getMockPlatformMetrics()
+          : { total_shops: 0, active_shops: 0, suspended_shops: 0, total_users: 0, total_orders: 0, total_khata_volume: 0 };
       }
 
       const row = Array.isArray(data) ? data[0] : data;
@@ -1664,28 +1748,30 @@ export const adminDb = {
         total_khata_volume: Number(row.total_khata_volume || 0),
       };
     } catch (networkErr) {
-      console.warn('Supabase network error in getPlatformMetrics, using local mock:', networkErr);
-      return getMockPlatformMetrics();
+      console.warn('Supabase network error in getPlatformMetrics:', networkErr);
+      return isDemoMode()
+        ? getMockPlatformMetrics()
+        : { total_shops: 0, active_shops: 0, suspended_shops: 0, total_users: 0, total_orders: 0, total_khata_volume: 0 };
     }
   },
 
   async getAllShops(): Promise<AdminShopOverview[]> {
     if (!isDatabaseConfigured()) {
-      return getMockAdminShops();
+      return isDemoMode() ? getMockAdminShops() : [];
     }
 
     try {
       const { data, error } = await supabase.rpc('get_all_shops_admin');
 
       if (error || !data) {
-        console.warn('get_all_shops_admin RPC error, using local fallback:', error?.message);
-        return getMockAdminShops();
+        console.warn('get_all_shops_admin RPC error:', error?.message);
+        return isDemoMode() ? getMockAdminShops() : [];
       }
 
       return (data as AdminShopOverviewRow[]).map(mapAdminShopOverviewRow);
     } catch (networkErr) {
-      console.warn('Supabase network error in getAllShops, using local mock:', networkErr);
-      return getMockAdminShops();
+      console.warn('Supabase network error in getAllShops:', networkErr);
+      return isDemoMode() ? getMockAdminShops() : [];
     }
   },
 

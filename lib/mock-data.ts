@@ -1,6 +1,10 @@
 /**
  * lib/mock-data.ts - Realistic Offline Seed Dataset for Silaye
  * Tailored for Wah Cantt workshop scenario with strict type conformity.
+ *
+ * ZERO-MOCK PRODUCTION ISOLATION:
+ * In production builds, default mock exports evaluate to clean empty arrays ([])
+ * unless explicitly enabled via `process.env.NEXT_PUBLIC_DEMO_MODE === 'true'`.
  */
 
 import type {
@@ -15,30 +19,17 @@ import type {
 
 /**
  * Check if the application is running in offline demo mode.
- * Evaluates explicit DEMO environment variables and browser runtime state.
+ * Evaluates explicit DEMO environment variables.
  */
 export function isDemoMode(): boolean {
-  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_DEMO_MODE === 'true') {
-    return true;
-  }
-  if (typeof window !== 'undefined') {
-    try {
-      const hasSbToken = Object.keys(localStorage).some(
-        (k) => k.startsWith('sb-') && k.endsWith('-auth-token')
-      );
-      if (hasSbToken) return false;
-    } catch {
-      // Ignore storage access errors
-    }
-  }
-  return typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
+  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_DEMO_MODE === 'true';
 }
 
 // ==========================================
 // 1. Shop Profile (Wah Cantt Locale)
 // ==========================================
 
-export const mockShop: Shop = {
+export const SEED_SHOP: Shop = {
   id: 'a0000000-0000-0000-0000-000000000001',
   name: 'Silaye Master Tailors & Fabrics',
   slug: 'silaye-wah-cantt',
@@ -61,11 +52,13 @@ export const mockShop: Shop = {
   updated_at: '2026-01-01T08:00:00.000Z',
 };
 
+export const mockShop: Shop = SEED_SHOP;
+
 // ==========================================
 // 2. Staff Members (3 Personnel)
 // ==========================================
 
-export const mockStaff: Staff[] = [
+export const SEED_STAFF: Staff[] = [
   {
     id: 'b0000000-0000-0000-0000-000000000001',
     shop_id: 'a0000000-0000-0000-0000-000000000001',
@@ -95,11 +88,13 @@ export const mockStaff: Staff[] = [
   },
 ];
 
+export const mockStaff: Staff[] = isDemoMode() ? SEED_STAFF : [];
+
 // ==========================================
-// 3. Customers (3 Members with Active Khata Balances)
+// 3. Customers (5 Members with Active Khata Balances)
 // ==========================================
 
-export const mockCustomers: Customer[] = [
+export const SEED_CUSTOMERS: Customer[] = [
   {
     id: 'c0000000-0000-0000-0000-000000000001',
     shop_id: 'a0000000-0000-0000-0000-000000000001',
@@ -111,7 +106,6 @@ export const mockCustomers: Customer[] = [
     notes: 'VIP Regular Customer. Prefers tight collar and concealed front patti.',
     total_orders_count: 8,
     total_spent: 24000.0,
-    // Positive balance = Udhaar / Customer owes shop
     current_khata_balance: 2500.0,
     created_at: '2026-01-15T10:00:00.000Z',
     updated_at: '2026-08-22T10:35:00.000Z',
@@ -127,7 +121,6 @@ export const mockCustomers: Customer[] = [
     notes: 'Prefers soft cotton fabric with traditional shalwar loose fit.',
     total_orders_count: 3,
     total_spent: 9500.0,
-    // Negative balance = Advance credit deposit
     current_khata_balance: -1000.0,
     created_at: '2026-03-10T14:30:00.000Z',
     updated_at: '2026-08-22T16:00:00.000Z',
@@ -143,7 +136,6 @@ export const mockCustomers: Customer[] = [
     notes: 'Young professional. Prefers slim fit kurta trouser.',
     total_orders_count: 2,
     total_spent: 6500.0,
-    // Zero balance = Settled
     current_khata_balance: 0.0,
     created_at: '2026-05-18T12:00:00.000Z',
     updated_at: '2026-08-24T11:00:00.000Z',
@@ -180,11 +172,13 @@ export const mockCustomers: Customer[] = [
   },
 ];
 
+export const mockCustomers: Customer[] = isDemoMode() ? SEED_CUSTOMERS : [];
+
 // ==========================================
 // 4. Measurement Profiles (Permanent Body Cards)
 // ==========================================
 
-export const mockMeasurementProfiles: MeasurementProfile[] = [
+export const SEED_MEASUREMENT_PROFILES: MeasurementProfile[] = [
   {
     id: 'd0000000-0000-0000-0000-000000000001',
     shop_id: 'a0000000-0000-0000-0000-000000000001',
@@ -382,11 +376,15 @@ export const mockMeasurementProfiles: MeasurementProfile[] = [
   },
 ];
 
+export const mockMeasurementProfiles: MeasurementProfile[] = isDemoMode()
+  ? SEED_MEASUREMENT_PROFILES
+  : [];
+
 // ==========================================
-// 5. Garment Orders (3 Stages of Pipeline)
+// 5. Garment Orders (7 Realistic Workshop Orders)
 // ==========================================
 
-export const mockOrders: GarmentOrder[] = [
+export const SEED_ORDERS: GarmentOrder[] = [
   {
     id: 'e0000000-0000-0000-0000-000000000001',
     order_number: 'DP-2026-0801',
@@ -413,10 +411,10 @@ export const mockOrders: GarmentOrder[] = [
     advance_paid: 1500.0,
     balance_due: 2500.0,
     payment_status: 'PARTIALLY_PAID',
-    assigned_cutter_id: 'b0000000-0000-0000-0000-000000000002', // Ustad Rafiq
-    assigned_stitcher_id: 'b0000000-0000-0000-0000-000000000003', // Tariq Mehmood
-    snapshot_measurements: mockMeasurementProfiles[0].measurements,
-    snapshot_styles: mockMeasurementProfiles[0].style_preferences,
+    assigned_cutter_id: 'b0000000-0000-0000-0000-000000000002',
+    assigned_stitcher_id: 'b0000000-0000-0000-0000-000000000003',
+    snapshot_measurements: SEED_MEASUREMENT_PROFILES[0].measurements,
+    snapshot_styles: SEED_MEASUREMENT_PROFILES[0].style_preferences,
     barcode_token: 'DP-2026-0801-B789',
     public_tracking_key: 'f0000000-0000-0000-0000-000000000001',
     created_at: '2026-08-22T10:30:00.000Z',
@@ -450,8 +448,8 @@ export const mockOrders: GarmentOrder[] = [
     payment_status: 'FULLY_PAID',
     assigned_cutter_id: 'b0000000-0000-0000-0000-000000000002',
     assigned_stitcher_id: 'b0000000-0000-0000-0000-000000000003',
-    snapshot_measurements: mockMeasurementProfiles[1].measurements,
-    snapshot_styles: mockMeasurementProfiles[1].style_preferences,
+    snapshot_measurements: SEED_MEASUREMENT_PROFILES[1].measurements,
+    snapshot_styles: SEED_MEASUREMENT_PROFILES[1].style_preferences,
     barcode_token: 'DP-2026-0802-C456',
     public_tracking_key: 'f0000000-0000-0000-0000-000000000002',
     created_at: '2026-08-20T14:00:00.000Z',
@@ -485,8 +483,8 @@ export const mockOrders: GarmentOrder[] = [
     payment_status: 'FULLY_PAID',
     assigned_cutter_id: 'b0000000-0000-0000-0000-000000000002',
     assigned_stitcher_id: 'b0000000-0000-0000-0000-000000000003',
-    snapshot_measurements: mockMeasurementProfiles[2].measurements,
-    snapshot_styles: mockMeasurementProfiles[2].style_preferences,
+    snapshot_measurements: SEED_MEASUREMENT_PROFILES[2].measurements,
+    snapshot_styles: SEED_MEASUREMENT_PROFILES[2].style_preferences,
     barcode_token: 'DP-2026-0803-A123',
     public_tracking_key: 'f0000000-0000-0000-0000-000000000003',
     created_at: '2026-08-18T16:00:00.000Z',
@@ -520,8 +518,8 @@ export const mockOrders: GarmentOrder[] = [
     payment_status: 'PARTIALLY_PAID',
     assigned_cutter_id: 'b0000000-0000-0000-0000-000000000002',
     assigned_stitcher_id: null,
-    snapshot_measurements: mockMeasurementProfiles[3].measurements,
-    snapshot_styles: mockMeasurementProfiles[3].style_preferences,
+    snapshot_measurements: SEED_MEASUREMENT_PROFILES[3].measurements,
+    snapshot_styles: SEED_MEASUREMENT_PROFILES[3].style_preferences,
     barcode_token: 'DP-2026-0804-D321',
     public_tracking_key: 'f0000000-0000-0000-0000-000000000004',
     created_at: '2026-08-24T09:00:00.000Z',
@@ -555,8 +553,8 @@ export const mockOrders: GarmentOrder[] = [
     payment_status: 'FULLY_PAID',
     assigned_cutter_id: 'b0000000-0000-0000-0000-000000000002',
     assigned_stitcher_id: 'b0000000-0000-0000-0000-000000000003',
-    snapshot_measurements: mockMeasurementProfiles[4].measurements,
-    snapshot_styles: mockMeasurementProfiles[4].style_preferences,
+    snapshot_measurements: SEED_MEASUREMENT_PROFILES[4].measurements,
+    snapshot_styles: SEED_MEASUREMENT_PROFILES[4].style_preferences,
     barcode_token: 'DP-2026-0805-E654',
     public_tracking_key: 'f0000000-0000-0000-0000-000000000005',
     created_at: '2026-08-21T11:30:00.000Z',
@@ -590,8 +588,8 @@ export const mockOrders: GarmentOrder[] = [
     payment_status: 'FULLY_PAID',
     assigned_cutter_id: 'b0000000-0000-0000-0000-000000000002',
     assigned_stitcher_id: 'b0000000-0000-0000-0000-000000000003',
-    snapshot_measurements: mockMeasurementProfiles[0].measurements,
-    snapshot_styles: mockMeasurementProfiles[0].style_preferences,
+    snapshot_measurements: SEED_MEASUREMENT_PROFILES[0].measurements,
+    snapshot_styles: SEED_MEASUREMENT_PROFILES[0].style_preferences,
     barcode_token: 'DP-2026-0806-F987',
     public_tracking_key: 'f0000000-0000-0000-0000-000000000006',
     created_at: '2026-08-19T10:00:00.000Z',
@@ -625,8 +623,8 @@ export const mockOrders: GarmentOrder[] = [
     payment_status: 'FULLY_PAID',
     assigned_cutter_id: 'b0000000-0000-0000-0000-000000000002',
     assigned_stitcher_id: 'b0000000-0000-0000-0000-000000000003',
-    snapshot_measurements: mockMeasurementProfiles[1].measurements,
-    snapshot_styles: mockMeasurementProfiles[1].style_preferences,
+    snapshot_measurements: SEED_MEASUREMENT_PROFILES[1].measurements,
+    snapshot_styles: SEED_MEASUREMENT_PROFILES[1].style_preferences,
     barcode_token: 'DP-2026-0807-G112',
     public_tracking_key: 'f0000000-0000-0000-0000-000000000007',
     created_at: '2026-08-15T11:00:00.000Z',
@@ -634,11 +632,13 @@ export const mockOrders: GarmentOrder[] = [
   },
 ];
 
+export const mockOrders: GarmentOrder[] = isDemoMode() ? SEED_ORDERS : [];
+
 // ==========================================
-// 6. Khata Financial Transactions (2 Records)
+// 6. Khata Financial Transactions
 // ==========================================
 
-export const mockKhataTransactions: KhataTransaction[] = [
+export const SEED_KHATA_TRANSACTIONS: KhataTransaction[] = [
   {
     id: 'g0000000-0000-0000-0000-000000000001',
     shop_id: 'a0000000-0000-0000-0000-000000000001',
@@ -648,7 +648,7 @@ export const mockKhataTransactions: KhataTransaction[] = [
     amount: 1500.0,
     balance_after: 2500.0,
     notes: 'Advance deposit via Cash for order DP-2026-0801',
-    created_by: 'b0000000-0000-0000-0000-000000000001', // Bilal Ahmed
+    created_by: 'b0000000-0000-0000-0000-000000000001',
     created_at: '2026-08-22T10:35:00.000Z',
   },
   {
@@ -665,12 +665,15 @@ export const mockKhataTransactions: KhataTransaction[] = [
   },
 ];
 
+export const mockKhataTransactions: KhataTransaction[] = isDemoMode()
+  ? SEED_KHATA_TRANSACTIONS
+  : [];
+
 // ==========================================
 // 7. Order Status Audit Logs
 // ==========================================
 
-export const mockOrderStatusLogs: OrderStatusLog[] = [
-  // Order 1 progression
+export const SEED_ORDER_STATUS_LOGS: OrderStatusLog[] = [
   {
     id: 'h0000000-0000-0000-0000-000000000001',
     order_id: 'e0000000-0000-0000-0000-000000000001',
@@ -698,205 +701,8 @@ export const mockOrderStatusLogs: OrderStatusLog[] = [
     notes: 'Assigned to Ustad Rafiq on cutting table 1.',
     created_at: '2026-08-23T09:15:00.000Z',
   },
-
-  // Order 2 progression
-  {
-    id: 'h0000000-0000-0000-0000-000000000004',
-    order_id: 'e0000000-0000-0000-0000-000000000002',
-    previous_status: null,
-    new_status: 'BOOKED',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'Order booked with shop fabric.',
-    created_at: '2026-08-20T14:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000005',
-    order_id: 'e0000000-0000-0000-0000-000000000002',
-    previous_status: 'BOOKED',
-    new_status: 'IN_CUTTING',
-    changed_by: 'b0000000-0000-0000-0000-000000000002',
-    notes: 'Cutting completed according to standard relaxed pattern.',
-    created_at: '2026-08-21T10:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000006',
-    order_id: 'e0000000-0000-0000-0000-000000000002',
-    previous_status: 'IN_CUTTING',
-    new_status: 'IN_STITCHING',
-    changed_by: 'b0000000-0000-0000-0000-000000000003',
-    notes: 'Handed over to Tariq Mehmood for assembly.',
-    created_at: '2026-08-22T15:30:00.000Z',
-  },
-
-  // Order 3 progression
-  {
-    id: 'h0000000-0000-0000-0000-000000000007',
-    order_id: 'e0000000-0000-0000-0000-000000000003',
-    previous_status: null,
-    new_status: 'BOOKED',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'Order booked.',
-    created_at: '2026-08-18T16:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000008',
-    order_id: 'e0000000-0000-0000-0000-000000000003',
-    previous_status: 'BOOKED',
-    new_status: 'IN_CUTTING',
-    changed_by: 'b0000000-0000-0000-0000-000000000002',
-    notes: 'Cutting completed.',
-    created_at: '2026-08-19T11:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000009',
-    order_id: 'e0000000-0000-0000-0000-000000000003',
-    previous_status: 'IN_CUTTING',
-    new_status: 'IN_STITCHING',
-    changed_by: 'b0000000-0000-0000-0000-000000000003',
-    notes: 'Stitching in progress.',
-    created_at: '2026-08-20T14:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000010',
-    order_id: 'e0000000-0000-0000-0000-000000000003',
-    previous_status: 'IN_STITCHING',
-    new_status: 'KAJ_BUTTON',
-    changed_by: 'b0000000-0000-0000-0000-000000000003',
-    notes: 'Kaj and buttonholes completed.',
-    created_at: '2026-08-23T11:30:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000011',
-    order_id: 'e0000000-0000-0000-0000-000000000003',
-    previous_status: 'KAJ_BUTTON',
-    new_status: 'PRESSING',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'Steam ironed and packed in garment suit cover.',
-    created_at: '2026-08-24T09:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000012',
-    order_id: 'e0000000-0000-0000-0000-000000000003',
-    previous_status: 'PRESSING',
-    new_status: 'READY_FOR_DELIVERY',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'Moved to pickup rack #3. WhatsApp notification ready.',
-    created_at: '2026-08-24T11:00:00.000Z',
-  },
-
-  // Order 4 progression
-  {
-    id: 'h0000000-0000-0000-0000-000000000013',
-    order_id: 'e0000000-0000-0000-0000-000000000004',
-    previous_status: null,
-    new_status: 'BOOKED',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'Boski suit order booked. Advance Rs. 2,000 received.',
-    created_at: '2026-08-24T09:00:00.000Z',
-  },
-
-  // Order 5 progression
-  {
-    id: 'h0000000-0000-0000-0000-000000000014',
-    order_id: 'e0000000-0000-0000-0000-000000000005',
-    previous_status: null,
-    new_status: 'BOOKED',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'Booked with shop fabric.',
-    created_at: '2026-08-21T11:30:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000015',
-    order_id: 'e0000000-0000-0000-0000-000000000005',
-    previous_status: 'BOOKED',
-    new_status: 'IN_CUTTING',
-    changed_by: 'b0000000-0000-0000-0000-000000000002',
-    notes: 'Cutting done.',
-    created_at: '2026-08-22T10:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000016',
-    order_id: 'e0000000-0000-0000-0000-000000000005',
-    previous_status: 'IN_CUTTING',
-    new_status: 'IN_STITCHING',
-    changed_by: 'b0000000-0000-0000-0000-000000000003',
-    notes: 'Assembly completed.',
-    created_at: '2026-08-23T16:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000017',
-    order_id: 'e0000000-0000-0000-0000-000000000005',
-    previous_status: 'IN_STITCHING',
-    new_status: 'KAJ_BUTTON',
-    changed_by: 'b0000000-0000-0000-0000-000000000003',
-    notes: 'Shirt collar buttonholes and cuffs in progress.',
-    created_at: '2026-08-24T14:00:00.000Z',
-  },
-
-  // Order 6 progression
-  {
-    id: 'h0000000-0000-0000-0000-000000000018',
-    order_id: 'e0000000-0000-0000-0000-000000000006',
-    previous_status: null,
-    new_status: 'BOOKED',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'Urgent Eid delivery booked.',
-    created_at: '2026-08-19T10:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000019',
-    order_id: 'e0000000-0000-0000-0000-000000000006',
-    previous_status: 'BOOKED',
-    new_status: 'IN_CUTTING',
-    changed_by: 'b0000000-0000-0000-0000-000000000002',
-    notes: 'Expedited cutting.',
-    created_at: '2026-08-20T09:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000020',
-    order_id: 'e0000000-0000-0000-0000-000000000006',
-    previous_status: 'IN_CUTTING',
-    new_status: 'IN_STITCHING',
-    changed_by: 'b0000000-0000-0000-0000-000000000003',
-    notes: 'Stitching prioritized.',
-    created_at: '2026-08-22T11:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000021',
-    order_id: 'e0000000-0000-0000-0000-000000000006',
-    previous_status: 'IN_STITCHING',
-    new_status: 'KAJ_BUTTON',
-    changed_by: 'b0000000-0000-0000-0000-000000000003',
-    notes: 'Buttons fitted.',
-    created_at: '2026-08-23T17:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000022',
-    order_id: 'e0000000-0000-0000-0000-000000000006',
-    previous_status: 'KAJ_BUTTON',
-    new_status: 'PRESSING',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'On final steam pressing station.',
-    created_at: '2026-08-24T16:30:00.000Z',
-  },
-
-  // Order 7 progression
-  {
-    id: 'h0000000-0000-0000-0000-000000000023',
-    order_id: 'e0000000-0000-0000-0000-000000000007',
-    previous_status: null,
-    new_status: 'BOOKED',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'Standard order booked.',
-    created_at: '2026-08-15T11:00:00.000Z',
-  },
-  {
-    id: 'h0000000-0000-0000-0000-000000000024',
-    order_id: 'e0000000-0000-0000-0000-000000000007',
-    previous_status: 'BOOKED',
-    new_status: 'COMPLETED',
-    changed_by: 'b0000000-0000-0000-0000-000000000001',
-    notes: 'Order completed and handed over to customer.',
-    created_at: '2026-08-21T17:30:00.000Z',
-  },
 ];
+
+export const mockOrderStatusLogs: OrderStatusLog[] = isDemoMode()
+  ? SEED_ORDER_STATUS_LOGS
+  : [];

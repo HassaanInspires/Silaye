@@ -42,12 +42,19 @@ import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
 import confetti from 'canvas-confetti';
 import {
-  mockCustomers,
-  mockMeasurementProfiles,
-  mockStaff,
   mockShop,
 } from '@/lib/mock-data';
-import { staffDb, ratesDb, printerDb, subscriptionDb, DEFAULT_PRINTER_SETTINGS } from '@/lib/db';
+import {
+  staffDb,
+  ratesDb,
+  printerDb,
+  subscriptionDb,
+  customersDb,
+  measurementsDb,
+  shopsDb,
+  ordersDb,
+  DEFAULT_PRINTER_SETTINGS,
+} from '@/lib/db';
 import { calculateOrderFinancials, formatPakistaniPhone } from '@/lib/validations/tailor';
 import type {
   Customer,
@@ -61,6 +68,7 @@ import type {
   GarmentType,
   FabricSource,
   PlanTier,
+  Shop,
 } from '@/types/tailor';
 
 function getFutureDateString(days: number): string {
@@ -296,6 +304,7 @@ export default function NewOrderPage() {
     reason?: string;
   } | null>(null);
   const [isCheckingQuota, setIsCheckingQuota] = React.useState<boolean>(false);
+  const [currentShop, setCurrentShop] = React.useState<Shop>(mockShop);
   const [printerSettings, setPrinterSettings] = React.useState<PrinterSettings>({
     id: 'ps-mock-default',
     shop_id: mockShop.id,
@@ -312,10 +321,14 @@ export default function NewOrderPage() {
     let isMounted = true;
     async function loadWorkshopStaffAndRates() {
       try {
+        const loadedShop = await shopsDb.getCurrentShop();
+        const activeShop = loadedShop || mockShop;
+        if (isMounted) setCurrentShop(activeShop);
+
         const [members, rates, pSettings] = await Promise.all([
-          staffDb.getByShopId(mockShop.id),
-          ratesDb.getByShopId(mockShop.id),
-          printerDb.getByShopId(mockShop.id),
+          staffDb.getByShopId(activeShop.id),
+          ratesDb.getByShopId(activeShop.id),
+          printerDb.getByShopId(activeShop.id),
         ]);
 
         if (isMounted) {
@@ -348,33 +361,38 @@ export default function NewOrderPage() {
   // Customer auto-lookup: fires when phone reaches 10–11 digits
   // --------------------------------------------------------------------------
   React.useEffect(() => {
+    let isMounted = true;
     const digits = phone.replace(/\D/g, '');
     if (digits.length >= 10 && digits.length <= 11) {
-      const match = mockCustomers.find(
-        (c) =>
-          c.phone.replace(/\D/g, '') === digits ||
-          (c.alternate_phone?.replace(/\D/g, '') === digits)
-      );
-      if (match) {
-        setFoundCustomer(match);
-        setCustomerName(match.full_name);
-        setCustomerAddress(match.address ?? '');
+      async function lookupCustomer() {
+        try {
+          const match = await customersDb.getByPhone(phone, currentShop.id);
+          if (!isMounted) return;
+          if (match) {
+            setFoundCustomer(match);
+            setCustomerName(match.full_name);
+            setCustomerAddress(match.address ?? '');
 
-        const defaultProfile = mockMeasurementProfiles.find(
-          (p) => p.customer_id === match.id && p.is_default
-        ) ?? null;
+            const profiles = await measurementsDb.getByCustomerId(match.id);
+            if (!isMounted) return;
+            const defaultProfile = profiles.find((p) => p.is_default) || profiles[0] || null;
 
-        if (defaultProfile) {
-          setFoundProfile(defaultProfile);
-          setMeasurements(defaultProfile.measurements);
-          setStylePreferences(defaultProfile.style_preferences);
-          setIsProfileLocked(true);
+            if (defaultProfile) {
+              setFoundProfile(defaultProfile);
+              setMeasurements(defaultProfile.measurements);
+              setStylePreferences(defaultProfile.style_preferences);
+              setIsProfileLocked(true);
+            }
+          } else {
+            setFoundCustomer(null);
+            setFoundProfile(null);
+            setIsProfileLocked(false);
+          }
+        } catch (err) {
+          console.warn('Customer lookup error:', err);
         }
-      } else {
-        setFoundCustomer(null);
-        setFoundProfile(null);
-        setIsProfileLocked(false);
       }
+      lookupCustomer();
     } else {
       if (digits.length < 10) {
         setFoundCustomer(null);
@@ -382,7 +400,10 @@ export default function NewOrderPage() {
         setIsProfileLocked(false);
       }
     }
-  }, [phone]);
+    return () => {
+      isMounted = false;
+    };
+  }, [phone, currentShop.id]);
 
   // --------------------------------------------------------------------------
   // Active Garment Rate & Surcharge Derivations
@@ -437,24 +458,24 @@ export default function NewOrderPage() {
   const selectedGarmentOption = GARMENT_TYPE_OPTIONS.find((g) => g.value === garmentType) || GARMENT_TYPE_OPTIONS[0];
 
   // Selected Staff Info (Dynamic from staffDb with mock fallback)
-  const cuttingMasters = React.useMemo(() => {
+  const cuttingMasters = React.useMemo<ShopMember[]>(() => {
     if (staffList.length > 0) {
       const filtered = staffList.filter(
         (s) => s.role === 'CUTTING_MASTER' || s.role === 'OWNER' || s.role === 'MANAGER'
       );
       return filtered.length > 0 ? filtered : staffList;
     }
-    return mockStaff.filter((s) => s.role === 'CUTTING_MASTER' && s.is_active);
+    return [];
   }, [staffList]);
 
-  const stitchers = React.useMemo(() => {
+  const stitchers = React.useMemo<ShopMember[]>(() => {
     if (staffList.length > 0) {
       const filtered = staffList.filter(
         (s) => s.role === 'STITCHER' || s.role === 'OWNER' || s.role === 'MANAGER'
       );
       return filtered.length > 0 ? filtered : staffList;
     }
-    return mockStaff.filter((s) => s.role === 'STITCHER' && s.is_active);
+    return [];
   }, [staffList]);
 
   const selectedCutter = cuttingMasters.find((s) => s.id === assignedCutterId);
@@ -535,7 +556,7 @@ export default function NewOrderPage() {
     // ── Pre-flight Subscription Quota Check ─────────────────────────────────
     setIsCheckingQuota(true);
     try {
-      const quotaCheck = await subscriptionDb.checkOrderAllowed(mockShop.id);
+      const quotaCheck = await subscriptionDb.checkOrderAllowed(currentShop.id);
       if (!quotaCheck.allowed) {
         setQuotaDetails({
           currentCount: quotaCheck.currentCount,
@@ -555,7 +576,7 @@ export default function NewOrderPage() {
     const orderNum = `DP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const effectiveCust: Customer = foundCustomer || {
       id: `cust-${Date.now()}`,
-      shop_id: mockShop.id,
+      shop_id: currentShop.id,
       full_name: customerName.trim(),
       phone: phone.trim() || '03001234567',
       alternate_phone: null,
@@ -572,7 +593,7 @@ export default function NewOrderPage() {
     const newOrder: GarmentOrder = {
       id: `ord-${Date.now()}`,
       order_number: orderNum,
-      shop_id: mockShop.id,
+      shop_id: currentShop.id,
       customer_id: effectiveCust.id,
       measurement_profile_id: foundProfile?.id || null,
       status: 'BOOKED',
@@ -606,7 +627,7 @@ export default function NewOrderPage() {
     };
 
     // Increment monthly quota count
-    await subscriptionDb.incrementUsage(mockShop.id);
+    await subscriptionDb.incrementUsage(currentShop.id);
 
     setNewBookedOrder(newOrder);
     setNewBookedCustomer(effectiveCust);
@@ -1720,7 +1741,7 @@ export default function NewOrderPage() {
           onOpenChange={setIsReceiptModalOpen}
           order={newBookedOrder}
           customer={newBookedCustomer}
-          shop={mockShop}
+          shop={currentShop}
           initialTemplate="booking"
         />
 
@@ -1730,7 +1751,7 @@ export default function NewOrderPage() {
           onOpenChange={setIsThermalModalOpen}
           order={newBookedOrder}
           customer={newBookedCustomer}
-          shop={mockShop}
+          shop={currentShop}
           settings={printerSettings}
           initialFormat={printerSettings.paper_width}
         />

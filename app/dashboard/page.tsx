@@ -12,14 +12,10 @@ import {
   ChevronRight,
   MessageSquare,
   Sparkles,
-  Layers,
   ArrowUpRight,
-  TrendingUp,
-  Flame,
   Calendar,
-  Phone,
-  MapPin,
   CheckCircle2,
+  CheckCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppShell } from '@/components/layout/app-shell';
@@ -27,13 +23,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal';
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
-import {
-  mockOrders as initialMockOrders,
-  mockCustomers as initialMockCustomers,
-  mockStaff,
-  mockShop,
-} from '@/lib/mock-data';
-import type { GarmentOrder, Customer, OrderStatus } from '@/types/tailor';
+import { ordersDb, customersDb, shopsDb } from '@/lib/db';
+import { isDemoMode, mockShop as defaultMockShop } from '@/lib/mock-data';
+import type { GarmentOrder, Customer, Shop, OrderStatus } from '@/types/tailor';
 
 // ---------------------------------------------------------------------------
 // Helper Mappings
@@ -65,8 +57,10 @@ const STAGE_BADGE_CONFIG: Record<
 };
 
 export default function DashboardPage() {
-  const [orders] = React.useState<GarmentOrder[]>(initialMockOrders);
-  const [customers] = React.useState<Customer[]>(initialMockCustomers);
+  const [orders, setOrders] = React.useState<GarmentOrder[]>([]);
+  const [customers, setCustomers] = React.useState<Customer[]>([]);
+  const [shop, setShop] = React.useState<Shop | null>(null);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
 
   // Modal states for 1-click interactions
   const [whatsAppModalOpen, setWhatsAppModalOpen] = React.useState<boolean>(false);
@@ -75,6 +69,41 @@ export default function DashboardPage() {
   const [printModalOpen, setPrintModalOpen] = React.useState<boolean>(false);
   const [selectedPrintOrder, setSelectedPrintOrder] = React.useState<GarmentOrder | null>(null);
 
+  // Live repository initialization
+  React.useEffect(() => {
+    let isMounted = true;
+
+    async function loadDashboardData() {
+      setIsLoading(true);
+      try {
+        const currentShop = await shopsDb.getCurrentShop();
+        if (!isMounted) return;
+        setShop(currentShop || defaultMockShop);
+
+        const targetShopId = currentShop?.id || defaultMockShop.id;
+        const [loadedOrders, loadedCustomers] = await Promise.all([
+          ordersDb.getByShopId(targetShopId),
+          customersDb.getByShopId(targetShopId),
+        ]);
+
+        if (isMounted) {
+          setOrders(loadedOrders);
+          setCustomers(loadedCustomers);
+        }
+      } catch (err) {
+        console.warn('Dashboard data fetch error:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadDashboardData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Customer map lookup
   const customerMap = React.useMemo(() => {
     const map = new Map<string, Customer>();
@@ -82,13 +111,56 @@ export default function DashboardPage() {
     return map;
   }, [customers]);
 
+  // Today ISO date string (YYYY-MM-DD)
+  const todayStr = React.useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  // Derived KPI Calculations
+  const activeOrders = React.useMemo(() => {
+    return orders.filter((o) => o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
+  }, [orders]);
+
+  const activeOrdersValue = React.useMemo(() => {
+    return activeOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+  }, [activeOrders]);
+
+  const inCutCount = React.useMemo(() => {
+    return orders.filter((o) => o.status === 'IN_CUTTING').length;
+  }, [orders]);
+
+  const inStitchCount = React.useMemo(() => {
+    return orders.filter((o) => o.status === 'IN_STITCHING').length;
+  }, [orders]);
+
+  const dueTodayOrders = React.useMemo(() => {
+    return activeOrders.filter((o) => o.delivery_date === todayStr);
+  }, [activeOrders, todayStr]);
+
+  const dueTodayValue = React.useMemo(() => {
+    return dueTodayOrders.reduce((sum, o) => sum + (o.balance_due || 0), 0);
+  }, [dueTodayOrders]);
+
+  const overdueOrders = React.useMemo(() => {
+    return activeOrders.filter((o) => o.delivery_date < todayStr);
+  }, [activeOrders, todayStr]);
+
+  const overdueValue = React.useMemo(() => {
+    return overdueOrders.reduce((sum, o) => sum + (o.balance_due || 0), 0);
+  }, [overdueOrders]);
+
+  const unsettledKhataTotal = React.useMemo(() => {
+    return customers
+      .filter((c) => (c.current_khata_balance || 0) > 0)
+      .reduce((sum, c) => sum + c.current_khata_balance, 0);
+  }, [customers]);
+
+  const debtorsCount = React.useMemo(() => {
+    return customers.filter((c) => (c.current_khata_balance || 0) > 0).length;
+  }, [customers]);
+
   // Urgent Orders List (Due today, tomorrow, or in progress)
   const urgentOrders = React.useMemo(() => {
-    // Select active, high-priority orders for the watchlist
-    return orders
-      .filter((o) => o.status !== 'COMPLETED' && o.status !== 'CANCELLED')
-      .slice(0, 5);
-  }, [orders]);
+    return activeOrders.slice(0, 5);
+  }, [activeOrders]);
 
   const handleOpenWhatsApp = (order: GarmentOrder) => {
     setSelectedWhatsAppOrder(order);
@@ -101,7 +173,6 @@ export default function DashboardPage() {
   };
 
   const handleFocusSearch = () => {
-    // Focus search input in AppShell top bar
     const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement | null;
     if (searchInput) {
       searchInput.focus();
@@ -111,7 +182,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell activeRoute="/dashboard">
-      <div className="flex-1 space-y-6 p-8 pt-6 max-w-7xl mx-auto">
+      <div className="flex-1 space-y-6 p-4 sm:p-6 md:p-8 pt-4 sm:pt-6 max-w-7xl mx-auto">
         {/* ------------------------------------------------------------------ */}
         {/* 1. TOP HEADER & GREETING BAR                                        */}
         {/* ------------------------------------------------------------------ */}
@@ -122,7 +193,9 @@ export default function DashboardPage() {
               <span className="text-xs font-semibold tracking-widest uppercase text-gold">
                 Live Workshop Operations
               </span>
-              <span className="text-xs text-muted-foreground">• Wah Cantt Master Counter</span>
+              <span className="text-xs text-muted-foreground">
+                • {shop?.name || 'Master Workshop Counter'}
+              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white flex items-center gap-3">
               <span>Command Dashboard</span>
@@ -158,6 +231,45 @@ export default function DashboardPage() {
         </div>
 
         {/* ------------------------------------------------------------------ */}
+        {/* FRESH WORKSHOP ZERO-MOCK CALLOUT (Obsidian Dark Glass)             */}
+        {/* ------------------------------------------------------------------ */}
+        {!isLoading && orders.length === 0 && (
+          <div className="premium-glass-card p-6 border-gold/30 bg-gradient-to-r from-gold/10 via-amber-500/5 to-transparent relative overflow-hidden shadow-[0_0_30px_rgba(212,175,55,0.1)]">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-gold/40 bg-gold/15 text-gold shadow-[0_0_20px_rgba(212,175,55,0.2)] shrink-0">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-white">Workshop is Fresh & Ready</h3>
+                    <span className="font-urdu-serif text-sm text-gold" dir="rtl">
+                      ورکشاپ تیار ہے - نیا سوٹ بک کریں
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-300 max-w-2xl">
+                    Zero active production queue. Your ledger is clean and ready. Book your first bespoke suit to track cutting, stitching, and trial deadlines in real-time.
+                  </p>
+                </div>
+              </div>
+              <a href="/orders/new" className="shrink-0 w-full sm:w-auto">
+                <Button
+                  variant="default"
+                  size="md"
+                  className="w-full sm:w-auto gap-2 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_25px_rgba(212,175,55,0.3)] transition-all hover:scale-[1.02]"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Book First Suit</span>
+                  <span className="font-urdu-sans text-xs font-normal opacity-80" dir="rtl">
+                    پہلا آرڈر
+                  </span>
+                </Button>
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
         {/* 2. TOP KPI METRICS RIBBON (2-Cols Mobile / 4-Cols Desktop Grid)     */}
         {/* ------------------------------------------------------------------ */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
@@ -179,23 +291,23 @@ export default function DashboardPage() {
             <div className="space-y-1 sm:space-y-1.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
                 <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                  <bdi dir="ltr">42</bdi>
+                  <bdi dir="ltr">{activeOrders.length}</bdi>
                 </span>
                 <span className="text-[11px] sm:text-xs font-medium text-gray-400">Orders in Flow</span>
               </div>
               <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
                 <span className="text-gray-400 truncate mr-1">Total Value</span>
                 <span className="font-semibold text-gold shrink-0">
-                  <bdi dir="ltr">Rs. 148,000</bdi>
+                  <bdi dir="ltr">Rs. {activeOrdersValue.toLocaleString()}</bdi>
                 </span>
               </div>
             </div>
             <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-gray-400 truncate">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
-              <span>7 Cut</span>
+              <span>{inCutCount} Cut</span>
               <span className="text-gray-600">•</span>
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-              <span>12 Stitch</span>
+              <span>{inStitchCount} Stitch</span>
             </div>
           </div>
 
@@ -217,20 +329,23 @@ export default function DashboardPage() {
             <div className="space-y-1 sm:space-y-1.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
                 <span className="text-2xl sm:text-3xl font-bold tracking-tight text-amber-300">
-                  <bdi dir="ltr">6</bdi>
+                  <bdi dir="ltr">{dueTodayOrders.length}</bdi>
                 </span>
                 <span className="text-[11px] sm:text-xs font-semibold text-amber-400/90">Suits Scheduled</span>
               </div>
               <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
                 <span className="text-gray-400 truncate mr-1">Due Value</span>
                 <span className="font-semibold text-amber-300 shrink-0">
-                  <bdi dir="ltr">Rs. 21,000</bdi>
+                  <bdi dir="ltr">Rs. {dueTodayValue.toLocaleString()}</bdi>
                 </span>
               </div>
             </div>
             <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-amber-400/80 truncate">
-              <Flame className="h-3 w-3 text-amber-400 shrink-0" />
-              <span>Ready for Final Pickup</span>
+              {dueTodayOrders.length > 0 ? (
+                <span>Ready for Final Pickup</span>
+              ) : (
+                <span className="text-gray-400">Schedule Clear Today</span>
+              )}
             </div>
           </div>
 
@@ -252,20 +367,31 @@ export default function DashboardPage() {
             <div className="space-y-1 sm:space-y-1.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
                 <span className="text-2xl sm:text-3xl font-bold tracking-tight text-rose-300">
-                  <bdi dir="ltr">1</bdi>
+                  <bdi dir="ltr">{overdueOrders.length}</bdi>
                 </span>
-                <span className="text-[11px] sm:text-xs font-semibold text-rose-400">Delayed ⚠️</span>
+                <span className="text-[11px] sm:text-xs font-semibold text-rose-400">
+                  {overdueOrders.length > 0 ? 'Delayed ⚠️' : '0 Delayed'}
+                </span>
               </div>
               <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
                 <span className="text-gray-400 truncate mr-1">Delayed</span>
                 <span className="font-semibold text-rose-300 shrink-0">
-                  <bdi dir="ltr">Rs. 3,500</bdi>
+                  <bdi dir="ltr">Rs. {overdueValue.toLocaleString()}</bdi>
                 </span>
               </div>
             </div>
             <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-medium text-rose-400 truncate">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
-              <span>1 Day Late</span>
+              {overdueOrders.length > 0 ? (
+                <>
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                  <span>Immediate Action Required</span>
+                </>
+              ) : (
+                <span className="text-emerald-400 flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  <span>All On Schedule</span>
+                </span>
+              )}
             </div>
           </div>
 
@@ -287,13 +413,13 @@ export default function DashboardPage() {
             <div className="space-y-1 sm:space-y-1.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
                 <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-rose-300">
-                  <bdi dir="ltr">Rs. 68,500</bdi>
+                  <bdi dir="ltr">Rs. {unsettledKhataTotal.toLocaleString()}</bdi>
                 </span>
               </div>
               <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
                 <span className="text-gray-400 truncate mr-1">Debtors</span>
                 <span className="font-medium text-gray-300 shrink-0">
-                  <bdi dir="ltr">14</bdi> Clients
+                  <bdi dir="ltr">{debtorsCount}</bdi> Clients
                 </span>
               </div>
             </div>
@@ -302,7 +428,7 @@ export default function DashboardPage() {
                 href="/khata"
                 className="inline-flex items-center gap-1 text-gold hover:text-gold-hover transition-colors font-medium"
               >
-                <span>Remind</span>
+                <span>View Khata</span>
                 <ChevronRight className="h-3 w-3" />
               </a>
               <span className="font-urdu-sans text-[11px] sm:text-xs text-gray-500 hidden xs:inline" dir="rtl">
@@ -368,9 +494,9 @@ export default function DashboardPage() {
                 className="gap-2 border-white/15 bg-transparent hover:bg-white/5 text-gray-300 hover:text-white"
               >
                 <Printer className="h-4 w-4 text-gray-400" />
-                <span>Print Daily Run-Sheet</span>
+                <span>Print Counter</span>
                 <span className="font-urdu-sans text-xs text-gray-400" dir="rtl">
-                  شیٹ پرنٹ
+                  پرنٹنگ
                 </span>
               </Button>
             </a>
@@ -428,132 +554,162 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {urgentOrders.map((order) => {
-                  const customer = customerMap.get(order.customer_id);
-                  const stageConfig = STAGE_BADGE_CONFIG[order.status] || {
-                    label: order.status,
-                    labelUrdu: '',
-                    variant: 'status-booked',
-                  };
-                  const garmentName =
-                    GARMENT_DISPLAY_NAMES[order.garment_type] || order.garment_type;
-
-                  return (
-                    <tr
-                      key={order.id}
-                      className="group transition-colors hover:bg-white/[0.02] border-b border-white/5"
-                    >
-                      {/* 1. Order Number */}
-                      <td className="py-4 px-5">
-                        <div className="flex flex-col">
-                          <span className="font-mono text-xs font-bold text-gold group-hover:text-gold-hover transition-colors">
-                            #{order.order_number}
-                          </span>
-                          <span className="text-[10px] text-gray-500">
-                            Due: {order.delivery_date}
-                          </span>
+                {urgentOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 px-6 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-gold/80">
+                          <CheckCircle2 className="h-6 w-6 text-emerald-400" />
                         </div>
-                      </td>
-
-                      {/* 2. Customer Name & Contact */}
-                      <td className="py-4 px-4">
-                        <div className="flex flex-col">
-                          <span className="font-medium text-gray-200">
-                            {customer?.full_name || 'Walk-in Customer'}
-                          </span>
-                          <span className="text-xs text-gray-400 font-mono">
-                            {customer?.phone || 'No phone'}
-                          </span>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-semibold text-gray-200">
+                            No Urgent Deliveries Pending
+                          </h4>
+                          <p className="text-xs text-gray-400 max-w-sm">
+                            Your workshop schedule is clear for today. Book new orders or inspect the production queue.
+                          </p>
                         </div>
-                      </td>
-
-                      {/* 3. Garment & Fabric */}
-                      <td className="py-4 px-4">
-                        <div className="flex flex-col">
-                          <span className="text-xs font-medium text-gray-200">
-                            <bdi dir="ltr">{order.quantity}x</bdi> {garmentName}
-                          </span>
-                          <span className="text-[11px] text-gray-400 truncate max-w-[180px]">
-                            {order.fabric_color || order.fabric_brand || 'Standard Fabric'}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* 4. Stage Badge */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <Badge variant={stageConfig.variant} className="text-[11px] px-2.5 py-0.5">
-                            {stageConfig.label}
-                          </Badge>
-                          <span
-                            className="font-urdu-sans text-[11px] text-gray-500 hidden sm:inline"
-                            dir="rtl"
+                        <a href="/orders/new" className="mt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 border-gold/30 bg-gold/10 text-gold hover:bg-gold/20 text-xs"
                           >
-                            {stageConfig.labelUrdu}
-                          </span>
-                        </div>
-                      </td>
+                            <PlusCircle className="h-3.5 w-3.5" />
+                            <span>Book New Suit</span>
+                          </Button>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  urgentOrders.map((order) => {
+                    const customer = customerMap.get(order.customer_id);
+                    const stageConfig = STAGE_BADGE_CONFIG[order.status] || {
+                      label: order.status,
+                      labelUrdu: '',
+                      variant: 'status-booked',
+                    };
+                    const garmentName =
+                      GARMENT_DISPLAY_NAMES[order.garment_type] || order.garment_type;
 
-                      {/* 5. Financial Balance */}
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex flex-col items-end">
-                          {order.balance_due === 0 ? (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
-                              <CheckCircle2 className="h-3 w-3" />
-                              <span>Paid (<bdi dir="ltr">Rs. 0</bdi>)</span>
+                    return (
+                      <tr
+                        key={order.id}
+                        className="group transition-colors hover:bg-white/[0.02] border-b border-white/5"
+                      >
+                        {/* 1. Order Number */}
+                        <td className="py-4 px-5">
+                          <div className="flex flex-col">
+                            <span className="font-mono text-xs font-bold text-gold group-hover:text-gold-hover transition-colors">
+                              #{order.order_number}
                             </span>
-                          ) : (
-                            <div className="space-y-0.5">
-                              <span className="font-mono text-xs font-semibold text-rose-400">
-                                <bdi dir="ltr">Rs. {order.balance_due.toLocaleString()}</bdi>
+                            <span className="text-[10px] text-gray-500">
+                              Due: {order.delivery_date}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* 2. Customer Name & Contact */}
+                        <td className="py-4 px-4">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-200">
+                              {customer?.full_name || 'Walk-in Customer'}
+                            </span>
+                            <span className="text-xs text-gray-400 font-mono">
+                              {customer?.phone || 'No phone'}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* 3. Garment & Fabric */}
+                        <td className="py-4 px-4">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-medium text-gray-200">
+                              <bdi dir="ltr">{order.quantity}x</bdi> {garmentName}
+                            </span>
+                            <span className="text-[11px] text-gray-400 truncate max-w-[180px]">
+                              {order.fabric_color || order.fabric_brand || 'Standard Fabric'}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* 4. Stage Badge */}
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={stageConfig.variant} className="text-[11px] px-2.5 py-0.5">
+                              {stageConfig.label}
+                            </Badge>
+                            <span
+                              className="font-urdu-sans text-[11px] text-gray-500 hidden sm:inline"
+                              dir="rtl"
+                            >
+                              {stageConfig.labelUrdu}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* 5. Financial Balance */}
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex flex-col items-end">
+                            {order.balance_due === 0 ? (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+                                <CheckCircle2 className="h-3 w-3" />
+                                <span>Paid (<bdi dir="ltr">Rs. 0</bdi>)</span>
                               </span>
-                              <span className="block text-[10px] text-gray-500">
-                                Total: <bdi dir="ltr">Rs. {order.total_amount.toLocaleString()}</bdi>
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
+                            ) : (
+                              <div className="space-y-0.5">
+                                <span className="font-mono text-xs font-semibold text-rose-400">
+                                  <bdi dir="ltr">Rs. {order.balance_due.toLocaleString()}</bdi>
+                                </span>
+                                <span className="block text-[10px] text-gray-500">
+                                  Total: <bdi dir="ltr">Rs. {order.total_amount.toLocaleString()}</bdi>
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
 
-                      {/* 6. Action Triggers */}
-                      <td className="py-4 px-5 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* 1-Click WhatsApp Receipt Trigger */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenWhatsApp(order)}
-                            title="Send WhatsApp Receipt / Ready Alert"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 transition-all hover:bg-emerald-500/20 hover:border-emerald-500/40"
-                            aria-label={`Send WhatsApp for order ${order.order_number}`}
-                          >
-                            <MessageSquare className="h-3.5 w-3.5" />
-                          </button>
+                        {/* 6. Action Triggers */}
+                        <td className="py-4 px-5 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* 1-Click WhatsApp Receipt Trigger */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenWhatsApp(order)}
+                              title="Send WhatsApp Receipt / Ready Alert"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 transition-all hover:bg-emerald-500/20 hover:border-emerald-500/40"
+                              aria-label={`Send WhatsApp for order ${order.order_number}`}
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                            </button>
 
-                          {/* 1-Click Thermal Slip Print Trigger */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenPrint(order)}
-                            title="Print Thermal Fabric Tag & Invoice"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-300 transition-all hover:bg-white/10 hover:text-white"
-                            aria-label={`Print thermal tag for order ${order.order_number}`}
-                          >
-                            <Printer className="h-3.5 w-3.5" />
-                          </button>
+                            {/* 1-Click Thermal Slip Print Trigger */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPrint(order)}
+                              title="Print Thermal Fabric Tag & Invoice"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-300 transition-all hover:bg-white/10 hover:text-white"
+                              aria-label={`Print thermal tag for order ${order.order_number}`}
+                            >
+                              <Printer className="h-3.5 w-3.5" />
+                            </button>
 
-                          {/* View Order in Queue */}
-                          <a
-                            href="/orders"
-                            title="View in Production Pipeline"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gold transition-all hover:bg-gold/10 hover:border-gold/30"
-                            aria-label={`Inspect order ${order.order_number}`}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </a>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                            {/* View Order in Queue */}
+                            <a
+                              href="/orders"
+                              title="View in Production Pipeline"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gold transition-all hover:bg-gold/10 hover:border-gold/30"
+                              aria-label={`Inspect order ${order.order_number}`}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </a>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -569,7 +725,7 @@ export default function DashboardPage() {
           onOpenChange={setWhatsAppModalOpen}
           order={selectedWhatsAppOrder}
           customer={customerMap.get(selectedWhatsAppOrder.customer_id) || null}
-          shop={mockShop}
+          shop={shop || defaultMockShop}
         />
       )}
 
@@ -579,7 +735,7 @@ export default function DashboardPage() {
           onOpenChange={setPrintModalOpen}
           order={selectedPrintOrder}
           customer={customerMap.get(selectedPrintOrder.customer_id) || null}
-          shop={mockShop}
+          shop={shop || defaultMockShop}
         />
       )}
     </AppShell>

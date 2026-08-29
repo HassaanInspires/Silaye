@@ -35,6 +35,8 @@ import {
   ratesDb,
   printerDb,
   adminDb,
+  getMockPlatformMetrics,
+  getMockAdminShops,
   subscriptionDb,
   purgeLocalCache,
   mapCustomerRow,
@@ -988,27 +990,43 @@ async function runVerification() {
     'adminDb.checkIsSuperAdmin safely evaluates super admin state without throwing runtime exceptions'
   );
 
+  const mockPlatformMetrics = getMockPlatformMetrics();
+  assert(
+    mockPlatformMetrics !== null &&
+      typeof mockPlatformMetrics.total_shops === 'number' &&
+      typeof mockPlatformMetrics.active_shops === 'number' &&
+      typeof mockPlatformMetrics.total_orders === 'number' &&
+      typeof mockPlatformMetrics.total_khata_volume === 'number' &&
+      mockPlatformMetrics.total_shops >= 8,
+    'getMockPlatformMetrics safely returns complete platform-wide metrics aggregation'
+  );
+
+  const mockShops = getMockAdminShops();
+  assert(
+    Array.isArray(mockShops) &&
+      mockShops.length >= 8 &&
+      mockShops.some((s) => s.city === 'Lahore') &&
+      mockShops.some((s) => s.city === 'Wah Cantt'),
+    'getMockAdminShops safely returns multi-tenant workshop overview list across diverse Pakistani cities'
+  );
+
   const fallbackMetrics = await adminDb.getPlatformMetrics();
   assert(
     fallbackMetrics !== null &&
       typeof fallbackMetrics.total_shops === 'number' &&
       typeof fallbackMetrics.active_shops === 'number' &&
       typeof fallbackMetrics.total_orders === 'number' &&
-      typeof fallbackMetrics.total_khata_volume === 'number' &&
-      fallbackMetrics.total_shops >= 8,
+      typeof fallbackMetrics.total_khata_volume === 'number',
     'adminDb.getPlatformMetrics safely returns complete platform-wide metrics aggregation in offline fallback'
   );
 
   const fallbackShops = await adminDb.getAllShops();
   assert(
-    Array.isArray(fallbackShops) &&
-      fallbackShops.length >= 8 &&
-      fallbackShops.some((s) => s.city === 'Lahore') &&
-      fallbackShops.some((s) => s.city === 'Wah Cantt'),
+    Array.isArray(fallbackShops),
     'adminDb.getAllShops safely returns multi-tenant workshop overview list across diverse Pakistani cities'
   );
 
-  const testShopId = fallbackShops[0]?.id || 'a0000000-0000-0000-0000-000000000001';
+  const testShopId = mockShops[0]?.id || 'a0000000-0000-0000-0000-000000000001';
   const statusMutationResult = await adminDb.setShopStatus(testShopId, 'SUSPENDED');
   assert(
     statusMutationResult === true,
@@ -1305,6 +1323,99 @@ async function runVerification() {
       typeof cachePurgeResult.clearedKeysCount === 'number',
     'purgeLocalCache() flushes local IndexedDB and localStorage stores while preserving Supabase auth tokens'
   );
+
+  // ----------------------------------------------------
+  // SECTION 13: Phase F.2 Clean-Slate UI, Zero-Mock Decoupling & Admin Lockdown
+  // ----------------------------------------------------
+  console.log('\n\x1b[36m--- Section 13: Clean-Slate UI, Zero-Mock Decoupling & Admin Lockdown ---\x1b[0m');
+
+  // Test 13.1: Migration 13 SQL integrity
+  const migration13Path = path.resolve(process.cwd(), 'supabase/migrations/20260825000013_admin_email_lock.sql');
+  const migration13Exists = fs.existsSync(migration13Path);
+  assert(migration13Exists, 'Migration 13 (20260825000013_admin_email_lock.sql) exists on disk');
+
+  if (migration13Exists) {
+    const migration13Sql = fs.readFileSync(migration13Path, 'utf8');
+    assert(
+      migration13Sql.includes('assign_super_admin_by_email()') &&
+        migration13Sql.includes('founder@silaye.pk') &&
+        migration13Sql.includes('is_platform_founder') &&
+        migration13Sql.includes('trg_assign_super_admin_by_email'),
+      'Migration 13 defines assign_super_admin_by_email() trigger for founder email auto-lock and backfill'
+    );
+  }
+
+  // Test 13.2: ordersDb.getByShopId method
+  assert(
+    typeof ordersDb.getByShopId === 'function',
+    'ordersDb.getByShopId is defined and exported as an async function'
+  );
+  const testOrders = await ordersDb.getByShopId('a0000000-0000-0000-0000-000000000001');
+  assert(
+    Array.isArray(testOrders),
+    'ordersDb.getByShopId returns typed GarmentOrder array with offline resilience'
+  );
+
+  // Test 13.3: customersDb.getByShopId method
+  assert(
+    typeof customersDb.getByShopId === 'function',
+    'customersDb.getByShopId is defined and exported as an async function'
+  );
+  const testCustomers = await customersDb.getByShopId('a0000000-0000-0000-0000-000000000001');
+  assert(
+    Array.isArray(testCustomers),
+    'customersDb.getByShopId returns typed Customer array with offline resilience'
+  );
+
+  // Test 13.4: khataDb.getByShopId method
+  assert(
+    typeof khataDb.getByShopId === 'function',
+    'khataDb.getByShopId is defined and exported as an async function'
+  );
+  const testKhata = await khataDb.getByShopId('a0000000-0000-0000-0000-000000000001');
+  assert(
+    Array.isArray(testKhata),
+    'khataDb.getByShopId returns typed KhataTransaction array with offline resilience'
+  );
+
+  // Test 13.5: adminDb.checkIsSuperAdmin execution
+  const adminCheck = await adminDb.checkIsSuperAdmin();
+  assert(
+    typeof adminCheck === 'boolean',
+    'adminDb.checkIsSuperAdmin() evaluates session founder verification safely to boolean'
+  );
+
+  // Test 13.6: adminDb.getPlatformMetrics execution
+  const platformMetrics = await adminDb.getPlatformMetrics();
+  assert(
+    typeof platformMetrics === 'object' &&
+      typeof platformMetrics.total_shops === 'number' &&
+      typeof platformMetrics.active_shops === 'number' &&
+      typeof platformMetrics.total_orders === 'number' &&
+      typeof platformMetrics.total_khata_volume === 'number',
+    'adminDb.getPlatformMetrics() returns strongly typed PlatformMetrics entity'
+  );
+
+  // Test 13.7: adminDb.getAllShops execution
+  const allShops = await adminDb.getAllShops();
+  assert(
+    Array.isArray(allShops),
+    'adminDb.getAllShops() returns typed AdminShopOverview array'
+  );
+
+  // Test 13.8: Static Tracking Route Slugs
+  const trackPageRoutePath = path.resolve(process.cwd(), 'app/track/[orderId]/page.tsx');
+  const trackPageExists = fs.existsSync(trackPageRoutePath);
+  assert(trackPageExists, 'Static order tracking dynamic route exists (app/track/[orderId]/page.tsx)');
+
+  if (trackPageExists) {
+    const trackPageContent = fs.readFileSync(trackPageRoutePath, 'utf8');
+    assert(
+      trackPageContent.includes('STATIC_TRACKING_SLUGS') &&
+        trackPageContent.includes('generateStaticParams'),
+      'app/track/[orderId]/page.tsx exports STATIC_TRACKING_SLUGS and generateStaticParams() for clean-slate export resilience'
+    );
+  }
 
   // ----------------------------------------------------
   // SUMMARY

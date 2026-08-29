@@ -1591,6 +1591,54 @@
   - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
   - `npm run build`: Static export compiled successfully, generating 27/27 static routes into `out/` with zero runtime errors.
 
+---
+
+### [2026-08-29] - Phase F, Sub-Phase F.2: Clean-Slate UI, Zero-Mock Production Decoupling & Admin Lockdown
+* **Tasks Completed:**
+  - `F.2.1` Super Admin Founder Email Auto-Lock (`supabase/migrations/20260825000013_admin_email_lock.sql`, `lib/db.ts`, `app/admin/page.tsx`):
+    * Created `public.assign_super_admin_by_email()` trigger function with `SECURITY DEFINER SET search_path = public`.
+    * Attached `trg_assign_super_admin_by_email` `AFTER INSERT ON auth.users`, auto-assigning `SUPER_ADMIN` status to `founder@silaye.pk` and `is_platform_founder = true`.
+    * Backfilled existing users matching founder criteria from `auth.users` into `public.system_admins`.
+    * Fortified `adminDb.checkIsSuperAdmin()` to strictly evaluate session against founder email and `system_admins` without leaking fallback data.
+  - `F.2.2` Repository Layer Offline-First Resiliency (`lib/db.ts`):
+    * Implemented `ordersDb.getByShopId()`, `customersDb.getByShopId()`, and `khataDb.getByShopId()`.
+    * Queries live Supabase tenant tables when online and syncs records to local IndexedDB (`saveLocalOrder`, `saveLocalCustomer`).
+    * Gracefully falls back to reading cached records from `lib/offline-db.ts` (`getLocalOrders`, `getLocalCustomers`, `getLocalKhataTransactions`) when offline.
+    * Returns clean empty array `[]` when no records exist.
+  - `F.2.3` Clean-Slate UI & Luxury Obsidian Dark Empty States (`app/dashboard/page.tsx`, `app/orders/page.tsx`, `app/khata/page.tsx`, `app/print/page.tsx`, `app/orders/new/page.tsx`):
+    * `/dashboard`: Decoupled `useState(initialMockOrders)` to `[]`; dynamically computes all 4 KPI cards (0 Active Queue, Rs. 0 Due, Rs. 0 Overdue, Rs. 0 Khata); displays luxury Obsidian Dark "Workshop is Fresh & Ready. Book your first suit." callout card.
+    * `/orders`: Decoupled state; displays Scissors icon, "No Orders in Production" (*کوئی آرڈر زیر تکمیل نہیں ہے*), and primary `[+ Book First Suit]` CTA button.
+    * `/khata`: Decoupled state; displays Ledger icon, "Khata Register is Clear" (*کھاتہ رجسٹر بالکل صاف ہے*), and primary `[+ New Khata Entry]` CTA button.
+    * `/print`: Decoupled state; displays Printer icon, "No Orders Scheduled for Printing" (*پرنٹنگ کے لیے کوئی آرڈر موجود نہیں*), and `[+ Book First Suit]` CTA button.
+    * `/orders/new`: Replaced mock customer lookup with live `customersDb.getByPhone` and `measurementsDb.getByCustomerId`.
+  - `F.2.4` Mock Data Total Isolation & Static Export Resiliency (`lib/mock-data.ts`, `app/track/[orderId]/page.tsx`):
+    * Isolated `mockOrders`, `mockCustomers`, `mockKhataTransactions`, `mockMeasurementProfiles`, `mockOrderStatusLogs`, `mockStaff` behind `isDemoMode()` returning `[]` in production.
+    * Maintained `STATIC_TRACKING_SLUGS` in `app/track/[orderId]/page.tsx` for clean Next.js static export compilation.
+  - `F.2.5` Automated Verification Suite & Static Export Compilation (`scripts/verify_db.ts`):
+    * Added Section 13 test assertions for Migration 13 DDL, founder email lock, repository `getByShopId` methods, and static tracking route exports.
+    * Executed full test suite: **113/113 tests passed** in `scripts/verify_db.ts`.
+    * Executed TypeScript check: **0 type errors** (`npx tsc --noEmit`).
+    * Executed Next.js build: **28/28 static routes generated** cleanly into `out/` (`npm run build`).
+
+* **Active File Changes:**
+  - `supabase/migrations/20260825000013_admin_email_lock.sql` [NEW]
+  - `lib/mock-data.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `app/orders/page.tsx` [MODIFIED]
+  - `app/khata/page.tsx` [MODIFIED]
+  - `app/print/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `app/track/[orderId]/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx --yes tsx scripts/verify_db.ts`: 113/113 test assertions passed (0 failures).
+  - `npx tsc --noEmit`: Exit code 0 — 0 type errors.
+  - `npm run build`: Static export compiled successfully, generating 28/28 static routes into `out/` with zero runtime errors.
+
 * **Next Immediate Task:**
   - Phase 12: Production Verification & Build Checks (Final Release Validation)
 
