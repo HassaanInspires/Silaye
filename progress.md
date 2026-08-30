@@ -1770,28 +1770,169 @@
   - `gh release view v1.0.0-beta`: Verified release online with both `Silaye.Beta.Setup.1.0.0.exe` and `app-debug.apk` assets attached.
 
 * **Next Immediate Task:**
-  - Silaye Beta customer workshop testing and production distribution.
+  - Phase 15 (Completed)
 
+---
 
+## Phase 15: Mobile Navigation Loop & Visual Ratio Rescue (Completed)
+* **Date:** 2026-08-30
+* **Tasks Completed:**
+  - `15.1` Landing Page & Hero Section Conversion CTAs (`app/page.tsx`, `components/landing/hero-section.tsx`):
+    * Standardized all conversion CTAs ("Open Workshop", "Register Workshop", "Open Your Digital Workshop", "Login") across the landing page to route directly to `/login` via standard Next.js `<Link href="/login">`.
+    * Eliminated broken direct deep-links from public marketing pages to internal protected paths (`/orders`, `/orders/new`) that caused jarring auth bounces.
+  - `15.2` Application Shell & Client Route Guard Lockdown (`components/layout/app-shell.tsx`):
+    * Fortified `isPublicRoute()` with trailing slash and query parameter normalization, strictly whitelisting `/`, `/login`, `/login/*`, `/track`, `/track/*`.
+    * Enforced guard preventing `window.location.replace('/login')` from triggering when the browser's current path is already `/login` or `/`.
+    * Eliminated redundant global loading skeleton during hydration on public routes, restricting verification blocks strictly to protected routes (`if (!isPublic && isSupabaseConfigured() && (!authChecked || !currentUser))`) for instant public route loading.
+  - `15.3` Logo Geometry & Aspect Ratio Normalization (`components/layout/app-shell.tsx`, `app/page.tsx`, `components/landing/hero-section.tsx`, `app/(auth)/login/page.tsx`):
+    * Wrapped all brand logos and icons in fixed containers (`relative h-9 w-9 shrink-0 flex items-center justify-center` in sidebar, mobile drawer, skeleton, and navbar; `relative h-12 w-12 shrink-0 ...` on login page).
+    * Applied `className="h-full w-full object-contain aspect-square"` with internal padding to all SVG elements.
+    * Completely eliminated flexbox cross-axis vertical stretching across all mobile viewports (320px–414px) and desktop monitors (1440px–2560px).
+  - `15.4` Full Verification Suite & Static Export Compilation:
+    * TypeScript compiler check: `npx tsc --noEmit` verified 0 type errors.
+    * Database integrity assertion suite: `scripts/verify_db.ts` verified 113/113 assertions pass (100%).
+    * Production static export compilation: `npm run build` compiled all 28 static routes into `out/` with zero runtime or prerender errors.
 
+* **Active File Changes:**
+  - `app/page.tsx` [MODIFIED]
+  - `components/landing/hero-section.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/(auth)/login/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
 
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors.
+  - `scripts/verify_db.ts`: 113/113 tests passed.
+  - `npm run build`: 28/28 static routes exported into `out/` successfully.
 
+* **Next Immediate Task:**
+  - Phase 16 (Completed)
 
+---
 
+## Phase 16: Manual Pakistani Bank Payment & Receipt Upload System (Completed)
+* **Date:** 2026-08-30
+* **Tasks Completed:**
+  - `16.1` Database Migration & Storage (`supabase/migrations/20260825000014_manual_payments.sql`):
+    * Created `public.manual_payment_requests` table with strict CHECK constraints: `plan_tier IN ('PRO', 'ENTERPRISE')`, `billing_cycle IN ('MONTHLY', 'ANNUAL')`, `payment_method IN ('BANK_TRANSFER', 'RAAST', 'JAZZCASH', 'EASYPAISA')`, `status IN ('PENDING', 'APPROVED', 'REJECTED')`.
+    * Enforced single active pending request per shop via partial unique index: `CREATE UNIQUE INDEX IF NOT EXISTS idx_one_pending_request_per_shop ON public.manual_payment_requests(shop_id) WHERE status = 'PENDING'`.
+    * Configured 3 Row Level Security policies (`Shop members can view`, `Shop members can insert`, `Super admins have full access`) utilizing `is_shop_member()` and `is_super_admin()`.
+    * Implemented safe conditional `storage.buckets` provisioning for the `payment-receipts` bucket with authenticated upload and public read storage policies.
+  - `16.2` Domain Types & Resilient Repositories (`types/tailor.ts`, `lib/db.ts`):
+    * Declared `PaymentMethod`, `PaymentRequestStatus`, and `ManualPaymentRequest` TypeScript interfaces.
+    * Implemented `manualPaymentsDb` repository with `createPaymentRequest`, `getShopPaymentRequests`, `getLatestPendingRequest`, `uploadReceiptImage`, and `resetMockState`.
+    * Built resilient `uploadReceiptImage` with safe `FileReader` base64 fallback for offline and SSR testing.
+  - `16.3` Workshop Settings Billing UI & Slip Upload Modal (`app/settings/page.tsx`):
+    * Replaced instant self-upgrade with the "Bank Transfer & Verification" modal featuring Meezan Bank Ltd, IBAN `PK00MEZN0001234567890101`, Raast ID `03001234567`, and JazzCash/EasyPaisa merchant number with 1-tap copy triggers.
+    * Added payment channel selector (`BANK_TRANSFER`, `RAAST`, `JAZZCASH`, `EASYPAISA`), Transaction ID input, and receipt image dropzone uploader with 5MB validation, image thumbnail preview, and removal button.
+    * Built glowing Amber **"Payment Under Review / تصدیق زیر جائزہ"** banner in Tab 5 displaying requested tier, PKR amount, Trx ID, timestamp, and slip thumbnail opening a full-resolution receipt lightbox modal.
+    * Added "Verification In Review" status badge on pricing card CTA buttons for pending tiers.
+  - `16.4` Full Verification Suite & Static Export Compilation:
+    * TypeScript compiler check: `npx tsc --noEmit` verified 0 type errors.
+    * Database integrity assertion suite: `scripts/verify_db.ts` added Section 14 and verified 124/124 assertions pass (100%).
+    * Production static export compilation: `npm run build` compiled all 28 static routes into `out/` with zero runtime or prerender errors.
 
+* **Active File Changes:**
+  - `supabase/migrations/20260825000014_manual_payments.sql` [NEW]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
 
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors.
+  - `scripts/verify_db.ts`: 124/124 tests passed (100%).
+  - `npm run build`: 28/28 static routes exported into `out/` successfully.
 
+* **Next Immediate Task:**
+  - Phase 17: Super Admin Verification Inbox & Custom Free Trial Campaign Engine (Completed)
 
+---
 
+## Phase 17: Super Admin Verification Inbox & Custom Free Trial Campaign Engine (Completed)
+* **Date:** 2026-08-30
+* **Tasks Completed:**
+  - `17.1` Database Migration & Atomic Security RPCs (`supabase/migrations/20260825000015_admin_approvals_and_trials.sql`):
+    * Implemented `approve_manual_subscription(p_request_id UUID, p_admin_notes TEXT)` with `SECURITY DEFINER SET search_path = public`, `is_super_admin()` auth validation, `FOR UPDATE` row-locking, status update to `APPROVED`, and automatic `shops` subscription tier upgrade (`ACTIVE`, `current_period_start = NOW()`, +30d / +365d duration math).
+    * Implemented `reject_manual_subscription(p_request_id UUID, p_rejection_reason TEXT)` with `SECURITY DEFINER SET search_path = public`, `is_super_admin()` auth check, and status update to `REJECTED` with admin rejection reason.
+    * Implemented `grant_promotional_trial(p_shop_id UUID, p_plan_tier VARCHAR, p_days INT, p_custom_date TIMESTAMPTZ)` with `SECURITY DEFINER SET search_path = public`, `is_super_admin()` check, type-safe interval calculation (`NOW() + (COALESCE(p_days, 14) * INTERVAL '1 day')`), custom expiry override, and `shops` update to `TRIALING`.
+    * Granted `EXECUTE` permissions on all 3 functions to `authenticated`.
+  - `17.2` Domain Types & Resilient Repositories (`types/tailor.ts`, `lib/db.ts`):
+    * Extended `ManualPaymentRequest` interface and `ManualPaymentRequestRow` with optional shop metadata (`shop_name`, `shop_city`, `shop_phone`, `shop?: Shop`).
+    * Implemented `adminDb.getAllPendingPaymentRequests()` returning pending payment requests joined with workshop metadata.
+    * Implemented `adminDb.approvePaymentRequest()`, `adminDb.rejectPaymentRequest()`, and `adminDb.grantPromotionalTrial()` with full offline mock simulation and `silaye:plan-updated` real-time custom event dispatching.
+    * Seeded initial demo pending payment requests (`mpr-mock-...`) for immediate inspection testing.
+  - `17.3` Super Admin Command Center UI Overhaul (`app/admin/page.tsx`):
+    * Added primary Tab Switcher between "Workshop Directory" (*ورکشاپ ڈائرکٹری*) and "Payment Approvals" (*رسید کی تصدیق*) with live glowing pending count badge.
+    * Built High-Density **Payment Approvals Table** displaying Workshop Name, Location, Plan & Cycle, Amount in PKR (`Rs. 26,880`), Payment Channel Badge, Monospace Trx Reference, Submitted Date, and Receipt Slip Thumbnail.
+    * Built **Receipt Inspection Lightbox Modal** with high-resolution screenshot viewer, full transaction breakdown, admin review notes / rejection reason textarea, 1-tap "Approve & Activate Subscription" (Emerald CTA), and "Reject Payment Request" (Rose CTA).
+    * Built **Grant Promotional Free Trial Modal** in Workshop Directory with Target Plan Tier selector (`PRO` / `ENTERPRISE`), Duration Presets (`7d`, `14d`, `30d`, `60d`, `90d`, `Custom Date`), date picker, and calculated expiration summary card.
+  - `17.4` Active Trial Workspace Banner (`components/layout/app-shell.tsx`):
+    * Synchronized `shopSubscriptionStatus` and `shopPeriodEnd` from `getCurrentShop()` and `silaye:plan-updated` event.
+    * Rendered top glowing blue promotional trial banner when `shopSubscriptionStatus === 'TRIALING'` (*"✨ Pro Promotional Trial Active: X days remaining"*) with dynamic remaining days countdown and direct link to `/settings`.
+  - `17.5` Full Verification Suite & Static Export Compilation:
+    * TypeScript compiler check: `npx tsc --noEmit` verified 0 type errors.
+    * Database integrity assertion suite: `scripts/verify_db.ts` added Section 15 and verified 137/137 assertions pass (100%).
+    * Production static export compilation: `npm run build` compiled all 28 static routes into `out/` with zero runtime or prerender errors.
 
+* **Active File Changes:**
+  - `supabase/migrations/20260825000015_admin_approvals_and_trials.sql` [NEW]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `app/admin/page.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
 
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors.
+  - `scripts/verify_db.ts`: 137/137 tests passed (100%).
+  - `npm run build`: 28/28 static routes exported into `out/` successfully.
 
+* **Next Immediate Task:**
+  - Phase 18: Paywall Enforcer, Quota Wall & Trial Expiration Hardening (Completed)
 
+---
 
+## Phase 18: Paywall Enforcer, Quota Wall & Trial Expiration Hardening (Completed)
+* **Date:** 2026-08-30
+* **Tasks Completed:**
+  - `18.1` Database Migration & Quota Hardening (`supabase/migrations/20260825000016_paywall_hardening.sql`):
+    * Updated `public.check_order_creation_allowed(p_shop_id UUID)` RPC with `SECURITY DEFINER SET search_path = public`, detecting expired promotional trials (`subscription_status = 'TRIALING' AND current_period_end < NOW()`), demoting effective tier to `'FREE'`, and raising an exception when monthly volume reaches 50 suits (`Monthly order quota reached (50/50). Upgrade to Pro for unlimited suits.`).
+    * Updated `public.add_shop_staff_member(p_shop_id UUID, p_email VARCHAR, p_role VARCHAR)` RPC with `public.is_shop_owner(p_shop_id)` security verification, effective tier demotion for expired trials, and 1-craftsman account ceiling enforcement on Free tier (`Free tier is limited to 1 craftsman account. Upgrade to Pro to add staff.`).
+    * Granted `EXECUTE` privileges on both functions to `authenticated` (and `anon` for quota pre-checks).
+  - `18.2` Repository Layer Hardening (`lib/db.ts`):
+    * Updated `subscriptionDb.checkOrderAllowed(shopId)`: Evaluates `isTrialExpired = status === 'TRIALING' && current_period_end < Date.now()`, returning `maxLimit: 50` for Free tier and expired trials, and `maxLimit: Infinity` for active Pro/Enterprise tiers.
+    * Hardened `staffDb.addStaff(shopId, email, role)`: Surfaces Free tier limit exceptions (`Free tier is limited to 1 craftsman account. Upgrade to Pro to add staff.`) across live Supabase RPC error traps and offline mock state simulation.
+  - `18.3` Frontend Paywalls & Quota Interceptors (`app/orders/new/page.tsx`, `app/settings/page.tsx`):
+    * `app/orders/new/page.tsx`: Pre-flight `subscriptionDb.checkOrderAllowed` guard prevents booking submissions once monthly quota (50/50) is reached, opening the Obsidian Dark "Monthly Quota Reached" dialog with consumption progress meter, Pro feature checklist, and CTA to `/settings`.
+    * `app/settings/page.tsx`: Evaluates `effectivePlanTier` taking trial expiration into account; disables the "Add Staff Member" / "Add Craftsman" button when a Free workshop has 1 member, and renders the Gold Pro Upgrade callout banner (*"Upgrade to Pro to add unlimited Cutting Masters & Stitchers"*).
+  - `18.4` Automated Verification Suite & Static Export Compilation:
+    * Added Section 16 to `scripts/verify_db.ts` asserting Migration 16 DDL, active vs expired promotional trial quota calculations, 50/50 ceiling blocking, and Free tier staff account limits.
+    * Full database test suite: **146/146 tests passed** (100%).
+    * TypeScript compiler check: **0 type errors** (`npx tsc --noEmit`).
+    * Production Next.js static export compilation: **28/28 static routes generated** cleanly into `out/` (`npm run build`).
 
+* **Active File Changes:**
+  - `supabase/migrations/20260825000016_paywall_hardening.sql` [NEW]
+  - `lib/db.ts` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
 
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors.
+  - `scripts/verify_db.ts`: 146/146 tests passed (100%).
+  - `npm run build`: 28/28 static routes exported into `out/` successfully.
 
-
+* **Next Immediate Task:**
+  - Beta platform monitoring and operational readiness.
 
 
 

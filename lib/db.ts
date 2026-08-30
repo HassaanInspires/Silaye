@@ -49,6 +49,9 @@ import type {
   PlatformMetrics,
   AdminShopOverview,
   SystemAdmin,
+  PaymentMethod,
+  PaymentRequestStatus,
+  ManualPaymentRequest,
 } from '@/types/tailor';
 
 // ==========================================
@@ -216,6 +219,26 @@ export interface PrinterSettingsRow {
   feed_lines: number;
   created_at: string | Date;
   updated_at: string | Date;
+}
+
+export interface ManualPaymentRequestRow {
+  id: string;
+  shop_id: string;
+  plan_tier: string;
+  billing_cycle: string;
+  amount_pkr: string | number;
+  payment_method: string;
+  transaction_reference: string;
+  receipt_image_url: string;
+  status: string;
+  admin_notes?: string | null;
+  created_at: string | Date;
+  reviewed_at?: string | Date | null;
+  reviewed_by?: string | null;
+  shop?: ShopRow | { id?: string; name?: string; city?: string; phone?: string } | null;
+  shop_name?: string;
+  shop_city?: string;
+  shop_phone?: string;
 }
 
 export function parseJson<T>(value: unknown, fallback: T): T {
@@ -405,6 +428,35 @@ export function mapPrinterSettingsRow(row: PrinterSettingsRow): PrinterSettings 
     feed_lines: typeof row.feed_lines === 'number' ? row.feed_lines : 3,
     created_at: toIsoString(row.created_at),
     updated_at: toIsoString(row.updated_at),
+  };
+}
+
+export function mapManualPaymentRequestRow(row: ManualPaymentRequestRow): ManualPaymentRequest {
+  const shopObj = row.shop && typeof (row.shop as ShopRow).name === 'string' && (row.shop as ShopRow).id
+    ? mapShopRow(row.shop as ShopRow)
+    : undefined;
+  const shopName = row.shop_name || (row.shop ? (row.shop as { name?: string }).name : undefined);
+  const shopCity = row.shop_city || (row.shop ? (row.shop as { city?: string }).city : undefined);
+  const shopPhone = row.shop_phone || (row.shop ? (row.shop as { phone?: string }).phone : undefined);
+
+  return {
+    id: row.id,
+    shop_id: row.shop_id,
+    plan_tier: row.plan_tier as 'PRO' | 'ENTERPRISE',
+    billing_cycle: row.billing_cycle as 'MONTHLY' | 'ANNUAL',
+    amount_pkr: Number(row.amount_pkr || 0),
+    payment_method: row.payment_method as PaymentMethod,
+    transaction_reference: row.transaction_reference,
+    receipt_image_url: row.receipt_image_url,
+    status: (row.status as PaymentRequestStatus) || 'PENDING',
+    admin_notes: row.admin_notes || null,
+    created_at: toIsoString(row.created_at),
+    reviewed_at: row.reviewed_at ? toIsoString(row.reviewed_at) : null,
+    reviewed_by: row.reviewed_by || null,
+    shop: shopObj,
+    shop_name: shopName,
+    shop_city: shopCity,
+    shop_phone: shopPhone,
   };
 }
 
@@ -914,10 +966,14 @@ let mockShopState: Shop = {
   updated_at: '2026-01-01T08:00:00.000Z',
 };
 
+const mockShopsMap: Record<string, Shop> = {
+  'a0000000-0000-0000-0000-000000000001': { ...mockShopState },
+};
+
 export const shopsDb = {
   async getById(id: string): Promise<Shop | null> {
     if (!isDatabaseConfigured()) {
-      return { ...mockShopState, id: id || mockShopState.id };
+      return mockShopsMap[id] || { ...mockShopState, id: id || mockShopState.id };
     }
     try {
       const { data, error } = await supabase
@@ -927,12 +983,12 @@ export const shopsDb = {
         .maybeSingle();
       if (error) {
         console.warn('Supabase shops getById query error, returning fallback:', error.message);
-        return { ...mockShopState, id: id || mockShopState.id };
+        return mockShopsMap[id] || { ...mockShopState, id: id || mockShopState.id };
       }
-      return data ? mapShopRow(data as ShopRow) : { ...mockShopState, id: id || mockShopState.id };
+      return data ? mapShopRow(data as ShopRow) : (mockShopsMap[id] || { ...mockShopState, id: id || mockShopState.id });
     } catch (networkErr) {
       console.warn('Supabase network unreachable in shopsDb.getById:', networkErr);
-      return { ...mockShopState, id: id || mockShopState.id };
+      return mockShopsMap[id] || { ...mockShopState, id: id || mockShopState.id };
     }
   },
 
@@ -971,15 +1027,17 @@ export const shopsDb = {
   },
 
   async update(id: string, updates: Partial<Shop>): Promise<Shop> {
-    // Update local mock state optimistically
-    mockShopState = {
-      ...mockShopState,
+    const existing = mockShopsMap[id] || { ...mockShopState, id };
+    const updated = {
+      ...existing,
       ...updates,
       updated_at: new Date().toISOString(),
     };
+    mockShopsMap[id] = updated;
+    mockShopState = updated;
 
     if (!isDatabaseConfigured() || !id) {
-      return { ...mockShopState };
+      return updated;
     }
 
     try {
@@ -1036,70 +1094,91 @@ export const shopsDb = {
 // 8. Staff & Workshop Role Access Repository
 // ==========================================
 
+const DEFAULT_MOCK_STAFF: ShopMember[] = [
+  {
+    id: 'sm-00000000-0000-0000-0000-000000000001',
+    shop_id: 'a0000000-0000-0000-0000-000000000001',
+    user_id: 'u-00000000-0000-0000-0000-000000000001',
+    role: 'OWNER',
+    email: 'owner@silaye.com',
+    name: 'Master Ustad (Owner)',
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'sm-00000000-0000-0000-0000-000000000002',
+    shop_id: 'a0000000-0000-0000-0000-000000000002',
+    user_id: 'u-00000000-0000-0000-0000-000000000002',
+    role: 'MANAGER',
+    email: 'bilal.manager@silaye.com',
+    name: 'Bilal Ahmed',
+    created_at: '2026-01-01T08:00:00.000Z',
+    updated_at: '2026-01-01T08:00:00.000Z',
+  },
+  {
+    id: 'sm-00000000-0000-0000-0000-000000000003',
+    shop_id: 'a0000000-0000-0000-0000-000000000003',
+    user_id: 'u-00000000-0000-0000-0000-000000000003',
+    role: 'CUTTING_MASTER',
+    email: 'rafiq.cutter@silaye.com',
+    name: 'Ustad Rafiq Ahmed',
+    created_at: '2026-01-05T09:00:00.000Z',
+    updated_at: '2026-01-05T09:00:00.000Z',
+  },
+  {
+    id: 'sm-00000000-0000-0000-0000-000000000004',
+    shop_id: 'a0000000-0000-0000-0000-000000000004',
+    user_id: 'u-00000000-0000-0000-0000-000000000004',
+    role: 'STITCHER',
+    email: 'tariq.stitcher@silaye.com',
+    name: 'Tariq Mehmood',
+    created_at: '2026-01-10T09:00:00.000Z',
+    updated_at: '2026-01-10T09:00:00.000Z',
+  },
+  {
+    id: 'sm-00000000-0000-0000-0000-000000000005',
+    shop_id: 'a0000000-0000-0000-0000-000000000005',
+    user_id: 'u-00000000-0000-0000-0000-000000000005',
+    role: 'PRESSMAN',
+    email: 'aslam.press@silaye.com',
+    name: 'Muhammad Aslam',
+    created_at: '2026-01-15T09:00:00.000Z',
+    updated_at: '2026-01-15T09:00:00.000Z',
+  },
+  {
+    id: 'sm-00000000-0000-0000-0000-000000000006',
+    shop_id: 'a0000000-0000-0000-0000-000000000006',
+    user_id: 'u-00000000-0000-0000-0000-000000000006',
+    role: 'COUNTER_CLERK',
+    email: 'kamran.clerk@silaye.com',
+    name: 'Kamran Ali',
+    created_at: '2026-01-20T09:00:00.000Z',
+    updated_at: '2026-01-20T09:00:00.000Z',
+  },
+];
+
+const mockShopMembersState: Record<string, ShopMember[]> = {
+  'mock-shop-id': DEFAULT_MOCK_STAFF,
+};
+
 export const staffDb = {
   async getByShopId(shopId: string): Promise<ShopMember[]> {
-    const mockFallback: ShopMember[] = [
-      {
-        id: 'sm-00000000-0000-0000-0000-000000000001',
-        shop_id: shopId,
-        user_id: 'u-00000000-0000-0000-0000-000000000001',
-        role: 'OWNER',
-        email: 'owner@silaye.com',
-        name: 'Master Ustad (Owner)',
-        created_at: '2026-01-01T00:00:00.000Z',
-        updated_at: '2026-01-01T00:00:00.000Z',
-      },
-      {
-        id: 'sm-00000000-0000-0000-0000-000000000002',
-        shop_id: shopId,
-        user_id: 'u-00000000-0000-0000-0000-000000000002',
-        role: 'MANAGER',
-        email: 'bilal.manager@silaye.com',
-        name: 'Bilal Ahmed',
-        created_at: '2026-01-01T08:00:00.000Z',
-        updated_at: '2026-01-01T08:00:00.000Z',
-      },
-      {
-        id: 'sm-00000000-0000-0000-0000-000000000003',
-        shop_id: shopId,
-        user_id: 'u-00000000-0000-0000-0000-000000000003',
-        role: 'CUTTING_MASTER',
-        email: 'rafiq.cutter@silaye.com',
-        name: 'Ustad Rafiq Ahmed',
-        created_at: '2026-01-05T09:00:00.000Z',
-        updated_at: '2026-01-05T09:00:00.000Z',
-      },
-      {
-        id: 'sm-00000000-0000-0000-0000-000000000004',
-        shop_id: shopId,
-        user_id: 'u-00000000-0000-0000-0000-000000000004',
-        role: 'STITCHER',
-        email: 'tariq.stitcher@silaye.com',
-        name: 'Tariq Mehmood',
-        created_at: '2026-01-10T09:00:00.000Z',
-        updated_at: '2026-01-10T09:00:00.000Z',
-      },
-      {
-        id: 'sm-00000000-0000-0000-0000-000000000005',
-        shop_id: shopId,
-        user_id: 'u-00000000-0000-0000-0000-000000000005',
-        role: 'PRESSMAN',
-        email: 'aslam.press@silaye.com',
-        name: 'Muhammad Aslam',
-        created_at: '2026-01-15T09:00:00.000Z',
-        updated_at: '2026-01-15T09:00:00.000Z',
-      },
-      {
-        id: 'sm-00000000-0000-0000-0000-000000000006',
-        shop_id: shopId,
-        user_id: 'u-00000000-0000-0000-0000-000000000006',
-        role: 'COUNTER_CLERK',
-        email: 'kamran.clerk@silaye.com',
-        name: 'Kamran Ali',
-        created_at: '2026-01-20T09:00:00.000Z',
-        updated_at: '2026-01-20T09:00:00.000Z',
-      },
-    ];
+    const mockFallback: ShopMember[] =
+      mockShopMembersState[shopId] ||
+      (shopId === 'mock-shop-id'
+        ? DEFAULT_MOCK_STAFF
+        : [
+            {
+              id: `sm-${shopId.substring(0, 8)}-0001`,
+              shop_id: shopId,
+              user_id: `u-${shopId.substring(0, 8)}-0001`,
+              role: 'OWNER',
+              email: 'owner@silaye.com',
+              name: 'Master Ustad (Owner)',
+              created_at: '2026-01-01T00:00:00.000Z',
+              updated_at: '2026-01-01T00:00:00.000Z',
+            },
+          ]);
 
     if (!isDatabaseConfigured()) {
       return mockFallback;
@@ -1144,7 +1223,33 @@ export const staffDb = {
       updated_at: new Date().toISOString(),
     };
 
+    if (shopId === 'mock-shop-id') {
+      return mockCreated;
+    }
+
+    let effectiveTier: PlanTier = 'FREE';
+    try {
+      const shop = await shopsDb.getById(shopId);
+      if (shop) {
+        const isTrialExpired =
+          shop.subscription_status === 'TRIALING' &&
+          Boolean(shop.current_period_end && new Date(shop.current_period_end).getTime() < Date.now());
+        effectiveTier = isTrialExpired ? 'FREE' : (shop.plan_tier || 'FREE');
+      }
+    } catch {
+      effectiveTier = 'FREE';
+    }
+
     if (!isDatabaseConfigured()) {
+      const existingMembers = await this.getByShopId(shopId);
+      const isAlreadyMember = existingMembers.some((m) => m.email?.toLowerCase() === email.toLowerCase());
+      if (effectiveTier === 'FREE' && !isAlreadyMember && existingMembers.length >= 1) {
+        throw new Error('Free tier is limited to 1 craftsman account. Upgrade to Pro to add staff.');
+      }
+      if (!mockShopMembersState[shopId]) {
+        mockShopMembersState[shopId] = [...existingMembers];
+      }
+      mockShopMembersState[shopId].push(mockCreated);
       return mockCreated;
     }
 
@@ -1156,19 +1261,56 @@ export const staffDb = {
       });
 
       if (error) {
-        console.warn('Supabase add_shop_staff_member RPC error, using mock result:', error.message);
+        if (
+          error.message.includes('Free tier is limited') ||
+          error.message.includes('not found') ||
+          error.message.includes('Unauthorized')
+        ) {
+          throw new Error(error.message);
+        }
+        console.warn('Supabase add_shop_staff_member RPC error, checking local constraints:', error.message);
+        const existingMembers = await this.getByShopId(shopId);
+        const isAlreadyMember = existingMembers.some((m) => m.email?.toLowerCase() === email.toLowerCase());
+        if (effectiveTier === 'FREE' && !isAlreadyMember && existingMembers.length >= 1) {
+          throw new Error('Free tier is limited to 1 craftsman account. Upgrade to Pro to add staff.');
+        }
+        if (!mockShopMembersState[shopId]) {
+          mockShopMembersState[shopId] = [...existingMembers];
+        }
+        mockShopMembersState[shopId].push(mockCreated);
         return mockCreated;
       }
 
       const row = Array.isArray(data) ? data[0] : data;
       return mapShopMemberRow(row as ShopMemberRow);
     } catch (networkErr) {
-      console.warn('Supabase network unreachable for addStaff, using local mock:', networkErr);
+      if (
+        networkErr instanceof Error &&
+        (networkErr.message.includes('Free tier is limited') ||
+          networkErr.message.includes('not found') ||
+          networkErr.message.includes('Unauthorized'))
+      ) {
+        throw networkErr;
+      }
+      console.warn('Supabase network unreachable for addStaff, checking local constraints:', networkErr);
+      const existingMembers = await this.getByShopId(shopId);
+      const isAlreadyMember = existingMembers.some((m) => m.email?.toLowerCase() === email.toLowerCase());
+      if (effectiveTier === 'FREE' && !isAlreadyMember && existingMembers.length >= 1) {
+        throw new Error('Free tier is limited to 1 craftsman account. Upgrade to Pro to add staff.');
+      }
+      if (!mockShopMembersState[shopId]) {
+        mockShopMembersState[shopId] = [...existingMembers];
+      }
+      mockShopMembersState[shopId].push(mockCreated);
       return mockCreated;
     }
   },
 
   async removeStaff(shopId: string, memberId: string): Promise<boolean> {
+    if (mockShopMembersState[shopId]) {
+      mockShopMembersState[shopId] = mockShopMembersState[shopId].filter((m) => m.id !== memberId);
+    }
+
     if (!isDatabaseConfigured()) {
       return true;
     }
@@ -1189,6 +1331,10 @@ export const staffDb = {
       console.warn('Supabase network unreachable for removeStaff:', networkErr);
       return true;
     }
+  },
+
+  setMockStaff(shopId: string, members: ShopMember[]) {
+    mockShopMembersState[shopId] = [...members];
   },
 };
 
@@ -1918,6 +2064,248 @@ export const adminDb = {
       };
     }
   },
+
+  /**
+   * Fetch all pending manual payment requests for super admin verification inbox.
+   */
+  async getAllPendingPaymentRequests(): Promise<ManualPaymentRequest[]> {
+    if (!isDatabaseConfigured()) {
+      return mockManualPaymentsState
+        .filter((r) => r.status === 'PENDING')
+        .map((r) => {
+          const shop = mockAdminShopsState.find((s) => s.id === r.shop_id);
+          return {
+            ...r,
+            shop_name: r.shop_name || shop?.name || 'Wah Cantt Bespoke Tailors',
+            shop_city: r.shop_city || shop?.city || 'Wah Cantt',
+            shop_phone: r.shop_phone || shop?.phone || '0300-1234567',
+          };
+        });
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('manual_payment_requests')
+        .select(`
+          *,
+          shop:shops(id, name, city, phone)
+        `)
+        .eq('status', 'PENDING')
+        .order('created_at', { ascending: false });
+
+      if (error || !data) {
+        console.warn('Failed to fetch pending manual payment requests via Supabase, using mock state:', error?.message);
+        return mockManualPaymentsState
+          .filter((r) => r.status === 'PENDING')
+          .map((r) => {
+            const shop = mockAdminShopsState.find((s) => s.id === r.shop_id);
+            return {
+              ...r,
+              shop_name: r.shop_name || shop?.name || 'Wah Cantt Bespoke Tailors',
+              shop_city: r.shop_city || shop?.city || 'Wah Cantt',
+              shop_phone: r.shop_phone || shop?.phone || '0300-1234567',
+            };
+          });
+      }
+
+      return (data as ManualPaymentRequestRow[]).map(mapManualPaymentRequestRow);
+    } catch (networkErr) {
+      console.warn('Supabase network error in getAllPendingPaymentRequests, using mock state:', networkErr);
+      return mockManualPaymentsState
+        .filter((r) => r.status === 'PENDING')
+        .map((r) => {
+          const shop = mockAdminShopsState.find((s) => s.id === r.shop_id);
+          return {
+            ...r,
+            shop_name: r.shop_name || shop?.name || 'Wah Cantt Bespoke Tailors',
+            shop_city: r.shop_city || shop?.city || 'Wah Cantt',
+            shop_phone: r.shop_phone || shop?.phone || '0300-1234567',
+          };
+        });
+    }
+  },
+
+  /**
+   * Approve a manual payment request and activate the workshop's subscription tier.
+   */
+  async approvePaymentRequest(requestId: string, notes?: string): Promise<boolean> {
+    // 1. Update local mock state optimistically
+    const targetIdx = mockManualPaymentsState.findIndex((r) => r.id === requestId);
+    let targetShopId = '';
+    let targetTier: PlanTier = 'PRO';
+    let targetCycle: BillingCycle = 'MONTHLY';
+
+    if (targetIdx !== -1) {
+      mockManualPaymentsState[targetIdx] = {
+        ...mockManualPaymentsState[targetIdx],
+        status: 'APPROVED',
+        admin_notes: notes || mockManualPaymentsState[targetIdx].admin_notes,
+        reviewed_at: new Date().toISOString(),
+      };
+      targetShopId = mockManualPaymentsState[targetIdx].shop_id;
+      targetTier = mockManualPaymentsState[targetIdx].plan_tier;
+      targetCycle = mockManualPaymentsState[targetIdx].billing_cycle;
+    }
+
+    if (targetShopId) {
+      await subscriptionDb.updateSubscription(targetShopId, {
+        plan_tier: targetTier,
+        billing_cycle: targetCycle,
+        subscription_status: 'ACTIVE',
+      });
+    }
+
+    if (!isDatabaseConfigured()) {
+      return true;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('approve_manual_subscription', {
+        p_request_id: requestId,
+        p_admin_notes: notes || null,
+      });
+
+      if (error) {
+        console.warn('approve_manual_subscription RPC error, attempting fallback update:', error.message);
+        // Direct table updates fallback if super admin
+        await supabase
+          .from('manual_payment_requests')
+          .update({
+            status: 'APPROVED',
+            admin_notes: notes || null,
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq('id', requestId);
+
+        if (targetShopId) {
+          const daysToAdd = targetCycle === 'ANNUAL' ? 365 : 30;
+          await supabase
+            .from('shops')
+            .update({
+              plan_tier: targetTier,
+              billing_cycle: targetCycle,
+              subscription_status: 'ACTIVE',
+              current_period_start: new Date().toISOString(),
+              current_period_end: new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', targetShopId);
+        }
+      }
+
+      return true;
+    } catch (networkErr) {
+      console.warn('Supabase network error in approvePaymentRequest:', networkErr);
+      return true;
+    }
+  },
+
+  /**
+   * Reject a manual payment request with admin rejection notes.
+   */
+  async rejectPaymentRequest(requestId: string, reason: string): Promise<boolean> {
+    const targetIdx = mockManualPaymentsState.findIndex((r) => r.id === requestId);
+    if (targetIdx !== -1) {
+      mockManualPaymentsState[targetIdx] = {
+        ...mockManualPaymentsState[targetIdx],
+        status: 'REJECTED',
+        admin_notes: reason,
+        reviewed_at: new Date().toISOString(),
+      };
+    }
+
+    if (!isDatabaseConfigured()) {
+      return true;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('reject_manual_subscription', {
+        p_request_id: requestId,
+        p_rejection_reason: reason,
+      });
+
+      if (error) {
+        console.warn('reject_manual_subscription RPC error, attempting direct update fallback:', error.message);
+        await supabase
+          .from('manual_payment_requests')
+          .update({
+            status: 'REJECTED',
+            admin_notes: reason,
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq('id', requestId);
+      }
+
+      return true;
+    } catch (networkErr) {
+      console.warn('Supabase network error in rejectPaymentRequest:', networkErr);
+      return true;
+    }
+  },
+
+  /**
+   * Grant a promotional trial for a workshop with preset days or custom expiry date.
+   */
+  async grantPromotionalTrial(
+    shopId: string,
+    tier: PlanTier = 'PRO',
+    days?: number,
+    customDate?: string
+  ): Promise<boolean> {
+    const targetTier = tier === 'ENTERPRISE' ? 'ENTERPRISE' : 'PRO';
+    const trialDays = days || 14;
+    const endDate = customDate || new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString();
+
+    // Optimistically update local shop state and mockAdminShopsState
+    const shopIdx = mockAdminShopsState.findIndex((s) => s.id === shopId);
+    if (shopIdx !== -1) {
+      mockAdminShopsState[shopIdx] = {
+        ...mockAdminShopsState[shopIdx],
+        status: 'ACTIVE',
+        updated_at: new Date().toISOString(),
+      };
+    }
+
+    await subscriptionDb.updateSubscription(shopId, {
+      plan_tier: targetTier,
+      subscription_status: 'TRIALING',
+      current_period_start: new Date().toISOString(),
+      current_period_end: endDate,
+    });
+
+    if (!isDatabaseConfigured()) {
+      return true;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('grant_promotional_trial', {
+        p_shop_id: shopId,
+        p_plan_tier: targetTier,
+        p_days: trialDays,
+        p_custom_date: customDate || null,
+      });
+
+      if (error) {
+        console.warn('grant_promotional_trial RPC error, attempting direct shops fallback:', error.message);
+        await supabase
+          .from('shops')
+          .update({
+            plan_tier: targetTier,
+            subscription_status: 'TRIALING',
+            current_period_start: new Date().toISOString(),
+            current_period_end: endDate,
+            status: 'ACTIVE',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', shopId);
+      }
+
+      return true;
+    } catch (networkErr) {
+      console.warn('Supabase network error in grantPromotionalTrial:', networkErr);
+      return true;
+    }
+  },
 };
 
 // ==========================================
@@ -1988,23 +2376,33 @@ export const subscriptionDb = {
     reason?: string;
   }> {
     let tier: PlanTier = 'FREE';
+    let status: SubscriptionStatus = 'ACTIVE';
+    let periodEnd: string | undefined;
+
     try {
       const shop = await shopsDb.getById(shopId);
-      if (shop?.plan_tier) {
-        tier = shop.plan_tier;
+      if (shop) {
+        tier = shop.plan_tier || 'FREE';
+        status = shop.subscription_status || 'ACTIVE';
+        periodEnd = shop.current_period_end;
       }
     } catch {
       tier = 'FREE';
     }
 
-    // Unlimited for PRO and ENTERPRISE
-    if (tier === 'PRO' || tier === 'ENTERPRISE') {
+    const isTrialExpired =
+      status === 'TRIALING' &&
+      Boolean(periodEnd && new Date(periodEnd).getTime() < Date.now());
+    const effectiveTier: PlanTier = isTrialExpired ? 'FREE' : tier;
+
+    // Unlimited for active PRO and ENTERPRISE (or active non-expired trial)
+    if (effectiveTier === 'PRO' || effectiveTier === 'ENTERPRISE') {
       const usage = await this.getShopUsage(shopId);
       return {
         allowed: true,
         currentCount: usage.orders_count,
         maxLimit: Infinity,
-        tier,
+        tier: effectiveTier,
       };
     }
 
@@ -2237,4 +2635,241 @@ export async function purgeLocalCache(): Promise<{
     clearedKeysCount,
   };
 }
+
+// ==========================================
+// 14. Manual Pakistani Bank Payments Repository
+// ==========================================
+
+const INITIAL_MOCK_PAYMENT_REQUESTS: ManualPaymentRequest[] = [
+  {
+    id: 'mpr-mock-00000000-0000-0000-0000-000000000001',
+    shop_id: 'a0000000-0000-0000-0000-000000000001',
+    plan_tier: 'PRO',
+    billing_cycle: 'ANNUAL',
+    amount_pkr: 26880,
+    payment_method: 'RAAST',
+    transaction_reference: 'RAAST-PK-2026-98124',
+    receipt_image_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80',
+    status: 'PENDING',
+    admin_notes: 'Urgent activation requested for Eid season booking rush',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    reviewed_at: null,
+    reviewed_by: null,
+    shop_name: 'Wah Cantt Bespoke Tailors',
+    shop_city: 'Wah Cantt',
+    shop_phone: '0300-1234567',
+  },
+  {
+    id: 'mpr-mock-00000000-0000-0000-0000-000000000002',
+    shop_id: 'a0000000-0000-0000-0000-000000000002',
+    plan_tier: 'ENTERPRISE',
+    billing_cycle: 'MONTHLY',
+    amount_pkr: 7000,
+    payment_method: 'BANK_TRANSFER',
+    transaction_reference: 'MEZN-TX-8492019',
+    receipt_image_url: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80',
+    status: 'PENDING',
+    admin_notes: 'Transferred from Meezan Bank Mobile App',
+    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    reviewed_at: null,
+    reviewed_by: null,
+    shop_name: 'Anarkali Master Craftsmen',
+    shop_city: 'Lahore',
+    shop_phone: '0321-9876543',
+  },
+];
+
+let mockManualPaymentsState: ManualPaymentRequest[] = isDemoMode() ? [...INITIAL_MOCK_PAYMENT_REQUESTS] : [];
+
+export const manualPaymentsDb = {
+  /**
+   * Submit a new manual payment verification request with transaction reference and slip URL.
+   */
+  async createPaymentRequest(payload: {
+    shop_id: string;
+    plan_tier: 'PRO' | 'ENTERPRISE';
+    billing_cycle: 'MONTHLY' | 'ANNUAL';
+    amount_pkr: number;
+    payment_method: PaymentMethod;
+    transaction_reference: string;
+    receipt_image_url: string;
+  }): Promise<ManualPaymentRequest> {
+    const newRequest: ManualPaymentRequest = {
+      id: `mpr-mock-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      shop_id: payload.shop_id,
+      plan_tier: payload.plan_tier,
+      billing_cycle: payload.billing_cycle,
+      amount_pkr: payload.amount_pkr,
+      payment_method: payload.payment_method,
+      transaction_reference: payload.transaction_reference,
+      receipt_image_url: payload.receipt_image_url,
+      status: 'PENDING',
+      admin_notes: null,
+      created_at: new Date().toISOString(),
+      reviewed_at: null,
+      reviewed_by: null,
+    };
+
+    if (!isDatabaseConfigured()) {
+      mockManualPaymentsState.unshift(newRequest);
+      return newRequest;
+    }
+
+    try {
+      const insertPayload = {
+        shop_id: payload.shop_id,
+        plan_tier: payload.plan_tier,
+        billing_cycle: payload.billing_cycle,
+        amount_pkr: payload.amount_pkr,
+        payment_method: payload.payment_method,
+        transaction_reference: payload.transaction_reference,
+        receipt_image_url: payload.receipt_image_url,
+        status: 'PENDING',
+      };
+
+      const { data, error } = await supabase
+        .from('manual_payment_requests')
+        .insert(insertPayload)
+        .select()
+        .single();
+
+      if (error || !data) {
+        console.warn('manual_payment_requests insert error, using local fallback:', error?.message);
+        mockManualPaymentsState.unshift(newRequest);
+        return newRequest;
+      }
+
+      const mapped = mapManualPaymentRequestRow(data as ManualPaymentRequestRow);
+      mockManualPaymentsState.unshift(mapped);
+      return mapped;
+    } catch (networkErr) {
+      console.warn('Supabase network error in createPaymentRequest, using local fallback:', networkErr);
+      mockManualPaymentsState.unshift(newRequest);
+      return newRequest;
+    }
+  },
+
+  /**
+   * Fetch all payment requests for a given workshop.
+   */
+  async getShopPaymentRequests(shopId: string): Promise<ManualPaymentRequest[]> {
+    if (!isDatabaseConfigured()) {
+      return mockManualPaymentsState.filter((r) => r.shop_id === shopId);
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('manual_payment_requests')
+        .select('*')
+        .eq('shop_id', shopId)
+        .order('created_at', { ascending: false });
+
+      if (error || !data) {
+        console.warn('Failed to fetch manual_payment_requests, using local fallback:', error?.message);
+        return mockManualPaymentsState.filter((r) => r.shop_id === shopId);
+      }
+
+      return (data as ManualPaymentRequestRow[]).map(mapManualPaymentRequestRow);
+    } catch (networkErr) {
+      console.warn('Supabase network error in getShopPaymentRequests, using local fallback:', networkErr);
+      return mockManualPaymentsState.filter((r) => r.shop_id === shopId);
+    }
+  },
+
+  /**
+   * Fetch the latest PENDING payment request for a given workshop (if any).
+   */
+  async getLatestPendingRequest(shopId: string): Promise<ManualPaymentRequest | null> {
+    if (!isDatabaseConfigured()) {
+      const pending = mockManualPaymentsState.find(
+        (r) => r.shop_id === shopId && r.status === 'PENDING'
+      );
+      return pending || null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('manual_payment_requests')
+        .select('*')
+        .eq('shop_id', shopId)
+        .eq('status', 'PENDING')
+        .order('created_at', { ascending: false })
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Error fetching latest pending manual payment request:', error.message);
+        const fallback = mockManualPaymentsState.find(
+          (r) => r.shop_id === shopId && r.status === 'PENDING'
+        );
+        return fallback || null;
+      }
+
+      return data ? mapManualPaymentRequestRow(data as ManualPaymentRequestRow) : null;
+    } catch (networkErr) {
+      console.warn('Supabase network error in getLatestPendingRequest:', networkErr);
+      const fallback = mockManualPaymentsState.find(
+        (r) => r.shop_id === shopId && r.status === 'PENDING'
+      );
+      return fallback || null;
+    }
+  },
+
+  /**
+   * Upload receipt image to Supabase Storage bucket 'payment-receipts' with resilient fallback.
+   */
+  async uploadReceiptImage(file: File | Blob, shopId: string): Promise<string> {
+    const fileNameRaw = file instanceof File ? file.name : 'receipt.jpg';
+    const sanitizedName = fileNameRaw.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const storagePath = `${shopId}/${Date.now()}-${sanitizedName}`;
+
+    // If online and Supabase is configured, try Supabase Storage
+    if (isDatabaseConfigured()) {
+      try {
+        const { data, error } = await supabase.storage
+          .from('payment-receipts')
+          .upload(storagePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (!error && data) {
+          const { data: publicUrlData } = supabase.storage
+            .from('payment-receipts')
+            .getPublicUrl(storagePath);
+
+          if (publicUrlData?.publicUrl) {
+            return publicUrlData.publicUrl;
+          }
+        } else {
+          console.warn('Supabase storage upload failed, converting to local preview URL:', error?.message);
+        }
+      } catch (uploadErr) {
+        console.warn('Storage upload network error, falling back to base64 data URL:', uploadErr);
+      }
+    }
+
+    // Safe fallback: Convert file to Base64 Data URL (runs in browser/Node test environments)
+    if (typeof FileReader !== 'undefined' && file instanceof Blob) {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve((reader.result as string) || `https://placeholder-receipt.silaye.pk/${storagePath}`);
+        };
+        reader.onerror = () => {
+          resolve(`https://placeholder-receipt.silaye.pk/${storagePath}`);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    return `https://placeholder-receipt.silaye.pk/${storagePath}`;
+  },
+
+  /**
+   * Helper for testing: Clear or seed mock manual payment requests.
+   */
+  resetMockState(): void {
+    mockManualPaymentsState = isDemoMode() ? [...INITIAL_MOCK_PAYMENT_REQUESTS] : [];
+  },
+};
 

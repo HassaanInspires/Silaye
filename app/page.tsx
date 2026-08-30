@@ -294,7 +294,7 @@ function FooterCTA() {
         </p>
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
-            href="/orders/new"
+            href="/login"
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-gold-hover hover:shadow-primary/30 active:scale-95"
           >
             Open Your Digital Workshop
@@ -321,8 +321,8 @@ function SiteFooter() {
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           {/* Brand */}
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/30 bg-primary/10">
-              <Scissors className="h-3.5 w-3.5 text-primary" />
+            <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
+              <Scissors className="h-full w-full p-2 object-contain aspect-square text-primary" />
             </div>
             <div>
               <span className="font-editorial text-base italic text-obsidian-text">Silaye</span>
@@ -336,7 +336,7 @@ function SiteFooter() {
               ['Features', '#features'],
               ['Pricing', '#pricing'],
               ['Track Order', '/track/'],
-              ['Open Workshop', '/orders'],
+              ['Open Workshop', '/login'],
             ].map(([label, href]) => (
               <Link
                 key={label}

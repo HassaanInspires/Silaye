@@ -38,6 +38,7 @@ import {
   getMockPlatformMetrics,
   getMockAdminShops,
   subscriptionDb,
+  manualPaymentsDb,
   purgeLocalCache,
   mapCustomerRow,
   mapMeasurementProfileRow,
@@ -49,6 +50,7 @@ import {
   mapPrinterSettingsRow,
   mapAdminShopOverviewRow,
   mapShopUsageRow,
+  mapManualPaymentRequestRow,
   type CustomerRow,
   type MeasurementProfileRow,
   type GarmentOrderRow,
@@ -59,6 +61,7 @@ import {
   type PrinterSettingsRow,
   type AdminShopOverviewRow,
   type ShopUsageRow,
+  type ManualPaymentRequestRow,
 } from '../lib/db';
 import {
   isSupabaseConfigured,
@@ -83,6 +86,9 @@ import type {
   SubscriptionStatus,
   BillingCycle,
   ShopUsage,
+  PaymentMethod,
+  PaymentRequestStatus,
+  ManualPaymentRequest,
 } from '../types/tailor';
 
 let passedTests = 0;
@@ -229,6 +235,33 @@ async function runVerification() {
     'Production lockdown & purge RPC migration exists at supabase/migrations/20260825000012_production_lockdown.sql'
   );
 
+  const manualPaymentsMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000014_manual_payments.sql'
+  );
+  assert(
+    fs.existsSync(manualPaymentsMigrationPath),
+    'Manual Pakistani payments migration exists at supabase/migrations/20260825000014_manual_payments.sql'
+  );
+
+  const adminApprovalsMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000015_admin_approvals_and_trials.sql'
+  );
+  assert(
+    fs.existsSync(adminApprovalsMigrationPath),
+    'Admin approvals & promotional trials migration exists at supabase/migrations/20260825000015_admin_approvals_and_trials.sql'
+  );
+
+  const paywallHardeningMigrationPath = path.resolve(
+    process.cwd(),
+    'supabase/migrations/20260825000016_paywall_hardening.sql'
+  );
+  assert(
+    fs.existsSync(paywallHardeningMigrationPath),
+    'Paywall hardening & quota wall migration exists at supabase/migrations/20260825000016_paywall_hardening.sql'
+  );
+
   const migrationSql = fs.readFileSync(schemaMigrationPath, 'utf8');
   const rpcSql = fs.readFileSync(rpcMigrationPath, 'utf8');
   const securitySql = fs.readFileSync(securityPatchesMigrationPath, 'utf8');
@@ -242,6 +275,9 @@ async function runVerification() {
   const superAdminSql = fs.readFileSync(superAdminMigrationPath, 'utf8');
   const subscriptionSystemSql = fs.readFileSync(subscriptionSystemMigrationPath, 'utf8');
   const productionLockdownSql = fs.readFileSync(productionLockdownMigrationPath, 'utf8');
+  const manualPaymentsSql = fs.readFileSync(manualPaymentsMigrationPath, 'utf8');
+  const adminApprovalsSql = fs.readFileSync(adminApprovalsMigrationPath, 'utf8');
+  const paywallHardeningSql = fs.readFileSync(paywallHardeningMigrationPath, 'utf8');
 
   // Verify Native UUID generator
   assert(
@@ -1416,6 +1452,374 @@ async function runVerification() {
       'app/track/[orderId]/page.tsx exports STATIC_TRACKING_SLUGS and generateStaticParams() for clean-slate export resilience'
     );
   }
+
+  // ----------------------------------------------------
+  // SECTION 14: Phase 16 Manual Pakistani Bank Payment & Receipt System
+  // ----------------------------------------------------
+  console.log('\n\x1b[36m--- Section 14: Manual Pakistani Bank Payments & Receipt Upload System ---\x1b[0m');
+
+  // Test 14.1: Migration 14 DDL checks
+  assert(
+    manualPaymentsSql.includes('CREATE TABLE IF NOT EXISTS public.manual_payment_requests') &&
+      manualPaymentsSql.includes('amount_pkr NUMERIC(10, 2) NOT NULL') &&
+      manualPaymentsSql.includes('transaction_reference VARCHAR(100) NOT NULL') &&
+      manualPaymentsSql.includes('receipt_image_url TEXT NOT NULL'),
+    'Migration 14 defines public.manual_payment_requests table with all required columns'
+  );
+
+  // Test 14.2: Migration 14 CHECK Constraints
+  assert(
+    manualPaymentsSql.includes("CHECK (plan_tier IN ('PRO', 'ENTERPRISE'))") &&
+      manualPaymentsSql.includes("CHECK (billing_cycle IN ('MONTHLY', 'ANNUAL'))") &&
+      manualPaymentsSql.includes("CHECK (payment_method IN ('BANK_TRANSFER', 'RAAST', 'JAZZCASH', 'EASYPAISA'))") &&
+      manualPaymentsSql.includes("CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'))"),
+    'Migration 14 enforces strict CHECK constraints on plan_tier, billing_cycle, payment_method, and status'
+  );
+
+  // Test 14.3: Migration 14 Partial Unique Index & RLS
+  assert(
+    manualPaymentsSql.includes('idx_one_pending_request_per_shop') &&
+      manualPaymentsSql.includes("WHERE status = 'PENDING'") &&
+      manualPaymentsSql.includes('ALTER TABLE public.manual_payment_requests ENABLE ROW LEVEL SECURITY'),
+    'Migration 14 enforces 1 PENDING request per shop via partial unique index and enables RLS'
+  );
+
+  // Test 14.4: Migration 14 Storage Bucket Provisioning
+  assert(
+    manualPaymentsSql.includes("'payment-receipts'") &&
+      manualPaymentsSql.includes('Authenticated users can upload payment receipts') &&
+      manualPaymentsSql.includes('Public read for payment receipts'),
+    'Migration 14 provisions payment-receipts Supabase storage bucket with authenticated upload and read policies'
+  );
+
+  // Test 14.5: Row Mapper mapManualPaymentRequestRow
+  const mockDbRow: ManualPaymentRequestRow = {
+    id: 'mpr-test-1',
+    shop_id: 'a0000000-0000-0000-0000-000000000001',
+    plan_tier: 'PRO',
+    billing_cycle: 'ANNUAL',
+    amount_pkr: '26880.00',
+    payment_method: 'RAAST',
+    transaction_reference: 'RAAST-2026-98124',
+    receipt_image_url: 'https://placeholder.silaye.pk/receipts/slip.png',
+    status: 'PENDING',
+    admin_notes: 'Urgent activation requested',
+    created_at: new Date().toISOString(),
+    reviewed_at: null,
+    reviewed_by: null,
+  };
+  const mappedRequest = mapManualPaymentRequestRow(mockDbRow);
+  assert(
+    mappedRequest.id === 'mpr-test-1' &&
+      mappedRequest.plan_tier === 'PRO' &&
+      mappedRequest.billing_cycle === 'ANNUAL' &&
+      mappedRequest.amount_pkr === 26880 &&
+      mappedRequest.payment_method === 'RAAST' &&
+      mappedRequest.status === 'PENDING',
+    'mapManualPaymentRequestRow correctly maps database rows into strongly-typed ManualPaymentRequest'
+  );
+
+  // Test 14.6: manualPaymentsDb repository methods defined
+  assert(
+    typeof manualPaymentsDb.createPaymentRequest === 'function' &&
+      typeof manualPaymentsDb.getShopPaymentRequests === 'function' &&
+      typeof manualPaymentsDb.getLatestPendingRequest === 'function' &&
+      typeof manualPaymentsDb.uploadReceiptImage === 'function',
+    'manualPaymentsDb exports all required async methods (create, get, getLatestPending, uploadReceiptImage)'
+  );
+
+  // Test 14.7: manualPaymentsDb.createPaymentRequest execution
+  manualPaymentsDb.resetMockState();
+  const createdPayment = await manualPaymentsDb.createPaymentRequest({
+    shop_id: 'a0000000-0000-0000-0000-000000000001',
+    plan_tier: 'PRO',
+    billing_cycle: 'ANNUAL',
+    amount_pkr: 26880,
+    payment_method: 'RAAST',
+    transaction_reference: 'RAAST-TRX-981234',
+    receipt_image_url: 'https://placeholder.silaye.pk/receipts/mpr-test.png',
+  });
+  assert(
+    createdPayment &&
+      createdPayment.shop_id === 'a0000000-0000-0000-0000-000000000001' &&
+      createdPayment.plan_tier === 'PRO' &&
+      createdPayment.status === 'PENDING' &&
+      createdPayment.transaction_reference === 'RAAST-TRX-981234',
+    'manualPaymentsDb.createPaymentRequest creates and returns pending manual payment record'
+  );
+
+  // Test 14.8: manualPaymentsDb.getShopPaymentRequests execution
+  const shopRequests = await manualPaymentsDb.getShopPaymentRequests('a0000000-0000-0000-0000-000000000001');
+  assert(
+    Array.isArray(shopRequests) && shopRequests.length > 0 && shopRequests[0].id === createdPayment.id,
+    'manualPaymentsDb.getShopPaymentRequests returns list of payment requests for workshop'
+  );
+
+  // Test 14.9: manualPaymentsDb.getLatestPendingRequest execution
+  const latestPending = await manualPaymentsDb.getLatestPendingRequest('a0000000-0000-0000-0000-000000000001');
+  assert(
+    latestPending !== null && latestPending.id === createdPayment.id && latestPending.status === 'PENDING',
+    'manualPaymentsDb.getLatestPendingRequest resolves active pending payment request'
+  );
+
+  // Test 14.10: manualPaymentsDb.uploadReceiptImage execution
+  const mockBlob = new Blob(['mock receipt image bytes'], { type: 'image/jpeg' });
+  const uploadedUrl = await manualPaymentsDb.uploadReceiptImage(mockBlob, 'a0000000-0000-0000-0000-000000000001');
+  assert(
+    typeof uploadedUrl === 'string' && (uploadedUrl.startsWith('http') || uploadedUrl.startsWith('data:')),
+    'manualPaymentsDb.uploadReceiptImage safely uploads receipt or generates resilient fallback URL'
+  );
+
+  // ----------------------------------------------------
+  // SECTION 15: Phase 17 Super Admin Approvals & Promotional Trial Campaign Engine
+  // ----------------------------------------------------
+  console.log('\n\x1b[36m--- Section 15: Super Admin Approvals & Promotional Trial Engine ---\x1b[0m');
+
+  // Test 15.1: Migration 15 DDL & RPC signatures
+  assert(
+    adminApprovalsSql.includes('CREATE OR REPLACE FUNCTION public.approve_manual_subscription') &&
+      adminApprovalsSql.includes('CREATE OR REPLACE FUNCTION public.reject_manual_subscription') &&
+      adminApprovalsSql.includes('CREATE OR REPLACE FUNCTION public.grant_promotional_trial'),
+    'Migration 15 declares approve_manual_subscription, reject_manual_subscription, and grant_promotional_trial RPCs'
+  );
+
+  // Test 15.2: Security & Row-Locking guards in Migration 15
+  assert(
+    adminApprovalsSql.includes('SECURITY DEFINER') &&
+      adminApprovalsSql.includes('SET search_path = public') &&
+      adminApprovalsSql.includes('public.is_super_admin()') &&
+      adminApprovalsSql.includes('FOR UPDATE'),
+    'Migration 15 enforces SECURITY DEFINER search_path isolation, super admin auth, and FOR UPDATE row-locking'
+  );
+
+  // Test 15.3: Type-safe interval math and execution grants
+  assert(
+    adminApprovalsSql.includes("INTERVAL '1 day'") &&
+      adminApprovalsSql.includes('GRANT EXECUTE ON FUNCTION public.approve_manual_subscription') &&
+      adminApprovalsSql.includes('GRANT EXECUTE ON FUNCTION public.reject_manual_subscription') &&
+      adminApprovalsSql.includes('GRANT EXECUTE ON FUNCTION public.grant_promotional_trial'),
+    'Migration 15 implements type-safe interval math and grants EXECUTE to authenticated users'
+  );
+
+  // Test 15.4: adminDb.getAllPendingPaymentRequests execution
+  const allPendingRequests = await adminDb.getAllPendingPaymentRequests();
+  assert(
+    Array.isArray(allPendingRequests) &&
+      allPendingRequests.length > 0 &&
+      allPendingRequests.every((r) => r.status === 'PENDING' && r.shop_name),
+    'adminDb.getAllPendingPaymentRequests returns typed pending payment requests with joined workshop metadata'
+  );
+
+  // Test 15.5: adminDb.approvePaymentRequest execution
+  const testApprovalShopId = 'a0000000-0000-0000-0000-000000000003';
+  const testApprovalReq = await manualPaymentsDb.createPaymentRequest({
+    shop_id: testApprovalShopId,
+    plan_tier: 'PRO',
+    billing_cycle: 'ANNUAL',
+    amount_pkr: 26880,
+    payment_method: 'BANK_TRANSFER',
+    transaction_reference: 'MEZN-TEST-APPROVAL-001',
+    receipt_image_url: 'https://placeholder.silaye.pk/receipts/approval-test.png',
+  });
+
+  const approvalSuccess = await adminDb.approvePaymentRequest(testApprovalReq.id, 'Verified via bank portal');
+  assert(
+    approvalSuccess === true,
+    'adminDb.approvePaymentRequest successfully approves manual payment request'
+  );
+
+  const pendingAfterApproval = await adminDb.getAllPendingPaymentRequests();
+  assert(
+    !pendingAfterApproval.some((r) => r.id === testApprovalReq.id),
+    'Approved payment request is removed from pending verification inbox'
+  );
+
+  // Test 15.6: adminDb.rejectPaymentRequest execution
+  const testRejectShopId = 'a0000000-0000-0000-0000-000000000004';
+  const testRejectReq = await manualPaymentsDb.createPaymentRequest({
+    shop_id: testRejectShopId,
+    plan_tier: 'ENTERPRISE',
+    billing_cycle: 'MONTHLY',
+    amount_pkr: 7000,
+    payment_method: 'JAZZCASH',
+    transaction_reference: 'JC-TEST-REJECT-002',
+    receipt_image_url: 'https://placeholder.silaye.pk/receipts/reject-test.png',
+  });
+
+  const rejectSuccess = await adminDb.rejectPaymentRequest(testRejectReq.id, 'Illegible transaction screenshot');
+  assert(
+    rejectSuccess === true,
+    'adminDb.rejectPaymentRequest successfully marks payment request as REJECTED'
+  );
+
+  const pendingAfterReject = await adminDb.getAllPendingPaymentRequests();
+  assert(
+    !pendingAfterReject.some((r) => r.id === testRejectReq.id),
+    'Rejected payment request is removed from pending verification inbox'
+  );
+
+  // Test 15.7: adminDb.grantPromotionalTrial with day presets (+30 days)
+  const trialTargetShopId = 'a0000000-0000-0000-0000-000000000005';
+  const grantPresetSuccess = await adminDb.grantPromotionalTrial(trialTargetShopId, 'PRO', 30);
+  assert(
+    grantPresetSuccess === true,
+    'adminDb.grantPromotionalTrial successfully grants 30-day Pro promotional trial'
+  );
+
+  const trialShopData = await shopsDb.getById(trialTargetShopId);
+  const trialDaysRemaining = Math.round(
+    (new Date(trialShopData?.current_period_end!).getTime() - new Date(trialShopData?.current_period_start!).getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+  assert(
+    trialShopData?.plan_tier === 'PRO' &&
+      trialShopData?.subscription_status === 'TRIALING' &&
+      trialDaysRemaining === 30,
+    'Promotional trial sets plan_tier = PRO, subscription_status = TRIALING, and calculated 30-day duration'
+  );
+
+  // Test 15.8: adminDb.grantPromotionalTrial with Custom Date
+  const customDateFuture = new Date(Date.now() + 65 * 24 * 60 * 60 * 1000).toISOString();
+  const grantCustomSuccess = await adminDb.grantPromotionalTrial(
+    trialTargetShopId,
+    'ENTERPRISE',
+    undefined,
+    customDateFuture
+  );
+  assert(
+    grantCustomSuccess === true,
+    'adminDb.grantPromotionalTrial supports Enterprise tier and custom future expiry timestamp'
+  );
+
+  const customTrialShop = await shopsDb.getById(trialTargetShopId);
+  assert(
+    customTrialShop?.plan_tier === 'ENTERPRISE' &&
+      customTrialShop?.subscription_status === 'TRIALING' &&
+      customTrialShop?.current_period_end === customDateFuture,
+    'Promotional trial accurately sets custom expiry date and Enterprise tier'
+  );
+
+  // ----------------------------------------------------
+  // SECTION 16: PAYWALL ENFORCER, QUOTA WALL & TRIAL EXPIRATION HARDENING
+  // ----------------------------------------------------
+  console.log('\n--- SECTION 16: Paywall Enforcer & Quota Wall Hardening ---');
+
+  // Test 16.1: Migration 16 function signatures & security definition
+  assert(
+    paywallHardeningSql.includes('CREATE OR REPLACE FUNCTION public.check_order_creation_allowed') &&
+      paywallHardeningSql.includes('CREATE OR REPLACE FUNCTION public.add_shop_staff_member') &&
+      paywallHardeningSql.includes('SECURITY DEFINER') &&
+      paywallHardeningSql.includes('SET search_path = public'),
+    'Migration 16 declares check_order_creation_allowed and add_shop_staff_member with SECURITY DEFINER and search_path isolation'
+  );
+
+  // Test 16.2: Trial expiration check and quota ceiling logic in Migration 16
+  assert(
+    paywallHardeningSql.includes("v_status = 'TRIALING' AND (v_period_end IS NOT NULL AND v_period_end < NOW())") &&
+      paywallHardeningSql.includes("v_effective_tier := 'FREE'") &&
+      paywallHardeningSql.includes('COALESCE(v_orders_count, 0) >= 50') &&
+      paywallHardeningSql.includes('Monthly order quota reached (50/50)'),
+    'Migration 16 detects expired promotional trials, demotes to FREE tier, and enforces 50 suits/month ceiling'
+  );
+
+  // Test 16.3: Staff account ceiling on Free tier in Migration 16
+  assert(
+    paywallHardeningSql.includes("v_effective_tier = 'FREE'") &&
+      paywallHardeningSql.includes('v_staff_count >= 1') &&
+      paywallHardeningSql.includes('Free tier is limited to 1 craftsman account. Upgrade to Pro to add staff.'),
+    'Migration 16 limits Free tier workshops to 1 craftsman account and requires Pro upgrade for staff'
+  );
+
+  // Test 16.4: Active promotional trial quota check (unlimited)
+  const activeTrialShopId = 'a0000000-0000-0000-0000-000000000010';
+  await shopsDb.update(activeTrialShopId, {
+    plan_tier: 'PRO',
+    subscription_status: 'TRIALING',
+    current_period_start: new Date().toISOString(),
+    current_period_end: new Date(Date.now() + 14 * 86400000).toISOString(),
+  });
+  subscriptionDb.setMockUsageCount(activeTrialShopId, 15);
+
+  const activeTrialQuota = await subscriptionDb.checkOrderAllowed(activeTrialShopId);
+  assert(
+    activeTrialQuota.allowed === true &&
+      activeTrialQuota.maxLimit === Infinity &&
+      activeTrialQuota.tier === 'PRO',
+    'Active promotional trial (current_period_end in future) grants unlimited order creation'
+  );
+
+  // Test 16.5: Expired promotional trial quota fallback (demoted to FREE tier)
+  const expiredTrialShopId = 'a0000000-0000-0000-0000-000000000011';
+  await shopsDb.update(expiredTrialShopId, {
+    plan_tier: 'PRO',
+    subscription_status: 'TRIALING',
+    current_period_start: new Date(Date.now() - 30 * 86400000).toISOString(),
+    current_period_end: new Date(Date.now() - 2 * 86400000).toISOString(),
+  });
+  subscriptionDb.setMockUsageCount(expiredTrialShopId, 25);
+
+  const expiredTrialQuota = await subscriptionDb.checkOrderAllowed(expiredTrialShopId);
+  assert(
+    expiredTrialQuota.allowed === true &&
+      expiredTrialQuota.maxLimit === 50 &&
+      expiredTrialQuota.tier === 'FREE',
+    'Expired promotional trial (current_period_end in past) demotes effective tier to FREE with 50-suit limit'
+  );
+
+  // Test 16.6: Expired trial monthly quota ceiling (50/50) blocking
+  subscriptionDb.setMockUsageCount(expiredTrialShopId, 50);
+  const expiredTrialBlocked = await subscriptionDb.checkOrderAllowed(expiredTrialShopId);
+  assert(
+    expiredTrialBlocked.allowed === false &&
+      expiredTrialBlocked.currentCount === 50 &&
+      expiredTrialBlocked.maxLimit === 50 &&
+      expiredTrialBlocked.tier === 'FREE' &&
+      Boolean(expiredTrialBlocked.reason?.includes('Monthly order quota reached (50/50)')),
+    'Expired promotional trial blocks order booking once monthly usage reaches 50/50 quota limit'
+  );
+
+  // Test 16.7: Free tier 1-craftsman account limit enforcement
+  const freeStaffShopId = 'a0000000-0000-0000-0000-000000000012';
+  await shopsDb.update(freeStaffShopId, {
+    plan_tier: 'FREE',
+    subscription_status: 'ACTIVE',
+  });
+  staffDb.setMockStaff(freeStaffShopId, [
+    {
+      id: 'sm-free-owner-1',
+      shop_id: freeStaffShopId,
+      user_id: 'u-free-owner-1',
+      role: 'OWNER',
+      email: 'owner.freeworkshop@silaye.com',
+      name: 'Owner Ustad',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ]);
+
+  let staffAddError: string | null = null;
+  try {
+    await staffDb.addStaff(freeStaffShopId, 'newcutter@silaye.com', 'CUTTING_MASTER');
+  } catch (err) {
+    staffAddError = err instanceof Error ? err.message : String(err);
+  }
+  assert(
+    staffAddError !== null &&
+      staffAddError.includes('Free tier is limited to 1 craftsman account. Upgrade to Pro to add staff.'),
+    'Free tier workshop is blocked from adding a second craftsman account'
+  );
+
+  // Test 16.8: Pro tier workshop permits adding additional staff members
+  await subscriptionDb.updateSubscription(freeStaffShopId, {
+    plan_tier: 'PRO',
+    subscription_status: 'ACTIVE',
+  });
+  const addedProStaff = await staffDb.addStaff(freeStaffShopId, 'newcutter@silaye.com', 'CUTTING_MASTER');
+  assert(
+    addedProStaff.email === 'newcutter@silaye.com' &&
+      addedProStaff.role === 'CUTTING_MASTER',
+    'Upgrading to Pro tier permits adding unlimited workshop craftsmen and roles'
+  );
 
   // ----------------------------------------------------
   // SUMMARY

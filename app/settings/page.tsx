@@ -39,6 +39,11 @@ import {
   CreditCard,
   Layers,
   ArrowRight,
+  Copy,
+  Upload,
+  Image as ImageIcon,
+  ExternalLink,
+  Hourglass,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
@@ -47,7 +52,16 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { shopsDb, staffDb, ratesDb, printerDb, subscriptionDb, purgeLocalCache, DEFAULT_PRINTER_SETTINGS } from '@/lib/db';
+import {
+  shopsDb,
+  staffDb,
+  ratesDb,
+  printerDb,
+  subscriptionDb,
+  manualPaymentsDb,
+  purgeLocalCache,
+  DEFAULT_PRINTER_SETTINGS,
+} from '@/lib/db';
 import { mockShop, mockOrders, mockCustomers } from '@/lib/mock-data';
 import type {
   Shop,
@@ -61,6 +75,9 @@ import type {
   BillingCycle,
   SubscriptionStatus,
   ShopUsage,
+  ManualPaymentRequest,
+  PaymentMethod,
+  PaymentRequestStatus,
 } from '@/types/tailor';
 import { isValidPakistaniPhone } from '@/lib/whatsapp';
 import { getCurrentUser, isSupabaseConfigured } from '@/lib/supabase/client';
@@ -300,6 +317,18 @@ export default function SettingsPage() {
   const [selectedUpgradeTier, setSelectedUpgradeTier] = React.useState<PlanTier | null>(null);
   const [upgrading, setUpgrading] = React.useState<boolean>(false);
 
+  // Manual Pakistani Payment Verification State
+  const [pendingPayment, setPendingPayment] = React.useState<ManualPaymentRequest | null>(null);
+  const [pendingPaymentLoading, setPendingPaymentLoading] = React.useState<boolean>(false);
+  const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('BANK_TRANSFER');
+  const [transactionRef, setTransactionRef] = React.useState<string>('');
+  const [receiptFile, setReceiptFile] = React.useState<File | null>(null);
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = React.useState<string | null>(null);
+  const [copiedField, setCopiedField] = React.useState<string | null>(null);
+  const [isReceiptLightboxOpen, setIsReceiptLightboxOpen] = React.useState<boolean>(false);
+  const [lightboxImageUrl, setLightboxImageUrl] = React.useState<string | null>(null);
+  const [paymentFormError, setPaymentFormError] = React.useState<string | null>(null);
+
   // Staff Management State
   const [staffMembers, setStaffMembers] = React.useState<ShopMember[]>([]);
   const [staffLoading, setStaffLoading] = React.useState<boolean>(false);
@@ -336,6 +365,13 @@ export default function SettingsPage() {
   const [resetConfirmInput, setResetConfirmInput] = React.useState<string>('');
   const [purgingWorkshop, setPurgingWorkshop] = React.useState<boolean>(false);
   const [flushingCache, setFlushingCache] = React.useState<boolean>(false);
+
+  // Derived Subscription & Tier Limit Interceptors
+  const isTrialExpired =
+    shop.subscription_status === 'TRIALING' &&
+    Boolean(shop.current_period_end && new Date(shop.current_period_end).getTime() < Date.now());
+  const effectivePlanTier: PlanTier = isTrialExpired ? 'FREE' : (shop.plan_tier || 'FREE');
+  const isStaffLimitReached = effectivePlanTier === 'FREE' && staffMembers.length >= 1;
 
   // Auto-dismiss notification after 4 seconds
   React.useEffect(() => {
@@ -428,6 +464,7 @@ export default function SettingsPage() {
   }, []);
 
   // Load monthly usage statistics
+  // Load monthly usage statistics
   const loadUsage = React.useCallback(async (shopId: string) => {
     setUsageLoading(true);
     try {
@@ -440,13 +477,27 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Load pending manual payment request
+  const loadPendingPayment = React.useCallback(async (shopId: string) => {
+    setPendingPaymentLoading(true);
+    try {
+      const pending = await manualPaymentsDb.getLatestPendingRequest(shopId);
+      setPendingPayment(pending);
+    } catch (err) {
+      console.warn('Failed to load pending manual payment request:', err);
+    } finally {
+      setPendingPaymentLoading(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     const shopId = shop.id || mockShop.id;
     loadStaff(shopId);
     loadRates(shopId);
     loadPrinterSettings(shopId);
     loadUsage(shopId);
-  }, [shop.id, loadStaff, loadRates, loadPrinterSettings, loadUsage]);
+    loadPendingPayment(shopId);
+  }, [shop.id, loadStaff, loadRates, loadPrinterSettings, loadUsage, loadPendingPayment]);
 
   // Safe Confetti Celebration Trigger
   const triggerCelebration = () => {
@@ -464,49 +515,152 @@ export default function SettingsPage() {
     }
   };
 
+  const handleCopyText = (text: string, fieldName: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2500);
+    }
+  };
+
   const handleOpenUpgradeModal = (tier: PlanTier) => {
+    if (tier === 'FREE') {
+      handleDowngradeToFree();
+      return;
+    }
     setSelectedUpgradeTier(tier);
+    setPaymentMethod('BANK_TRANSFER');
+    setTransactionRef('');
+    setReceiptFile(null);
+    setReceiptPreviewUrl(null);
+    setPaymentFormError(null);
     setIsUpgradeModalOpen(true);
   };
 
-  const handleConfirmUpgrade = async () => {
-    if (!selectedUpgradeTier) return;
+  const handleReceiptFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPaymentFormError('Receipt image exceeds 5MB limit. Please select a smaller image.');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setPaymentFormError('Only image files (.png, .jpg, .jpeg, .webp) are supported.');
+      return;
+    }
+
+    setPaymentFormError(null);
+    setReceiptFile(file);
+
+    if (typeof window !== 'undefined') {
+      const preview = URL.createObjectURL(file);
+      setReceiptPreviewUrl(preview);
+    }
+  };
+
+  const handleRemoveReceipt = () => {
+    setReceiptFile(null);
+    if (receiptPreviewUrl && receiptPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(receiptPreviewUrl);
+    }
+    setReceiptPreviewUrl(null);
+  };
+
+  const handleSubmitPaymentRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUpgradeTier || selectedUpgradeTier === 'FREE') return;
+
+    const cleanRef = transactionRef.trim();
+    if (!cleanRef) {
+      setPaymentFormError('Please enter the Transaction ID / Reference Number from your receipt.');
+      return;
+    }
+
+    if (!receiptFile && !receiptPreviewUrl) {
+      setPaymentFormError('Please upload a screenshot or photo of your payment slip / receipt.');
+      return;
+    }
+
     setUpgrading(true);
+    setPaymentFormError(null);
 
     try {
-      const cycle: BillingCycle = isAnnual ? 'ANNUAL' : 'MONTHLY';
       const shopId = shop.id || mockShop.id;
-      const updated = await subscriptionDb.updateSubscription(shopId, {
-        plan_tier: selectedUpgradeTier,
+      const planMeta = PRICING_PLANS.find((p) => p.tier === selectedUpgradeTier);
+      const amountPkr = isAnnual
+        ? (planMeta?.annualMonthlyPKR || 0) * 12
+        : planMeta?.monthlyPKR || 0;
+      const cycle: BillingCycle = isAnnual ? 'ANNUAL' : 'MONTHLY';
+
+      // 1. Upload receipt image
+      let receiptUrl = receiptPreviewUrl || '';
+      if (receiptFile) {
+        receiptUrl = await manualPaymentsDb.uploadReceiptImage(receiptFile, shopId);
+      }
+
+      // 2. Create manual payment request in database
+      const created = await manualPaymentsDb.createPaymentRequest({
+        shop_id: shopId,
+        plan_tier: selectedUpgradeTier as 'PRO' | 'ENTERPRISE',
         billing_cycle: cycle,
-        subscription_status: 'ACTIVE',
+        amount_pkr: amountPkr,
+        payment_method: paymentMethod,
+        transaction_reference: cleanRef,
+        receipt_image_url: receiptUrl,
       });
 
-      setShop((prev) => ({
-        ...prev,
-        ...updated,
-        plan_tier: selectedUpgradeTier,
-        billing_cycle: cycle,
-        subscription_status: 'ACTIVE',
-      }));
+      setPendingPayment(created);
 
       // Trigger celebratory confetti
       triggerCelebration();
 
       setIsUpgradeModalOpen(false);
       setSelectedUpgradeTier(null);
-
-      const targetPlanMeta = PRICING_PLANS.find((p) => p.tier === selectedUpgradeTier);
-      const planName = targetPlanMeta?.title || selectedUpgradeTier;
+      setReceiptFile(null);
+      setReceiptPreviewUrl(null);
 
       setNotification({
-        message: `🎉 Subscription activated! Workshop upgraded to ${planName} (${cycle === 'ANNUAL' ? 'Annual Billing −20%' : 'Monthly Billing'}).`,
+        message: `🎉 Payment slip submitted for verification! Our finance desk will verify and activate your ${planMeta?.title || selectedUpgradeTier} subscription shortly.`,
         type: 'success',
       });
     } catch (err) {
-      console.error('Failed to update subscription:', err);
+      console.error('Failed to submit manual payment request:', err);
+      setPaymentFormError(err instanceof Error ? err.message : 'Failed to submit payment request. Please try again.');
+    } finally {
+      setUpgrading(false);
+    }
+  };
+
+  const handleDowngradeToFree = async () => {
+    setUpgrading(true);
+    try {
+      const shopId = shop.id || mockShop.id;
+      const updated = await subscriptionDb.updateSubscription(shopId, {
+        plan_tier: 'FREE',
+        billing_cycle: 'MONTHLY',
+        subscription_status: 'ACTIVE',
+      });
+
+      setShop((prev) => ({
+        ...prev,
+        ...updated,
+        plan_tier: 'FREE',
+        billing_cycle: 'MONTHLY',
+        subscription_status: 'ACTIVE',
+      }));
+
+      setPendingPayment(null);
+
       setNotification({
-        message: err instanceof Error ? err.message : 'Failed to update subscription. Please try again.',
+        message: 'Workshop plan changed to Solo Master (Free).',
+        type: 'info',
+      });
+    } catch (err) {
+      console.error('Failed to downgrade plan:', err);
+      setNotification({
+        message: 'Failed to adjust plan. Please try again.',
         type: 'error',
       });
     } finally {
@@ -1502,13 +1656,50 @@ export default function SettingsPage() {
               <Button
                 type="button"
                 onClick={handleOpenAddModal}
-                className="bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_20px_rgba(212,175,55,0.2)] gap-2 whitespace-nowrap cursor-pointer"
+                disabled={isStaffLimitReached}
+                className={
+                  isStaffLimitReached
+                    ? 'bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed opacity-60 gap-2 whitespace-nowrap'
+                    : 'bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_20px_rgba(212,175,55,0.2)] gap-2 whitespace-nowrap cursor-pointer'
+                }
               >
                 <UserPlus className="h-4 w-4" />
                 <span>Add Staff Member</span>
                 <span className="font-urdu-sans text-xs opacity-80">(نیا کاریگر)</span>
               </Button>
             </div>
+
+            {/* Free Tier Staff Limit Gold Pro Upgrade Callout */}
+            {isStaffLimitReached && (
+              <div className="rounded-2xl border border-gold/40 bg-gradient-to-r from-gold/15 via-amber-900/20 to-black/60 p-4 sm:p-5 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_0_30px_rgba(212,175,55,0.15)] animate-fade-in border-l-4 border-l-gold">
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold/20 text-gold border border-gold/40 shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+                    <Crown className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className="border-gold/50 bg-gold/20 text-gold text-[10px] uppercase font-bold tracking-wider">
+                        Pro Plan Feature
+                      </Badge>
+                      <span className="text-sm font-bold text-white">
+                        Upgrade to Pro to add unlimited Cutting Masters &amp; Stitchers
+                      </span>
+                    </div>
+                    <p className="font-urdu-sans text-xs text-gold/90 mt-1" dir="rtl">
+                      مفت پلان پر صرف 1 کاریگر کی حد ہے۔ لامحدود ماسٹر کٹر اور درزی شامل کرنے کے لیے پرو ورکشاپ میں اپ گریڈ کریں۔
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => setActiveTab('billing')}
+                  className="shrink-0 bg-gradient-to-r from-gold to-amber-500 text-black font-bold text-xs hover:opacity-90 shadow-[0_0_20px_rgba(212,175,55,0.35)] gap-1.5 cursor-pointer"
+                >
+                  <Crown className="h-3.5 w-3.5" />
+                  <span>Upgrade to Pro →</span>
+                </Button>
+              </div>
+            )}
 
             {/* Staff Directory List */}
             <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
@@ -1572,7 +1763,8 @@ export default function SettingsPage() {
                       variant="outline"
                       size="sm"
                       onClick={handleOpenAddModal}
-                      className="border-white/10 text-gold text-xs mt-2"
+                      disabled={isStaffLimitReached}
+                      className="border-white/10 text-gold text-xs mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <UserPlus className="h-3.5 w-3.5 mr-1.5" />
                       Add Craftsman
@@ -2703,6 +2895,101 @@ export default function SettingsPage() {
         {/* Tab 5: Billing & Subscriptions */}
         {activeTab === 'billing' && (
           <div className="space-y-8 animate-in fade-in duration-300">
+            {/* Pending Manual Payment Review Banner */}
+            {pendingPayment && pendingPayment.status === 'PENDING' && (
+              <div className="rounded-2xl border border-amber-500/40 bg-[#16130c]/95 p-6 sm:p-7 backdrop-blur-2xl shadow-[0_0_35px_rgba(245,158,11,0.18)] relative overflow-hidden space-y-4">
+                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+
+                {/* Banner Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/20 pb-4 relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-500/40 bg-amber-500/15 text-amber-400 shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+                      <Hourglass className="h-5 w-5 animate-spin" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border border-amber-500/40 bg-amber-500/20 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                          <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
+                          <span>Payment Under Review</span>
+                        </span>
+                        <span className="font-urdu-sans text-xs text-amber-400 font-semibold" dir="rtl">
+                          (تصدیق زیر جائزہ ہے)
+                        </span>
+                      </div>
+                      <h3 className="font-editorial text-lg sm:text-xl font-bold text-white tracking-tight mt-1">
+                        Manual Pakistani Bank Transfer Verification in Progress
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-amber-400/90 font-mono bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>Submitted {new Date(pendingPayment.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs relative z-10">
+                  <div className="rounded-xl border border-white/5 bg-black/40 p-3 space-y-1">
+                    <span className="text-gray-400 block text-[11px]">Requested Plan:</span>
+                    <span className="font-bold text-white text-sm flex items-center gap-1.5">
+                      {pendingPayment.plan_tier === 'PRO' ? (
+                        <>
+                          <Crown className="h-4 w-4 text-gold" />
+                          <span>Pro Workshop</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 text-cyan-400" />
+                          <span>Enterprise House</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="rounded-xl border border-white/5 bg-black/40 p-3 space-y-1">
+                    <span className="text-gray-400 block text-[11px]">Amount & Frequency:</span>
+                    <span className="font-bold text-white text-sm">
+                      <bdi dir="ltr" className="text-amber-400 font-mono">Rs. {Number(pendingPayment.amount_pkr).toLocaleString('en-PK')}</bdi>{' '}
+                      <span className="text-xs text-gray-400 font-normal">({pendingPayment.billing_cycle === 'ANNUAL' ? '1-Year' : '1-Month'})</span>
+                    </span>
+                  </div>
+
+                  <div className="rounded-xl border border-white/5 bg-black/40 p-3 space-y-1">
+                    <span className="text-gray-400 block text-[11px]">Method & Reference:</span>
+                    <div className="font-mono text-xs text-gray-200 truncate">
+                      <span className="font-semibold text-white uppercase">{pendingPayment.payment_method.replace('_', ' ')}</span>
+                      <span className="text-amber-400 block truncate">#{pendingPayment.transaction_reference}</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/5 bg-black/40 p-2.5 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-gray-400 block text-[11px]">Receipt Slip:</span>
+                      <span className="text-[11px] text-gray-300 font-medium truncate block">Slip Attached</span>
+                    </div>
+                    {pendingPayment.receipt_image_url && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLightboxImageUrl(pendingPayment.receipt_image_url);
+                          setIsReceiptLightboxOpen(true);
+                        }}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[11px] font-semibold transition-all cursor-pointer shrink-0"
+                      >
+                        <Eye className="h-3 w-3" />
+                        <span>View</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-xs text-amber-300/80 leading-relaxed pt-1 relative z-10">
+                  Our finance operations team is verifying your payment reference with the bank. Verification typically completes within 1–2 hours during business hours. Your workshop capacity will automatically unlock.
+                </p>
+              </div>
+            )}
+
             {/* Active Plan & Usage Overview Widget */}
             <div className="premium-glass-card p-6 sm:p-8 rounded-2xl relative overflow-hidden border border-white/10 bg-[#0F1115]/80 backdrop-blur-2xl">
               {/* Background ambient lighting */}
@@ -2991,6 +3278,16 @@ export default function SettingsPage() {
                             <CheckCircle2 className="h-4 w-4 mr-1.5" />
                             <span>Current Plan (موجودہ پلان)</span>
                           </Button>
+                        ) : pendingPayment && pendingPayment.status === 'PENDING' && pendingPayment.plan_tier === plan.tier ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled
+                            className="w-full border-amber-500/40 bg-amber-500/10 text-amber-300 font-semibold text-xs py-5 opacity-90 cursor-default gap-1.5"
+                          >
+                            <Hourglass className="h-4 w-4 animate-spin text-amber-400" />
+                            <span>Verification In Review (زیر جائزہ)</span>
+                          </Button>
                         ) : plan.tier === 'FREE' ? (
                           <Button
                             type="button"
@@ -3249,11 +3546,11 @@ export default function SettingsPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* Subscription Upgrade & Activation Modal                                   */}
+      {/* Manual Pakistani Bank Transfer & Slip Upload Modal                        */}
       {/* ========================================================================= */}
       {isUpgradeModalOpen && selectedUpgradeTier && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-2xl border border-white/10 bg-[#121316] p-6 shadow-2xl space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="relative w-full max-w-xl rounded-2xl border border-white/10 bg-[#121316] p-6 sm:p-7 shadow-2xl space-y-5 my-8">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/5 pb-4">
               <div className="flex items-center gap-3">
@@ -3261,25 +3558,21 @@ export default function SettingsPage() {
                   className={`flex h-10 w-10 items-center justify-center rounded-xl border ${
                     selectedUpgradeTier === 'PRO'
                       ? 'border-gold/40 bg-gold/15 text-gold'
-                      : selectedUpgradeTier === 'ENTERPRISE'
-                      ? 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300'
-                      : 'border-slate-500/40 bg-slate-500/15 text-slate-300'
+                      : 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300'
                   }`}
                 >
                   {selectedUpgradeTier === 'PRO' ? (
                     <Crown className="h-5 w-5" />
-                  ) : selectedUpgradeTier === 'ENTERPRISE' ? (
-                    <Sparkles className="h-5 w-5" />
                   ) : (
-                    <Store className="h-5 w-5" />
+                    <Sparkles className="h-5 w-5" />
                   )}
                 </div>
                 <div>
-                  <h3 className="font-editorial text-lg font-bold text-white tracking-tight">
-                    Confirm Subscription Plan
+                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-white tracking-tight">
+                    Bank Transfer & Slip Verification
                   </h3>
                   <p className="font-urdu-serif text-xs text-gold/80 -mt-0.5" dir="rtl">
-                    پلان کی تصدیق اور فوری ایکٹیویشن
+                    بینک ٹرانسفر، راست اور رسید اپ لوڈ
                   </p>
                 </div>
               </div>
@@ -3288,14 +3581,17 @@ export default function SettingsPage() {
                 onClick={() => {
                   setIsUpgradeModalOpen(false);
                   setSelectedUpgradeTier(null);
+                  setReceiptFile(null);
+                  setReceiptPreviewUrl(null);
+                  setPaymentFormError(null);
                 }}
-                className="text-gray-400 hover:text-white rounded-lg p-1 transition-colors cursor-pointer"
+                className="text-gray-400 hover:text-white rounded-lg p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Plan Details & Pricing Summary Card */}
+            {/* Plan & Amount Summary Card */}
             {(() => {
               const meta = PRICING_PLANS.find((p) => p.tier === selectedUpgradeTier);
               if (!meta) return null;
@@ -3304,80 +3600,331 @@ export default function SettingsPage() {
               const totalPrice = isAnnual ? meta.annualMonthlyPKR * 12 : meta.monthlyPKR;
 
               return (
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-white/10 bg-black/40 p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">Selected Plan:</span>
-                      <span className="text-sm font-bold text-white">{meta.title}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">Billing Frequency:</span>
-                      <span className="text-xs font-semibold text-gold">
-                        {isAnnual ? 'Annually (−20% Discount)' : 'Monthly'}
+                <div className="rounded-xl border border-white/10 bg-black/40 p-4 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Upgrading Workshop To:</span>
+                    <span className="font-bold text-white text-sm">{meta.title} ({meta.urTitle})</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Billing Cycle:</span>
+                    <span className="font-semibold text-gold">
+                      {isAnnual ? 'Annual Billing (−20% Discount applied)' : 'Monthly Billing'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-white/5 pt-2 text-xs">
+                    <span className="text-gray-300 font-medium">Total Amount to Transfer:</span>
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-white font-mono">
+                        <bdi dir="ltr" className="text-gold">Rs. {totalPrice.toLocaleString('en-PK')}</bdi>
                       </span>
-                    </div>
-
-                    <div className="flex items-center justify-between border-t border-white/5 pt-2">
-                      <span className="text-xs text-gray-300">Amount Due:</span>
-                      <div className="text-right">
-                        <span className="text-base font-bold text-white">
-                          <bdi dir="ltr">Rs. {monthlyPrice.toLocaleString('en-PK')}</bdi> / mo
-                        </span>
-                        {isAnnual && meta.monthlyPKR > 0 && (
-                          <div className="text-[10px] text-emerald-400">
-                            Total: <bdi dir="ltr">Rs. {totalPrice.toLocaleString('en-PK')}</bdi> billed for 1 year
-                          </div>
-                        )}
-                      </div>
+                      {isAnnual && (
+                        <div className="text-[10px] text-emerald-400">
+                          Includes 12 months full access (Save Rs. {((meta.monthlyPKR - meta.annualMonthlyPKR) * 12).toLocaleString('en-PK')})
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {/* Highlights checklist */}
-                  <div className="space-y-2 pt-1">
-                    <span className="text-xs font-medium text-gray-300">Activated Features:</span>
-                    <ul className="space-y-1.5 text-xs text-gray-400">
-                      {meta.features.slice(0, 4).map((f) => (
-                        <li key={f} className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-gold shrink-0" />
-                          <span>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <p className="text-[11px] text-gray-400 italic">
-                    Subscription upgrades take effect immediately. Monthly quota will be adjusted in real time.
-                  </p>
                 </div>
               );
             })()}
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
-              <Button
+            {/* Official Bank & Account Details Card */}
+            <div className="rounded-xl border border-gold/30 bg-[#16140e]/90 p-4 space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between border-b border-gold/20 pb-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-gold" />
+                  <span className="text-xs font-bold text-white">Official Pakistani Bank Accounts</span>
+                </div>
+                <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                  میزان بینک اور راست اکاونٹ
+                </span>
+              </div>
+
+              <div className="space-y-2.5 text-xs">
+                {/* Bank Name & Title */}
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Bank & Title:</span>
+                  <span className="text-white font-semibold text-right">
+                    Meezan Bank Ltd · <span className="text-gold">Silaye Technologies / Hassan Tariq</span>
+                  </span>
+                </div>
+
+                {/* IBAN */}
+                <div className="flex items-center justify-between gap-2 bg-black/50 p-2 rounded-lg border border-white/5">
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-gray-400 block">Account / IBAN Number:</span>
+                    <span className="font-mono text-xs text-white font-semibold block truncate">
+                      PK00MEZN0001234567890101
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopyText('PK00MEZN0001234567890101', 'iban')}
+                    className="border-gold/30 hover:bg-gold/10 text-gold text-[11px] h-7 px-2.5 gap-1 shrink-0 cursor-pointer"
+                  >
+                    {copiedField === 'iban' ? (
+                      <>
+                        <Check className="h-3 w-3 text-emerald-400" />
+                        <span className="text-emerald-400 font-bold">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Raast ID */}
+                <div className="flex items-center justify-between gap-2 bg-black/50 p-2 rounded-lg border border-white/5">
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-gray-400 block">Raast ID / Instant Pay:</span>
+                    <span className="font-mono text-xs text-white font-semibold block truncate">
+                      03001234567 <span className="text-gray-400 font-normal text-[11px]">(payments@silaye.pk)</span>
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopyText('03001234567', 'raast')}
+                    className="border-gold/30 hover:bg-gold/10 text-gold text-[11px] h-7 px-2.5 gap-1 shrink-0 cursor-pointer"
+                  >
+                    {copiedField === 'raast' ? (
+                      <>
+                        <Check className="h-3 w-3 text-emerald-400" />
+                        <span className="text-emerald-400 font-bold">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* JazzCash / EasyPaisa Till */}
+                <div className="flex items-center justify-between gap-2 bg-black/50 p-2 rounded-lg border border-white/5">
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-gray-400 block">JazzCash & EasyPaisa Merchant Number:</span>
+                    <span className="font-mono text-xs text-white font-semibold block truncate">
+                      03001234567
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopyText('03001234567', 'wallet')}
+                    className="border-gold/30 hover:bg-gold/10 text-gold text-[11px] h-7 px-2.5 gap-1 shrink-0 cursor-pointer"
+                  >
+                    {copiedField === 'wallet' ? (
+                      <>
+                        <Check className="h-3 w-3 text-emerald-400" />
+                        <span className="text-emerald-400 font-bold">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Submission Form */}
+            <form onSubmit={handleSubmitPaymentRequest} className="space-y-4">
+              {/* Payment Method Selector */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-gray-300 font-medium flex items-center justify-between">
+                  <span>Transfer Channel Used:</span>
+                  <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                    ادائیگی کا طریقہ منتخب کریں
+                  </span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: 'BANK_TRANSFER' as PaymentMethod, label: 'Bank Transfer', ur: 'بینک ٹرانسفر' },
+                    { id: 'RAAST' as PaymentMethod, label: 'Raast Pay', ur: 'راست ادائیگی' },
+                    { id: 'JAZZCASH' as PaymentMethod, label: 'JazzCash', ur: 'جاز کیش' },
+                    { id: 'EASYPAISA' as PaymentMethod, label: 'EasyPaisa', ur: 'ایزی پیسہ' },
+                  ].map((m) => {
+                    const isSelected = paymentMethod === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setPaymentMethod(m.id)}
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-gold bg-gold/15 text-white shadow-[0_0_12px_rgba(212,175,55,0.2)]'
+                            : 'border-white/10 bg-black/30 text-gray-400 hover:border-white/20 hover:text-gray-200'
+                        }`}
+                      >
+                        <span className="font-semibold text-xs block truncate">{m.label}</span>
+                        <span className="font-urdu-sans text-[10px] text-gold/80 block mt-0.5" dir="rtl">
+                          {m.ur}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Transaction ID / UTR Reference Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-gray-300 font-medium flex items-center justify-between">
+                  <span>Transaction ID / Reference Number <span className="text-rose-400">*</span>:</span>
+                  <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                    ٹرانزیکشن آئی ڈی / یو ٹی آر نمبر
+                  </span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="e.g. MEZN-98234812 / RAAST-837482"
+                  value={transactionRef}
+                  onChange={(e) => setTransactionRef(e.target.value)}
+                  className="bg-black/50 border-white/10 text-white font-mono text-xs h-10 placeholder:text-gray-600 focus:border-gold"
+                  required
+                />
+              </div>
+
+              {/* Receipt File Upload & Preview */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-gray-300 font-medium flex items-center justify-between">
+                  <span>Upload Payment Receipt / Slip Screenshot <span className="text-rose-400">*</span>:</span>
+                  <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                    بینک رسید یا اسکرین شاٹ اپ لوڈ کریں
+                  </span>
+                </label>
+
+                {receiptPreviewUrl ? (
+                  <div className="relative rounded-xl border border-gold/40 bg-black/60 p-3 flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={receiptPreviewUrl}
+                      alt="Receipt Preview"
+                      className="h-16 w-16 object-cover rounded-lg border border-white/10 shrink-0 bg-neutral-900"
+                    />
+                    <div className="min-w-0 flex-1 text-xs">
+                      <p className="font-semibold text-white truncate">
+                        {receiptFile?.name || 'receipt_slip.jpg'}
+                      </p>
+                      <p className="text-[11px] text-emerald-400 flex items-center gap-1 mt-0.5">
+                        <CheckCircle2 className="h-3 w-3" />
+                        <span>Slip image attached ({receiptFile ? `${(receiptFile.size / 1024).toFixed(0)} KB` : 'Ready'})</span>
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRemoveReceipt}
+                      className="border-rose-500/30 hover:bg-rose-500/10 text-rose-400 text-xs h-8 px-2.5 gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Remove</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <label className="border-2 border-dashed border-white/15 hover:border-gold/50 rounded-xl p-5 flex flex-col items-center justify-center gap-2 bg-black/30 hover:bg-black/50 transition-all cursor-pointer group">
+                    <div className="h-9 w-9 rounded-full bg-white/5 group-hover:bg-gold/15 flex items-center justify-center text-gray-400 group-hover:text-gold transition-colors">
+                      <Upload className="h-4 w-4" />
+                    </div>
+                    <div className="text-center space-y-0.5">
+                      <p className="text-xs font-semibold text-gray-300 group-hover:text-white">
+                        Click to browse or drop payment receipt image
+                      </p>
+                      <p className="text-[10px] text-gray-500">
+                        Supports PNG, JPG, JPEG, WebP up to 5MB
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleReceiptFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Error Message */}
+              {paymentFormError && (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-rose-400 shrink-0" />
+                  <span>{paymentFormError}</span>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsUpgradeModalOpen(false);
+                    setSelectedUpgradeTier(null);
+                    setReceiptFile(null);
+                    setReceiptPreviewUrl(null);
+                    setPaymentFormError(null);
+                  }}
+                  disabled={upgrading}
+                  className="border-white/10 hover:bg-white/5 text-gray-300 text-xs cursor-pointer"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="default"
+                  isLoading={upgrading}
+                  disabled={upgrading}
+                  className="bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs shadow-[0_0_20px_rgba(212,175,55,0.25)] gap-1.5 cursor-pointer"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Submit Slip for Review (تصدیق کے لیے جمع کریں)</span>
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* Receipt Image Lightbox Modal                                              */}
+      {/* ========================================================================= */}
+      {isReceiptLightboxOpen && lightboxImageUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative max-w-3xl w-full rounded-2xl border border-white/10 bg-[#0F1115] p-4 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4 text-gold" />
+                <span className="text-xs font-semibold text-white">Payment Receipt Document</span>
+              </div>
+              <button
                 type="button"
-                variant="outline"
                 onClick={() => {
-                  setIsUpgradeModalOpen(false);
-                  setSelectedUpgradeTier(null);
+                  setIsReceiptLightboxOpen(false);
+                  setLightboxImageUrl(null);
                 }}
-                disabled={upgrading}
-                className="border-white/10 hover:bg-white/5 text-gray-300 text-xs cursor-pointer"
+                className="text-gray-400 hover:text-white rounded-lg p-1 transition-colors cursor-pointer"
               >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="default"
-                onClick={handleConfirmUpgrade}
-                isLoading={upgrading}
-                disabled={upgrading}
-                className="bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs shadow-[0_0_20px_rgba(212,175,55,0.25)] gap-1.5 cursor-pointer"
-              >
-                <Check className="h-4 w-4" />
-                <span>Confirm & Activate Subscription</span>
-              </Button>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex items-center justify-center max-h-[75vh] overflow-hidden rounded-xl bg-black/80 p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={lightboxImageUrl}
+                alt="Receipt Full View"
+                className="max-h-[70vh] w-auto object-contain rounded-lg shadow-lg"
+              />
             </div>
           </div>
         </div>

@@ -23,13 +23,14 @@ import {
   ShieldAlert,
   Crown,
   CreditCard,
+  ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { syncCoordinator, type SyncState } from '@/lib/sync-coordinator';
 import { adminDb, shopsDb } from '@/lib/db';
-import type { PlanTier, Shop } from '@/types/tailor';
+import type { PlanTier, Shop, SubscriptionStatus } from '@/types/tailor';
 import {
   getSession,
   signOut,
@@ -247,9 +248,12 @@ function SidebarItem({ item, isActive, onNavigate }: SidebarItemProps) {
 }
 
 // Helper to check if route is public
-const isPublicRoute = (path: string): boolean => {
-  if (!path || path === '/' || path === '') return true;
-  if (path.startsWith('/login') || path.startsWith('/track')) return true;
+export const isPublicRoute = (path: string): boolean => {
+  if (!path) return true;
+  const normalized = path.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
+  if (normalized === '/' || normalized === '') return true;
+  if (normalized === '/login' || normalized.startsWith('/login/')) return true;
+  if (normalized === '/track' || normalized.startsWith('/track/')) return true;
   return false;
 };
 
@@ -265,9 +269,20 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
   const [shopStatus, setShopStatus] = React.useState<string>('ACTIVE');
   const [shopPlanTier, setShopPlanTier] = React.useState<PlanTier>('FREE');
+  const [shopSubscriptionStatus, setShopSubscriptionStatus] = React.useState<SubscriptionStatus>('ACTIVE');
+  const [shopPeriodEnd, setShopPeriodEnd] = React.useState<string>('');
 
   const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
   const isPublic = isPublicRoute(pathname);
+
+  // Helper to calculate days remaining until trial expiration
+  const calculateDaysRemaining = (endDateStr?: string): number => {
+    if (!endDateStr) return 14;
+    const end = new Date(endDateStr).getTime();
+    const now = Date.now();
+    const diffDays = Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
+    return diffDays;
+  };
 
   // Global '/' shortcut focuses the search input
   const searchRef = React.useRef<HTMLInputElement>(null);
@@ -289,11 +304,26 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   // Real-time plan upgrade / subscription event listener
   React.useEffect(() => {
     const handlePlanUpdated = (e: Event) => {
-      const customEvent = e as CustomEvent<{ plan_tier?: PlanTier; shop?: Shop }>;
+      const customEvent = e as CustomEvent<{
+        plan_tier?: PlanTier;
+        subscription_status?: SubscriptionStatus;
+        current_period_end?: string;
+        shop?: Shop;
+      }>;
       if (customEvent.detail?.plan_tier) {
         setShopPlanTier(customEvent.detail.plan_tier);
-      } else if (customEvent.detail?.shop?.plan_tier) {
-        setShopPlanTier(customEvent.detail.shop.plan_tier);
+      }
+      if (customEvent.detail?.subscription_status) {
+        setShopSubscriptionStatus(customEvent.detail.subscription_status);
+      }
+      if (customEvent.detail?.current_period_end) {
+        setShopPeriodEnd(customEvent.detail.current_period_end);
+      }
+      if (customEvent.detail?.shop) {
+        if (customEvent.detail.shop.plan_tier) setShopPlanTier(customEvent.detail.shop.plan_tier);
+        if (customEvent.detail.shop.subscription_status) setShopSubscriptionStatus(customEvent.detail.shop.subscription_status);
+        if (customEvent.detail.shop.current_period_end) setShopPeriodEnd(customEvent.detail.shop.current_period_end);
+        if (customEvent.detail.shop.status) setShopStatus(customEvent.detail.shop.status);
       }
     };
 
@@ -329,6 +359,8 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         if (isMounted && initialShop) {
           if (initialShop.status) setShopStatus(initialShop.status);
           if (initialShop.plan_tier) setShopPlanTier(initialShop.plan_tier);
+          if (initialShop.subscription_status) setShopSubscriptionStatus(initialShop.subscription_status);
+          if (initialShop.current_period_end) setShopPeriodEnd(initialShop.current_period_end);
         }
       } catch {
         // Ignore fallback
@@ -353,14 +385,19 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           if (isMounted && shop) {
             if (shop.status) setShopStatus(shop.status);
             if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
+            if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
+            if (shop.current_period_end) setShopPeriodEnd(shop.current_period_end);
           }
         } catch {
           // Ignore
         }
       } else if (!isWhitelisted) {
-        // Strict Auth Guard: Immediately block and redirect
+        // Strict Auth Guard: Immediately block and redirect only for non-whitelisted paths
         if (typeof window !== 'undefined') {
-          window.location.replace('/login');
+          const browserPath = window.location.pathname;
+          if (!isPublicRoute(browserPath) && browserPath !== '/login' && browserPath !== '/') {
+            window.location.replace('/login');
+          }
         }
       } else {
         setAuthChecked(true);
@@ -376,9 +413,11 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         setIsSuperAdmin(false);
         setShopStatus('ACTIVE');
         setShopPlanTier('FREE');
-        const currentPath = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
-        if (!isPublicRoute(currentPath)) {
-          if (typeof window !== 'undefined') {
+        setShopSubscriptionStatus('ACTIVE');
+        setShopPeriodEnd('');
+        if (typeof window !== 'undefined') {
+          const browserPath = window.location.pathname;
+          if (!isPublicRoute(browserPath) && browserPath !== '/login' && browserPath !== '/') {
             window.location.replace('/login');
           }
         }
@@ -388,8 +427,10 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           if (isMounted) setIsSuperAdmin(isSuper);
         });
         shopsDb.getCurrentShop(session.user.id).then((shop) => {
-          if (isMounted && shop?.plan_tier) {
-            setShopPlanTier(shop.plan_tier);
+          if (isMounted && shop) {
+            if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
+            if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
+            if (shop.current_period_end) setShopPeriodEnd(shop.current_period_end);
           }
         });
       }
@@ -408,27 +449,13 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
     }
   };
 
-  // Strict Auth Wall: Block rendering and show loading skeleton on protected routes
+  // Strict Auth Wall: Block rendering and show loading skeleton strictly on protected routes
   if (!isPublic && isSupabaseConfigured() && (!authChecked || !currentUser)) {
     return (
       <div className="min-h-screen bg-ambient-dark flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold animate-pulse">
-            <Scissors className="h-5 w-5" />
-          </div>
-          <span className="text-xs text-gray-400">Verifying session...</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Session verification skeleton for all routes during initial load
-  if (!authChecked && isSupabaseConfigured()) {
-    return (
-      <div className="min-h-screen bg-ambient-dark flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold animate-pulse">
-            <Scissors className="h-5 w-5" />
+          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold animate-pulse">
+            <Scissors className="h-full w-full p-2 object-contain aspect-square" />
           </div>
           <span className="text-xs text-gray-400">Verifying session...</span>
         </div>
@@ -449,8 +476,8 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           {/* Brand Logo & Header */}
           <div className="flex items-center justify-between px-1">
             <a href="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-transform group-hover:scale-105">
-                <Scissors className="h-4 w-4" />
+              <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-transform group-hover:scale-105">
+                <Scissors className="h-full w-full p-2 object-contain aspect-square" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
@@ -579,8 +606,8 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <a href="/dashboard" className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold">
-                      <Scissors className="h-4 w-4" />
+                    <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold">
+                      <Scissors className="h-full w-full p-2 object-contain aspect-square" />
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="font-editorial text-xl font-medium text-white">Silaye</span>
@@ -745,6 +772,40 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
 
         {/* Scrollable Main Viewport */}
         <main className="flex-1 p-4 md:p-8" id="main-content">
+          {/* Active Promotional Trial Workspace Banner */}
+          {shopSubscriptionStatus === 'TRIALING' && (
+            <div className="mb-6 rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-950/70 via-blue-900/40 to-indigo-950/70 p-4 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-[0_0_30px_rgba(59,130,246,0.2)] animate-fade-in border-l-4 border-l-blue-400">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                  <Sparkles className="h-5 w-5 animate-pulse text-blue-300" />
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-white text-sm">
+                      ✨ {shopPlanTier === 'ENTERPRISE' ? 'Enterprise' : 'Pro'} Promotional Trial Active
+                    </span>
+                    <span className="rounded-full bg-blue-500/20 border border-blue-400/40 px-2 py-0.5 text-[10px] font-bold text-blue-300">
+                      {calculateDaysRemaining(shopPeriodEnd)} Days Remaining
+                    </span>
+                  </div>
+                  <span className="font-urdu-sans text-xs text-blue-300/80" dir="rtl">
+                    آپ کا پروموشنل ٹرائل فعال ہے۔ تمام پرو فیچرز بغیر کسی رکاوٹ کے دستیاب ہیں۔
+                  </span>
+                </div>
+              </div>
+              <a href="/settings" className="shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-400/40 bg-blue-500/10 text-blue-200 hover:bg-blue-500/25 text-xs font-semibold"
+                >
+                  <span>Manage Subscription</span>
+                  <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                </Button>
+              </a>
+            </div>
+          )}
+
           {shopStatus === 'SUSPENDED' && activeRoute !== '/admin' && (
             <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 backdrop-blur-xl flex items-start gap-3 shadow-[0_0_25px_rgba(244,63,94,0.15)] animate-fade-in">
               <ShieldAlert className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />

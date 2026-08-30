@@ -1773,7 +1773,7 @@ export default function NewOrderPage() {
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-bold text-foreground">Monthly Quota Reached</h2>
                       <Badge variant="outline" className="border-gold/50 bg-gold/10 text-gold text-[10px] uppercase tracking-wider font-semibold">
-                        Free Tier
+                        {currentShop.subscription_status === 'TRIALING' ? 'Trial Expired' : 'Free Tier'}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -1793,7 +1793,7 @@ export default function NewOrderPage() {
                   <div className="flex items-center justify-between text-xs mb-2">
                     <span className="font-medium text-gray-300">Monthly Usage Consumption</span>
                     <span className="font-mono font-bold text-gold">
-                      {quotaDetails.currentCount} / {quotaDetails.maxLimit} Suits (100%)
+                      {quotaDetails.currentCount} / {quotaDetails.maxLimit} Suits ({Math.min(100, Math.round((quotaDetails.currentCount / quotaDetails.maxLimit) * 100))}%)
                     </span>
                   </div>
                   <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
@@ -1803,7 +1803,9 @@ export default function NewOrderPage() {
                     />
                   </div>
                   <p className="mt-2 text-[11px] text-muted-foreground">
-                    Free tier accommodates up to 50 orders per calendar month. You have tailored {quotaDetails.currentCount} suits this month.
+                    {currentShop.subscription_status === 'TRIALING'
+                      ? 'Your promotional trial has concluded. The workspace is currently limited to the Free tier ceiling of 50 suits/month.'
+                      : `Free tier accommodates up to 50 orders per calendar month. You have tailored ${quotaDetails.currentCount} suits this month.`}
                   </p>
                 </div>
 

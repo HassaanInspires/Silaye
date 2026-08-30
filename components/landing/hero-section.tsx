@@ -89,8 +89,8 @@ function WorkshopPreviewCard() {
         {/* Card header */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md border border-primary/30 bg-primary/10">
-              <Scissors className="h-3 w-3 text-primary" />
+            <div className="relative h-6 w-6 shrink-0 flex items-center justify-center rounded-md border border-primary/30 bg-primary/10">
+              <Scissors className="h-full w-full p-1 object-contain aspect-square text-primary" />
             </div>
             <span className="text-xs font-semibold text-foreground">Live Workshop Queue</span>
           </div>
@@ -188,8 +188,8 @@ export function HeroSection() {
       <nav className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
         {/* Brand */}
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
-            <Scissors className="h-4.5 w-4.5 text-primary" />
+          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
+            <Scissors className="h-full w-full p-2 object-contain aspect-square text-primary" />
           </div>
           <div>
             <span className="font-editorial text-lg font-normal italic text-foreground">
@@ -214,7 +214,7 @@ export function HeroSection() {
 
         {/* CTA */}
         <Link
-          href="/orders"
+          href="/login"
           className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition-all hover:bg-primary/20"
         >
           Open Workshop
@@ -256,7 +256,7 @@ export function HeroSection() {
             {/* CTA buttons */}
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
-                href="/orders/new"
+                href="/login"
                 className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-gold-hover hover:shadow-primary/30 active:scale-95"
               >
                 Register Workshop

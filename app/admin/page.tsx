@@ -31,6 +31,15 @@ import {
   XCircle,
   Trash2,
   RotateCcw,
+  CreditCard,
+  Eye,
+  Gift,
+  Calendar,
+  Check,
+  X,
+  FileCheck,
+  FileX,
+  Maximize2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppShell } from '@/components/layout/app-shell';
@@ -47,7 +56,14 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { adminDb } from '@/lib/db';
-import type { PlatformMetrics, AdminShopOverview, ShopStatus } from '@/types/tailor';
+import type {
+  PlatformMetrics,
+  AdminShopOverview,
+  ShopStatus,
+  ManualPaymentRequest,
+  PaymentMethod,
+  PlanTier,
+} from '@/types/tailor';
 import { formatCurrency } from '@/lib/escpos';
 
 // ---------------------------------------------------------------------------
@@ -89,6 +105,37 @@ const STATUS_CONFIG: Record<
   },
 };
 
+const PAYMENT_METHOD_CONFIG: Record<
+  PaymentMethod,
+  {
+    label: string;
+    labelUrdu: string;
+    badgeClass: string;
+  }
+> = {
+  BANK_TRANSFER: {
+    label: 'Bank Transfer (Meezan)',
+    labelUrdu: 'بینک ٹرانسفر',
+    badgeClass: 'border-blue-500/40 bg-blue-500/15 text-blue-300',
+  },
+  RAAST: {
+    label: 'Raast Instant P2P',
+    labelUrdu: 'راست ادائیگی',
+    badgeClass: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
+  },
+  JAZZCASH: {
+    label: 'JazzCash Merchant',
+    labelUrdu: 'جاز کیش',
+    badgeClass: 'border-amber-500/40 bg-amber-500/15 text-amber-300',
+  },
+  EASYPAISA: {
+    label: 'EasyPaisa Merchant',
+    labelUrdu: 'ایزی پیسہ',
+    badgeClass: 'border-teal-500/40 bg-teal-500/15 text-teal-300',
+  },
+};
+
+type AdminSection = 'DIRECTORY' | 'PAYMENTS';
 type FilterTab = 'ALL' | 'ACTIVE' | 'SUSPENDED' | 'TRIAL';
 
 export default function SuperAdminDashboardPage() {
@@ -96,9 +143,13 @@ export default function SuperAdminDashboardPage() {
   const [authChecking, setAuthChecking] = React.useState<boolean>(true);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
 
+  // Section Switcher State
+  const [activeSection, setActiveSection] = React.useState<AdminSection>('DIRECTORY');
+
   // Platform Data State
   const [metrics, setMetrics] = React.useState<PlatformMetrics | null>(null);
   const [shops, setShops] = React.useState<AdminShopOverview[]>([]);
+  const [pendingPayments, setPendingPayments] = React.useState<ManualPaymentRequest[]>([]);
   const [loadingData, setLoadingData] = React.useState<boolean>(false);
 
   // Search & Filter State
@@ -116,6 +167,20 @@ export default function SuperAdminDashboardPage() {
   const [purgeDialogOpen, setPurgeDialogOpen] = React.useState<boolean>(false);
   const [purgeConfirmInput, setPurgeConfirmInput] = React.useState<string>('');
   const [purgingData, setPurgingData] = React.useState<boolean>(false);
+
+  // Receipt Inspection Lightbox Modal State
+  const [selectedPayment, setSelectedPayment] = React.useState<ManualPaymentRequest | null>(null);
+  const [inspectModalOpen, setInspectModalOpen] = React.useState<boolean>(false);
+  const [adminNotesInput, setAdminNotesInput] = React.useState<string>('');
+  const [processingPayment, setProcessingPayment] = React.useState<boolean>(false);
+
+  // Grant Free Trial Modal State
+  const [trialShop, setTrialShop] = React.useState<AdminShopOverview | null>(null);
+  const [trialModalOpen, setTrialModalOpen] = React.useState<boolean>(false);
+  const [trialTier, setTrialTier] = React.useState<PlanTier>('PRO');
+  const [trialDaysPreset, setTrialDaysPreset] = React.useState<number | 'CUSTOM'>(14);
+  const [customTrialDate, setCustomTrialDate] = React.useState<string>('');
+  const [grantingTrial, setGrantingTrial] = React.useState<boolean>(false);
 
   // Toast Notification
   const [toastMessage, setToastMessage] = React.useState<{ title: string; desc: string; type: 'success' | 'error' } | null>(null);
@@ -153,12 +218,14 @@ export default function SuperAdminDashboardPage() {
   const loadPlatformData = async () => {
     setLoadingData(true);
     try {
-      const [metricsData, shopsData] = await Promise.all([
+      const [metricsData, shopsData, paymentsData] = await Promise.all([
         adminDb.getPlatformMetrics(),
         adminDb.getAllShops(),
+        adminDb.getAllPendingPaymentRequests(),
       ]);
       setMetrics(metricsData);
       setShops(shopsData);
+      setPendingPayments(paymentsData);
     } catch (err) {
       console.error('Failed to load platform data:', err);
     } finally {
@@ -168,9 +235,10 @@ export default function SuperAdminDashboardPage() {
 
   const showToast = (title: string, desc: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ title, desc, type });
-    setTimeout(() => setToastMessage(null), 4000);
+    setTimeout(() => setToastMessage(null), 4500);
   };
 
+  // Workshop Status Handlers
   const handleOpenStatusDialog = (shop: AdminShopOverview, status: ShopStatus) => {
     setSelectedShop(shop);
     setTargetStatus(status);
@@ -184,12 +252,10 @@ export default function SuperAdminDashboardPage() {
     try {
       const success = await adminDb.setShopStatus(selectedShop.id, targetStatus);
       if (success) {
-        // Optimistically update list
         setShops((prev) =>
           prev.map((s) => (s.id === selectedShop.id ? { ...s, status: targetStatus, updated_at: new Date().toISOString() } : s))
         );
 
-        // Update metrics counts
         if (metrics) {
           const updatedShops = shops.map((s) => (s.id === selectedShop.id ? { ...s, status: targetStatus } : s));
           setMetrics({
@@ -208,13 +274,14 @@ export default function SuperAdminDashboardPage() {
       } else {
         showToast('Update Failed', 'Could not update workshop status. Try again.', 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Error', 'An unexpected error occurred while modifying status.', 'error');
     } finally {
       setUpdatingStatus(false);
     }
   };
 
+  // Purge Test Data Handlers
   const handleOpenPurgeDialog = (shop: AdminShopOverview) => {
     setShopToPurge(shop);
     setPurgeConfirmInput('');
@@ -232,14 +299,12 @@ export default function SuperAdminDashboardPage() {
     try {
       const result = await adminDb.purgeShopTestData(shopToPurge.id);
       if (result.success) {
-        // Optimistically update orders count for this workshop
         setShops((prev) =>
           prev.map((s) =>
             s.id === shopToPurge.id ? { ...s, total_orders: 0, updated_at: new Date().toISOString() } : s
           )
         );
 
-        // Update platform metrics
         if (metrics) {
           const updatedTotalOrders = shops
             .map((s) => (s.id === shopToPurge.id ? 0 : s.total_orders))
@@ -269,7 +334,120 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
-  // Filtered Shops List
+  // Receipt Inspection & Verification Handlers
+  const handleOpenInspectModal = (request: ManualPaymentRequest) => {
+    setSelectedPayment(request);
+    setAdminNotesInput(request.admin_notes || '');
+    setInspectModalOpen(true);
+  };
+
+  const handleApprovePayment = async () => {
+    if (!selectedPayment) return;
+
+    setProcessingPayment(true);
+    try {
+      const success = await adminDb.approvePaymentRequest(selectedPayment.id, adminNotesInput.trim() || undefined);
+      if (success) {
+        // Remove from pending list
+        setPendingPayments((prev) => prev.filter((p) => p.id !== selectedPayment.id));
+
+        showToast(
+          'Subscription Approved & Activated! ✨',
+          `Payment for "${selectedPayment.shop_name || 'Workshop'}" verified. ${selectedPayment.plan_tier} ${selectedPayment.billing_cycle} plan is now active.`,
+          'success'
+        );
+        setInspectModalOpen(false);
+        setSelectedPayment(null);
+      } else {
+        showToast('Approval Failed', 'Could not approve payment request. Please try again.', 'error');
+      }
+    } catch (err) {
+      showToast('Error', err instanceof Error ? err.message : 'An error occurred during approval.', 'error');
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const handleRejectPayment = async () => {
+    if (!selectedPayment) return;
+    if (!adminNotesInput.trim()) {
+      showToast('Rejection Reason Required', 'Please enter an admin note or reason for rejecting this payment.', 'error');
+      return;
+    }
+
+    setProcessingPayment(true);
+    try {
+      const success = await adminDb.rejectPaymentRequest(selectedPayment.id, adminNotesInput.trim());
+      if (success) {
+        // Remove from pending list
+        setPendingPayments((prev) => prev.filter((p) => p.id !== selectedPayment.id));
+
+        showToast(
+          'Payment Request Rejected',
+          `Payment request for "${selectedPayment.shop_name || 'Workshop'}" has been marked as REJECTED.`,
+          'success'
+        );
+        setInspectModalOpen(false);
+        setSelectedPayment(null);
+      } else {
+        showToast('Rejection Failed', 'Could not reject payment request. Please try again.', 'error');
+      }
+    } catch (err) {
+      showToast('Error', err instanceof Error ? err.message : 'An error occurred during rejection.', 'error');
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  // Promotional Free Trial Handlers
+  const handleOpenTrialModal = (shop: AdminShopOverview) => {
+    setTrialShop(shop);
+    setTrialTier('PRO');
+    setTrialDaysPreset(14);
+    setCustomTrialDate('');
+    setTrialModalOpen(true);
+  };
+
+  const handleGrantTrial = async () => {
+    if (!trialShop) return;
+
+    setGrantingTrial(true);
+    try {
+      const days = trialDaysPreset === 'CUSTOM' ? undefined : trialDaysPreset;
+      const customDate = trialDaysPreset === 'CUSTOM' ? customTrialDate : undefined;
+
+      if (trialDaysPreset === 'CUSTOM' && !customTrialDate) {
+        showToast('Date Required', 'Please pick a valid expiry date for the custom trial.', 'error');
+        setGrantingTrial(false);
+        return;
+      }
+
+      const success = await adminDb.grantPromotionalTrial(
+        trialShop.id,
+        trialTier,
+        days,
+        customDate ? new Date(customDate).toISOString() : undefined
+      );
+
+      if (success) {
+        showToast(
+          'Promotional Trial Granted! 🎁',
+          `Granted ${trialTier} trial access to "${trialShop.name}".`,
+          'success'
+        );
+        setTrialModalOpen(false);
+        setTrialShop(null);
+      } else {
+        showToast('Trial Grant Failed', 'Could not grant promotional trial access.', 'error');
+      }
+    } catch (err) {
+      showToast('Error', err instanceof Error ? err.message : 'An error occurred granting trial.', 'error');
+    } finally {
+      setGrantingTrial(false);
+    }
+  };
+
+  // Filtered Workshops
   const filteredShops = React.useMemo(() => {
     return shops.filter((shop) => {
       const matchesTab =
@@ -365,8 +543,8 @@ export default function SuperAdminDashboardPage() {
             className={cn(
               'fixed top-20 right-6 z-50 flex items-center gap-3 rounded-2xl border px-5 py-3.5 backdrop-blur-2xl shadow-2xl transition-all animate-in fade-in slide-in-from-top-4 duration-300',
               toastMessage.type === 'success'
-                ? 'border-emerald-500/40 bg-emerald-950/80 text-emerald-200'
-                : 'border-rose-500/40 bg-rose-950/80 text-rose-200'
+                ? 'border-emerald-500/40 bg-emerald-950/90 text-emerald-200 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
+                : 'border-rose-500/40 bg-rose-950/90 text-rose-200 shadow-[0_0_30px_rgba(244,63,94,0.2)]'
             )}
             role="status"
           >
@@ -398,13 +576,54 @@ export default function SuperAdminDashboardPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="font-urdu-serif text-sm text-cyan-400/80" dir="rtl">
-                سلائے پلیٹ فارم سپروائزر اور ورکشاپ مینجمنٹ کنٹرول
+                سلائے پلیٹ فارم سپروائزر، رسید کی تصدیق اور پروموشنل ٹرائلز
               </span>
             </div>
           </div>
 
-          {/* Quick Refresh & Stats Controls */}
+          {/* Quick Refresh & Section Tabs */}
           <div className="flex items-center gap-3">
+            {/* Top Mode Switcher */}
+            <div className="flex items-center rounded-xl border border-white/10 bg-[#0B0C0E]/80 p-1 backdrop-blur-md">
+              <button
+                type="button"
+                onClick={() => setActiveSection('DIRECTORY')}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+                  activeSection === 'DIRECTORY'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    : 'text-gray-400 hover:text-gray-200'
+                )}
+              >
+                <Store className="h-3.5 w-3.5" />
+                <span>Workshops</span>
+                <span className="rounded-full bg-white/10 px-1.5 py-0.2 text-[10px] text-gray-300">
+                  {shops.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveSection('PAYMENTS')}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer relative',
+                  activeSection === 'PAYMENTS'
+                    ? 'bg-gold/20 text-gold border border-gold/40 shadow-[0_0_15px_rgba(212,175,55,0.15)]'
+                    : 'text-gray-400 hover:text-gray-200'
+                )}
+              >
+                <CreditCard className="h-3.5 w-3.5" />
+                <span>Payment Approvals</span>
+                {pendingPayments.length > 0 ? (
+                  <span className="rounded-full bg-amber-500/30 border border-amber-400/50 px-1.5 py-0.2 text-[10px] font-bold text-amber-300 animate-pulse">
+                    {pendingPayments.length}
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-white/10 px-1.5 py-0.2 text-[10px] text-gray-400">0</span>
+                )}
+              </button>
+            </div>
+
             <Button
               variant="outline"
               size="sm"
@@ -413,7 +632,7 @@ export default function SuperAdminDashboardPage() {
               className="gap-2 border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-gray-300"
             >
               <RefreshCw className={cn('h-3.5 w-3.5', loadingData && 'animate-spin text-cyan-400')} />
-              <span>{loadingData ? 'Syncing...' : 'Sync Live Metrics'}</span>
+              <span className="hidden sm:inline">{loadingData ? 'Syncing...' : 'Sync Live'}</span>
             </Button>
           </div>
         </div>
@@ -500,248 +719,700 @@ export default function SuperAdminDashboardPage() {
             </div>
           </Card>
 
-          {/* Card 4: Total Udhaar Receivable Volume */}
+          {/* Card 4: Pending Bank Approvals / Udhaar */}
           <Card className="premium-glass-card p-5 relative overflow-hidden border-amber-500/20 hover:border-amber-500/40 transition-all">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                  Market Udhaar Tracked
+                  Pending Approvals
                 </span>
                 <div className="font-urdu-sans text-xs text-amber-400/90 -mt-0.5" dir="rtl">
-                  مارکیٹ ادھار والیوم
+                  بینک رسید کی تصدیق
                 </div>
               </div>
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400">
-                <Wallet className="h-4 w-4" />
+                <CreditCard className="h-4 w-4" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-2xl font-bold tracking-tight text-amber-300 font-mono">
-                <bdi dir="ltr">{metrics ? formatCurrency(metrics.total_khata_volume) : '—'}</bdi>
+              <span className="text-3xl font-bold tracking-tight text-amber-300 font-mono">
+                {pendingPayments.length}
               </span>
-              <span className="text-xs text-amber-400/70">Ledger Balances</span>
+              <span className="text-xs text-amber-400/70">Awaiting Verification</span>
             </div>
           </Card>
         </div>
 
         {/* ------------------------------------------------------------------- */}
-        {/* WORKSHOP SUPERVISION & LIFECYCLE MANAGEMENT TABLE                   */}
+        {/* SECTION A: PAYMENT APPROVALS INBOX                                  */}
         {/* ------------------------------------------------------------------- */}
-        <Card className="premium-glass-card overflow-hidden">
-          <CardHeader className="p-6 pb-4 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <CardTitle className="font-editorial text-2xl text-white flex items-center gap-2">
-                <span>Workshop Directory & Operations</span>
-                <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-mono font-medium text-gray-300">
-                  {filteredShops.length}
-                </span>
-              </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
-                Supervise registered tailoring workshop tenants, audit production volumes, and manage subscription lifecycles.
-              </CardDescription>
-            </div>
+        {activeSection === 'PAYMENTS' && (
+          <Card className="premium-glass-card overflow-hidden border-gold/20 shadow-[0_0_30px_rgba(212,175,55,0.05)]">
+            <CardHeader className="p-6 pb-4 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="font-editorial text-2xl text-white flex items-center gap-2">
+                  <span>Manual Payment Verification Inbox</span>
+                  <span className="rounded-full bg-gold/15 border border-gold/30 px-2.5 py-0.5 text-xs font-mono font-bold text-gold">
+                    {pendingPayments.length} Pending
+                  </span>
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-400 flex items-center gap-2 pt-1">
+                  <span>Audit proof-of-payment bank slips, confirm Raast/IBAN reference tokens, and activate Pro / Enterprise subscriptions.</span>
+                  <span className="font-urdu-sans text-xs text-gold/80" dir="rtl">
+                    رسید کی تصدیق اور سبسکرپشن ایکٹیویشن
+                  </span>
+                </CardDescription>
+              </div>
+            </CardHeader>
 
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] p-1">
-              {(['ALL', 'ACTIVE', 'SUSPENDED', 'TRIAL'] as FilterTab[]).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer',
-                    activeTab === tab
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                      : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                  )}
-                >
-                  {tab === 'ALL' && 'All Shops'}
-                  {tab === 'ACTIVE' && 'Active'}
-                  {tab === 'SUSPENDED' && 'Suspended'}
-                  {tab === 'TRIAL' && 'Trial'}
-                </button>
-              ))}
-            </div>
-          </CardHeader>
-
-          {/* Search Bar */}
-          <div className="p-6 py-4 border-b border-white/5 bg-white/[0.01]">
-            <Input
-              type="search"
-              placeholder="Search by workshop name, city (e.g. Lahore, Wah Cantt), or owner email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={<Search className="h-4 w-4" />}
-              className="h-10 text-xs md:text-sm bg-[#0B0C0E]/60 border-white/10"
-            />
-          </div>
-
-          {/* High-Density Data Table */}
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-white/5 bg-white/[0.02] text-gray-400 uppercase tracking-wider text-[10px] font-semibold">
-                  <th className="py-3.5 px-6">Workshop Name</th>
-                  <th className="py-3.5 px-4">Location</th>
-                  <th className="py-3.5 px-4">Owner & Contact</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-center">Craftsmen</th>
-                  <th className="py-3.5 px-4 text-right">Orders</th>
-                  <th className="py-3.5 px-4">Created Date</th>
-                  <th className="py-3.5 px-6 text-right">Governance Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 text-gray-300">
-                {filteredShops.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-gray-500">
-                      <Store className="h-8 w-8 mx-auto mb-2 opacity-40 text-gray-400" />
-                      <p className="text-sm">No tailoring workshops found matching current criteria.</p>
-                    </td>
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-white/5 bg-white/[0.02] text-gray-400 uppercase tracking-wider text-[10px] font-semibold">
+                    <th className="py-3.5 px-6">Workshop / Tenant</th>
+                    <th className="py-3.5 px-4">Plan & Billing</th>
+                    <th className="py-3.5 px-4">Amount (PKR)</th>
+                    <th className="py-3.5 px-4">Payment Channel</th>
+                    <th className="py-3.5 px-4">Trx Reference</th>
+                    <th className="py-3.5 px-4">Submitted</th>
+                    <th className="py-3.5 px-4 text-center">Receipt Slip</th>
+                    <th className="py-3.5 px-6 text-right">Verification Action</th>
                   </tr>
-                ) : (
-                  filteredShops.map((shop) => {
-                    const statusMeta = STATUS_CONFIG[shop.status] || STATUS_CONFIG.ACTIVE;
-                    return (
-                      <tr
-                        key={shop.id}
-                        className="hover:bg-white/[0.03] transition-colors group"
-                      >
-                        {/* Workshop Name */}
-                        <td className="py-4 px-6 font-medium text-white">
-                          <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-gold font-bold">
-                              {shop.name.charAt(0)}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-gray-100 group-hover:text-gold transition-colors">
-                                {shop.name}
-                              </span>
-                              <span className="text-[10px] text-gray-500 font-mono">
-                                {shop.id.substring(0, 13)}...
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Location */}
-                        <td className="py-4 px-4 text-gray-300">
-                          <div className="flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 text-gray-500 shrink-0" />
-                            <span>{shop.city || 'Wah Cantt'}</span>
-                          </div>
-                        </td>
-
-                        {/* Owner & Contact */}
-                        <td className="py-4 px-4">
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-1.5 text-gray-200">
-                              <Mail className="h-3 w-3 text-cyan-400 shrink-0" />
-                              <span className="truncate max-w-[170px]" title={shop.owner_email || 'No email'}>
-                                {shop.owner_email || 'founder@silaye.pk'}
-                              </span>
-                            </div>
-                            {shop.phone && (
-                              <div className="flex items-center gap-1.5 text-[11px] text-gray-400 font-mono">
-                                <Phone className="h-3 w-3 text-gray-500 shrink-0" />
-                                <span>{shop.phone}</span>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-gray-300">
+                  {pendingPayments.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-16 text-center text-gray-500">
+                        <CheckCircle2 className="h-10 w-10 mx-auto mb-3 opacity-40 text-emerald-400" />
+                        <p className="text-sm font-medium text-gray-300">Inbox Zero: No pending payment requests</p>
+                        <p className="font-urdu-sans text-xs text-gray-500 pt-1" dir="rtl">
+                          تمام موصولہ ادائیگیاں تصدیق شدہ ہیں
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    pendingPayments.map((payment) => {
+                      const methodMeta = PAYMENT_METHOD_CONFIG[payment.payment_method] || PAYMENT_METHOD_CONFIG.BANK_TRANSFER;
+                      return (
+                        <tr
+                          key={payment.id}
+                          className="hover:bg-white/[0.03] transition-colors group cursor-pointer"
+                          onClick={() => handleOpenInspectModal(payment)}
+                        >
+                          {/* Workshop Name */}
+                          <td className="py-4 px-6 font-medium text-white">
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10 border border-gold/20 text-gold font-bold">
+                                {payment.shop_name ? payment.shop_name.charAt(0) : 'W'}
                               </div>
-                            )}
-                          </div>
-                        </td>
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-gray-100 group-hover:text-gold transition-colors">
+                                  {payment.shop_name || 'Wah Cantt Bespoke Tailors'}
+                                </span>
+                                <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                                  <MapPin className="h-2.5 w-2.5" />
+                                  {payment.shop_city || 'Wah Cantt'}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
 
-                        {/* Status Badge */}
-                        <td className="py-4 px-4">
-                          <span
-                            className={cn(
-                              'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold',
-                              statusMeta.badgeClass
-                            )}
-                          >
-                            <span className={cn('h-1.5 w-1.5 rounded-full', statusMeta.dotClass)} />
-                            <span>{statusMeta.label}</span>
-                          </span>
-                        </td>
+                          {/* Plan & Cycle */}
+                          <td className="py-4 px-4">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-bold text-white tracking-wide">
+                                {payment.plan_tier}
+                              </span>
+                              <span className="text-[10px] text-gray-400 font-mono uppercase">
+                                {payment.billing_cycle}
+                              </span>
+                            </div>
+                          </td>
 
-                        {/* Craftsmen Count */}
-                        <td className="py-4 px-4 text-center font-mono">
-                          <span className="rounded-lg bg-white/5 px-2 py-1 text-xs border border-white/10 text-gray-200">
-                            {shop.member_count}
-                          </span>
-                        </td>
+                          {/* Amount in PKR */}
+                          <td className="py-4 px-4 font-mono font-bold text-emerald-400">
+                            <bdi dir="ltr">Rs. {payment.amount_pkr.toLocaleString()}</bdi>
+                          </td>
 
-                        {/* Orders Processed */}
-                        <td className="py-4 px-4 text-right font-mono font-semibold text-white">
-                          <bdi dir="ltr">{shop.total_orders.toLocaleString()}</bdi>
-                        </td>
+                          {/* Payment Method */}
+                          <td className="py-4 px-4">
+                            <span
+                              className={cn(
+                                'inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold',
+                                methodMeta.badgeClass
+                              )}
+                            >
+                              {methodMeta.label}
+                            </span>
+                          </td>
 
-                        {/* Created Date */}
-                        <td className="py-4 px-4 text-gray-400 font-mono text-[11px]">
-                          {new Date(shop.created_at).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </td>
+                          {/* Trx Reference */}
+                          <td className="py-4 px-4 font-mono text-gray-300 font-medium">
+                            <span className="rounded bg-black/40 px-2 py-1 border border-white/10 text-[11px]">
+                              {payment.transaction_reference}
+                            </span>
+                          </td>
 
-                        {/* Actions */}
-                        <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {shop.status === 'ACTIVE' ? (
+                          {/* Submitted Timestamp */}
+                          <td className="py-4 px-4 text-gray-400 font-mono text-[11px]">
+                            {new Date(payment.created_at).toLocaleTimeString('en-GB', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}{' '}
+                            <span className="text-gray-500">
+                              ({new Date(payment.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })})
+                            </span>
+                          </td>
+
+                          {/* Receipt Slip Thumbnail */}
+                          <td className="py-4 px-4 text-center">
+                            <div className="relative inline-block h-10 w-10 rounded-lg overflow-hidden border border-white/20 bg-black/60 shadow group/thumb">
+                              <img
+                                src={payment.receipt_image_url}
+                                alt="Receipt thumbnail"
+                                className="h-full w-full object-cover group-hover/thumb:scale-110 transition-transform duration-200"
+                              />
+                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                                <Eye className="h-3.5 w-3.5 text-white" />
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Action CTA */}
+                          <td className="py-4 px-6 text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenInspectModal(payment);
+                              }}
+                              className="h-8 px-3 text-xs border-gold/40 text-gold hover:bg-gold/15 hover:border-gold shadow-[0_0_10px_rgba(212,175,55,0.1)] gap-1.5"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>Inspect Slip</span>
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
+
+        {/* ------------------------------------------------------------------- */}
+        {/* SECTION B: WORKSHOP SUPERVISION & DIRECTORY TABLE                   */}
+        {/* ------------------------------------------------------------------- */}
+        {activeSection === 'DIRECTORY' && (
+          <Card className="premium-glass-card overflow-hidden">
+            <CardHeader className="p-6 pb-4 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="font-editorial text-2xl text-white flex items-center gap-2">
+                  <span>Workshop Directory & Operations</span>
+                  <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-mono font-medium text-gray-300">
+                    {filteredShops.length}
+                  </span>
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-400">
+                  Supervise registered tailoring workshop tenants, audit production throughput, and grant custom promotional Pro trials.
+                </CardDescription>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] p-1">
+                {(['ALL', 'ACTIVE', 'SUSPENDED', 'TRIAL'] as FilterTab[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+                      activeTab === tab
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                    )}
+                  >
+                    {tab === 'ALL' && 'All Shops'}
+                    {tab === 'ACTIVE' && 'Active'}
+                    {tab === 'SUSPENDED' && 'Suspended'}
+                    {tab === 'TRIAL' && 'Trial'}
+                  </button>
+                ))}
+              </div>
+            </CardHeader>
+
+            {/* Search Bar */}
+            <div className="p-6 py-4 border-b border-white/5 bg-white/[0.01]">
+              <Input
+                type="search"
+                placeholder="Search by workshop name, city (e.g. Lahore, Wah Cantt), or owner email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                leftIcon={<Search className="h-4 w-4" />}
+                className="h-10 text-xs md:text-sm bg-[#0B0C0E]/60 border-white/10"
+              />
+            </div>
+
+            {/* High-Density Data Table */}
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-white/5 bg-white/[0.02] text-gray-400 uppercase tracking-wider text-[10px] font-semibold">
+                    <th className="py-3.5 px-6">Workshop Name</th>
+                    <th className="py-3.5 px-4">Location</th>
+                    <th className="py-3.5 px-4">Owner & Contact</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-center">Craftsmen</th>
+                    <th className="py-3.5 px-4 text-right">Orders</th>
+                    <th className="py-3.5 px-4">Created Date</th>
+                    <th className="py-3.5 px-6 text-right">Governance Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-gray-300">
+                  {filteredShops.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-gray-500">
+                        <Store className="h-8 w-8 mx-auto mb-2 opacity-40 text-gray-400" />
+                        <p className="text-sm">No tailoring workshops found matching current criteria.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredShops.map((shop) => {
+                      const statusMeta = STATUS_CONFIG[shop.status] || STATUS_CONFIG.ACTIVE;
+                      return (
+                        <tr
+                          key={shop.id}
+                          className="hover:bg-white/[0.03] transition-colors group"
+                        >
+                          {/* Workshop Name */}
+                          <td className="py-4 px-6 font-medium text-white">
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-gold font-bold">
+                                {shop.name.charAt(0)}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-gray-100 group-hover:text-gold transition-colors">
+                                  {shop.name}
+                                </span>
+                                <span className="text-[10px] text-gray-500 font-mono">
+                                  {shop.id.substring(0, 13)}...
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Location */}
+                          <td className="py-4 px-4 text-gray-300">
+                            <div className="flex items-center gap-1.5">
+                              <MapPin className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                              <span>{shop.city || 'Wah Cantt'}</span>
+                            </div>
+                          </td>
+
+                          {/* Owner & Contact */}
+                          <td className="py-4 px-4">
+                            <div className="flex flex-col gap-0.5">
+                              <div className="flex items-center gap-1.5 text-gray-200">
+                                <Mail className="h-3 w-3 text-cyan-400 shrink-0" />
+                                <span className="truncate max-w-[170px]" title={shop.owner_email || 'No email'}>
+                                  {shop.owner_email || 'founder@silaye.pk'}
+                                </span>
+                              </div>
+                              {shop.phone && (
+                                <div className="flex items-center gap-1.5 text-[11px] text-gray-400 font-mono">
+                                  <Phone className="h-3 w-3 text-gray-500 shrink-0" />
+                                  <span>{shop.phone}</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Status Badge */}
+                          <td className="py-4 px-4">
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold',
+                                statusMeta.badgeClass
+                              )}
+                            >
+                              <span className={cn('h-1.5 w-1.5 rounded-full', statusMeta.dotClass)} />
+                              <span>{statusMeta.label}</span>
+                            </span>
+                          </td>
+
+                          {/* Craftsmen Count */}
+                          <td className="py-4 px-4 text-center font-mono">
+                            <span className="rounded-lg bg-white/5 px-2 py-1 text-xs border border-white/10 text-gray-200">
+                              {shop.member_count}
+                            </span>
+                          </td>
+
+                          {/* Orders Processed */}
+                          <td className="py-4 px-4 text-right font-mono font-semibold text-white">
+                            <bdi dir="ltr">{shop.total_orders.toLocaleString()}</bdi>
+                          </td>
+
+                          {/* Created Date */}
+                          <td className="py-4 px-4 text-gray-400 font-mono text-[11px]">
+                            {new Date(shop.created_at).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="py-4 px-6 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Grant Free Trial Action */}
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleOpenStatusDialog(shop, 'SUSPENDED')}
-                                className="h-7 px-2.5 text-[11px] border-rose-500/30 text-rose-400 hover:bg-rose-500/15 hover:border-rose-500/60"
+                                onClick={() => handleOpenTrialModal(shop)}
+                                className="h-7 px-2.5 text-[11px] border-blue-500/40 text-blue-300 hover:bg-blue-500/15 hover:border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.1)] gap-1"
+                                title="Grant Custom Free Trial Access"
                               >
-                                <PauseCircle className="h-3.5 w-3.5 mr-1 text-rose-400" />
-                                <span>Suspend</span>
+                                <Sparkles className="h-3 w-3 text-blue-400" />
+                                <span>Grant Trial</span>
                               </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleOpenStatusDialog(shop, 'ACTIVE')}
-                                className="h-7 px-2.5 text-[11px] border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/15 hover:border-emerald-500/60"
-                              >
-                                <PlayCircle className="h-3.5 w-3.5 mr-1 text-emerald-400" />
-                                <span>Reactivate</span>
-                              </Button>
-                            )}
 
-                            {shop.status !== 'TRIAL' && (
+                              {/* Suspend / Reactivate Action */}
+                              {shop.status === 'ACTIVE' ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleOpenStatusDialog(shop, 'SUSPENDED')}
+                                  className="h-7 px-2.5 text-[11px] border-rose-500/30 text-rose-400 hover:bg-rose-500/15 hover:border-rose-500/60"
+                                >
+                                  <PauseCircle className="h-3.5 w-3.5 mr-1 text-rose-400" />
+                                  <span>Suspend</span>
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleOpenStatusDialog(shop, 'ACTIVE')}
+                                  className="h-7 px-2.5 text-[11px] border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/15 hover:border-emerald-500/60"
+                                >
+                                  <PlayCircle className="h-3.5 w-3.5 mr-1 text-emerald-400" />
+                                  <span>Reactivate</span>
+                                </Button>
+                              )}
+
+                              {/* Purge Test Data Button */}
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleOpenStatusDialog(shop, 'TRIAL')}
-                                className="h-7 px-2 text-[11px] text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
-                                title="Set Trial Mode"
+                                onClick={() => handleOpenPurgeDialog(shop)}
+                                className="h-7 px-2 text-[11px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30"
+                                title="Purge Workshop Test Data"
                               >
-                                <span>Trial</span>
+                                <Trash2 className="h-3.5 w-3.5" />
                               </Button>
-                            )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
 
-                            {/* Purge Test Data Button */}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleOpenPurgeDialog(shop)}
-                              className="h-7 px-2 text-[11px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30"
-                              title="Purge Workshop Test Data"
-                            >
-                              <Trash2 className="h-3.5 w-3.5 mr-1" />
-                              <span>Purge</span>
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
+        {/* ------------------------------------------------------------------- */}
+        {/* RECEIPT INSPECTION LIGHTBOX & VERIFICATION MODAL                     */}
+        {/* ------------------------------------------------------------------- */}
+        <Dialog open={inspectModalOpen} onOpenChange={setInspectModalOpen}>
+          <DialogContent className="max-w-3xl bg-[#0F1115]/95 border-gold/30 backdrop-blur-2xl shadow-[0_0_50px_rgba(212,175,55,0.15)] p-6">
+            <DialogHeader>
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/40 bg-gold/15 text-gold">
+                    <FileCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <DialogTitle className="font-editorial text-2xl text-white">
+                      Inspect Payment Receipt
+                    </DialogTitle>
+                    <span className="font-urdu-sans text-xs text-gold/90" dir="rtl">
+                      بینک رسید کی تصدیق اور سبسکرپشن ایکٹیویشن
+                    </span>
+                  </div>
+                </div>
+
+                {selectedPayment && (
+                  <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-bold text-amber-300 uppercase tracking-wider">
+                    {selectedPayment.status}
+                  </span>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+              </div>
+            </DialogHeader>
+
+            {selectedPayment && (
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
+                {/* Left Col: High-Res Screenshot Viewer (7 Cols) */}
+                <div className="md:col-span-7 space-y-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                    Proof-of-Payment Screenshot / Slip
+                  </span>
+                  <div className="relative rounded-2xl border border-white/15 bg-black/80 overflow-hidden min-h-[320px] max-h-[420px] flex items-center justify-center shadow-inner group/img">
+                    <img
+                      src={selectedPayment.receipt_image_url}
+                      alt="Full resolution receipt"
+                      className="max-h-[400px] w-auto object-contain rounded-xl"
+                    />
+                    <a
+                      href={selectedPayment.receipt_image_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute bottom-3 right-3 rounded-lg bg-black/70 border border-white/20 px-2.5 py-1 text-xs text-white flex items-center gap-1.5 opacity-90 hover:opacity-100 hover:bg-black transition-all"
+                    >
+                      <Maximize2 className="h-3 w-3" />
+                      <span>Full View</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Right Col: Transaction Breakdown & Action Controls (5 Cols) */}
+                <div className="md:col-span-5 flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                      Transaction Verification Data
+                    </span>
+
+                    {/* Breakdown Card */}
+                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5 space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Workshop:</span>
+                        <span className="font-semibold text-white">{selectedPayment.shop_name || 'Wah Cantt Tailors'}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Plan Requested:</span>
+                        <span className="font-bold text-gold">
+                          {selectedPayment.plan_tier} ({selectedPayment.billing_cycle})
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Amount Transferred:</span>
+                        <span className="font-mono font-bold text-emerald-400 text-sm">
+                          <bdi dir="ltr">Rs. {selectedPayment.amount_pkr.toLocaleString()}</bdi>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Payment Channel:</span>
+                        <span className="font-medium text-gray-200">
+                          {PAYMENT_METHOD_CONFIG[selectedPayment.payment_method]?.label || selectedPayment.payment_method}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Trx Reference / ID:</span>
+                        <span className="font-mono bg-black/50 px-1.5 py-0.5 rounded text-white border border-white/10">
+                          {selectedPayment.transaction_reference}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Submitted At:</span>
+                        <span className="font-mono text-gray-400 text-[11px]">
+                          {new Date(selectedPayment.created_at).toLocaleString('en-GB')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Admin Review Notes / Rejection Reason Input */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-gray-300 flex items-center justify-between">
+                        <span>Admin Review Notes:</span>
+                        <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                          ایڈمن کے نوٹس / وجہ
+                        </span>
+                      </label>
+                      <textarea
+                        value={adminNotesInput}
+                        onChange={(e) => setAdminNotesInput(e.target.value)}
+                        placeholder="Optional notes for approval, or reason if rejecting..."
+                        rows={2}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 p-2.5 text-xs text-white placeholder:text-gray-500 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 1-Tap Action Triggers */}
+                  <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
+                    <Button
+                      variant="default"
+                      onClick={handleApprovePayment}
+                      disabled={processingPayment}
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-[0_0_20px_rgba(16,185,129,0.25)] gap-2 h-10"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>{processingPayment ? 'Activating...' : 'Approve & Activate Subscription'}</span>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      onClick={handleRejectPayment}
+                      disabled={processingPayment}
+                      className="w-full border-rose-500/40 text-rose-400 hover:bg-rose-500/15 hover:border-rose-500 text-xs font-medium h-9 gap-1.5"
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                      <span>Reject Payment Request</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* ------------------------------------------------------------------- */}
+        {/* GRANT PROMOTIONAL FREE TRIAL MODAL                                  */}
+        {/* ------------------------------------------------------------------- */}
+        <Dialog open={trialModalOpen} onOpenChange={setTrialModalOpen}>
+          <DialogContent className="max-w-md bg-[#0F1115]/95 border-blue-500/30 backdrop-blur-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] p-6">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/40 bg-blue-500/15 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="font-editorial text-xl text-white">
+                    Grant Promotional Free Trial
+                  </DialogTitle>
+                  <span className="font-urdu-sans text-xs text-blue-400" dir="rtl">
+                    ورکشاپ کے لیے پروموشنل ٹرائل فعال کریں
+                  </span>
+                </div>
+              </div>
+
+              <DialogDescription className="text-xs text-gray-300 leading-relaxed pt-1">
+                Granting a promotional trial immediately upgrades <strong className="text-white">{trialShop?.name}</strong> to full Pro features without requiring immediate payment.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-3">
+              {/* Plan Tier Choice */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-300">Target Plan Tier:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTrialTier('PRO')}
+                    className={cn(
+                      'rounded-xl border p-2.5 text-xs font-semibold text-center transition-all cursor-pointer',
+                      trialTier === 'PRO'
+                        ? 'border-gold bg-gold/15 text-gold shadow-[0_0_15px_rgba(212,175,55,0.15)]'
+                        : 'border-white/10 bg-white/[0.02] text-gray-400 hover:text-gray-200'
+                    )}
+                  >
+                    Pro Workshop
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTrialTier('ENTERPRISE')}
+                    className={cn(
+                      'rounded-xl border p-2.5 text-xs font-semibold text-center transition-all cursor-pointer',
+                      trialTier === 'ENTERPRISE'
+                        ? 'border-cyan-500 bg-cyan-500/15 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                        : 'border-white/10 bg-white/[0.02] text-gray-400 hover:text-gray-200'
+                    )}
+                  >
+                    Enterprise Tailor House
+                  </button>
+                </div>
+              </div>
+
+              {/* Duration Presets */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-300">Trial Duration Preset:</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[7, 14, 30, 60, 90].map((days) => (
+                    <button
+                      key={days}
+                      type="button"
+                      onClick={() => setTrialDaysPreset(days)}
+                      className={cn(
+                        'rounded-xl border py-2 text-xs font-medium text-center transition-all cursor-pointer',
+                        trialDaysPreset === days
+                          ? 'border-blue-400 bg-blue-500/20 text-blue-200 font-semibold shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                          : 'border-white/10 bg-white/[0.02] text-gray-400 hover:text-gray-200'
+                      )}
+                    >
+                      {days} Days
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setTrialDaysPreset('CUSTOM')}
+                    className={cn(
+                      'rounded-xl border py-2 text-xs font-medium text-center transition-all cursor-pointer',
+                      trialDaysPreset === 'CUSTOM'
+                        ? 'border-blue-400 bg-blue-500/20 text-blue-200 font-semibold shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                        : 'border-white/10 bg-white/[0.02] text-gray-400 hover:text-gray-200'
+                    )}
+                  >
+                    Custom Date
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Date Input */}
+              {trialDaysPreset === 'CUSTOM' && (
+                <div className="space-y-1.5 animate-fade-in">
+                  <label className="text-xs font-semibold text-gray-300">Custom Expiry Date:</label>
+                  <Input
+                    type="date"
+                    value={customTrialDate}
+                    onChange={(e) => setCustomTrialDate(e.target.value)}
+                    className="h-10 text-xs bg-black/50 border-white/15 text-white"
+                  />
+                </div>
+              )}
+
+              {/* Calculated Expiry Card */}
+              <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 text-xs text-blue-200 flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-400 shrink-0" />
+                <span>
+                  Trial will expire on:{' '}
+                  <strong className="text-white font-mono">
+                    {trialDaysPreset === 'CUSTOM'
+                      ? customTrialDate || 'Select a date'
+                      : new Date(Date.now() + (trialDaysPreset as number) * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                  </strong>
+                </span>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTrialModalOpen(false)}
+                disabled={grantingTrial}
+                className="border-white/10 text-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleGrantTrial}
+                disabled={grantingTrial || (trialDaysPreset === 'CUSTOM' && !customTrialDate)}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+              >
+                {grantingTrial ? 'Granting Trial...' : 'Grant Promotional Trial'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* ------------------------------------------------------------------- */}
         {/* STATUS MUTATION CONFIRMATION MODAL                                  */}

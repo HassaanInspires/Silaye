@@ -37,6 +37,7 @@ export default function LoginPage() {
   // If already logged in, redirect to dashboard
   React.useEffect(() => {
     async function checkExistingSession() {
+      if (!isSupabaseConfigured()) return;
       const session = await getSession();
       if (session) {
         window.location.href = '/dashboard';
@@ -153,8 +154,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative z-10 space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_25px_rgba(212,175,55,0.2)] mb-2">
-            <Scissors className="h-7 w-7" />
+          <div className="relative h-12 w-12 shrink-0 inline-flex items-center justify-center rounded-2xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_25px_rgba(212,175,55,0.2)] mb-2">
+            <Scissors className="h-full w-full p-2.5 object-contain aspect-square" />
           </div>
           <h1 className="font-editorial text-3xl md:text-4xl font-medium tracking-tight text-white">
             Silaye

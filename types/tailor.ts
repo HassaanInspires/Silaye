@@ -441,3 +441,41 @@ export interface AdminShopOverview {
   updated_at: string; // ISO 8601 timestamp
 }
 
+// ==========================================
+// 5. Manual Pakistani Bank Payments & Verification
+// ==========================================
+
+export type PaymentMethod =
+  | 'BANK_TRANSFER'
+  | 'RAAST'
+  | 'JAZZCASH'
+  | 'EASYPAISA';
+
+export type PaymentRequestStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED';
+
+export interface ManualPaymentRequest {
+  id: string; // UUID
+  shop_id: string; // UUID
+  plan_tier: 'PRO' | 'ENTERPRISE';
+  billing_cycle: 'MONTHLY' | 'ANNUAL';
+  amount_pkr: number;
+  payment_method: PaymentMethod;
+  transaction_reference: string;
+  receipt_image_url: string;
+  status: PaymentRequestStatus;
+  admin_notes?: string | null;
+  created_at: string; // ISO 8601 timestamp
+  reviewed_at?: string | null; // ISO 8601 timestamp
+  reviewed_by?: string | null; // UUID
+
+  // Relational references (optional joins)
+  shop?: Shop;
+  shop_name?: string;
+  shop_city?: string;
+  shop_phone?: string;
+}
+
+
