@@ -201,6 +201,7 @@
 - [x] 14.3 Native Icon Pipeline Setup (`package.json`, `assets/`, `android/app/src/main/res/mipmap-*`): Install `@capacitor/assets`, scaffold source assets (`icon-only.png`, `icon-foreground.png`, `icon-background.png`), generate all adaptive Android mipmaps across mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi, and configure `"icons:generate"` script.
 - [x] 14.4 GitHub Actions CI/CD Workflow Secret Injection (`.github/workflows/build-artifacts.yml`): Pass repository secrets (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_DEMO_MODE: 'false'`) at job level into Windows and Android compilation runners.
 - [x] 14.5 Full Production Verification & Static Export: 0 TypeScript type errors (`npx tsc --noEmit`), 113/113 database assertions pass (`scripts/verify_db.ts`), and 28/28 static export routes successfully compiled (`npm run build`).
+- [x] 14.6 Automated CI/CD Cloud Build & Official GitHub Release `v1.0.0-beta` (`.gitignore`, GitHub Actions, `gh release`): Excluded `release-binaries/` from git tracking, executed cloud compilation on `windows-latest` (NSIS x64 Setup 166.56 MB) and `ubuntu-latest` (Capacitor Android APK 7.66 MB), and published official GitHub Release `v1.0.0-beta`.
 
 
 

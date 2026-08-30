@@ -1748,6 +1748,27 @@
   - `npm run build`: 28/28 routes exported into `out/` successfully.
   - `android/app/src/main/res/mipmap-*`: All adaptive icon mipmaps generated.
 
+  - `14.6` Official GitHub Release `v1.0.0-beta` Publication:
+    * Resolved GitHub 100MB file size limit rejection by adding `/release-binaries/` to `.gitignore`.
+    * Cleanly committed and pushed Phase 14 source code, assets, and configs to `origin/main`.
+    * Force-pushed annotated release tag `v1.0.0-beta` triggering the GitHub Actions CI/CD pipeline (`build-artifacts.yml`).
+    * Automated cloud compilation succeeded on Windows (`windows-latest`, NSIS 64-bit installer, 3m48s) and Android (`ubuntu-latest`, Capacitor 8 / JDK 21, 2m31s).
+    * Downloaded fresh cloud release binaries into `./release-binaries/` and verified binary integrity:
+      * `Silaye Beta Setup 1.0.0.exe` (166.56 MiB)
+      * `app-debug.apk` (7.66 MiB)
+    * Published official GitHub Release `v1.0.0-beta` with live download assets and release notes via `gh release create`.
+
+* **Active File Changes:**
+  - `.gitignore` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `git push origin main`: Succeeded with clean remote refs.
+  - `git push origin v1.0.0-beta --force`: Succeeded and triggered CI/CD run `33299532747`.
+  - GitHub Actions Workflow: 2/2 jobs succeeded (`Build Windows Desktop Installer (.exe)` and `Build Android Native Package (.apk)`).
+  - `gh release view v1.0.0-beta`: Verified release online with both `Silaye.Beta.Setup.1.0.0.exe` and `app-debug.apk` assets attached.
+
 * **Next Immediate Task:**
   - Silaye Beta customer workshop testing and production distribution.
 
