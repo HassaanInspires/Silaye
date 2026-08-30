@@ -10,6 +10,10 @@ jobs:
   build-windows-exe:
     name: Build Windows Desktop Installer (.exe)
     runs-on: windows-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_DEMO_MODE: 'false'
     steps:
       - name: Checkout Codebase
         uses: actions/checkout@v4
@@ -39,6 +43,10 @@ jobs:
   build-android-apk:
     name: Build Android Native Package (.apk)
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_DEMO_MODE: 'false'
     steps:
       - name: Checkout Codebase
         uses: actions/checkout@v4

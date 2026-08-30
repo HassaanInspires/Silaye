@@ -3,7 +3,7 @@ import { KeyboardResize, KeyboardStyle } from '@capacitor/keyboard';
 
 const config: CapacitorConfig = {
   appId: 'pk.silaye.app',
-  appName: 'Silaye Master Tailor OS',
+  appName: 'Silaye Beta',
   webDir: 'out',
   server: {
     androidScheme: 'https',

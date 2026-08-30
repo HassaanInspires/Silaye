@@ -10,7 +10,7 @@ function createWindow() {
     height: 800,
     minWidth: 1024,
     minHeight: 700,
-    title: 'Silaye Master Tailor OS',
+    title: 'Silaye Beta',
     backgroundColor: '#0B0C0E',
     darkTheme: true,
     autoHideMenuBar: true,

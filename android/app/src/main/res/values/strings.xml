@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Silaye Master Tailor OS</string>
-    <string name="title_activity_main">Silaye Master Tailor OS</string>
+    <string name="app_name">Silaye Beta</string>
+    <string name="title_activity_main">Silaye Beta</string>
     <string name="package_name">pk.silaye.app</string>
     <string name="custom_url_scheme">pk.silaye.app</string>
 </resources>

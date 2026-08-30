@@ -1696,7 +1696,61 @@
   - GitHub Release `v1.0.0`: Live and accessible on GitHub with binary downloads.
 
 * **Next Immediate Task:**
-  - Production deployment & customer workshop onboarding.
+  - Phase 14: Beta Hardening, Strict Auth Wall & Native Icon Branding (Completed).
+
+---
+
+## Phase 14: Beta Hardening, Strict Auth Wall & Native Icon Branding (Completed)
+* **Date:** 2026-08-30
+* **Tasks Completed:**
+  - `14.1` Strict Client-Side Route Guard & Loading Skeleton (`components/layout/app-shell.tsx`):
+    * Replaced permissive auth handling with a strict client-side auth wall across internal routes (`/dashboard`, `/orders`, `/orders/new`, `/khata`, `/print`, `/settings`, `/admin`).
+    * Public route whitelist enforced: `/`, `/login`, `/login/*`, `/track/*`.
+    * Implemented immediate non-blocking redirect `window.location.replace('/login')` upon unauthenticated session resolution on protected routes.
+    * Displayed a centered Obsidian Dark loading skeleton with gold pulsing scissors logo during session verification, preventing unauthenticated page flash.
+    * Added `SIGNED_OUT` auth event listener to instantly navigate away from protected views.
+  - `14.2` "Silaye Beta" Visual Branding & Watermark:
+    * Synchronized application title and metadata across `app/layout.tsx`, `capacitor.config.ts`, `electron/main.cjs`, `package.json`, and `android/app/src/main/res/values/strings.xml` to `"Silaye Beta"`.
+    * Added elegant Amber "BETA" pill badge (`border-amber-500/40 bg-amber-500/15 text-amber-400 font-bold uppercase`) next to the brand logo in both the desktop fixed glass sidebar and the mobile slide-out drawer sheet in `components/layout/app-shell.tsx`.
+  - `14.3` Native Icon Pipeline Setup:
+    * Installed `@capacitor/assets` dev dependency.
+    * Generated source icon assets (`assets/icon-only.png`, `assets/icon-foreground.png`, `assets/icon-background.png`, `assets/splash.png`, `assets/splash-dark.png`) using `sharp` from `public/favicon.svg`.
+    * Executed `npx capacitor-assets generate --android` generating 74 Android assets across all mipmap densities (`mipmap-mdpi`, `mipmap-hdpi`, `mipmap-xhdpi`, `mipmap-xxhdpi`, `mipmap-xxxhdpi`, `mipmap-anydpi-v26`) and splash screen drawables.
+    * Added `"icons:generate": "npx capacitor-assets generate --android"` script to `package.json`.
+  - `14.4` GitHub Actions CI/CD Secrets Injection (`.github/workflows/build-artifacts.yml`):
+    * Passed repository secrets (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_DEMO_MODE: 'false'`) at job level for both `build-windows-exe` and `build-android-apk` runners.
+  - `14.5` Verification & Production Compilation:
+    * TypeScript compiler check: `npx tsc --noEmit` exited with 0 errors.
+    * Database integrity assertion suite: `scripts/verify_db.ts` verified 113/113 assertions pass (100%).
+    * Production Next.js static export: `npm run build` compiled 28/28 static routes into `out/` with zero runtime or prerender errors.
+
+* **Active File Changes:**
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/layout.tsx` [MODIFIED]
+  - `capacitor.config.ts` [MODIFIED]
+  - `electron/main.cjs` [MODIFIED]
+  - `package.json` [MODIFIED]
+  - `package-lock.json` [MODIFIED]
+  - `android/app/src/main/res/values/strings.xml` [MODIFIED]
+  - `.github/workflows/build-artifacts.yml` [MODIFIED]
+  - `assets/icon-only.png` [NEW]
+  - `assets/icon-foreground.png` [NEW]
+  - `assets/icon-background.png` [NEW]
+  - `assets/splash.png` [NEW]
+  - `assets/splash-dark.png` [NEW]
+  - `android/app/src/main/res/mipmap-*` [UPDATED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors.
+  - `scripts/verify_db.ts`: 113/113 tests passed.
+  - `npm run build`: 28/28 routes exported into `out/` successfully.
+  - `android/app/src/main/res/mipmap-*`: All adaptive icon mipmaps generated.
+
+* **Next Immediate Task:**
+  - Silaye Beta customer workshop testing and production distribution.
+
 
 
 

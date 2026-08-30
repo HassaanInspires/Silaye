@@ -1,7 +1,7 @@
 {
   "name": "silaye",
   "version": "1.0.0",
-  "description": "Silaye Master Tailor OS",
+  "description": "Silaye Beta",
   "author": "Silaye Technologies",
   "private": true,
   "main": "electron/main.cjs",
@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "icons:generate": "npx capacitor-assets generate --android",
     "desktop:dev": "concurrently \"next dev\" \"wait-on http://localhost:3000 && electron electron/main.cjs\"",
     "desktop:build": "npm run build && electron-builder --win nsis --x64 --publish never",
     "mobile:sync": "npm run build && npx cap sync android",
@@ -19,7 +20,7 @@
   },
   "build": {
     "appId": "pk.silaye.desktop",
-    "productName": "Silaye Master Tailor OS",
+    "productName": "Silaye Beta",
     "publish": null,
     "directories": {
       "output": "dist-electron"
@@ -38,7 +39,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Silaye Master Tailor OS"
+      "shortcutName": "Silaye Beta"
     }
   },
   "dependencies": {
@@ -60,6 +61,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.5.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.13.4",

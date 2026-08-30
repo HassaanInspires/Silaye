@@ -246,6 +246,13 @@ function SidebarItem({ item, isActive, onNavigate }: SidebarItemProps) {
   );
 }
 
+// Helper to check if route is public
+const isPublicRoute = (path: string): boolean => {
+  if (!path || path === '/' || path === '') return true;
+  if (path.startsWith('/login') || path.startsWith('/track')) return true;
+  return false;
+};
+
 // ---------------------------------------------------------------------------
 // App Shell
 // ---------------------------------------------------------------------------
@@ -258,6 +265,9 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
   const [shopStatus, setShopStatus] = React.useState<string>('ACTIVE');
   const [shopPlanTier, setShopPlanTier] = React.useState<PlanTier>('FREE');
+
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
+  const isPublic = isPublicRoute(pathname);
 
   // Global '/' shortcut focuses the search input
   const searchRef = React.useRef<HTMLInputElement>(null);
@@ -297,19 +307,13 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
     };
   }, []);
 
-  // Supabase Auth Session Lifecycle Check & Whitelist Guard
+  // Supabase Auth Session Lifecycle Check & Strict Route Guard
   React.useEffect(() => {
     let isMounted = true;
 
     async function checkAuthSession() {
-      const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
-      const isWhitelisted =
-        pathname === '/login' ||
-        pathname === '/login/' ||
-        pathname.startsWith('/login') ||
-        pathname.startsWith('/track') ||
-        pathname === '/' ||
-        pathname === '';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
+      const isWhitelisted = isPublicRoute(currentPath);
 
       // Check Super Admin privilege safely
       try {
@@ -354,7 +358,10 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           // Ignore
         }
       } else if (!isWhitelisted) {
-        window.location.href = '/login';
+        // Strict Auth Guard: Immediately block and redirect
+        if (typeof window !== 'undefined') {
+          window.location.replace('/login');
+        }
       } else {
         setAuthChecked(true);
       }
@@ -369,15 +376,11 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         setIsSuperAdmin(false);
         setShopStatus('ACTIVE');
         setShopPlanTier('FREE');
-        const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
-        const isWhitelisted =
-          pathname === '/login' ||
-          pathname === '/login/' ||
-          pathname.startsWith('/login') ||
-          pathname.startsWith('/track') ||
-          pathname === '/';
-        if (!isWhitelisted) {
-          window.location.href = '/login';
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
+        if (!isPublicRoute(currentPath)) {
+          if (typeof window !== 'undefined') {
+            window.location.replace('/login');
+          }
         }
       } else if (session) {
         setCurrentUser(session.user);
@@ -400,9 +403,26 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
 
   const handleSignOut = async () => {
     await signOut();
-    window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+      window.location.replace('/login');
+    }
   };
 
+  // Strict Auth Wall: Block rendering and show loading skeleton on protected routes
+  if (!isPublic && isSupabaseConfigured() && (!authChecked || !currentUser)) {
+    return (
+      <div className="min-h-screen bg-ambient-dark flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold animate-pulse">
+            <Scissors className="h-5 w-5" />
+          </div>
+          <span className="text-xs text-gray-400">Verifying session...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Session verification skeleton for all routes during initial load
   if (!authChecked && isSupabaseConfigured()) {
     return (
       <div className="min-h-screen bg-ambient-dark flex items-center justify-center">
@@ -433,9 +453,14 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 <Scissors className="h-4 w-4" />
               </div>
               <div className="flex flex-col">
-                <span className="font-editorial text-xl font-medium tracking-tight text-white group-hover:text-gold transition-colors">
-                  Silaye
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-editorial text-xl font-medium tracking-tight text-white group-hover:text-gold transition-colors">
+                    Silaye
+                  </span>
+                  <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-amber-400 uppercase shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                    BETA
+                  </span>
+                </div>
                 <span className="font-urdu-serif text-xs text-gold/80 -mt-1" dir="rtl">
                   سلائے ماسٹر
                 </span>
@@ -557,7 +582,12 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold">
                       <Scissors className="h-4 w-4" />
                     </div>
-                    <span className="font-editorial text-xl font-medium text-white">Silaye</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-editorial text-xl font-medium text-white">Silaye</span>
+                      <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-amber-400 uppercase shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                        BETA
+                      </span>
+                    </div>
                   </a>
                   {shopPlanTier === 'PRO' ? (
                     <span className="rounded-full border border-gold/50 bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-gold uppercase shadow-[0_0_10px_rgba(212,175,55,0.2)] flex items-center gap-1">

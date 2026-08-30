@@ -30,7 +30,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Silaye | Bespoke Tailor Workshop Management & CRM",
+  title: "Silaye Beta | Bespoke Tailor Workshop Management & CRM",
   description:
     "Mission-critical bespoke tailor workshop OS, bilingual measurement vault, and workflow pipeline engine.",
   icons: {

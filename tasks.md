@@ -193,6 +193,16 @@
 - [x] 13.5 Download compiled cross-platform production binaries into `./release-binaries/` via GitHub CLI (`gh`).
 - [x] 13.6 Verify binary integrity and checksums (`Silaye Master Tailor OS Setup 1.0.0.exe` [167 MB], `app-debug.apk` [5.4 MB]).
 
+---
+
+## Phase 14: Beta Hardening, Strict Auth Wall & Native Icon Branding
+- [x] 14.1 Strict Client-Side Route Guard & Skeleton (`components/layout/app-shell.tsx`): Block unauthenticated access to internal routes (`/dashboard`, `/orders`, `/orders/new`, `/khata`, `/print`, `/settings`, `/admin`), render centered Obsidian Dark loading skeleton with scissors logo, and redirect immediately to `/login` via `window.location.replace('/login')` while whitelisting `/`, `/login`, `/login/*`, `/track/*`.
+- [x] 14.2 "Silaye Beta" Visual Branding & Watermark (`app/layout.tsx`, `components/layout/app-shell.tsx`, `capacitor.config.ts`, `electron/main.cjs`, `package.json`, `android/app/src/main/res/values/strings.xml`): Update title and app identity across all platforms to "Silaye Beta" and add amber "BETA" pill badge beside the logo in desktop sidebar and mobile drawer.
+- [x] 14.3 Native Icon Pipeline Setup (`package.json`, `assets/`, `android/app/src/main/res/mipmap-*`): Install `@capacitor/assets`, scaffold source assets (`icon-only.png`, `icon-foreground.png`, `icon-background.png`), generate all adaptive Android mipmaps across mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi, and configure `"icons:generate"` script.
+- [x] 14.4 GitHub Actions CI/CD Workflow Secret Injection (`.github/workflows/build-artifacts.yml`): Pass repository secrets (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_DEMO_MODE: 'false'`) at job level into Windows and Android compilation runners.
+- [x] 14.5 Full Production Verification & Static Export: 0 TypeScript type errors (`npx tsc --noEmit`), 113/113 database assertions pass (`scripts/verify_db.ts`), and 28/28 static export routes successfully compiled (`npm run build`).
+
+
 
 
 
