@@ -1677,11 +1677,23 @@
   - `tasks.md` [MODIFIED]
   - `progress.md` [MODIFIED]
   - `release-binaries/silaye-windows-installer-x64/Silaye Master Tailor OS Setup 1.0.0.exe` [NEW]
+  - `13.7` Official GitHub Release Publication:
+    * Published official production release `v1.0.0` at `https://github.com/HassaanInspires/Silaye/releases/tag/v1.0.0` via GitHub CLI (`gh release create`).
+    * Attached binary assets: `Silaye.Master.Tailor.OS.Setup.1.0.0.exe` (166.57 MiB) and `app-debug.apk` (5.37 MiB).
+    * Verified release assets and live URL via `gh release view v1.0.0`.
+
+* **Active File Changes:**
+  - `.github/workflows/build-artifacts.yml` [MODIFIED]
+  - `package.json` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+  - `release-binaries/silaye-windows-installer-x64/Silaye Master Tailor OS Setup 1.0.0.exe` [NEW]
   - `release-binaries/silaye-android-apk/app-debug.apk` [NEW]
 
 * **Verification Results:**
   - GitHub Actions Workflow Run `33267688040`: 100% Success across Windows x64 and Android runners.
   - Native Binaries: Verified 100% valid executable and APK formats with verified SHA-256 signatures.
+  - GitHub Release `v1.0.0`: Live and accessible on GitHub with binary downloads.
 
 * **Next Immediate Task:**
   - Production deployment & customer workshop onboarding.
