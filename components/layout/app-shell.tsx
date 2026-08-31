@@ -36,6 +36,7 @@ import {
   type NavLayoutPreference,
   NAV_LAYOUT_CHANGED_EVENT,
 } from '@/lib/nav-preferences';
+import { useOnlineStatus } from '@/lib/use-online-status';
 import { syncCoordinator, type SyncState } from '@/lib/sync-coordinator';
 import { adminDb, shopsDb } from '@/lib/db';
 import type { PlanTier, Shop, SubscriptionStatus } from '@/types/tailor';
@@ -283,6 +284,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const [shopName, setShopName] = React.useState<string>('Silaye Master');
   const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState<boolean>(false);
   const [navLayout, setNavLayout] = React.useState<NavLayoutPreference>('tabs');
+  const isOnline = useOnlineStatus();
 
   const mobileSearchRef = React.useRef<HTMLInputElement>(null);
 
@@ -503,7 +505,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   }
 
   return (
-    <div className="min-h-screen bg-ambient-dark text-foreground flex flex-col md:flex-row font-sans">
+    <div className="min-h-[100dvh] bg-ambient-dark text-foreground flex flex-col md:flex-row font-sans overflow-x-hidden">
       {/* ------------------------------------------------------------------ */}
       {/* DESKTOP SIDEBAR (Fixed Glass Panel)                                  */}
       {/* ------------------------------------------------------------------ */}
@@ -792,7 +794,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
               </button>
             </div>
           ) : (
-            <div className="flex md:hidden items-center justify-between w-full">
+            <div className="flex md:hidden items-center justify-between w-full h-14 min-h-14 px-3.5">
               {/* Mobile Left: Hamburger (Drawer/Hybrid) or Gold Scissors (Tabs) */}
               <div className="flex items-center gap-2 shrink-0">
                 {navLayout === 'drawer' || navLayout === 'hybrid' ? (
@@ -813,14 +815,21 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 )}
               </div>
 
-              {/* Mobile Center: Workshop Name + Live Sync Pill */}
-              <div className="flex items-center justify-center gap-1.5 min-w-0 px-2 flex-1">
-                <span className="text-xs font-bold text-white truncate max-w-[130px] sm:max-w-[180px]">
+              {/* Mobile Center: Workshop Name + Compact Status Dot */}
+              <div className="flex items-center justify-center min-w-0 px-2 flex-1">
+                <span className="text-sm font-semibold text-white truncate max-w-[200px]">
                   {shopName}
                 </span>
-                <div className="shrink-0 scale-90 origin-center">
-                  <ConnectionPill />
-                </div>
+                <span
+                  className={cn(
+                    "h-2 w-2 rounded-full inline-block ml-1.5 shrink-0 animate-pulse",
+                    isOnline
+                      ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+                      : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"
+                  )}
+                  title={isOnline ? "Online / آن لائن" : "Offline / آف لائن"}
+                  aria-label={isOnline ? "Online" : "Offline"}
+                />
               </div>
 
               {/* Mobile Right: Compact Touch Actions [🔍 Search] and [🔔 Notification] */}
@@ -883,7 +892,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         {/* Scrollable Main Viewport */}
         <main
           className={cn(
-            'flex-1 p-4 md:p-8 pb-safe',
+            'flex-1 w-full overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-safe overscroll-y-contain',
             navLayout === 'drawer' ? 'pb-8 md:pb-8' : 'pb-36 md:pb-8'
           )}
           id="main-content"

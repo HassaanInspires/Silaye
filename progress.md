@@ -2430,7 +2430,69 @@
   - `npm run build`: Exit code 0 (28/28 static routes compiled into `out/`).
 
 * **Next Immediate Task:**
-  - Concept 2 Planning & Exploration / Next Release Milestone.
+  - Sub-Phase 19.9: Mobile Scroll Unlock, Viewport Physics Fix & Top Header Streamlining (Completed)
+
+---
+
+## Sub-Phase 19.9: Mobile Scroll Unlock, Viewport Physics Fix & Top Header Streamlining (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `19.9` Mobile Scroll Unlock, Viewport Physics Fix & Top Header Streamlining:
+    * **Viewport Touch Scroll Unlock (`app/globals.css`, `components/layout/app-shell.tsx`)**:
+      - Refactored `html, body` base styles in `app/globals.css`:
+        ```css
+        html {
+          min-height: 100%;
+          height: 100%;
+          background-color: #0B0C0E;
+          overflow-x: hidden;
+        }
+        body {
+          min-height: 100%;
+          height: 100%;
+          background-color: #0B0C0E;
+          overflow-x: hidden;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          @apply bg-background text-foreground antialiased;
+          font-feature-settings: "rlig" 1, "calt" 1;
+        }
+        ```
+      - Updated root container in `components/layout/app-shell.tsx`:
+        `className="min-h-[100dvh] bg-ambient-dark text-foreground flex flex-col md:flex-row font-sans overflow-x-hidden"`
+      - Configured `<main id="main-content">` viewport in `components/layout/app-shell.tsx`:
+        `className={cn("flex-1 w-full overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-safe overscroll-y-contain", navLayout === "drawer" ? "pb-8 md:pb-8" : "pb-36 md:pb-8")}`
+      - Eliminated vertical gesture trapping, restored native momentum scrolling (`-webkit-overflow-scrolling: touch`), and maintained safe overscroll containment.
+    * **Reactive Online Status Hook (`lib/use-online-status.ts`)**:
+      - Created lightweight, SSR-safe `useOnlineStatus(): boolean` hook.
+      - Initialized with `typeof navigator !== 'undefined' ? navigator.onLine : true`.
+      - Subscribed to `window.addEventListener('online')`, `window.addEventListener('offline')`, and `window.addEventListener('visibilitychange')` with clean unmount disposal.
+    * **Mobile Top Command Bar Streamlining (`components/layout/app-shell.tsx`)**:
+      - Re-architected mobile command bar (`flex md:hidden items-center justify-between w-full h-14 min-h-14 px-3.5`).
+      - Left: Brand Icon (Gold Scissors in Tabs mode, or Hamburger `<Menu />` in Drawer/Hybrid mode).
+      - Center: Replaced bulky `<ConnectionPill />` text badge with sleek Workshop Name (`text-sm font-semibold text-white truncate max-w-[200px]`) + compact pulsing status dot (`h-2 w-2 rounded-full inline-block ml-1.5 shrink-0 animate-pulse` glowing Emerald `#10b981` when online, Amber `#f59e0b` when offline).
+      - Right: Compact touch action buttons (`[🔍 Search]` trigger opening slide-down quick search and `[🔔 Notifications]` trigger linking to `/settings`).
+      - Preserved full desktop command bar (`hidden md:flex`) with standard `<ConnectionPill />` and wide search input untouched.
+    * **Automated Verification**:
+      - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+      - `npx --yes tsx scripts/verify_db.ts`: Exit code 0 (159/159 database and repository test assertions passed in 663.82s).
+      - `npm run build`: Exit code 0 (all 28/28 static routes cleanly generated into `out/`).
+
+* **Active File Changes:**
+  - `lib/use-online-status.ts` [NEW]
+  - `app/globals.css` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 type errors.
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 test assertions passing.
+  - `npm run build`: Clean static production export into `out/` (28/28 static routes compiled).
+
+* **Next Immediate Task:**
+  - Milestone Planning & Concept 2 Exploration.
+
 
 
 
