@@ -312,7 +312,20 @@
   - **Artifact Ingestion & Verification**: Downloaded compiled binaries into `./release-binaries-concept1/` via GitHub CLI (`gh run download`) and verified checksums and binary integrity.
   - **Official GitHub Release Publication**: Published official GitHub Release `v1.1.0-concept1` with complete bilingual release notes and attached production binary assets.
 
+---
 
-
-
-
+## Phase 20: Mobile Lifecycle Core Fixes & Deep-Link Navigation Architecture
+- [x] 20.1 Zero-Flash Root Shell & Pre-Render Elimination (`app/page.tsx`):
+  - Statically pre-renders ONLY the fullscreen Obsidian Dark backdrop (`#0B0C0E`) with the centered pulsing gold scissors logo on `out/index.html`.
+  - In `useEffect`: if native mobile and session exists, routes via `router.replace('/dashboard')`; if unauthenticated, renders `<MobileOnboardingFlow />`; if desktop browser or Electron, hydrates into the full editorial marketing landing page.
+- [x] 20.2 Deterministic Auth Guard & Interlock (`components/layout/app-shell.tsx`, `app/(auth)/login/page.tsx`):
+  - Introduced `isAuthResolved` state in `AppShell` with subscription to `supabase.auth.onAuthStateChange` (`INITIAL_SESSION`, `SIGNED_IN`, `SIGNED_OUT`, `TOKEN_REFRESHED`) and a 2.5s fallback timeout.
+  - Enforced strict interlock preventing redirects while `!isAuthResolved`, and rendered Obsidian Dark skeleton loader on protected routes during verification.
+  - Replaced all `window.location.replace` hard reloads with Next.js App Router `router.replace` in both `AppShell` and `LoginPage` to eliminate history loops and state destruction.
+- [x] 20.3 Notification Deep-Link Action Handler (`lib/notifications.ts`, `components/platform/notification-scheduler.tsx`):
+  - Implemented `setupNotificationActionListener` in `lib/notifications.ts` subscribing to `LocalNotifications.addListener('localNotificationActionPerformed', ...)`.
+  - Registered listener inside `NotificationScheduler` (`app/layout.tsx`) to route directly to `action.notification.extra?.route || '/dashboard'` via `router.replace`, with clean unmount disposal.
+- [x] 20.4 Automated Verification Suite & Static Export Compilation (`scripts/verify_db.ts`):
+  - Added Section 16/17 Test 17.8 verifying `setupNotificationActionListener` initialization and cleanup function handling (159/159 tests passing).
+  - Verified 0 TypeScript type errors (`npx tsc --noEmit`).
+  - Verified Next.js static export compilation into `out/` (28/28 static routes generated cleanly) and verified `out/index.html` renders strictly the `#0B0C0E` backdrop with 0 marketing copy bytes.

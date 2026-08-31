@@ -366,3 +366,36 @@ export async function sendTestNotification(): Promise<boolean> {
 
   return permitted;
 }
+
+/**
+ * Sets up a listener for notification tap / action performance on Capacitor mobile devices.
+ * Extracts the deep-link route from notification extra payload and passes it to the callback.
+ * Returns a cleanup function to unregister the listener.
+ */
+export async function setupNotificationActionListener(
+  onNavigate: (route: string) => void
+): Promise<() => void> {
+  if (typeof window === 'undefined') return () => {};
+
+  if (isNativeMobile(false) || window.Capacitor?.isNativePlatform?.()) {
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      const handle = await LocalNotifications.addListener(
+        'localNotificationActionPerformed',
+        (action) => {
+          const targetRoute = action.notification.extra?.route || '/dashboard';
+          if (targetRoute) {
+            onNavigate(targetRoute);
+          }
+        }
+      );
+      return () => {
+        handle.remove().catch(() => {});
+      };
+    } catch (err) {
+      console.warn('[Silaye Notifications] Failed to attach notification action listener:', err);
+    }
+  }
+
+  return () => {};
+}

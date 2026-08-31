@@ -105,6 +105,7 @@ import {
   scheduleUrgentOrderAlert,
   sendTestNotification,
   playNotificationChime,
+  setupNotificationActionListener,
   MORNING_BRIEFING_NOTIFICATION_ID,
   TEST_NOTIFICATION_ID,
 } from '../lib/notifications';
@@ -1951,6 +1952,19 @@ async function runVerification() {
   assert(
     typeof testNotifResult === 'boolean',
     'sendTestNotification() returns boolean test dispatch outcome'
+  );
+
+  // Test 17.8: setupNotificationActionListener initializes cleanly and returns cleanup callback
+  let actionListenerCleanup: (() => void) | null = null;
+  let actionListenerError: Error | null = null;
+  try {
+    actionListenerCleanup = await setupNotificationActionListener(() => {});
+  } catch (err) {
+    actionListenerError = err as Error;
+  }
+  assert(
+    actionListenerError === null && typeof actionListenerCleanup === 'function',
+    'setupNotificationActionListener() returns cleanup function in safe headless environment'
   );
 
   // ----------------------------------------------------

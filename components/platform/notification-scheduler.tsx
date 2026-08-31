@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   getNotificationPreferences,
   NOTIFICATION_PREFS_CHANGED_EVENT,
@@ -8,6 +9,7 @@ import {
 import {
   scheduleDailyMorningBriefing,
   scheduleUrgentOrderAlert,
+  setupNotificationActionListener,
 } from '@/lib/notifications';
 import { ordersDb, shopsDb } from '@/lib/db';
 
@@ -17,8 +19,10 @@ import { ordersDb, shopsDb } from '@/lib/db';
  * Zero-DOM background client component mounted at root level.
  * Automatically synchronizes workshop orders with the Local Notifications Engine
  * to trigger daily 9:00 AM delivery briefings and urgent in-production alerts.
+ * Also intercepts native notification tap actions to deep-link directly into target routes.
  */
 export function NotificationScheduler(): null {
+  const router = useRouter();
   const syncScheduledNotifications = React.useCallback(async () => {
     if (typeof window === 'undefined') return;
 
@@ -66,6 +70,25 @@ export function NotificationScheduler(): null {
       console.warn('[Silaye Notifications] Background scheduler evaluation notice:', err);
     }
   }, []);
+
+  // Intercept native mobile notification clicks/actions to deep-link directly into target routes
+  React.useEffect(() => {
+    let cleanupListener: (() => void) | undefined;
+
+    setupNotificationActionListener((targetRoute) => {
+      if (targetRoute) {
+        router.replace(targetRoute);
+      }
+    }).then((cleanup) => {
+      cleanupListener = cleanup;
+    });
+
+    return () => {
+      if (cleanupListener) {
+        cleanupListener();
+      }
+    };
+  }, [router]);
 
   React.useEffect(() => {
     // Run initial evaluation after a slight delay to allow auth and offline DB initialization

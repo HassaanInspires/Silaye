@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Scissors } from 'lucide-react';
 import { HeroSection } from '@/components/landing/hero-section';
 import { BentoGrid } from '@/components/landing/bento-grid';
@@ -373,6 +374,7 @@ function SiteFooter() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
+  const router = useRouter();
   const [isMounted, setIsMounted] = React.useState<boolean>(false);
   const [isMobile, setIsMobile] = React.useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = React.useState<boolean>(true);
@@ -391,11 +393,11 @@ export default function HomePage() {
         try {
           const session = await getSession();
           if (session) {
-            window.location.replace('/dashboard');
+            router.replace('/dashboard');
             return;
           }
         } catch {
-          // Ignore fallback
+          // Fallback to onboarding
         }
         setIsCheckingAuth(false);
       }
@@ -403,23 +405,27 @@ export default function HomePage() {
     } else {
       setIsCheckingAuth(false);
     }
-  }, []);
+  }, [router]);
 
-  // 1. Native Mobile Environment: Auto-route or render Cinematic 3-Card Onboarding
-  if (isMounted && isMobile) {
-    if (isCheckingAuth) {
-      return (
-        <div className="min-h-screen bg-[#0B0C0E] flex items-center justify-center">
-          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold animate-pulse">
-            <Scissors className="h-full w-full p-2 object-contain aspect-square" />
-          </div>
+  // 1. Initial Static Render (out/index.html) & Mobile Auth Checking:
+  // ONLY render the fullscreen Obsidian Dark backdrop (#0B0C0E) with subtle centered gold scissors logo pulse.
+  // Under no circumstances should marketing HTML ever render on initial static HTML paint.
+  if (!isMounted || (isMobile && isCheckingAuth)) {
+    return (
+      <div className="min-h-screen bg-[#0B0C0E] flex items-center justify-center">
+        <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold animate-pulse">
+          <Scissors className="h-full w-full p-2 object-contain aspect-square" />
         </div>
-      );
-    }
+      </div>
+    );
+  }
+
+  // 2. Native Mobile Environment: Unauthenticated users view Cinematic 3-Card Onboarding
+  if (isMobile) {
     return <MobileOnboardingFlow />;
   }
 
-  // 2. Desktop Browser, Electron, or Initial Static Render: Full Luxury Editorial Landing Page
+  // 3. Desktop Browser or Electron (Mounted): Full Luxury Editorial Landing Page
   return (
     <main className="min-h-screen bg-obsidian-bg">
       {/* Section 1: Obsidian Dark Hero */}

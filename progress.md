@@ -2290,7 +2290,48 @@
   - `gh release view v1.1.0-concept1`: Live GitHub release verified with `app-debug.apk` (7.75 MiB) and `Silaye.Beta.Setup.1.1.0.exe` (166.70 MiB).
 
 * **Next Immediate Task:**
-  - Phase 20: Next Milestone / Concept Evaluation.
+  - Phase 20: Mobile Lifecycle Core Fixes & Deep-Link Navigation Architecture (Completed)
+
+---
+
+## Phase 20: Mobile Lifecycle Core Fixes & Deep-Link Navigation Architecture (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `20.1` Zero-Flash Root Shell & Pre-Render Elimination (`app/page.tsx`):
+    * Replaced the static pre-render logic in `app/page.tsx` so that `!isMounted` (and during mobile auth evaluation) renders strictly a fullscreen Obsidian Dark backdrop (`#0B0C0E`) with the pulsing gold scissors logo.
+    * Statically pre-rendered HTML export (`out/index.html`) now contains zero marketing text or markup bytes, eliminating the 0.5s marketing flash on APK launch.
+    * In client `useEffect`: if mobile and session exists, routes via `router.replace('/dashboard')`; if unauthenticated, renders `<MobileOnboardingFlow />`; if desktop browser or Electron, hydrates into the full editorial marketing landing page.
+  - `20.2` Deterministic Auth Guard & Interlock (`components/layout/app-shell.tsx`, `app/(auth)/login/page.tsx`):
+    * Introduced `isAuthResolved` boolean state in `AppShell` with subscription to `supabase.auth.onAuthStateChange` (`INITIAL_SESSION`, `SIGNED_IN`, `SIGNED_OUT`, `TOKEN_REFRESHED`) and a 2.5s fallback timeout.
+    * Enforced strict interlock: no redirects occur while `!isAuthResolved`, and protected routes display an Obsidian Dark skeleton loader during session verification.
+    * Replaced all `window.location.replace` calls across `AppShell` and `LoginPage` with Next.js App Router `router.replace`, preserving in-memory React and Supabase client state and eliminating infinite ping-pong redirect loops.
+  - `20.3` Notification Deep-Link Action Handler (`lib/notifications.ts`, `components/platform/notification-scheduler.tsx`):
+    * Implemented `setupNotificationActionListener(onNavigate)` in `lib/notifications.ts` subscribing to Capacitor's `localNotificationActionPerformed` event.
+    * Mounted action listener in `NotificationScheduler` (`app/layout.tsx`) navigating directly to `action.notification.extra?.route || '/dashboard'` via `router.replace`, bypassing the `/` root route check entirely and cleaning up on unmount.
+  - `20.4` Automated Verification Suite & Static Export Compilation (`scripts/verify_db.ts`):
+    * Added Section 16/17 Test 17.8 verifying `setupNotificationActionListener` initialization and cleanup function handling (159/159 tests passing).
+    * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    * Verified Next.js static export compilation into `out/` (28/28 static routes generated cleanly) and verified `out/index.html` renders strictly the `#0B0C0E` backdrop with 0 marketing copy bytes.
+
+* **Active File Changes:**
+  - `app/page.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/(auth)/login/page.tsx` [MODIFIED]
+  - `lib/notifications.ts` [MODIFIED]
+  - `components/platform/notification-scheduler.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: Exit code 0 (159/159 tests passed).
+  - `npm run build`: Exit code 0 (28/28 static routes compiled into `out/`).
+  - `out/index.html`: Verified static HTML contains ONLY `#0B0C0E` backdrop + scissors logo, zero marketing copy bytes.
+
+* **Next Immediate Task:**
+  - Phase 21: Next Milestone / Concept Evaluation.
+
 
 
 

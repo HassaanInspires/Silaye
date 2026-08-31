@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Home,
   PlusCircle,
@@ -268,10 +269,11 @@ export const isPublicRoute = (path: string): boolean => {
 // ---------------------------------------------------------------------------
 
 export function AppShell({ children, activeRoute = '' }: AppShellProps) {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState<boolean>(false);
   const [searchValue, setSearchValue] = React.useState<string>('');
   const [currentUser, setCurrentUser] = React.useState<User | null>(null);
-  const [authChecked, setAuthChecked] = React.useState<boolean>(false);
+  const [isAuthResolved, setIsAuthResolved] = React.useState<boolean>(() => !isSupabaseConfigured());
   const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
   const [shopStatus, setShopStatus] = React.useState<string>('ACTIVE');
   const [shopPlanTier, setShopPlanTier] = React.useState<PlanTier>('FREE');
@@ -358,9 +360,16 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
     };
   }, []);
 
-  // Supabase Auth Session Lifecycle Check & Strict Route Guard
+  // Supabase Auth Session Lifecycle Check & Deterministic Route Guard Interlock
   React.useEffect(() => {
     let isMounted = true;
+
+    // Safety fallback timeout to guarantee auth is resolved within 2.5s
+    const fallbackTimer = setTimeout(() => {
+      if (isMounted) {
+        setIsAuthResolved(true);
+      }
+    }, 2500);
 
     async function checkAuthSession() {
       const currentPath = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
@@ -389,39 +398,36 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
 
       if (!isSupabaseConfigured()) {
         // Local offline / demo development mode
-        if (isMounted) setAuthChecked(true);
+        if (isMounted) setIsAuthResolved(true);
         return;
       }
 
-      const session = await getSession();
-      if (!isMounted) return;
+      try {
+        const session = await getSession();
+        if (!isMounted) return;
+        setIsAuthResolved(true);
 
-      if (session) {
-        setCurrentUser(session.user);
-        setAuthChecked(true);
+        if (session) {
+          setCurrentUser(session.user);
 
-        // Fetch tenant shop status & tier for authenticated user
-        try {
-          const shop = await shopsDb.getCurrentShop(session.user.id);
-          if (isMounted && shop) {
-            if (shop.status) setShopStatus(shop.status);
-            if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
-            if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
-            if (shop.current_period_end) setShopPeriodEnd(shop.current_period_end);
+          // Fetch tenant shop status & tier for authenticated user
+          try {
+            const shop = await shopsDb.getCurrentShop(session.user.id);
+            if (isMounted && shop) {
+              if (shop.status) setShopStatus(shop.status);
+              if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
+              if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
+              if (shop.current_period_end) setShopPeriodEnd(shop.current_period_end);
+            }
+          } catch {
+            // Ignore
           }
-        } catch {
-          // Ignore
+        } else if (!isWhitelisted) {
+          // STRICT AUTH INTERLOCK: Only redirect when auth resolution is complete
+          router.replace('/login');
         }
-      } else if (!isWhitelisted) {
-        // Strict Auth Guard: Immediately block and redirect only for non-whitelisted paths
-        if (typeof window !== 'undefined') {
-          const browserPath = window.location.pathname;
-          if (!isPublicRoute(browserPath) && browserPath !== '/login' && browserPath !== '/') {
-            window.location.replace('/login');
-          }
-        }
-      } else {
-        setAuthChecked(true);
+      } catch {
+        if (isMounted) setIsAuthResolved(true);
       }
     }
 
@@ -429,6 +435,8 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
 
     const { unsubscribe } = onAuthStateChange((event, session) => {
       if (!isMounted) return;
+      setIsAuthResolved(true);
+
       if (event === 'SIGNED_OUT') {
         setCurrentUser(null);
         setIsSuperAdmin(false);
@@ -436,11 +444,9 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         setShopPlanTier('FREE');
         setShopSubscriptionStatus('ACTIVE');
         setShopPeriodEnd('');
-        if (typeof window !== 'undefined') {
-          const browserPath = window.location.pathname;
-          if (!isPublicRoute(browserPath) && browserPath !== '/login' && browserPath !== '/') {
-            window.location.replace('/login');
-          }
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
+        if (!isPublicRoute(currentPath)) {
+          router.replace('/login');
         }
       } else if (session) {
         setCurrentUser(session.user);
@@ -449,29 +455,31 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         });
         shopsDb.getCurrentShop(session.user.id).then((shop) => {
           if (isMounted && shop) {
+            if (shop.status) setShopStatus(shop.status);
             if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
             if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
             if (shop.current_period_end) setShopPeriodEnd(shop.current_period_end);
           }
         });
+      } else {
+        setCurrentUser(null);
       }
     });
 
     return () => {
       isMounted = false;
+      clearTimeout(fallbackTimer);
       unsubscribe();
     };
-  }, [activeRoute]);
+  }, [activeRoute, router]);
 
   const handleSignOut = async () => {
     await signOut();
-    if (typeof window !== 'undefined') {
-      window.location.replace('/login');
-    }
+    router.replace('/login');
   };
 
-  // Strict Auth Wall: Block rendering and show loading skeleton strictly on protected routes
-  if (!isPublic && isSupabaseConfigured() && (!authChecked || !currentUser)) {
+  // Strict Auth Wall: Block rendering and show loading skeleton strictly on protected routes while auth is unresolved or unauthenticated
+  if (!isPublic && isSupabaseConfigured() && (!isAuthResolved || !currentUser)) {
     return (
       <div className="min-h-screen bg-ambient-dark flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">

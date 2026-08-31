@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Scissors,
   Mail,
@@ -24,6 +25,7 @@ import {
 } from '@/lib/supabase/client';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [mode, setMode] = React.useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = React.useState<string>('');
   const [password, setPassword] = React.useState<string>('');
@@ -57,14 +59,14 @@ export default function LoginPage() {
       try {
         const session = await getSession();
         if (session) {
-          window.location.replace('/dashboard');
+          router.replace('/dashboard');
         }
       } catch {
         // Ignore fallback
       }
     }
     checkExistingSession();
-  }, []);
+  }, [router]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +80,7 @@ export default function LoginPage() {
 
     if (!isConfigured) {
       // Local / Offline developer bypass
-      window.location.replace('/dashboard');
+      router.replace('/dashboard');
       return;
     }
 
@@ -97,7 +99,7 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        window.location.replace('/dashboard');
+        router.replace('/dashboard');
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'An unexpected error occurred.');
@@ -121,7 +123,7 @@ export default function LoginPage() {
     }
 
     if (!isConfigured) {
-      window.location.replace('/dashboard');
+      router.replace('/dashboard');
       return;
     }
 
@@ -145,7 +147,7 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        window.location.replace('/dashboard');
+        router.replace('/dashboard');
       } else if (data.user) {
         setSuccessMsg(
           'Registration successful! Please check your email to confirm your account, or sign in.'
