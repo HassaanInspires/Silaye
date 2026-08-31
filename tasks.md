@@ -305,6 +305,13 @@
   - **Automated Background Scheduler (`components/platform/notification-scheduler.tsx`, `app/layout.tsx`)**: Mounted zero-DOM client component at root level, evaluating active session, querying workshop orders, scheduling 9:00 AM morning briefings and urgent alerts, and listening to live preference change broadcasts.
   - **Workshop Settings UI Integration (`app/settings/page.tsx`)**: Added dedicated "Notifications & Due Alerts / نوٹیفیکیشنز اور الرٹس" card in Tab 1 with 3 tactile toggle switches (Morning Delivery Briefing 9:00 AM, Urgent Due Date Warnings < 24h, Sound & Vibration Chimes) and 1-tap "ٹیسٹ نوٹیفیکیشن بھیجیں / Send Test Alert" button.
   - **Automated Verification**: 0 TypeScript compiler errors (`npx tsc --noEmit`), 158/158 database and notification engine assertions pass (`scripts/verify_db.ts`), and Next.js static export compiles all 28/28 static routes cleanly into `out/` (`npm run build`).
+- [x] 19.7 Cloud Build, APK Compilation & GitHub Release for Concept 1 (`package.json`, `package-lock.json`, `.github/workflows/build-artifacts.yml`, `gh release`):
+  - **Version Alignment & Clean Release Snapshot**: Bumped `"version": "1.1.0"` across `package.json` and `package-lock.json`, excluded `release-binaries*/` in `.gitignore`, committed clean release snapshot `chore(release): v1.1.0-concept1 - native bottom tabs, elevated FAB, 3-card mobile onboarding, system bar styling, inner screens overhaul & automated due alerts`, and pushed to `main`.
+  - **CI/CD Cloud Matrix Trigger**: Created annotated release tag `v1.1.0-concept1` and pushed to remote to trigger GitHub Actions build matrix workflow `Build Cross-Platform Native Binaries` (Run `#33365757118`).
+  - **Cross-Platform Compilation**: Compiled Android Native Package (`app-debug.apk` [7.75 MB]) via Capacitor 8 / Java JDK 21 on `ubuntu-latest` and Windows Desktop Installer (`Silaye Beta Setup 1.1.0.exe` [166.70 MB]) via Electron Builder NSIS x64 on `windows-latest`.
+  - **Artifact Ingestion & Verification**: Downloaded compiled binaries into `./release-binaries-concept1/` via GitHub CLI (`gh run download`) and verified checksums and binary integrity.
+  - **Official GitHub Release Publication**: Published official GitHub Release `v1.1.0-concept1` with complete bilingual release notes and attached production binary assets.
+
 
 
 
