@@ -680,6 +680,10 @@ export const measurementsDb = {
 // ==========================================
 
 export const ordersDb = {
+  async getOrders(shopId?: string): Promise<GarmentOrder[]> {
+    return this.getByShopId(shopId || '');
+  },
+
   async getByShopId(shopId: string): Promise<GarmentOrder[]> {
     if (isDatabaseConfigured()) {
       try {

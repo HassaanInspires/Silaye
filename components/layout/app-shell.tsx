@@ -28,6 +28,12 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
+import {
+  getNavLayoutPreference,
+  type NavLayoutPreference,
+  NAV_LAYOUT_CHANGED_EVENT,
+} from '@/lib/nav-preferences';
 import { syncCoordinator, type SyncState } from '@/lib/sync-coordinator';
 import { adminDb, shopsDb } from '@/lib/db';
 import type { PlanTier, Shop, SubscriptionStatus } from '@/types/tailor';
@@ -271,9 +277,24 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const [shopPlanTier, setShopPlanTier] = React.useState<PlanTier>('FREE');
   const [shopSubscriptionStatus, setShopSubscriptionStatus] = React.useState<SubscriptionStatus>('ACTIVE');
   const [shopPeriodEnd, setShopPeriodEnd] = React.useState<string>('');
+  const [navLayout, setNavLayout] = React.useState<NavLayoutPreference>('tabs');
 
   const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
   const isPublic = isPublicRoute(pathname);
+
+  // Hydrate navigation layout preference and subscribe to cross-component layout change events
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setNavLayout(getNavLayoutPreference());
+      const handleLayoutChange = () => {
+        setNavLayout(getNavLayoutPreference());
+      };
+      window.addEventListener(NAV_LAYOUT_CHANGED_EVENT, handleLayoutChange);
+      return () => {
+        window.removeEventListener(NAV_LAYOUT_CHANGED_EVENT, handleLayoutChange);
+      };
+    }
+  }, []);
 
   // Helper to calculate days remaining until trial expiration
   const calculateDaysRemaining = (endDateStr?: string): number => {
@@ -601,7 +622,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative flex w-72 max-w-xs flex-1 flex-col justify-between border-r border-white/10 bg-[#0B0C0E]/95 p-6 backdrop-blur-2xl shadow-2xl">
+          <div className="relative flex w-72 max-w-xs flex-1 flex-col justify-between border-r border-white/10 bg-[#0B0C0E]/95 p-6 pt-safe pb-safe backdrop-blur-2xl shadow-2xl">
             <div className="flex flex-col gap-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -722,17 +743,19 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       {/* ------------------------------------------------------------------ */}
       <div className="flex flex-1 flex-col min-w-0 md:pl-64">
         {/* Top Command Bar (Glass Effect) */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-white/5 bg-[#0B0C0E]/60 px-4 md:px-8 backdrop-blur-2xl shadow-sm">
+        <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-4 border-b border-white/5 bg-[#0B0C0E]/60 px-4 md:px-8 pt-safe md:pt-0 pb-2 md:pb-0 backdrop-blur-2xl shadow-sm">
           <div className="flex items-center gap-3">
             {/* Mobile Hamburger */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 md:hidden hover:bg-white/10 cursor-pointer"
-              aria-label="Open navigation menu"
-            >
-              <Menu className="h-4 w-4" />
-            </button>
+            {(navLayout === 'drawer' || navLayout === 'hybrid') && (
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 md:hidden hover:bg-white/10 cursor-pointer"
+                aria-label="Open navigation menu"
+              >
+                <Menu className="h-4 w-4" />
+              </button>
+            )}
 
             {/* Customer / Order search */}
             <div className="w-64 md:w-80 lg:w-96">
@@ -771,7 +794,13 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         </header>
 
         {/* Scrollable Main Viewport */}
-        <main className="flex-1 p-4 md:p-8" id="main-content">
+        <main
+          className={cn(
+            'flex-1 p-4 md:p-8 pb-safe',
+            navLayout === 'drawer' ? 'pb-6 md:pb-8' : 'pb-28 md:pb-8'
+          )}
+          id="main-content"
+        >
           {/* Active Promotional Trial Workspace Banner */}
           {shopSubscriptionStatus === 'TRIALING' && (
             <div className="mb-6 rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-950/70 via-blue-900/40 to-indigo-950/70 p-4 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-[0_0_30px_rgba(59,130,246,0.2)] animate-fade-in border-l-4 border-l-blue-400">
@@ -823,6 +852,11 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           {children}
         </main>
       </div>
+
+      {/* Mobile Native Bottom Navigation Bar & FAB */}
+      {!isPublic && navLayout !== 'drawer' && (
+        <MobileBottomNav activeRoute={activeRoute || pathname} navLayout={navLayout} />
+      )}
     </div>
   );
 }

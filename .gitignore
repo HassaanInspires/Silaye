@@ -47,4 +47,4 @@ Thumbs.db
 *.log
 
 # Release artifacts
-/release-binaries/
+/release-binaries*/

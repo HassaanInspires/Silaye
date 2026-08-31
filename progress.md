@@ -1932,7 +1932,325 @@
   - `npm run build`: 28/28 static routes exported into `out/` successfully.
 
 * **Next Immediate Task:**
-  - Beta platform monitoring and operational readiness.
+  - Automated Cloud Release Build & Publication (v1.0.1-beta Completed)
+
+---
+
+## Release: Silaye Beta v1.0.1-beta Cloud Compilation & Publication (Completed)
+* **Date:** 2026-08-30
+* **Tasks Completed:**
+  - `1.1` Version Alignment: Bumped `"version": "1.0.1"` in `package.json`.
+  - `1.2` Snapshot Commit & Push: Staged all files and committed release snapshot: `chore(release): v1.0.1-beta - manual bank payments, admin approvals, trial campaign engine & paywall hardening` to `origin/main`.
+  - `1.3` Annotated Tag & CI/CD Trigger: Created and pushed annotated tag `v1.0.1-beta` triggering the GitHub Actions automated cloud build pipeline (`build-artifacts.yml`).
+  - `1.4` GitHub Actions Compilation (Run ID: `33317473289`):
+    * **Android Native Package (`.apk`)**: Compiled in 2m16s on Ubuntu runner with Capacitor 8 & Java JDK 21.
+    * **Windows Desktop Installer (`.exe`)**: Compiled in 3m47s on Windows runner with Electron Builder NSIS x64.
+    * Both jobs finished with 100% success.
+  - `1.5` Binary Retrieval: Downloaded compiled artifacts into `./release-binaries/`:
+    * `Silaye.Beta.Setup.1.0.1.exe` (166.53 MiB)
+    * `app-debug.apk` (7.68 MiB)
+  - `1.6` Official GitHub Release Publication: Published official GitHub Release `v1.0.1-beta` at `https://github.com/HassaanInspires/Silaye/releases/tag/v1.0.1-beta` with binary assets and release notes.
+
+* **Active File Changes:**
+  - `package.json` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `gh run watch 33317473289`: Succeeded (0 failures).
+  - `gh release view v1.0.1-beta`: Verified online with `Silaye.Beta.Setup.1.0.1.exe` and `app-debug.apk` attached.
+
+* **Next Immediate Task:**
+  - Phase 19.1 (Completed)
+
+---
+
+## Phase 19: Mobile Native Onboarding, Platform Gateway & Session Auto-Routing (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `19.1` Mobile Platform Gateway, Session Auto-Routing & Cinematic 3-Card Onboarding:
+    * **`lib/platform.ts` [NEW]**: Created cross-platform runtime detection module exporting `isNativeMobile()`, `isElectron()`, `isMobileDevice()`, and `getPlatformType()` with safe SSR guards and support for URL query override (`?view=mobile` / `?onboarding=true`) for responsive development testing.
+    * **`components/landing/mobile-onboarding.tsx` [NEW]**: Built fullscreen Obsidian Dark (`#0B0C0E`) 3-card cinematic onboarding flow:
+      - Header: Centered Gold Scissors logo (fixed 36x36px aspect-square) and top-right "لاگ ان / Sign In" button routing to `/login?tab=login`.
+      - Card 1: ✂️ Smart Measurement Vault (*ناپ کی ڈیجیٹل تجوری*) with customer profile card, 3x2 measurement matrix, and collar/daman preference chips.
+      - Card 2: 📱 1-Click WhatsApp Receipts (*واٹس ایپ رسیدیں*) with glowing emerald chat bubble mockup, double blue ticks, and automated slip dispatch.
+      - Card 3: ⚡ Offline Khata & Workflow (*آف لائن کھاتہ اور ورک فلو*) with live production pipeline stage progression, offline sync status, and Udhaar receivables summary.
+      - Gesture & Navigation: Touch swipe gesture recognition (> 45px delta), smooth animated slide transitions, and dynamic active dot indicators (● ○ ○).
+      - Bottom CTAs: Primary Gold CTA (*"نیا ڈیجیٹل کھاتہ بنائیں / Open Workshop"* -> `/login?tab=register`) and secondary ghost CTA (*"پہلے سے اکاؤنٹ ہے؟ لاگ ان کریں / Sign In"* -> `/login?tab=login`).
+    * **`app/page.tsx` [MODIFIED]**: Transformed landing page with client gateway logic:
+      - On mount, detects native mobile environment (`isNativeMobile()`).
+      - If native mobile AND user has active session: immediately invokes `window.location.replace('/dashboard')` without rendering landing markup.
+      - If native mobile AND unauthenticated: renders `<MobileOnboardingFlow />` in full-screen Obsidian Dark.
+      - If desktop browser or Electron: renders the full luxury editorial marketing page (`HeroSection`, `BentoGrid`, `ParadigmShiftSection`, `MobileShowcaseSection`, `TestimonialsSection`, `PricingSection`, `FooterCTA`, `SiteFooter`).
+    * **`app/(auth)/login/page.tsx` [MODIFIED]**:
+      - URL query parameter tab synchronization on mount (`?tab=register` -> `signup` mode, `?tab=login` -> `signin` mode).
+      - Replaced all dashboard redirect calls with `window.location.replace('/dashboard')` to eliminate back-button bounce loops.
+    * **Verification & Static Export**:
+      - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+      - `npm run build`: Static export compiled cleanly, generating all 28/28 static routes into `out/`.
+
+* **Active File Changes:**
+  - `lib/platform.ts` [NEW]
+  - `components/landing/mobile-onboarding.tsx` [NEW]
+  - `app/page.tsx` [MODIFIED]
+  - `app/(auth)/login/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npm run build`: Exit code 0 (28/28 static routes generated into `out/`).
+
+* **Next Immediate Task:**
+  - Sub-Phase 19.2: Android System Bar, Gesture Navigation Bar & Hardware Safe Area Styling (Completed)
+
+---
+
+## Sub-Phase 19.2: Android System Bar, Gesture Navigation Bar & Hardware Safe Area Styling (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `19.2` Android System Bar, Gesture Navigation Bar & Hardware Safe Area Styling:
+    * **Capacitor Plugin Configuration (`capacitor.config.ts`)**:
+      - Configured `StatusBar` plugin with `backgroundColor: '#0B0C0E'`, `style: 'DARK'`, and `overlaysWebView: false`.
+      - Configured `SplashScreen` plugin with `backgroundColor: '#0B0C0E'`, `launchAutoHide: true`, `launchShowDuration: 1000`, and `showSpinner: false` to eliminate white launch flashes on cold start.
+    * **Native Runtime Initialization & Safe Lifecycle (`lib/platform-native.ts`, `components/platform/native-initializer.tsx`)**:
+      - Created `lib/platform-native.ts` exporting `initializeNativePlatform()` with SSR checks and Capacitor platform validation (`isNativeMobile(false)`).
+      - Dynamically sets status bar background to `#0B0C0E`, style to `Style.Dark` (light icons on dark status bar), and `overlaysWebView: false`.
+      - Created `components/platform/native-initializer.tsx` and mounted it globally inside `<body>` in `app/layout.tsx`.
+    * **Global Hardware Safe Area Utilities & Root Clamping (`app/layout.tsx`, `app/globals.css`)**:
+      - Extended Next.js App Router viewport metadata in `app/layout.tsx` with `viewportFit: 'cover'`.
+      - Added root background color and overscroll clamping (`html, body { background-color: #0B0C0E; overscroll-behavior-y: none; }`) in `app/globals.css` to prevent rubber-band bounce exposing browser frames.
+      - Added CSS safe-area helper classes with balanced default fallbacks:
+        * `.pt-safe`: `padding-top: max(env(safe-area-inset-top, 0px), 12px);`
+        * `.pb-safe`: `padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);`
+        * `.pl-safe`: `padding-left: max(env(safe-area-inset-left, 0px), 0px);`
+        * `.pr-safe`: `padding-right: max(env(safe-area-inset-right, 0px), 0px);`
+        * `.min-h-screen-safe`: `min-height: 100dvh; min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));`
+    * **App Shell & Onboarding Viewport Clamping (`components/layout/app-shell.tsx`, `components/landing/mobile-onboarding.tsx`)**:
+      - `components/layout/app-shell.tsx`: Applied `.pt-safe` to sticky top mobile header command bar, `.pt-safe` & `.pb-safe` to the mobile slide-out navigation sheet, and `.pb-safe` to `<main id="main-content">` scrollable viewport.
+      - `components/landing/mobile-onboarding.tsx`: Applied `.min-h-screen-safe` to the root container, `.pt-safe` to the top brand header, and `.pb-safe` to the bottom CTA action container.
+    * **Full Verification & Static Export Compilation**:
+      - TypeScript compiler: `npx tsc --noEmit` verified 0 type errors.
+      - Database & Repository test suite: `scripts/verify_db.ts` verified 146/146 test assertions pass (100%).
+      - Next.js static export: `npm run build` compiled all 28 static routes cleanly into `out/`.
+
+* **Active File Changes:**
+  - `capacitor.config.ts` [MODIFIED]
+  - `lib/platform-native.ts` [NEW]
+  - `components/platform/native-initializer.tsx` [NEW]
+  - `app/layout.tsx` [MODIFIED]
+  - `app/globals.css` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `components/landing/mobile-onboarding.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `scripts/verify_db.ts`: Exit code 0 (146/146 tests passed).
+  - `npm run build`: Exit code 0 (28/28 static routes compiled into `out/`).
+
+* **Next Immediate Task:**
+  - Sub-Phase 19.3: Native Bottom Navigation Bar & Elevated Floating Action Button (FAB) (Completed)
+
+---
+
+## Sub-Phase 19.3: Native Bottom Navigation Bar & Floating Action Button (FAB) (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `19.3` Native Bottom Navigation Bar & Floating Action Button (FAB):
+    * **Native Mobile Bottom Navigation Bar (`components/layout/mobile-bottom-nav.tsx`)**:
+      - Built client component fixed at bottom of mobile viewports (`md:hidden fixed bottom-0 left-0 right-0 z-40`).
+      - Applied Obsidian Glass design tokens (`bg-[#0E1013]/95 backdrop-blur-xl border-t border-gold/15 shadow-[0_-4px_25px_rgba(0,0,0,0.6)]`) with `.pb-safe` Android hardware gesture area padding.
+      - Integrated 4 touch-optimized tabs with 48x48px touch targets, bilingual Urdu/English labels, and subpath-aware route matching:
+        1. 🏠 Home (`/dashboard` - ہوم)
+        2. ✂️ Orders (`/orders` - آرڈرز)
+        3. 📒 Khata (`/khata` - کھاتہ)
+        4. ⚙️ Settings (`/settings` - سیٹنگز)
+      - Integrated active tab indicator with glowing gold text (`text-gold`), glowing active pill backdrop (`bg-gold/10 border border-gold/20 shadow-[0_0_12px_rgba(212,175,55,0.15)]`), and gold active dot indicator (`●`).
+    * **Elevated Center Action FAB (`[+ Book Suit]`)**:
+      - Built floating center circular action button (`-translate-y-4 h-14 w-14 rounded-full bg-gradient-to-tr from-gold via-amber-400 to-amber-500 text-black flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.4)] border-4 border-[#0B0C0E] active:scale-95 transition-all`).
+      - Connected directly to `/orders/new` via Next.js `<Link href="/orders/new">` with accessibility labels and active route detection.
+    * **Application Shell Integration (`components/layout/app-shell.tsx`)**:
+      - Mounted `<MobileBottomNav />` inside `AppShell` for authenticated sessions (`!isPublic`).
+      - Increased `<main id="main-content">` bottom padding on mobile to `pb-28 md:pb-8 pb-safe` to provide generous scroll clearance above the bottom bar.
+      - Preserved z-index layering (`MobileBottomNav` at `z-40`, mobile navigation drawer and modal dialogs at `z-50`) ensuring zero clipping across open overlays.
+    * **Full Verification & Static Export Compilation**:
+      - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+      - `scripts/verify_db.ts`: 146/146 test assertions pass (100%).
+      - `npm run build`: Static export compiled cleanly, generating all 28 static routes into `out/`.
+
+* **Active File Changes:**
+  - `components/layout/mobile-bottom-nav.tsx` [NEW]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `scripts/verify_db.ts`: Exit code 0 (146/146 tests passed).
+  - `npm run build`: Exit code 0 (28/28 static routes compiled into `out/`).
+
+* **Next Immediate Task:**
+  - Sub-Phase 19.4: Inner Screens Mobile-First Overhaul (Completed)
+
+---
+
+## Sub-Phase 19.4: Inner Screens Mobile-First Overhaul (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `19.4` Inner Screens Mobile-First Overhaul:
+    * **Mobile Dashboard Overhaul (`app/dashboard/page.tsx`)**:
+      - Wrapped desktop command dashboard under `hidden md:block`.
+      - Built native mobile layout under `block md:hidden`:
+        * Urdu Greeting Card: `"السلام علیکم، ماسٹر صاحب"` with workshop name and live sync status pill.
+        * 2x2 High-Contrast KPI Grid: `آج کی ڈیلیوری` (Due Today - Amber), `ورکشاپ سلائی` (In Progress - Sky/Blue with cutting & stitching breakdown), `تیار سوٹ` (Ready for Pickup - Emerald), `باقی ادھار` (Pending Khata Balance - Rose with debtor count).
+        * Horizontal Swipeable Urgent Deliveries Carousel (`overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none touch-pan-x`) with 1-tap WhatsApp alert and Thermal Print triggers.
+        * Quick Action Chips for fast counter actions (`تلاش`, `کھاتہ رجسٹر`, `ٹیگ پرنٹ`, `نیا سوٹ`).
+    * **Mobile Orders Pipeline (`app/orders/page.tsx`)**:
+      - Wrapped desktop Spreadsheet & Kanban view under `hidden md:block`.
+      - Built dedicated mobile pipeline under `block md:hidden`:
+        * Sticky top search input with clear `'✕'` button for searching customer name, phone, or order #.
+        * Horizontal status filter pills (`تمام All`, `کٹنگ Cutting`, `سلائی Stitching`, `تیار Ready`, `ڈیلیورڈ Delivered`) with live count badges.
+        * Mobile Order Cards: Bold customer name, suit count (e.g. `2× شلوار قمیض`), due date badge with urgency color coding, balance due tag, 1-tap green WhatsApp receipt CTA, 1-tap print CTA, and 1-tap next-status advance CTA.
+    * **Native 3-Step Suit Booking Wizard (`app/orders/new/page.tsx`)**:
+      - Wrapped desktop 12-column grid under `hidden md:block`.
+      - Built dedicated 3-Step Wizard under `block md:hidden`:
+        * Step 1 (Customer & Suit): Pakistani phone mask (`03XX-XXXXXXX`) with auto-lookup and profile badge, customer details, garment selection cards, suit count stepper, delivery date picker, urgent rush toggle, and fabric specs.
+        * Step 2 (Style & Preferences): Collar style selector (Full Ban, Half Ban, Sherwani, Shirt Collar, Soft Ban), Pocket options, Daman cut (Square vs Round), Stitching type (Single vs Double), and Front Patti.
+        * Step 3 (Measurement Matrix): 2-Column touch grid for 10 Shalwar Kameez measurements with tactile `[-0.5"]` and `[+0.5"]` thumb steppers, fractional pills, craftsman assignments, and special notes.
+        * Sticky Bottom Action Bar: Fixed with Total PKR, advance input, balance due, and full-width gold `"بکنگ مکمل کریں / Book Order"` CTA.
+    * **Mobile Khata Ledger Screen (`app/khata/page.tsx`)**:
+      - Wrapped desktop `KhataLedgerView` under `hidden md:block`.
+      - Built dedicated mobile layout under `block md:hidden`:
+        * Financial Summary Card: Total Udhaar Receivables (`Rs. {totalReceivables}`) vs Total Advance Deposits Held with debtor counts.
+        * Sticky search input and filter pills (`تمام`, `ادھار`, `ایڈوانس`, `بے باق`).
+        * Customer Balance List Cards: Red badge (`"Rs. 3,500 واجب الادا"`) for debtors, Emerald for credit, Green for settled, with 1-tap WhatsApp reminder CTA, 1-tap `"+ وصولی / Record Payment"` button, and full statement drawer trigger.
+    * **Full Verification & Static Export Compilation**:
+      - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+      - `scripts/verify_db.ts`: 146/146 test assertions passed (100%).
+      - `npm run build`: Static export compiled cleanly, generating all 28 static routes into `out/`.
+
+* **Active File Changes:**
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `app/orders/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `app/khata/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `scripts/verify_db.ts`: Exit code 0 (146/146 tests passed).
+  - `npm run build`: Exit code 0 (28/28 static routes compiled into `out/`).
+
+* **Next Immediate Task:**
+  - Sub-Phase 19.5: Navigation Layout Switcher (Tabs vs. Drawer vs. Hybrid) (Completed)
+
+---
+
+## Sub-Phase 19.5: Navigation Layout Switcher (Tabs vs. Drawer vs. Hybrid) (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `19.5` Navigation Layout Switcher (Tabs vs. Drawer vs. Hybrid):
+    * **Navigation Layout Preferences Utility (`lib/nav-preferences.ts`)**:
+      - Defined `NavLayoutPreference` type: `'tabs' | 'drawer' | 'hybrid'`.
+      - Exported constants `NAV_LAYOUT_STORAGE_KEY = 'silaye:nav-layout'` and `NAV_LAYOUT_CHANGED_EVENT = 'silaye:nav-layout-changed'`.
+      - Implemented `getNavLayoutPreference()` with SSR safety (`typeof window === 'undefined'`) returning `'tabs'` default.
+      - Implemented `setNavLayoutPreference(layout)` with `localStorage` persistence and cross-component custom window event dispatching.
+    * **Application Shell Integration (`components/layout/app-shell.tsx`)**:
+      - Initialized `navLayout` state to `'tabs'` (preventing SSR hydration mismatch) and hydrated from `getNavLayoutPreference()` on mount.
+      - Subscribed to `silaye:nav-layout-changed` custom events with cleanup on unmount.
+      - Mobile Hamburger Button (`<Menu />`): Hidden on mobile in `'tabs'` mode (`navLayout === 'tabs'`); rendered in `'drawer'` and `'hybrid'` modes.
+      - Viewport Bottom Padding: Dynamic padding on `<main>` adjusting to `pb-6 md:pb-8 pb-safe` in `'drawer'` mode vs `pb-28 md:pb-8 pb-safe` in `'tabs'` / `'hybrid'` modes.
+      - Bottom Navigation Bar Mounting: Conditionally rendered `<MobileBottomNav />` when `!isPublic && navLayout !== 'drawer'`.
+    * **Mobile Bottom Navigation Component (`components/layout/mobile-bottom-nav.tsx`)**:
+      - Added `navLayout?: NavLayoutPreference` prop support and `silaye:nav-layout-changed` event listener.
+      - Returns `null` immediately when effective layout is `'drawer'`.
+    * **Workshop Settings UI Integration (`app/settings/page.tsx`)**:
+      - Added dedicated "Navigation Layout / نیویگیشن اسٹائل" settings card in Tab 1 (Workshop Profile) with 3 interactive radio cards:
+        1. **Modern Tabs + Action Button (`tabs`)**: "4 Tabs + Center Gold FAB for 1-thumb use / 4 باٹم ٹیبز اور گولڈ ایکشن بٹن".
+        2. **Classic Drawer Only (`drawer`)**: "Fullscreen view with top hamburger menu / مکمل سکرین ویو اور اوپر ہیمبرگر مینو".
+        3. **Hybrid Master (`hybrid`)**: "Bottom tabs + Top hamburger drawer / باٹم ٹیبز اور اوپر ہیمبرگر ڈراور دونوں".
+      - Rendered active glowing gold border (`border-gold bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.15)]`), checkmark badge, and live toast notification (*"نیویگیشن اسٹائل تبدیل کر دیا گیا ہے / Navigation layout updated successfully"*).
+    * **Full Verification & Static Export Compilation**:
+      - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+      - `scripts/verify_db.ts`: 146/146 test assertions passed (100%).
+      - `npm run build`: Static export compiled cleanly, generating all 28 static routes into `out/`.
+
+* **Active File Changes:**
+  - `lib/nav-preferences.ts` [NEW]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `components/layout/mobile-bottom-nav.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `scripts/verify_db.ts`: Exit code 0 (146/146 tests passed).
+  - `npm run build`: Exit code 0 (28/28 static routes compiled into `out/`).
+
+* **Next Immediate Task:**
+  - Sub-Phase 19.6 (Completed)
+
+---
+
+## Phase 19.6: Automated Daily Due Alerts, Local Notifications Engine & Workshop Notification Preferences (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `19.6` Automated Daily Due Alerts, Local Notifications Engine & Workshop Notification Preferences:
+    * **Package & Native Setup (`package.json`)**: Installed `@capacitor/local-notifications` to enable cross-platform local notification scheduling for Android / iOS alongside web fallbacks.
+    * **Workshop Notification Preferences (`lib/notification-preferences.ts`)**:
+      - Declared `WorkshopNotificationPrefs` interface (`morningBriefing: boolean`, `urgentAlerts: boolean`, `soundEnabled: boolean`).
+      - Exported `DEFAULT_NOTIFICATION_PREFS` defaulting all toggles to `true`.
+      - Exported `getNotificationPreferences()`, `setNotificationPreferences(prefs)`, and `resetNotificationPreferences()` using SSR-safe `localStorage` (`'silaye:notification-prefs'`).
+      - Dispatched `silaye:notification-prefs-changed` custom event on updates for real-time reactivity.
+    * **Local Notifications Engine (`lib/notifications.ts`)**:
+      - Implemented `hashStringToId(str: string): number` converting arbitrary string IDs and UUIDs into safe 32-bit positive integers for Android `AlarmManager`.
+      - Implemented `playNotificationChime()` generating a luxury dual-tone acoustic chime (D5 587.33 Hz $\to$ A5 880 Hz) using the Web Audio API (`AudioContext`) with automatic suspended state resumption.
+      - Implemented `requestNotificationPermissions(): Promise<boolean>` checking and requesting permissions across Capacitor LocalNotifications and Web Notification APIs.
+      - Implemented `scheduleDailyMorningBriefing(orders: GarmentOrder[])`: Filters active orders due today (`delivery_date === today` and `status !== 'COMPLETED' && status !== 'CANCELLED'`), counts total suits, determines past 9:00 AM status, and schedules local notification with ID `9001` (*"☀️ Morning Workshop Briefing | صبح کا بریفنگ"*).
+      - Implemented `scheduleUrgentOrderAlert(order: GarmentOrder)`: Triggers when an in-production suit (`BOOKED`, `FABRIC_RECEIVED`, `IN_CUTTING`, `IN_STITCHING`, `KAJ_BUTTON`, `PRESSING`) is due within 24 hours.
+      - Implemented `sendTestNotification(): Promise<boolean>`: Dispatches test alert and triggers audio chime for instant device verification.
+    * **Repository & Type Aliases (`lib/db.ts`, `types/tailor.ts`)**:
+      - Exported `ordersDb.getOrders(shopId)` alias on `ordersDb` pointing to `ordersDb.getByShopId(shopId)`.
+      - Exported `type Order = GarmentOrder` in `types/tailor.ts`.
+    * **Automated Notification Scheduler Component (`components/platform/notification-scheduler.tsx`, `app/layout.tsx`)**:
+      - Built zero-DOM client component mounted inside `app/layout.tsx`.
+      - Evaluates active session and shop on mount, queries active orders via `ordersDb.getOrders(shopId)`, evaluates preferences, schedules 9:00 AM delivery briefings and urgent alerts, and listens for `silaye:notification-prefs-changed`.
+    * **Workshop Settings UI Integration (`app/settings/page.tsx`)**:
+      - Added dedicated "Notifications & Due Alerts / نوٹیفیکیشنز اور الرٹس" card in Tab 1 with 3 tactile switch toggles:
+        1. **Morning Delivery Briefing (صبح 9:00 بجے ڈیلیوری الرٹ)**: 9:00 AM Daily briefing of suits scheduled for delivery today.
+        2. **Urgent Due Date Warnings (24 گھنٹے پہلے فوری وارننگ)**: Instant high-priority warning when in-production suits are due within 24 hours.
+        3. **Sound & Vibration (آواز اور وائبریشن)**: Workshop acoustic chime and device vibration on alert delivery.
+      - Built 1-tap "ٹیسٹ نوٹیفیکیشن بھیجیں / Send Test Alert" button with audio chime and toast feedback.
+    * **Automated Verification Suite (`scripts/verify_db.ts`)**:
+      - Added Section 17 test assertions validating default preferences, SSR fallback, toggle mutations, reset functionality, 32-bit positive integer ID hashing, `ordersDb.getOrders` alias, fixed briefing/test notification IDs, and error-free headless execution (158/158 tests passing).
+      - Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+      - Verified Next.js static export compilation into `out/` (28/28 static routes generated cleanly).
+
+* **Active File Changes:**
+  - `package.json` [MODIFIED]
+  - `package-lock.json` [MODIFIED]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `lib/notification-preferences.ts` [NEW]
+  - `lib/notifications.ts` [NEW]
+  - `components/platform/notification-scheduler.tsx` [NEW]
+  - `app/layout.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `scripts/verify_db.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `scripts/verify_db.ts`: Exit code 0 (158/158 tests passed).
+  - `npm run build`: Exit code 0 (28/28 static routes compiled into `out/`).
+
+* **Next Immediate Task:**
+  - Phase 20: Native Mobile Packaging & Android APK Snapshot.
+
 
 
 

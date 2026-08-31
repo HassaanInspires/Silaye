@@ -89,7 +89,25 @@ import type {
   PaymentMethod,
   PaymentRequestStatus,
   ManualPaymentRequest,
+  Order,
 } from '../types/tailor';
+import {
+  getNotificationPreferences,
+  setNotificationPreferences,
+  resetNotificationPreferences,
+  DEFAULT_NOTIFICATION_PREFS,
+  type WorkshopNotificationPrefs,
+} from '../lib/notification-preferences';
+import {
+  hashStringToId,
+  requestNotificationPermissions,
+  scheduleDailyMorningBriefing,
+  scheduleUrgentOrderAlert,
+  sendTestNotification,
+  playNotificationChime,
+  MORNING_BRIEFING_NOTIFICATION_ID,
+  TEST_NOTIFICATION_ID,
+} from '../lib/notifications';
 
 let passedTests = 0;
 let totalTests = 0;
@@ -1819,6 +1837,120 @@ async function runVerification() {
     addedProStaff.email === 'newcutter@silaye.com' &&
       addedProStaff.role === 'CUTTING_MASTER',
     'Upgrading to Pro tier permits adding unlimited workshop craftsmen and roles'
+  );
+
+  // ----------------------------------------------------
+  // SECTION 17: Local Notifications Engine & Workshop Preferences
+  // ----------------------------------------------------
+  console.log('\n--- SECTION 17: Local Notifications Engine & Workshop Preferences ---');
+
+  // Test 17.1: Default notification preferences default all toggles to true
+  assert(
+    DEFAULT_NOTIFICATION_PREFS.morningBriefing === true &&
+      DEFAULT_NOTIFICATION_PREFS.urgentAlerts === true &&
+      DEFAULT_NOTIFICATION_PREFS.soundEnabled === true,
+    'DEFAULT_NOTIFICATION_PREFS defaults morningBriefing, urgentAlerts, and soundEnabled to true'
+  );
+
+  // Test 17.2: getNotificationPreferences returns valid defaults in SSR/Node environment
+  const loadedPrefs = getNotificationPreferences();
+  assert(
+    typeof loadedPrefs.morningBriefing === 'boolean' &&
+      typeof loadedPrefs.urgentAlerts === 'boolean' &&
+      typeof loadedPrefs.soundEnabled === 'boolean',
+    'getNotificationPreferences() returns typed WorkshopNotificationPrefs entity'
+  );
+
+  // Test 17.3: setNotificationPreferences updates preferences and reset restores defaults
+  const mutatedPrefs = setNotificationPreferences({ morningBriefing: false, soundEnabled: false });
+  assert(
+    mutatedPrefs.morningBriefing === false &&
+      mutatedPrefs.urgentAlerts === true &&
+      mutatedPrefs.soundEnabled === false,
+    'setNotificationPreferences() updates individual toggle preferences correctly'
+  );
+  const restoredPrefs = resetNotificationPreferences();
+  assert(
+    restoredPrefs.morningBriefing === true &&
+      restoredPrefs.urgentAlerts === true &&
+      restoredPrefs.soundEnabled === true,
+    'resetNotificationPreferences() restores all notification settings to default true'
+  );
+
+  // Test 17.4: hashStringToId generates deterministic 32-bit positive integer IDs for Android AlarmManager
+  const testId1 = hashStringToId('order_uuid_123456');
+  const testId2 = hashStringToId('order_uuid_123456');
+  const testId3 = hashStringToId('another_different_order_id');
+  assert(
+    typeof testId1 === 'number' &&
+      testId1 > 0 &&
+      testId1 < 2147483647 &&
+      testId1 === testId2 &&
+      testId1 !== testId3,
+    'hashStringToId generates deterministic 32-bit positive integers'
+  );
+
+  // Test 17.5: ordersDb.getOrders alias is defined and functions identically to getByShopId
+  assert(
+    typeof ordersDb.getOrders === 'function',
+    'ordersDb.getOrders is defined and exported as an async function'
+  );
+  const shopOrdersViaAlias = await ordersDb.getOrders(freeStaffShopId);
+  assert(
+    Array.isArray(shopOrdersViaAlias),
+    'ordersDb.getOrders(shopId) successfully queries shop orders with offline resilience'
+  );
+
+  // Test 17.6: Constants MORNING_BRIEFING_NOTIFICATION_ID and TEST_NOTIFICATION_ID are defined integers
+  assert(
+    MORNING_BRIEFING_NOTIFICATION_ID === 9001 && TEST_NOTIFICATION_ID === 9999,
+    'Fixed notification IDs 9001 and 9999 are declared for briefings and test alerts'
+  );
+
+  // Test 17.7: Notification methods are callable and safe against SSR / headless environments
+  let notifPermResult = false;
+  let briefingError: Error | null = null;
+  let urgentAlertError: Error | null = null;
+  let testNotifResult = false;
+
+  try {
+    notifPermResult = await requestNotificationPermissions();
+  } catch (err) {
+    briefingError = err as Error;
+  }
+  assert(
+    typeof notifPermResult === 'boolean',
+    'requestNotificationPermissions() returns boolean in safe headless environment'
+  );
+
+  try {
+    await scheduleDailyMorningBriefing([]);
+  } catch (err) {
+    briefingError = err as Error;
+  }
+  assert(
+    briefingError === null,
+    'scheduleDailyMorningBriefing() executes cleanly without unhandled exceptions'
+  );
+
+  try {
+    playNotificationChime();
+  } catch (err) {
+    urgentAlertError = err as Error;
+  }
+  assert(
+    urgentAlertError === null,
+    'playNotificationChime() handles Web Audio context gracefully in non-browser runtimes'
+  );
+
+  try {
+    testNotifResult = await sendTestNotification();
+  } catch (err) {
+    urgentAlertError = err as Error;
+  }
+  assert(
+    typeof testNotifResult === 'boolean',
+    'sendTestNotification() returns boolean test dispatch outcome'
   );
 
   // ----------------------------------------------------

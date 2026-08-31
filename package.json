@@ -1,6 +1,6 @@
 {
   "name": "silaye",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Silaye Beta",
   "author": "Silaye Technologies",
   "private": true,
@@ -47,6 +47,7 @@
     "@capacitor/app-launcher": "^8.0.1",
     "@capacitor/core": "^8.5.0",
     "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/local-notifications": "^8.3.1",
     "@capacitor/status-bar": "^8.0.3",
     "@supabase/supabase-js": "^2.112.4",
     "canvas-confetti": "^1.9.4",

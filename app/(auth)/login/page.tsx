@@ -34,13 +34,33 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = React.useState<string | null>(null);
   const isConfigured = isSupabaseConfigured();
 
-  // If already logged in, redirect to dashboard
+  // Query parameter tab sync & existing session check
   React.useEffect(() => {
+    // 1. Sync active tab mode with query parameter (?tab=register | ?tab=login)
+    if (typeof window !== 'undefined') {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const tab = searchParams.get('tab');
+        if (tab === 'register' || tab === 'signup') {
+          setMode('signup');
+        } else if (tab === 'login' || tab === 'signin') {
+          setMode('signin');
+        }
+      } catch {
+        // Ignore fallback
+      }
+    }
+
+    // 2. If already logged in, redirect immediately to dashboard
     async function checkExistingSession() {
       if (!isSupabaseConfigured()) return;
-      const session = await getSession();
-      if (session) {
-        window.location.href = '/dashboard';
+      try {
+        const session = await getSession();
+        if (session) {
+          window.location.replace('/dashboard');
+        }
+      } catch {
+        // Ignore fallback
       }
     }
     checkExistingSession();
@@ -58,7 +78,7 @@ export default function LoginPage() {
 
     if (!isConfigured) {
       // Local / Offline developer bypass
-      window.location.href = '/dashboard';
+      window.location.replace('/dashboard');
       return;
     }
 
@@ -77,7 +97,7 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        window.location.href = '/dashboard';
+        window.location.replace('/dashboard');
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'An unexpected error occurred.');
@@ -101,7 +121,7 @@ export default function LoginPage() {
     }
 
     if (!isConfigured) {
-      window.location.href = '/dashboard';
+      window.location.replace('/dashboard');
       return;
     }
 
@@ -125,7 +145,7 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        window.location.href = '/dashboard';
+        window.location.replace('/dashboard');
       } else if (data.user) {
         setSuccessMsg(
           'Registration successful! Please check your email to confirm your account, or sign in.'

@@ -1,8 +1,14 @@
+'use client';
+
+import * as React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Scissors } from 'lucide-react';
 import { HeroSection } from '@/components/landing/hero-section';
 import { BentoGrid } from '@/components/landing/bento-grid';
 import { PricingSection } from '@/components/landing/pricing-section';
+import { MobileOnboardingFlow } from '@/components/landing/mobile-onboarding';
+import { isNativeMobile } from '@/lib/platform';
+import { getSession, isSupabaseConfigured } from '@/lib/supabase/client';
 
 // ─── Paradigm shift — Notebook Day vs Silaye Way ──────────────────────────────
 
@@ -367,6 +373,53 @@ function SiteFooter() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
+  const [isMounted, setIsMounted] = React.useState<boolean>(false);
+  const [isMobile, setIsMobile] = React.useState<boolean>(false);
+  const [isCheckingAuth, setIsCheckingAuth] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+    const native = isNativeMobile(true);
+    setIsMobile(native);
+
+    if (native) {
+      async function checkSession() {
+        if (!isSupabaseConfigured()) {
+          setIsCheckingAuth(false);
+          return;
+        }
+        try {
+          const session = await getSession();
+          if (session) {
+            window.location.replace('/dashboard');
+            return;
+          }
+        } catch {
+          // Ignore fallback
+        }
+        setIsCheckingAuth(false);
+      }
+      checkSession();
+    } else {
+      setIsCheckingAuth(false);
+    }
+  }, []);
+
+  // 1. Native Mobile Environment: Auto-route or render Cinematic 3-Card Onboarding
+  if (isMounted && isMobile) {
+    if (isCheckingAuth) {
+      return (
+        <div className="min-h-screen bg-[#0B0C0E] flex items-center justify-center">
+          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold animate-pulse">
+            <Scissors className="h-full w-full p-2 object-contain aspect-square" />
+          </div>
+        </div>
+      );
+    }
+    return <MobileOnboardingFlow />;
+  }
+
+  // 2. Desktop Browser, Electron, or Initial Static Render: Full Luxury Editorial Landing Page
   return (
     <main className="min-h-screen bg-obsidian-bg">
       {/* Section 1: Obsidian Dark Hero */}

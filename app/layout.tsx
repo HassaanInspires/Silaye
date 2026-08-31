@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Noto_Sans_Arabic, Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
+import { NativeInitializer } from "@/components/platform/native-initializer";
+import { NotificationScheduler } from "@/components/platform/notification-scheduler";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -27,6 +29,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -60,6 +63,8 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        <NativeInitializer />
+        <NotificationScheduler />
         {children}
       </body>
     </html>

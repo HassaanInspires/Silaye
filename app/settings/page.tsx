@@ -44,6 +44,9 @@ import {
   Image as ImageIcon,
   ExternalLink,
   Hourglass,
+  Bell,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
@@ -52,6 +55,19 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  getNavLayoutPreference,
+  setNavLayoutPreference,
+  type NavLayoutPreference,
+  NAV_LAYOUT_CHANGED_EVENT,
+} from '@/lib/nav-preferences';
+import {
+  getNotificationPreferences,
+  setNotificationPreferences,
+  type WorkshopNotificationPrefs,
+  NOTIFICATION_PREFS_CHANGED_EVENT,
+} from '@/lib/notification-preferences';
+import { sendTestNotification } from '@/lib/notifications';
 import {
   shopsDb,
   staffDb,
@@ -301,6 +317,86 @@ export default function SettingsPage() {
     type: 'success' | 'error' | 'info';
   } | null>(null);
   const [phoneError, setPhoneError] = React.useState<string | null>(null);
+
+  // Navigation Layout Preference State
+  const [navLayout, setNavLayout] = React.useState<NavLayoutPreference>('tabs');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setNavLayout(getNavLayoutPreference());
+      const handleLayoutChange = () => {
+        setNavLayout(getNavLayoutPreference());
+      };
+      window.addEventListener(NAV_LAYOUT_CHANGED_EVENT, handleLayoutChange);
+      return () => {
+        window.removeEventListener(NAV_LAYOUT_CHANGED_EVENT, handleLayoutChange);
+      };
+    }
+  }, []);
+
+  const handleNavLayoutChange = (newLayout: NavLayoutPreference) => {
+    setNavLayout(newLayout);
+    setNavLayoutPreference(newLayout);
+    setNotification({
+      message: 'نیویگیشن اسٹائل تبدیل کر دیا گیا ہے / Navigation layout updated successfully',
+      type: 'success',
+    });
+  };
+
+  // Workshop Notification Preferences State
+  const [notificationPrefs, setNotificationPrefs] = React.useState<WorkshopNotificationPrefs>(() =>
+    getNotificationPreferences()
+  );
+  const [sendingTestAlert, setSendingTestAlert] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setNotificationPrefs(getNotificationPreferences());
+      const handlePrefsChange = () => {
+        setNotificationPrefs(getNotificationPreferences());
+      };
+      window.addEventListener(NOTIFICATION_PREFS_CHANGED_EVENT, handlePrefsChange);
+      return () => {
+        window.removeEventListener(NOTIFICATION_PREFS_CHANGED_EVENT, handlePrefsChange);
+      };
+    }
+  }, []);
+
+  const handleToggleNotificationPref = (key: keyof WorkshopNotificationPrefs) => {
+    const updated = setNotificationPreferences({
+      [key]: !notificationPrefs[key],
+    });
+    setNotificationPrefs(updated);
+    setNotification({
+      message: 'نوٹیفیکیشن ترجیحات اپ ڈیٹ ہو گئیں / Notification preferences saved',
+      type: 'success',
+    });
+  };
+
+  const handleSendTestAlert = async () => {
+    setSendingTestAlert(true);
+    try {
+      const delivered = await sendTestNotification();
+      if (delivered) {
+        setNotification({
+          message: 'ٹیسٹ نوٹیفیکیشن بھیج دیا گیا ہے / Test alert sent successfully',
+          type: 'success',
+        });
+      } else {
+        setNotification({
+          message: 'نوٹیفیکیشن کی اجازت درکار ہے / Please enable notification permissions in your browser or device settings',
+          type: 'error',
+        });
+      }
+    } catch {
+      setNotification({
+        message: 'ٹیسٹ الرٹ بھیجنے میں خرابی / Failed to dispatch test alert',
+        type: 'error',
+      });
+    } finally {
+      setSendingTestAlert(false);
+    }
+  };
 
   // Subscription & Billing State
   const [shopUsage, setShopUsage] = React.useState<ShopUsage>({
@@ -1370,7 +1466,383 @@ export default function SettingsPage() {
                 </CardFooter>
               </Card>
 
-              {/* Section 4: Danger Zone - Workshop Reset & Data Purification */}
+              {/* Section 4: Navigation Layout Preference */}
+              <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
+                <CardHeader>
+                  <CardTitle className="text-base text-white flex items-center gap-2">
+                    <Sliders className="h-4 w-4 text-gold" />
+                    <span>Navigation Layout</span>
+                    <span className="font-urdu-serif text-xs text-gold/80 -mt-0.5" dir="rtl">
+                      نیویگیشن اسٹائل
+                    </span>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-gray-400">
+                    Choose your preferred mobile navigation interface. Changes apply immediately and persist across sessions.
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-3">
+                  {/* Option 1: Modern Tabs */}
+                  <div
+                    onClick={() => handleNavLayoutChange('tabs')}
+                    className={cn(
+                      'p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start justify-between gap-3',
+                      navLayout === 'tabs'
+                        ? 'border-gold/60 bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.15)] ring-1 ring-gold/40'
+                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
+                    )}
+                    role="radio"
+                    aria-checked={navLayout === 'tabs'}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        handleNavLayoutChange('tabs');
+                      }
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={cn(
+                          'h-5 w-5 rounded-full border flex items-center justify-center mt-0.5 shrink-0 transition-colors',
+                          navLayout === 'tabs'
+                            ? 'border-gold bg-gold text-[#0B0C0E]'
+                            : 'border-white/30 bg-black/40'
+                        )}
+                      >
+                        {navLayout === 'tabs' && <Check className="h-3 w-3 stroke-[3]" />}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-white">
+                            Modern Tabs + Action Button
+                          </span>
+                          <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                            ماڈرن باٹم ٹیبز
+                          </span>
+                          <Badge variant="outline" className="text-[10px] text-gold border-gold/30 bg-gold/5 py-0 px-1.5">
+                            Recommended / تجویز کردہ
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                          4 Tabs + Center Gold FAB for 1-thumb use. Clean minimal top header without menu clutter.
+                        </p>
+                        <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                          4 باٹم ٹیبز اور درمیان میں گولڈ نیا سوٹ بٹن — ایک ہاتھ اور انگوٹھے سے تیز رفتار استعمال کے لیے۔
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Option 2: Classic Drawer Only */}
+                  <div
+                    onClick={() => handleNavLayoutChange('drawer')}
+                    className={cn(
+                      'p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start justify-between gap-3',
+                      navLayout === 'drawer'
+                        ? 'border-gold/60 bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.15)] ring-1 ring-gold/40'
+                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
+                    )}
+                    role="radio"
+                    aria-checked={navLayout === 'drawer'}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        handleNavLayoutChange('drawer');
+                      }
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={cn(
+                          'h-5 w-5 rounded-full border flex items-center justify-center mt-0.5 shrink-0 transition-colors',
+                          navLayout === 'drawer'
+                            ? 'border-gold bg-gold text-[#0B0C0E]'
+                            : 'border-white/30 bg-black/40'
+                        )}
+                      >
+                        {navLayout === 'drawer' && <Check className="h-3 w-3 stroke-[3]" />}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-white">
+                            Classic Drawer Only
+                          </span>
+                          <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                            کلاسک ڈراور
+                          </span>
+                          <Badge variant="outline" className="text-[10px] text-cyan-300 border-cyan-500/30 bg-cyan-500/5 py-0 px-1.5">
+                            Max Screen Space / بڑی سکرین
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                          Fullscreen view with top hamburger menu. Hides the bottom bar to maximize vertical space.
+                        </p>
+                        <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                          مکمل فل سکرین ویو اور اوپر ہیمبرگر مینو — باٹم بار چھپا کر ڈیٹا کے لیے زیادہ جگہ فراہم کرتا ہے۔
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Option 3: Hybrid Master */}
+                  <div
+                    onClick={() => handleNavLayoutChange('hybrid')}
+                    className={cn(
+                      'p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start justify-between gap-3',
+                      navLayout === 'hybrid'
+                        ? 'border-gold/60 bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.15)] ring-1 ring-gold/40'
+                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
+                    )}
+                    role="radio"
+                    aria-checked={navLayout === 'hybrid'}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        handleNavLayoutChange('hybrid');
+                      }
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={cn(
+                          'h-5 w-5 rounded-full border flex items-center justify-center mt-0.5 shrink-0 transition-colors',
+                          navLayout === 'hybrid'
+                            ? 'border-gold bg-gold text-[#0B0C0E]'
+                            : 'border-white/30 bg-black/40'
+                        )}
+                      >
+                        {navLayout === 'hybrid' && <Check className="h-3 w-3 stroke-[3]" />}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-white">
+                            Hybrid Master
+                          </span>
+                          <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                            ہائبرڈ ماسٹر
+                          </span>
+                          <Badge variant="outline" className="text-[10px] text-amber-300 border-amber-500/30 bg-amber-500/5 py-0 px-1.5">
+                            Power User / ہمہ گیر
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                          Bottom tabs + Top hamburger drawer. Access quick counter shortcuts and full slide-out sidebar simultaneously.
+                        </p>
+                        <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                          باٹم ٹیبز اور اوپر ہیمبرگر ڈراور دونوں بیک وقت فعال — فوری بکنگ اور مکمل مینو دونوں دستیاب۔
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Section 5: Notifications & Due Alerts */}
+              <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
+                <CardHeader>
+                  <CardTitle className="text-base text-white flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-gold" />
+                    <span>Notifications & Due Alerts</span>
+                    <span className="font-urdu-serif text-xs text-gold/80 -mt-0.5" dir="rtl">
+                      نوٹیفیکیشنز اور الرٹس
+                    </span>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-gray-400">
+                    Automated daily delivery briefings, urgent in-production order alerts, and sound chimes.
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-3">
+                  {/* Toggle 1: Morning Briefing */}
+                  <div
+                    onClick={() => handleToggleNotificationPref('morningBriefing')}
+                    className={cn(
+                      'p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start justify-between gap-3',
+                      notificationPrefs.morningBriefing
+                        ? 'border-gold/50 bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
+                    )}
+                    role="switch"
+                    aria-checked={notificationPrefs.morningBriefing}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        handleToggleNotificationPref('morningBriefing');
+                      }
+                    }}
+                  >
+                    <div className="space-y-1 pr-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-white">
+                          Morning Delivery Briefing
+                        </span>
+                        <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                          صبح 9:00 بجے ڈیلیوری الرٹ
+                        </span>
+                        <Badge variant="outline" className="text-[10px] text-amber-300 border-amber-500/30 bg-amber-500/5 py-0 px-1.5">
+                          9:00 AM Daily
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        Automated morning briefing summarizing all garments scheduled for delivery today.
+                      </p>
+                      <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                        روزانہ صبح 9:00 بجے آج ڈیلیور ہونے والے تمام سوٹوں کی سمری اور الرٹ وصول کریں۔
+                      </p>
+                    </div>
+
+                    {/* Switch Knob */}
+                    <div
+                      className={cn(
+                        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-1',
+                        notificationPrefs.morningBriefing ? 'bg-gold' : 'bg-white/20'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#0B0C0E] shadow ring-0 transition duration-200 ease-in-out',
+                          notificationPrefs.morningBriefing ? 'translate-x-5' : 'translate-x-0'
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Toggle 2: Urgent Due Date Warnings */}
+                  <div
+                    onClick={() => handleToggleNotificationPref('urgentAlerts')}
+                    className={cn(
+                      'p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start justify-between gap-3',
+                      notificationPrefs.urgentAlerts
+                        ? 'border-gold/50 bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
+                    )}
+                    role="switch"
+                    aria-checked={notificationPrefs.urgentAlerts}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        handleToggleNotificationPref('urgentAlerts');
+                      }
+                    }}
+                  >
+                    <div className="space-y-1 pr-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-white">
+                          Urgent Due Date Warnings
+                        </span>
+                        <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                          24 گھنٹے پہلے فوری وارننگ
+                        </span>
+                        <Badge variant="outline" className="text-[10px] text-rose-300 border-rose-500/30 bg-rose-500/5 py-0 px-1.5">
+                          &lt; 24h Warning
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        High-priority alerts when an in-production suit is due within 24 hours or overdue.
+                      </p>
+                      <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                        جب کوئی زیرِ تکمیل سوٹ 24 گھنٹے کے اندر ڈیلیور ہونا ہو یا تاخیر کا شکار ہو تو فوری وارننگ وصول کریں۔
+                      </p>
+                    </div>
+
+                    {/* Switch Knob */}
+                    <div
+                      className={cn(
+                        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-1',
+                        notificationPrefs.urgentAlerts ? 'bg-gold' : 'bg-white/20'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#0B0C0E] shadow ring-0 transition duration-200 ease-in-out',
+                          notificationPrefs.urgentAlerts ? 'translate-x-5' : 'translate-x-0'
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Toggle 3: Sound & Vibration */}
+                  <div
+                    onClick={() => handleToggleNotificationPref('soundEnabled')}
+                    className={cn(
+                      'p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start justify-between gap-3',
+                      notificationPrefs.soundEnabled
+                        ? 'border-gold/50 bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
+                    )}
+                    role="switch"
+                    aria-checked={notificationPrefs.soundEnabled}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        handleToggleNotificationPref('soundEnabled');
+                      }
+                    }}
+                  >
+                    <div className="space-y-1 pr-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-white">
+                          Sound & Vibration
+                        </span>
+                        <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                          آواز اور وائبریشن
+                        </span>
+                        <Badge variant="outline" className="text-[10px] text-cyan-300 border-cyan-500/30 bg-cyan-500/5 py-0 px-1.5">
+                          {notificationPrefs.soundEnabled ? 'Chime Active' : 'Muted'}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        Play workshop acoustic chime and trigger device vibration when alerts arrive.
+                      </p>
+                      <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                        الرٹس موصول ہونے پر مخصوص آواز اور وائبریشن بجائیں۔
+                      </p>
+                    </div>
+
+                    {/* Switch Knob */}
+                    <div
+                      className={cn(
+                        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-1',
+                        notificationPrefs.soundEnabled ? 'bg-gold' : 'bg-white/20'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#0B0C0E] shadow ring-0 transition duration-200 ease-in-out',
+                          notificationPrefs.soundEnabled ? 'translate-x-5' : 'translate-x-0'
+                        )}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-white/5 pt-4">
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <Bell className="h-3.5 w-3.5 text-gold" />
+                    <span>Test your device's notification and audio alert permissions:</span>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSendTestAlert}
+                    disabled={sendingTestAlert}
+                    className="border-gold/40 bg-gold/10 hover:bg-gold/20 text-gold text-xs font-semibold gap-2 shadow-[0_0_15px_rgba(212,175,55,0.15)]"
+                  >
+                    <Bell className={cn('h-3.5 w-3.5', sendingTestAlert && 'animate-bounce text-gold')} />
+                    <span>{sendingTestAlert ? 'بھیجا جا رہا ہے...' : 'ٹیسٹ نوٹیفیکیشن بھیجیں / Send Test Alert'}</span>
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              {/* Section 6: Danger Zone - Workshop Reset & Data Purification */}
               <Card className="border-rose-500/20 bg-[#0B0C0E]/70 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-base text-rose-300 flex items-center gap-2">

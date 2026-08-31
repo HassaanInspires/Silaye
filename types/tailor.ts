@@ -358,6 +358,11 @@ export interface GarmentOrder {
 }
 
 /**
+ * Semantic type alias for GarmentOrder
+ */
+export type Order = GarmentOrder;
+
+/**
  * Khata Ledger & Financial Transaction
  */
 export interface KhataTransaction {

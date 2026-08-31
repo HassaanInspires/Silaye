@@ -157,6 +157,18 @@ export default function DashboardPage() {
     return customers.filter((c) => (c.current_khata_balance || 0) > 0).length;
   }, [customers]);
 
+  const inProgressCount = React.useMemo(() => {
+    return orders.filter((o) =>
+      ['IN_CUTTING', 'IN_STITCHING', 'KAJ_BUTTON', 'PRESSING'].includes(o.status)
+    ).length;
+  }, [orders]);
+
+  const readyOrders = React.useMemo(() => {
+    return orders.filter(
+      (o) => o.status === 'READY_FOR_DELIVERY' || o.status === 'READY_FOR_TRIAL'
+    );
+  }, [orders]);
+
   // Urgent Orders List (Due today, tomorrow, or in progress)
   const urgentOrders = React.useMemo(() => {
     return activeOrders.slice(0, 5);
@@ -183,6 +195,342 @@ export default function DashboardPage() {
   return (
     <AppShell activeRoute="/dashboard">
       <div className="flex-1 space-y-6 p-4 sm:p-6 md:p-8 pt-4 sm:pt-6 max-w-7xl mx-auto">
+        {/* ================================================================ */}
+        {/* MOBILE VIEWPORT ONLY (md:hidden)                                 */}
+        {/* ================================================================ */}
+        <div className="block md:hidden space-y-4">
+          {/* 1. Mobile Greeting Card */}
+          <div className="premium-glass-card p-4 border-gold/25 bg-gradient-to-br from-gold/15 via-[#121418] to-transparent relative overflow-hidden shadow-[0_0_25px_rgba(212,175,55,0.1)]">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] text-emerald-400 font-semibold">
+                    آن لائن • Live Sync
+                  </span>
+                </div>
+                <h1 className="font-urdu-serif text-xl font-bold text-white tracking-tight leading-urdu-display pt-0.5" dir="rtl">
+                  السلام علیکم، ماسٹر صاحب
+                </h1>
+                <p className="text-xs text-gray-300 font-medium truncate max-w-[220px]">
+                  {shop?.name || 'Master Workshop Counter'}
+                </p>
+              </div>
+
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <span className="text-[10px] text-gray-400 font-mono">
+                  {new Date().toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                </span>
+                <a href="/orders/new">
+                  <Button
+                    size="sm"
+                    className="h-8 px-2.5 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_15px_rgba(212,175,55,0.25)] text-xs gap-1"
+                  >
+                    <PlusCircle className="h-3.5 w-3.5" />
+                    <span>سوٹ بک کریں</span>
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. 2x2 High-Contrast KPI Grid */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Card 1: Due Today (آج کی ڈیلیوری - Amber) */}
+            <div className="premium-glass-card p-3 border-amber-500/30 bg-gradient-to-br from-amber-500/15 via-[#121418] to-transparent relative overflow-hidden">
+              <div className="flex items-center justify-between pb-1.5">
+                <div className="flex flex-col">
+                  <span className="font-urdu-sans text-xs font-bold text-amber-300" dir="rtl">
+                    آج کی ڈیلیوری
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-amber-400/70 font-semibold">
+                    Due Today
+                  </span>
+                </div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/20 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                  <Clock className="h-3.5 w-3.5 animate-pulse" />
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-xl font-bold text-amber-300 font-mono">
+                  <bdi dir="ltr">{dueTodayOrders.length}</bdi>{' '}
+                  <span className="text-[11px] font-urdu-sans font-normal text-amber-400/80">سوٹ</span>
+                </div>
+                <div className="text-[10px] text-gray-400 flex items-center justify-between pt-1 border-t border-white/5">
+                  <span>Due Value</span>
+                  <span className="font-mono font-semibold text-amber-300">
+                    Rs. {dueTodayValue.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: In Progress (ورکشاپ سلائی - Sky/Blue) */}
+            <div className="premium-glass-card p-3 border-sky-500/30 bg-gradient-to-br from-sky-500/15 via-[#121418] to-transparent relative overflow-hidden">
+              <div className="flex items-center justify-between pb-1.5">
+                <div className="flex flex-col">
+                  <span className="font-urdu-sans text-xs font-bold text-sky-300" dir="rtl">
+                    ورکشاپ سلائی
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-sky-400/70 font-semibold">
+                    In Progress
+                  </span>
+                </div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-sky-500/30 bg-sky-500/20 text-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.2)]">
+                  <Scissors className="h-3.5 w-3.5" />
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-xl font-bold text-sky-300 font-mono">
+                  <bdi dir="ltr">{inProgressCount}</bdi>{' '}
+                  <span className="text-[11px] font-urdu-sans font-normal text-sky-400/80">جاری</span>
+                </div>
+                <div className="text-[10px] text-gray-400 flex items-center justify-between pt-1 border-t border-white/5">
+                  <span className="truncate">{inCutCount} کٹنگ</span>
+                  <span className="font-mono text-sky-300">{inStitchCount} سلائی</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Ready for Pickup (تیار سوٹ - Emerald) */}
+            <div className="premium-glass-card p-3 border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-[#121418] to-transparent relative overflow-hidden">
+              <div className="flex items-center justify-between pb-1.5">
+                <div className="flex flex-col">
+                  <span className="font-urdu-sans text-xs font-bold text-emerald-300" dir="rtl">
+                    تیار سوٹ
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-emerald-400/70 font-semibold">
+                    Ready
+                  </span>
+                </div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.2)]">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-xl font-bold text-emerald-300 font-mono">
+                  <bdi dir="ltr">{readyOrders.length}</bdi>{' '}
+                  <span className="text-[11px] font-urdu-sans font-normal text-emerald-400/80">تیار</span>
+                </div>
+                <div className="text-[10px] text-gray-400 flex items-center justify-between pt-1 border-t border-white/5">
+                  <span>ڈلیوری تیار</span>
+                  <span className="font-mono text-emerald-400">Ready</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Udhaar Balance (باقی ادھار - Rose) */}
+            <div className="premium-glass-card p-3 border-rose-500/30 bg-gradient-to-br from-rose-500/15 via-[#121418] to-transparent relative overflow-hidden">
+              <div className="flex items-center justify-between pb-1.5">
+                <div className="flex flex-col">
+                  <span className="font-urdu-sans text-xs font-bold text-rose-300" dir="rtl">
+                    باقی ادھار
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-rose-400/70 font-semibold">
+                    Pending Khata
+                  </span>
+                </div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/20 text-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.2)]">
+                  <Wallet className="h-3.5 w-3.5" />
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-lg font-bold text-rose-300 font-mono truncate">
+                  <bdi dir="ltr">Rs. {unsettledKhataTotal.toLocaleString()}</bdi>
+                </div>
+                <div className="text-[10px] text-gray-400 flex items-center justify-between pt-1 border-t border-white/5">
+                  <span>{debtorsCount} گاہک</span>
+                  <a href="/khata" className="text-gold hover:underline">
+                    کھاتہ →
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Quick Action Chips */}
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href="/orders"
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#121418] p-2.5 text-xs text-gray-200 hover:border-gold/30 active:scale-95 transition-all shadow-sm"
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-gold shrink-0">
+                <Search className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-white truncate">تلاش کریں</span>
+                <span className="text-[10px] text-gray-400 truncate">Search Queue</span>
+              </div>
+            </a>
+
+            <a
+              href="/khata"
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#121418] p-2.5 text-xs text-gray-200 hover:border-gold/30 active:scale-95 transition-all shadow-sm"
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400 shrink-0">
+                <Wallet className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-white truncate">کھاتہ رجسٹر</span>
+                <span className="text-[10px] text-gray-400 truncate">Khata Ledger</span>
+              </div>
+            </a>
+
+            <a
+              href="/print"
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#121418] p-2.5 text-xs text-gray-200 hover:border-gold/30 active:scale-95 transition-all shadow-sm"
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400 shrink-0">
+                <Printer className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-white truncate">ٹیگ پرنٹ</span>
+                <span className="text-[10px] text-gray-400 truncate">Reprint Tags</span>
+              </div>
+            </a>
+
+            <a
+              href="/orders/new"
+              className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/10 p-2.5 text-xs text-gold hover:bg-gold/20 active:scale-95 transition-all shadow-sm"
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold text-[#0B0C0E] font-bold shrink-0">
+                <PlusCircle className="h-4 w-4" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-gold truncate">نیا سوٹ</span>
+                <span className="text-[10px] text-amber-200/80 truncate">Book Order</span>
+              </div>
+            </a>
+          </div>
+
+          {/* 4. Horizontal Urgent Deliveries Carousel */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <span className="font-urdu-serif text-sm font-bold text-white" dir="rtl">
+                  فوری ترسیلات
+                </span>
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold text-amber-300">
+                  Urgent
+                </span>
+              </div>
+              <a
+                href="/orders"
+                className="inline-flex items-center gap-1 text-xs text-gold font-medium hover:underline"
+              >
+                <span>تمام آرڈرز</span>
+                <ChevronRight className="h-3 w-3" />
+              </a>
+            </div>
+
+            {urgentOrders.length === 0 ? (
+              <div className="premium-glass-card p-6 border-white/10 text-center space-y-2">
+                <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto" />
+                <h4 className="text-xs font-semibold text-white">آج کوئی فوری ڈلیوری نہیں ہے</h4>
+                <p className="text-[11px] text-gray-400">تمام شیڈول کلئیر ہے۔ نیا آرڈر بک کریں۔</p>
+                <a href="/orders/new" className="inline-block pt-1">
+                  <Button size="sm" variant="outline" className="text-xs border-gold/30 text-gold bg-gold/5">
+                    <PlusCircle className="h-3 w-3 mr-1" /> نیا سوٹ بک کریں
+                  </Button>
+                </a>
+              </div>
+            ) : (
+              <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none touch-pan-x -mx-4 px-4">
+                {urgentOrders.map((order) => {
+                  const customer = customerMap.get(order.customer_id);
+                  const isDueToday = order.delivery_date === todayStr;
+                  const garmentName =
+                    GARMENT_DISPLAY_NAMES[order.garment_type] || order.garment_type;
+
+                  return (
+                    <div
+                      key={order.id}
+                      className="w-[280px] shrink-0 snap-start premium-glass-card p-3.5 border-white/10 bg-[#121418] hover:border-gold/30 space-y-2.5 shadow-lg"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-bold text-gold">
+                          #{order.order_number}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <span
+                            className={cn(
+                              'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                              isDueToday
+                                ? 'border-amber-500/40 bg-amber-500/15 text-amber-300'
+                                : 'border-rose-500/40 bg-rose-500/15 text-rose-300'
+                            )}
+                          >
+                            {isDueToday ? 'آج کی ڈلیوری' : order.delivery_date}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-sm text-white truncate">
+                          {customer?.full_name || 'Walk-in Customer'}
+                        </div>
+                        <div className="text-[11px] text-gray-400 font-mono">
+                          {customer?.phone || 'No phone'}
+                        </div>
+                        <div className="text-xs text-gray-300 font-medium truncate pt-0.5">
+                          {order.quantity}x {garmentName} • {order.fabric_color || 'کپڑا'}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-gray-400">باقی رقم</span>
+                          <span
+                            className={cn(
+                              'font-mono text-xs font-bold',
+                              order.balance_due === 0 ? 'text-emerald-400' : 'text-rose-400'
+                            )}
+                          >
+                            {order.balance_due === 0 ? 'Paid' : `Rs. ${order.balance_due.toLocaleString()}`}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenWhatsApp(order)}
+                            title="WhatsApp Alert"
+                            className="flex h-8 px-2.5 items-center justify-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 text-xs font-semibold"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            <span>پیغام</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenPrint(order)}
+                            title="Print Tag"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white"
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                          </button>
+                          <a
+                            href="/orders"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gold/30 bg-gold/10 text-gold hover:bg-gold/20"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ================================================================ */}
+        {/* DESKTOP VIEWPORT ONLY (hidden md:block)                          */}
+        {/* ================================================================ */}
+        <div className="hidden md:block space-y-6">
         {/* ------------------------------------------------------------------ */}
         {/* 1. TOP HEADER & GREETING BAR                                        */}
         {/* ------------------------------------------------------------------ */}
@@ -713,6 +1061,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
+        </div>
         </div>
       </div>
 
