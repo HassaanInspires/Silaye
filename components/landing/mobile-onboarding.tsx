@@ -11,6 +11,9 @@ import {
   MessageSquare,
   ShieldCheck,
   Check,
+  CheckCheck,
+  Ruler,
+  ChevronRight,
 } from 'lucide-react';
 
 export function MobileOnboardingFlow() {
@@ -93,7 +96,7 @@ export function MobileOnboardingFlow() {
           <div className="w-full shrink-0 flex flex-col items-center justify-center text-center px-2">
             {/* Category Pill */}
             <div className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-gold shadow-[0_0_12px_rgba(212,175,55,0.15)] mb-3">
-              <Scissors className="h-3 w-3" />
+              <Ruler className="h-3.5 w-3.5 text-gold" />
               <span>Digital Measurement Vault</span>
             </div>
 
@@ -101,16 +104,18 @@ export function MobileOnboardingFlow() {
             <h2 className="font-urdu-serif text-2xl font-bold text-white mb-1.5 leading-snug" dir="rtl">
               ناپ کی ڈیجیٹل تجوری
             </h2>
-            <p className="font-urdu-sans text-xs text-gray-400 max-w-xs mb-5 leading-urdu-data" dir="rtl">
+            <p className="font-urdu-sans text-xs text-gray-400 max-w-xs mb-4 leading-urdu-data" dir="rtl">
               کبھی ناپ گم نہ ہو۔ تمام کسٹمرز کا کلاؤڈ ریکارڈ ایک کلک پر۔
             </p>
 
             {/* Visual Glass Mockup */}
-            <div className="premium-glass-card rounded-2xl border border-white/10 p-4 w-full max-w-xs shadow-2xl space-y-3 bg-[#121316]/90 backdrop-blur-xl text-left">
+            <div className="premium-glass-card rounded-2xl border border-gold/25 p-4 w-full max-w-xs shadow-2xl space-y-3 bg-[#121316]/95 backdrop-blur-xl text-left relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gold/5 rounded-full blur-xl pointer-events-none" />
+
               {/* Customer Profile Header */}
               <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-gold/15 flex items-center justify-center text-[11px] font-bold text-gold">
+                  <div className="h-7 w-7 rounded-lg bg-gold/20 border border-gold/40 flex items-center justify-center text-[11px] font-bold text-gold shadow-[0_0_10px_rgba(212,175,55,0.2)]">
                     HS
                   </div>
                   <div>
@@ -123,38 +128,30 @@ export function MobileOnboardingFlow() {
                 </span>
               </div>
 
-              {/* 3x2 Measurement Matrix Mock */}
-              <div className="grid grid-cols-3 gap-1.5 text-center">
-                <div className="rounded-lg bg-[#0B0C0E]/60 border border-gold/30 p-1.5">
-                  <span className="block text-[9px] text-gray-400 font-urdu-sans" dir="rtl">لمبائی</span>
-                  <span className="text-xs font-bold text-gold font-mono">42.50&quot;</span>
+              {/* 4 High-Contrast Tactile Measurement Chips */}
+              <div className="grid grid-cols-2 gap-2 text-center">
+                <div className="rounded-xl bg-[#0B0C0E]/80 border border-gold/40 p-2 shadow-[0_0_12px_rgba(212,175,55,0.1)] flex items-center justify-between">
+                  <span className="text-[11px] text-gray-300 font-urdu-sans font-medium" dir="rtl">لمبائی</span>
+                  <span className="text-xs font-bold text-gold font-mono">40.00&quot;</span>
                 </div>
-                <div className="rounded-lg bg-[#0B0C0E]/60 border border-white/5 p-1.5">
-                  <span className="block text-[9px] text-gray-400 font-urdu-sans" dir="rtl">چھاتی</span>
-                  <span className="text-xs font-bold text-gray-200 font-mono">38.00&quot;</span>
+                <div className="rounded-xl bg-[#0B0C0E]/80 border border-gold/40 p-2 shadow-[0_0_12px_rgba(212,175,55,0.1)] flex items-center justify-between">
+                  <span className="text-[11px] text-gray-300 font-urdu-sans font-medium" dir="rtl">چھاتی</span>
+                  <span className="text-xs font-bold text-gold font-mono">38.00&quot;</span>
                 </div>
-                <div className="rounded-lg bg-[#0B0C0E]/60 border border-white/5 p-1.5">
-                  <span className="block text-[9px] text-gray-400 font-urdu-sans" dir="rtl">کمر</span>
-                  <span className="text-xs font-bold text-gray-200 font-mono">34.25&quot;</span>
+                <div className="rounded-xl bg-[#0B0C0E]/80 border border-white/10 p-2 flex items-center justify-between">
+                  <span className="text-[11px] text-gray-300 font-urdu-sans font-medium" dir="rtl">تیرَہ</span>
+                  <span className="text-xs font-bold text-amber-300 font-mono">18.00&quot;</span>
                 </div>
-                <div className="rounded-lg bg-[#0B0C0E]/60 border border-white/5 p-1.5">
-                  <span className="block text-[9px] text-gray-400 font-urdu-sans" dir="rtl">کالر</span>
-                  <span className="text-xs font-bold text-gray-200 font-mono">16.00&quot;</span>
-                </div>
-                <div className="rounded-lg bg-[#0B0C0E]/60 border border-white/5 p-1.5">
-                  <span className="block text-[9px] text-gray-400 font-urdu-sans" dir="rtl">تیرا</span>
-                  <span className="text-xs font-bold text-gray-200 font-mono">18.50&quot;</span>
-                </div>
-                <div className="rounded-lg bg-[#0B0C0E]/60 border border-white/5 p-1.5">
-                  <span className="block text-[9px] text-gray-400 font-urdu-sans" dir="rtl">بازو</span>
-                  <span className="text-xs font-bold text-gray-200 font-mono">24.00&quot;</span>
+                <div className="rounded-xl bg-[#0B0C0E]/80 border border-white/10 p-2 flex items-center justify-between">
+                  <span className="text-[11px] text-gray-300 font-urdu-sans font-medium" dir="rtl">بین</span>
+                  <span className="text-xs font-bold text-amber-300 font-mono">15.00&quot;</span>
                 </div>
               </div>
 
               {/* Style Chip Footer */}
-              <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-white/5">
-                <span className="font-urdu-sans" dir="rtl">شیروانی کالر • گول دامن</span>
-                <span className="text-gold font-medium">2 سائیڈ جیب</span>
+              <div className="flex items-center justify-between text-[10px] text-gray-300 pt-2 border-t border-white/5 font-urdu-sans" dir="rtl">
+                <span className="text-gold/90">شیروانی بین • گول دامن</span>
+                <span className="text-gray-400">2 سائیڈ جیب</span>
               </div>
             </div>
           </div>
@@ -163,7 +160,7 @@ export function MobileOnboardingFlow() {
           <div className="w-full shrink-0 flex flex-col items-center justify-center text-center px-2">
             {/* Category Pill */}
             <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.15)] mb-3">
-              <MessageSquare className="h-3 w-3" />
+              <MessageSquare className="h-3.5 w-3.5" />
               <span>1-Click WhatsApp Receipts</span>
             </div>
 
@@ -171,7 +168,7 @@ export function MobileOnboardingFlow() {
             <h2 className="font-urdu-serif text-2xl font-bold text-white mb-1.5 leading-snug" dir="rtl">
               واٹس ایپ رسیدیں
             </h2>
-            <p className="font-urdu-sans text-xs text-gray-400 max-w-xs mb-5 leading-urdu-data" dir="rtl">
+            <p className="font-urdu-sans text-xs text-gray-400 max-w-xs mb-4 leading-urdu-data" dir="rtl">
               بکنگ اور سوٹ تیار ہوتے ہی کسٹمر کو فوری خودکار سلپ بھیجیں۔
             </p>
 
@@ -192,30 +189,41 @@ export function MobileOnboardingFlow() {
               </div>
 
               {/* Chat Bubble Mock */}
-              <div className="rounded-xl bg-[#005c4b] p-3 text-white text-xs space-y-1.5 shadow-md">
-                <p className="font-urdu-sans text-[11px] leading-snug" dir="rtl">
-                  السلام علیکم حاجی صاحب! آپ کا سوٹ تیار ہو چکا ہے۔
-                </p>
-                <div className="rounded-lg bg-black/20 p-1.5 text-[10px] space-y-0.5 font-mono">
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Total:</span>
-                    <span className="font-bold">Rs. 3,500</span>
+              <div className="rounded-xl bg-[#005c4b] p-3 text-white text-xs space-y-2 shadow-md border border-emerald-400/20">
+                <div className="border-b border-white/10 pb-1.5">
+                  <p className="font-urdu-sans text-[11px] font-bold text-emerald-100" dir="rtl">
+                    📋 Silaye Tailor Receipt / ڈیجیٹل رسید
+                  </p>
+                  <p className="font-urdu-sans text-[10px] text-emerald-200 pt-0.5" dir="rtl">
+                    حاجی سلیم صاحب • 2x شلوار قمیض
+                  </p>
+                </div>
+
+                <div className="rounded-lg bg-black/25 p-2 text-[10px] space-y-1 font-mono">
+                  <div className="flex justify-between text-gray-300">
+                    <span>سلائی اجرت (Stitching):</span>
+                    <span className="font-bold text-white">Rs. 3,500</span>
                   </div>
                   <div className="flex justify-between text-emerald-200">
-                    <span>Balance Due:</span>
-                    <span className="font-bold">Rs. 0 (Paid)</span>
+                    <span>ایڈوانس وصولی (Advance):</span>
+                    <span className="font-bold">Rs. 1,500</span>
+                  </div>
+                  <div className="flex justify-between text-amber-200 pt-0.5 border-t border-white/10">
+                    <span className="font-bold">باقی رقم (Balance Due):</span>
+                    <span className="font-bold text-amber-300">Rs. 2,000</span>
                   </div>
                 </div>
+
                 <div className="flex items-center justify-end gap-1 text-[9px] text-emerald-200 pt-0.5">
                   <span>10:42 AM</span>
-                  <span className="text-cyan-300 font-bold">✓✓</span>
+                  <CheckCheck className="h-3.5 w-3.5 text-[#38bdf8]" />
                 </div>
               </div>
 
               {/* Instant Automation Badge */}
-              <div className="flex items-center justify-center gap-1.5 text-[10px] text-emerald-400/90 pt-1">
-                <CheckCircle2 className="h-3 w-3" />
-                <span>خودکار سلپ ڈیلیوری • Zero SMS Cost</span>
+              <div className="flex items-center justify-center gap-1.5 text-[10px] text-emerald-400/90 pt-1 font-urdu-sans" dir="rtl">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                <span>خودکار واٹس ایپ نوٹیفیکیشن • Zero SMS Cost</span>
               </div>
             </div>
           </div>
@@ -224,7 +232,7 @@ export function MobileOnboardingFlow() {
           <div className="w-full shrink-0 flex flex-col items-center justify-center text-center px-2">
             {/* Category Pill */}
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)] mb-3">
-              <WifiOff className="h-3 w-3" />
+              <WifiOff className="h-3.5 w-3.5" />
               <span>Offline Khata & Workflow</span>
             </div>
 
@@ -232,46 +240,55 @@ export function MobileOnboardingFlow() {
             <h2 className="font-urdu-serif text-2xl font-bold text-white mb-1.5 leading-snug" dir="rtl">
               آف لائن کھاتہ اور ورک فلو
             </h2>
-            <p className="font-urdu-sans text-xs text-gray-400 max-w-xs mb-5 leading-urdu-data" dir="rtl">
+            <p className="font-urdu-sans text-xs text-gray-400 max-w-xs mb-4 leading-urdu-data" dir="rtl">
               انٹرنیٹ کے بغیر بلنگ، ادھار کھاتہ، اور سلائی ٹریکنگ۔
             </p>
 
             {/* Visual Glass Mockup */}
-            <div className="premium-glass-card rounded-2xl border border-amber-500/30 bg-[#121316]/90 p-4 w-full max-w-xs shadow-[0_0_30px_rgba(245,158,11,0.15)] space-y-3 text-left backdrop-blur-xl">
-              {/* Pipeline Stage Chips */}
+            <div className="premium-glass-card rounded-2xl border border-amber-500/30 bg-[#121316]/95 p-4 w-full max-w-xs shadow-[0_0_30px_rgba(245,158,11,0.15)] space-y-3 text-left backdrop-blur-xl">
+              {/* Glowing 3-Stage Pipeline Ribbon */}
               <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider">
-                  Live Production Pipeline
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider">
+                    Production Ribbon
+                  </span>
+                  <span className="text-[9px] text-amber-400 font-mono">1-Tap Progress</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="flex-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 py-1.5 px-1 text-center">
+                    <span className="block font-urdu-sans text-[10px] text-emerald-300 font-bold" dir="rtl">کٹائی</span>
+                    <span className="text-[8px] text-emerald-400">✓ Done</span>
+                  </div>
+                  <ChevronRight className="h-3 w-3 text-gray-500 shrink-0" />
+                  <div className="flex-1 rounded-lg bg-amber-500/20 border border-amber-500/60 py-1.5 px-1 text-center shadow-[0_0_10px_rgba(245,158,11,0.3)] animate-pulse">
+                    <span className="block font-urdu-sans text-[10px] text-amber-200 font-bold" dir="rtl">سلائی</span>
+                    <span className="text-[8px] text-amber-400 font-bold">⚡ Active</span>
+                  </div>
+                  <ChevronRight className="h-3 w-3 text-gray-500 shrink-0" />
+                  <div className="flex-1 rounded-lg bg-white/5 border border-white/10 py-1.5 px-1 text-center text-gray-400">
+                    <span className="block font-urdu-sans text-[10px]" dir="rtl">تیار</span>
+                    <span className="text-[8px]">✨ Ready</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Offline DB Synced Shield Badge */}
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/25 p-2.5 flex items-center justify-between text-[10px]">
+                <div className="flex items-center gap-1.5 text-amber-300 font-semibold">
+                  <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0" />
+                  <span>Offline DB Synced</span>
+                </div>
+                <span className="rounded-full bg-amber-500/20 border border-amber-400/30 px-2 py-0.5 text-[9px] font-mono font-bold text-amber-300">
+                  100% Local
                 </span>
-                <div className="grid grid-cols-3 gap-1 text-[10px] font-medium text-center">
-                  <div className="rounded-lg bg-white/5 border border-white/10 py-1.5 text-gray-300">
-                    <span className="block font-urdu-sans" dir="rtl">کٹائی</span>
-                    <span className="text-[9px] text-emerald-400">✓ Done</span>
-                  </div>
-                  <div className="rounded-lg bg-amber-500/20 border border-amber-500/50 py-1.5 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-                    <span className="block font-urdu-sans" dir="rtl">سلائی</span>
-                    <span className="text-[9px] text-amber-400 animate-pulse">⚡ Active</span>
-                  </div>
-                  <div className="rounded-lg bg-white/5 border border-white/10 py-1.5 text-gray-500">
-                    <span className="block font-urdu-sans" dir="rtl">تیار</span>
-                    <span className="text-[9px]">Queue</span>
-                  </div>
-                </div>
               </div>
 
-              {/* Offline Sync State Pill */}
-              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-2 flex items-center justify-between text-[10px]">
-                <div className="flex items-center gap-1.5 text-amber-400 font-semibold">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>Offline DB Synchronized</span>
-                </div>
-                <span className="text-gray-400 font-mono">0 Queued</span>
-              </div>
-
-              {/* Total Udhaar Metric */}
+              {/* Live Ledger Udhaar Metric Highlight */}
               <div className="flex items-center justify-between border-t border-white/5 pt-2 text-xs">
-                <span className="text-gray-400 font-urdu-sans" dir="rtl">واجب الادا ادھار:</span>
-                <span className="font-mono font-bold text-rose-400">Rs. 68,500</span>
+                <span className="text-gray-300 font-urdu-sans" dir="rtl">کل واجب الادا ادھار:</span>
+                <span className="font-mono font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-lg">
+                  Rs. 68,500
+                </span>
               </div>
             </div>
           </div>

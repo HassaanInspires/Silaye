@@ -302,7 +302,7 @@ export default function KhataPage() {
         {/* ================================================================ */}
         {/* MOBILE KHATA LEDGER VIEWPORT (md:hidden)                         */}
         {/* ================================================================ */}
-        <div className="block md:hidden space-y-4">
+        <div className="block md:hidden space-y-4 pb-36 pb-safe">
           {/* Mobile Header Bar */}
           <div className="flex items-center justify-between pb-1">
             <div>

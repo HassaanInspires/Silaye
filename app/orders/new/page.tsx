@@ -708,7 +708,7 @@ export default function NewOrderPage() {
         {/* ================================================================ */}
         {/* MOBILE 3-STEP WIZARD (md:hidden)                                 */}
         {/* ================================================================ */}
-        <div className="block md:hidden space-y-4 pb-36">
+        <div className="block md:hidden space-y-4 pb-36 pb-safe">
           {/* Step Progress Pills Header */}
           <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#121418] rounded-xl border border-white/5 shadow-md">
             {[

@@ -312,6 +312,16 @@
   - **Artifact Ingestion & Verification**: Downloaded compiled binaries into `./release-binaries-concept1/` via GitHub CLI (`gh run download`) and verified checksums and binary integrity.
   - **Official GitHub Release Publication**: Published official GitHub Release `v1.1.0-concept1` with complete bilingual release notes and attached production binary assets.
 
+- [x] 19.8 Mobile Viewport Clamping, Header Overflow Fix, Bottom Clearance Standard & Onboarding Visual Polish (`app/globals.css`, `components/layout/app-shell.tsx`, `app/dashboard/page.tsx`, `app/settings/page.tsx`, `app/orders/page.tsx`, `app/khata/page.tsx`, `app/print/page.tsx`, `app/orders/new/page.tsx`, `components/landing/mobile-onboarding.tsx`):
+  - **Global Viewport Containment (`app/globals.css`)**: Added `overflow-x: hidden; max-width: 100vw; width: 100%; position: relative;` to `html, body` base styles to eliminate horizontal dragging, side-swiping, and accidental viewport overflow on mobile browsers and native webviews.
+  - **Mobile Top Command Bar Clamping & Refactor (`components/layout/app-shell.tsx`)**: Isolated mobile header under `md:hidden` (`flex md:hidden items-center justify-between w-full h-14 min-h-14 px-3`) rendering Hamburger `<Menu />` (in Drawer/Hybrid mode) or Gold Scissors icon (in Tabs mode) on the left, Workshop Name with live sync indicator pill in the center, and compact touch actions (`[🔍 Search]` trigger with expandable slide-down search bar and `[🔔 Notification]` bell linking to settings) on the right, removing the wide text input from small viewports (<768px) while preserving full command bar on desktop.
+  - **Universal Bottom Clearance Standard (`pb-36 pb-safe`)**: Enforced `pb-36 pb-safe` (minimum 140px bottom padding) across `<main>` scroll viewport in `AppShell` and across mobile containers in `app/dashboard/page.tsx`, `app/settings/page.tsx`, `app/orders/page.tsx`, `app/khata/page.tsx`, `app/print/page.tsx`, and `app/orders/new/page.tsx`, eliminating content clipping above `<MobileBottomNav />`.
+  - **Elevated 3-Card Mobile Onboarding Aesthetics (`components/landing/mobile-onboarding.tsx`)**: Refined all 3 cinematic feature cards with rich tailoring visual components:
+    * Card 1 (Smart Measurement Vault): Digital tailoring measurement card with golden accents, measuring tape/ruler icon, 4 high-contrast chips (لمبائی 40", چھاتی 38", تیرَہ 18", بین 15"), and style preference badges.
+    * Card 2 (WhatsApp Receipts): Authentic emerald WhatsApp chat bubble with customer slip header, PKR breakdown (Stitching Rs. 3,500, Advance Rs. 1,500, Balance Rs. 2,000), timestamp 10:42 AM, and double blue ticks (`✓✓` in `#38bdf8`).
+    * Card 3 (Offline Workflow): Glowing 3-stage pipeline ribbon (کٹائی -> سلائی -> تیار) with active pulse, "Offline DB Synced" shield badge with 100% local pill, and live ledger receivable metric (`Rs. 68,500`).
+  - **Automated Verification**: 0 TypeScript compiler errors (`npx tsc --noEmit`), 159/159 database and repository test assertions pass (`scripts/verify_db.ts`), and clean production static export compiled into `out/` with all 28 static routes (`npm run build`).
+
 ---
 
 ## Phase 20: Mobile Lifecycle Core Fixes & Deep-Link Navigation Architecture

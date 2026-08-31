@@ -332,7 +332,7 @@ export default function OrdersQueuePage() {
         {/* ================================================================= */}
         {/* MOBILE PIPELINE VIEWPORT (md:hidden)                              */}
         {/* ================================================================= */}
-        <div className="block md:hidden space-y-3">
+        <div className="block md:hidden space-y-3 pb-36 pb-safe">
           {/* 1. Mobile Header Bar */}
           <div className="flex items-center justify-between pb-1">
             <div>

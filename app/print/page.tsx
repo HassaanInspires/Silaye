@@ -217,7 +217,7 @@ export default function PrintStationPage() {
 
   return (
     <AppShell activeRoute="/print">
-      <div className="space-y-6 pb-20 max-w-7xl mx-auto p-4 sm:p-6 md:p-8 pt-4 sm:pt-6">
+      <div className="space-y-6 pb-36 md:pb-20 pb-safe max-w-7xl mx-auto p-4 sm:p-6 md:p-8 pt-4 sm:pt-6">
         {/* Page Header */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-5">
           <div>

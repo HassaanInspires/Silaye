@@ -198,7 +198,7 @@ export default function DashboardPage() {
         {/* ================================================================ */}
         {/* MOBILE VIEWPORT ONLY (md:hidden)                                 */}
         {/* ================================================================ */}
-        <div className="block md:hidden space-y-4">
+        <div className="block md:hidden space-y-4 pb-36 pb-safe">
           {/* 1. Mobile Greeting Card */}
           <div className="premium-glass-card p-4 border-gold/25 bg-gradient-to-br from-gold/15 via-[#121418] to-transparent relative overflow-hidden shadow-[0_0_25px_rgba(212,175,55,0.1)]">
             <div className="flex items-start justify-between gap-3">

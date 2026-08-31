@@ -25,6 +25,7 @@ import {
   Crown,
   CreditCard,
   ArrowRight,
+  Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -279,7 +280,11 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const [shopPlanTier, setShopPlanTier] = React.useState<PlanTier>('FREE');
   const [shopSubscriptionStatus, setShopSubscriptionStatus] = React.useState<SubscriptionStatus>('ACTIVE');
   const [shopPeriodEnd, setShopPeriodEnd] = React.useState<string>('');
+  const [shopName, setShopName] = React.useState<string>('Silaye Master');
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState<boolean>(false);
   const [navLayout, setNavLayout] = React.useState<NavLayoutPreference>('tabs');
+
+  const mobileSearchRef = React.useRef<HTMLInputElement>(null);
 
   const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
   const isPublic = isPublicRoute(pathname);
@@ -347,6 +352,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         if (customEvent.detail.shop.subscription_status) setShopSubscriptionStatus(customEvent.detail.shop.subscription_status);
         if (customEvent.detail.shop.current_period_end) setShopPeriodEnd(customEvent.detail.shop.current_period_end);
         if (customEvent.detail.shop.status) setShopStatus(customEvent.detail.shop.status);
+        if (customEvent.detail.shop.name) setShopName(customEvent.detail.shop.name);
       }
     };
 
@@ -391,6 +397,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           if (initialShop.plan_tier) setShopPlanTier(initialShop.plan_tier);
           if (initialShop.subscription_status) setShopSubscriptionStatus(initialShop.subscription_status);
           if (initialShop.current_period_end) setShopPeriodEnd(initialShop.current_period_end);
+          if (initialShop.name) setShopName(initialShop.name);
         }
       } catch {
         // Ignore fallback
@@ -418,6 +425,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
               if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
               if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
               if (shop.current_period_end) setShopPeriodEnd(shop.current_period_end);
+              if (shop.name) setShopName(shop.name);
             }
           } catch {
             // Ignore
@@ -444,6 +452,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         setShopPlanTier('FREE');
         setShopSubscriptionStatus('ACTIVE');
         setShopPeriodEnd('');
+        setShopName('Silaye Master');
         const currentPath = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
         if (!isPublicRoute(currentPath)) {
           router.replace('/login');
@@ -459,6 +468,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
             if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
             if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
             if (shop.current_period_end) setShopPeriodEnd(shop.current_period_end);
+            if (shop.name) setShopName(shop.name);
           }
         });
       } else {
@@ -751,21 +761,95 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       {/* ------------------------------------------------------------------ */}
       <div className="flex flex-1 flex-col min-w-0 md:pl-64">
         {/* Top Command Bar (Glass Effect) */}
-        <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-4 border-b border-white/5 bg-[#0B0C0E]/60 px-4 md:px-8 pt-safe md:pt-0 pb-2 md:pb-0 backdrop-blur-2xl shadow-sm">
-          <div className="flex items-center gap-3">
-            {/* Mobile Hamburger */}
-            {(navLayout === 'drawer' || navLayout === 'hybrid') && (
+        <header className="sticky top-0 z-30 flex min-h-14 md:min-h-16 items-center justify-between border-b border-white/5 bg-[#0B0C0E]/60 px-3 md:px-8 pt-safe md:pt-0 pb-2 md:pb-0 backdrop-blur-2xl shadow-sm max-w-full overflow-hidden">
+          {/* ================================================================ */}
+          {/* MOBILE COMMAND BAR (<768px - md:hidden)                           */}
+          {/* ================================================================ */}
+          {isMobileSearchOpen ? (
+            <div className="flex md:hidden items-center gap-2 w-full animate-in fade-in duration-200">
+              <div className="relative flex-1">
+                <Input
+                  ref={mobileSearchRef}
+                  type="search"
+                  placeholder="Search customer, order…"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  leftIcon={<Search className="h-4 w-4 text-gold" />}
+                  className="h-9 text-xs bg-[#0B0C0E]/80 border-gold/30 focus:border-gold"
+                  autoFocus
+                />
+              </div>
               <button
                 type="button"
-                onClick={() => setMobileMenuOpen(true)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 md:hidden hover:bg-white/10 cursor-pointer"
-                aria-label="Open navigation menu"
+                onClick={() => {
+                  setIsMobileSearchOpen(false);
+                  setSearchValue('');
+                }}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:text-white cursor-pointer"
+                aria-label="Close search"
               >
-                <Menu className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </button>
-            )}
+            </div>
+          ) : (
+            <div className="flex md:hidden items-center justify-between w-full">
+              {/* Mobile Left: Hamburger (Drawer/Hybrid) or Gold Scissors (Tabs) */}
+              <div className="flex items-center gap-2 shrink-0">
+                {navLayout === 'drawer' || navLayout === 'hybrid' ? (
+                  <button
+                    type="button"
+                    onClick={() => setMobileMenuOpen(true)}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 cursor-pointer"
+                    aria-label="Open navigation menu"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <a href="/dashboard" className="flex items-center" aria-label="Go to Dashboard">
+                    <div className="relative h-8 w-8 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                      <Scissors className="h-4 w-4 object-contain aspect-square" />
+                    </div>
+                  </a>
+                )}
+              </div>
 
-            {/* Customer / Order search */}
+              {/* Mobile Center: Workshop Name + Live Sync Pill */}
+              <div className="flex items-center justify-center gap-1.5 min-w-0 px-2 flex-1">
+                <span className="text-xs font-bold text-white truncate max-w-[130px] sm:max-w-[180px]">
+                  {shopName}
+                </span>
+                <div className="shrink-0 scale-90 origin-center">
+                  <ConnectionPill />
+                </div>
+              </div>
+
+              {/* Mobile Right: Compact Touch Actions [🔍 Search] and [🔔 Notification] */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileSearchOpen(true)}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-gold transition-colors cursor-pointer"
+                  aria-label="Open search"
+                  title="Search"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                </button>
+                <a
+                  href="/settings"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-gold transition-colors cursor-pointer"
+                  aria-label="Notifications and Settings"
+                  title="Notifications"
+                >
+                  <Bell className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================ */}
+          {/* DESKTOP COMMAND BAR (≥768px - hidden md:flex)                    */}
+          {/* ================================================================ */}
+          <div className="hidden md:flex items-center justify-between w-full gap-4">
             <div className="w-64 md:w-80 lg:w-96">
               <Input
                 ref={searchRef}
@@ -778,26 +862,21 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 aria-label="Search customers and orders"
               />
             </div>
-          </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex">
+            <div className="flex items-center gap-3">
               <ConnectionPill />
-            </div>
 
-            {/* New Booking CTA */}
-            <a href="/orders/new">
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-1.5 whitespace-nowrap bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_20px_rgba(212,175,55,0.2)]"
-              >
-                <PlusCircle className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">New Booking</span>
-                <span className="sm:hidden">New</span>
-              </Button>
-            </a>
+              <a href="/orders/new">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="gap-1.5 whitespace-nowrap bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                >
+                  <PlusCircle className="h-4 w-4" aria-hidden="true" />
+                  <span>New Booking</span>
+                </Button>
+              </a>
+            </div>
           </div>
         </header>
 
@@ -805,7 +884,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         <main
           className={cn(
             'flex-1 p-4 md:p-8 pb-safe',
-            navLayout === 'drawer' ? 'pb-6 md:pb-8' : 'pb-28 md:pb-8'
+            navLayout === 'drawer' ? 'pb-8 md:pb-8' : 'pb-36 md:pb-8'
           )}
           id="main-content"
         >

@@ -1102,7 +1102,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell activeRoute="/settings">
-      <div className="space-y-8 max-w-7xl mx-auto pb-16">
+      <div className="space-y-8 max-w-7xl mx-auto pb-36 md:pb-16 pb-safe">
         {/* Top Header & Context */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
           <div>

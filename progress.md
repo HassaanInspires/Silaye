@@ -2341,7 +2341,57 @@
   - `out/index.html`: Verified static HTML contains ONLY `#0B0C0E` backdrop + scissors logo, zero marketing copy bytes.
 
 * **Next Immediate Task:**
-  - Phase 21: Next Milestone / Concept Evaluation.
+  - Sub-Phase 19.8: Mobile Viewport Clamping, Header Overflow Fix, Bottom Clearance Standard & Onboarding Visual Polish (Completed)
+
+---
+
+## Phase 19.8: Mobile Viewport Clamping, Header Overflow Fix, Bottom Clearance Standard & Onboarding Visual Polish (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `19.8` Mobile Viewport Clamping, Header Overflow Fix, Bottom Clearance Standard & Onboarding Visual Polish:
+    * **Global Viewport Containment (`app/globals.css`)**:
+      - Added `overflow-x: hidden; max-width: 100vw; width: 100%; position: relative;` to `html, body` base styles.
+      - Eliminates horizontal drag/pull-to-slide bugs and viewport side overflow on native Android WebViews and mobile browsers.
+    * **Mobile Top Command Bar Clamping & Refactor (`components/layout/app-shell.tsx`)**:
+      - Re-architected command bar header isolating mobile viewports (`<768px`, `md:hidden`) with `h-14` height and `overflow-hidden` constraints.
+      - Rendered Drawer Hamburger (in Drawer/Hybrid layout) or Gold Scissors brand icon (in Tabs layout) on the left.
+      - Centered Workshop Brand Name with dynamic shop hydration and live sync indicator status pill (`ConnectionPill`).
+      - Added compact touch action icon buttons on the right: `[🔍 Search]` trigger with instant slide-down search input bar and `[🔔 Notification]` bell linking directly to settings.
+      - Removed full-width text input from mobile top bar while preserving desktop command bar (`hidden md:flex`).
+    * **Universal Bottom Clearance Standard (`pb-36 pb-safe`)**:
+      - Enforced `pb-36 pb-safe` (minimum 140px bottom padding) on `<main>` viewport in `AppShell` (when `navLayout !== 'drawer'`).
+      - Applied `pb-36 pb-safe` across all mobile scroll wrappers in `app/dashboard/page.tsx`, `app/settings/page.tsx`, `app/orders/page.tsx`, `app/khata/page.tsx`, `app/print/page.tsx`, and `app/orders/new/page.tsx`.
+      - Guaranteed that scrolling to the bottom of all screens (e.g. Morning Delivery Briefing toggle in `/settings` and urgent cards in `/dashboard`) leaves generous breathing space above `<MobileBottomNav />` with zero clipping.
+    * **Elevated 3-Card Mobile Onboarding Aesthetics (`components/landing/mobile-onboarding.tsx`)**:
+      - **Card 1 (Smart Measurement Vault / ناپ کی ڈیجیٹل تجوری)**: Digital tailoring measurement card with golden accents, measuring tape/ruler icon, 4 high-contrast chips (لمبائی 40", چھاتی 38", تیرَہ 18", بین 15"), customer profile badge, and style preference tags (`شیروانی بین • گول دامن • 2 سائیڈ جیب`).
+      - **Card 2 (1-Click WhatsApp Receipts / واٹس ایپ رسیدیں)**: Authentic emerald WhatsApp chat bubble with customer slip header, PKR breakdown (Stitching Rs. 3,500, Advance Rs. 1,500, Balance Rs. 2,000), timestamp 10:42 AM, and double blue ticks (`✓✓` in `#38bdf8`).
+      - **Card 3 (Offline Workflow & Khata / آف لائن کھاتہ اور ورک فلو)**: Glowing 3-stage pipeline ribbon (کٹائی -> سلائی -> تیار) with active pulse, "Offline DB Synced" shield badge with 100% local pill, and live ledger receivable metric (`Rs. 68,500`).
+    * **Automated Verification**:
+      - `npx tsc --noEmit`: 0 type errors.
+      - `scripts/verify_db.ts`: All 159/159 database, auth, notification, and repository test assertions pass.
+      - `npm run build`: Production static export generated all 28/28 static routes cleanly into `out/`.
+
+* **Active File Changes:**
+  - `app/globals.css` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `app/orders/page.tsx` [MODIFIED]
+  - `app/khata/page.tsx` [MODIFIED]
+  - `app/print/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `components/landing/mobile-onboarding.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: Exit code 0 (159/159 tests passed).
+  - `npm run build`: Exit code 0 (28/28 static routes compiled into `out/`).
+
+* **Next Immediate Task:**
+  - Concept 2 Planning & Exploration / Next Release Milestone.
+
 
 
 
