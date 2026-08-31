@@ -505,7 +505,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-ambient-dark text-foreground flex flex-col md:flex-row font-sans overflow-x-hidden">
+    <div className="h-[100dvh] flex flex-col md:flex-row overflow-hidden bg-ambient-dark text-foreground font-sans">
       {/* ------------------------------------------------------------------ */}
       {/* DESKTOP SIDEBAR (Fixed Glass Panel)                                  */}
       {/* ------------------------------------------------------------------ */}
@@ -761,9 +761,9 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       {/* ------------------------------------------------------------------ */}
       {/* MAIN CONTENT AREA WITH COMMAND BAR                                  */}
       {/* ------------------------------------------------------------------ */}
-      <div className="flex flex-1 flex-col min-w-0 md:pl-64">
+      <div className="flex flex-1 flex-col min-w-0 md:pl-64 h-full overflow-hidden">
         {/* Top Command Bar (Glass Effect) */}
-        <header className="sticky top-0 z-30 flex min-h-14 md:min-h-16 items-center justify-between border-b border-white/5 bg-[#0B0C0E]/60 px-3 md:px-8 pt-safe md:pt-0 pb-2 md:pb-0 backdrop-blur-2xl shadow-sm max-w-full overflow-hidden">
+        <header className="sticky top-0 z-30 flex shrink-0 min-h-14 md:min-h-16 items-center justify-between border-b border-white/5 bg-[#0B0C0E]/60 px-3 md:px-8 pt-safe md:pt-0 pb-2 md:pb-0 backdrop-blur-2xl shadow-sm max-w-full overflow-hidden">
           {/* ================================================================ */}
           {/* MOBILE COMMAND BAR (<768px - md:hidden)                           */}
           {/* ================================================================ */}
@@ -892,7 +892,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         {/* Scrollable Main Viewport */}
         <main
           className={cn(
-            'flex-1 w-full overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-safe overscroll-y-contain',
+            'flex-1 w-full overflow-y-scroll overflow-x-hidden touch-pan-y overscroll-y-contain p-4 md:p-8 pb-safe',
             navLayout === 'drawer' ? 'pb-8 md:pb-8' : 'pb-36 md:pb-8'
           )}
           id="main-content"

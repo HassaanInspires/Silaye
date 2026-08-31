@@ -258,7 +258,7 @@ export default function KhataPage() {
 
   return (
     <AppShell activeRoute="/khata">
-      <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6 md:p-8 pt-4 sm:pt-6">
+      <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header (Desktop) */}
         <div className="hidden md:flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-5">
           <div className="space-y-1">
@@ -302,7 +302,7 @@ export default function KhataPage() {
         {/* ================================================================ */}
         {/* MOBILE KHATA LEDGER VIEWPORT (md:hidden)                         */}
         {/* ================================================================ */}
-        <div className="block md:hidden space-y-4 pb-36 pb-safe">
+        <div className="block md:hidden space-y-4">
           {/* Mobile Header Bar */}
           <div className="flex items-center justify-between pb-1">
             <div>

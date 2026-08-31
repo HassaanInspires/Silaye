@@ -328,11 +328,11 @@ export default function OrdersQueuePage() {
 
   return (
     <AppShell activeRoute="/orders">
-      <div className="flex-1 space-y-4 p-4 sm:p-6 md:p-8 pt-4 sm:pt-6 max-w-7xl mx-auto">
+      <div className="space-y-4 max-w-7xl mx-auto">
         {/* ================================================================= */}
         {/* MOBILE PIPELINE VIEWPORT (md:hidden)                              */}
         {/* ================================================================= */}
-        <div className="block md:hidden space-y-3 pb-36 pb-safe">
+        <div className="block md:hidden space-y-3">
           {/* 1. Mobile Header Bar */}
           <div className="flex items-center justify-between pb-1">
             <div>

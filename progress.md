@@ -2522,7 +2522,48 @@
   - `ls -lh release-binaries-concept1-v113/*`: Confirmed valid binary files on disk.
 
 * **Next Immediate Task:**
-  - Concept 2 Planning & Exploration / Next Release Milestone.
+  - Task 20.8: Mobile Single Scroll Container & Android WebView Touch Freeze Fix (Completed)
+
+---
+
+## Phase 20: Mobile Single Scroll Container & Android WebView Touch Freeze Fix (Completed)
+* **Date:** 2026-08-31
+* **Tasks Completed:**
+  - `20.8` Mobile Single Scroll Container & Android WebView Touch Freeze Diagnosis & Fix:
+    * **Root Cause Diagnosis**:
+      - Root Cause 1: `body { overflow-y: auto; height: 100%; }` in `app/globals.css` combined with `min-h-[100dvh]` on `AppShell` root wrapper created conflicting nested scroll containers. Android WebView (Chromium) captured touch gestures at the root `body` level, which had no scrollable overflow, deadlocking the gesture recognizer and freezing touch event propagation to inner `<main className="overflow-y-auto">` elements.
+      - Root Cause 2: Missing `touch-action: pan-y;` on `html, body` and `<main>` caused touch disambiguation delays and gesture dropouts in Android WebViews.
+      - Root Cause 3: Duplicate outer wrappers and nested `pb-36 pb-safe` on individual page components caused padding bloat and layout competition against the app shell scroll viewport.
+    * **Implementation of Mobile Single Scroll Standard**:
+      - `app/globals.css`: Cleaned up `html, body` base styles to `height: 100%; width: 100%; margin: 0; padding: 0; background-color: #0B0C0E; overflow: hidden; touch-action: pan-y; -webkit-overflow-scrolling: touch;`.
+      - `app/layout.tsx`: Configured `body` with `h-full w-full overflow-hidden`.
+      - `components/layout/app-shell.tsx`:
+        * Wrapped outer app in `h-[100dvh] flex flex-col md:flex-row overflow-hidden`.
+        * Configured main content column with `h-full overflow-hidden`.
+        * Configured top header with `shrink-0`.
+        * Established `<main id="main-content">` as the strictly ONE dedicated scroll container with `flex-1 w-full overflow-y-scroll overflow-x-hidden touch-pan-y overscroll-y-contain pb-36 md:pb-8 pb-safe`.
+      - Inner Pages Cleanup: Removed redundant padding and duplicate `pb-36 pb-safe` from `app/dashboard/page.tsx`, `app/settings/page.tsx`, `app/orders/page.tsx`, `app/khata/page.tsx`, `app/print/page.tsx`, and `app/orders/new/page.tsx`.
+
+* **Active File Changes:**
+  - `app/globals.css` [MODIFIED]
+  - `app/layout.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `app/orders/page.tsx` [MODIFIED]
+  - `app/khata/page.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `app/print/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors.
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 database and repository test assertions passed.
+  - `npm run build`: Clean static production export into `out/` with all 28/28 static routes generated.
+
+* **Next Immediate Task:**
+  - Concept 2 Planning & Android Release Compilation.
 
 
 

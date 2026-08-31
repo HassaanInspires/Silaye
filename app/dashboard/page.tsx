@@ -194,11 +194,11 @@ export default function DashboardPage() {
 
   return (
     <AppShell activeRoute="/dashboard">
-      <div className="flex-1 space-y-6 p-4 sm:p-6 md:p-8 pt-4 sm:pt-6 max-w-7xl mx-auto">
+      <div className="space-y-6 max-w-7xl mx-auto">
         {/* ================================================================ */}
         {/* MOBILE VIEWPORT ONLY (md:hidden)                                 */}
         {/* ================================================================ */}
-        <div className="block md:hidden space-y-4 pb-36 pb-safe">
+        <div className="block md:hidden space-y-4">
           {/* 1. Mobile Greeting Card */}
           <div className="premium-glass-card p-4 border-gold/25 bg-gradient-to-br from-gold/15 via-[#121418] to-transparent relative overflow-hidden shadow-[0_0_25px_rgba(212,175,55,0.1)]">
             <div className="flex items-start justify-between gap-3">

@@ -88,19 +88,15 @@
     @apply border-border;
   }
 
-  html {
-    min-height: 100%;
-    height: 100%;
-    background-color: #0B0C0E;
-    overflow-x: hidden;
-  }
-
+  html,
   body {
-    min-height: 100%;
     height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
     background-color: #0B0C0E;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
+    touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
