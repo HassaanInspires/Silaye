@@ -344,4 +344,12 @@
   - Triggered GitHub Actions CI/CD matrix build (`Run #33369514827`) on `v1.1.1-concept1` tag.
   - Successfully compiled Android Native Package (`app-debug.apk` [7.74 MB]) in 2m 49s on `ubuntu-latest` and Windows Desktop Installer (`Silaye Beta Setup 1.1.1.exe` [166.70 MB]) in 2m 44s on `windows-latest`.
   - Downloaded compiled production binaries into `./release-binaries-concept1-patch/` and published official GitHub Release `v1.1.1-concept1`.
+- [x] 20.6 Cloud Build, Binary Compilation & Official Release v1.1.2-concept1 (`package.json`, `package-lock.json`, `gh release`):
+  - Bumped version to `1.1.2` across `package.json` and `package-lock.json`.
+  - Staged and committed snapshot `chore(release): v1.1.2-concept1 - viewport containment, mobile header clamping, universal pb-36 bottom clearance & rich onboarding visuals` and pushed to `main`.
+  - Created annotated tag `v1.1.2-concept1` and pushed to remote triggering GitHub Actions CI/CD matrix build (`Run #33406622163`).
+  - Compiled Android Native Package (`app-debug.apk` [7.75 MB]) in 1m 52s on `ubuntu-latest` and Windows Desktop Installer (`Silaye Beta Setup 1.1.2.exe` [166.70 MB]) in 3m 55s on `windows-latest`.
+  - Downloaded compiled cross-platform production binaries into `./release-binaries-concept1-v112/` via `gh run download`.
+  - Published official GitHub Release `v1.1.2-concept1` with complete bilingual release notes and binary assets attached: https://github.com/HassaanInspires/Silaye/releases/tag/v1.1.2-concept1.
+
 
