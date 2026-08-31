@@ -362,5 +362,12 @@
     * Configured `AppShell` root wrapper to `h-[100dvh] flex flex-col md:flex-row overflow-hidden` and inner column to `h-full overflow-hidden`.
     * Established `<main id="main-content">` as the strictly ONE dedicated scroll container with `flex-1 w-full overflow-y-scroll overflow-x-hidden touch-pan-y overscroll-y-contain pb-36 md:pb-8 pb-safe`.
     * Eradicated duplicate outer padding and duplicate `pb-36 pb-safe` from inner pages (`app/dashboard/page.tsx`, `app/orders/page.tsx`, `app/khata/page.tsx`, `app/settings/page.tsx`, `app/print/page.tsx`, `app/orders/new/page.tsx`).
-  - **Verification**: Verified 0 TypeScript type errors (`npx tsc --noEmit`), 159/159 database and repository test assertions pass (`scripts/verify_db.ts`), and Next.js static export compiles all 28/28 static routes cleanly into `out/` (`npm run build`).
+- [x] 20.9 Cloud Build, Binary Compilation & Official Release v1.1.4-concept1 (`package.json`, `package-lock.json`, `gh release`):
+  - Bumped version to `1.1.4` across `package.json` and `package-lock.json`.
+  - Staged and committed snapshot `chore(release): v1.1.4-concept1 - fix mobile vertical touch scroll freeze & single scroll container standard` and pushed to `main`.
+  - Created annotated tag `v1.1.4-concept1` and pushed to remote triggering GitHub Actions CI/CD matrix build (`Run #33423220777`).
+  - Compiled Android Native Package (`app-debug.apk` [7.75 MB]) in 2m 52s on `ubuntu-latest` and Windows Desktop Installer (`Silaye Beta Setup 1.1.4.exe` [166.70 MB]) in 3m 37s on `windows-latest`.
+  - Downloaded compiled cross-platform production binaries locally into `./release-binaries-concept1-v114/` via `gh run download`.
+  - Published official GitHub Release `v1.1.4-concept1` with complete bilingual release notes and binary assets attached: https://github.com/HassaanInspires/Silaye/releases/tag/v1.1.4-concept1.
+
 
