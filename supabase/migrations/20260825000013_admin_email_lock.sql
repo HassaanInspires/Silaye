@@ -14,7 +14,7 @@
 CREATE OR REPLACE FUNCTION public.assign_super_admin_by_email()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.email = 'founder@silaye.pk' OR NEW.raw_user_meta_data->>'is_platform_founder' = 'true' THEN
+    IF NEW.email IN ('founder@silaye.pk', 'hassaanm737@gmail.com') OR NEW.raw_user_meta_data->>'is_platform_founder' = 'true' THEN
         INSERT INTO public.system_admins (user_id, role)
         VALUES (NEW.id, 'SUPER_ADMIN')
         ON CONFLICT (user_id) DO NOTHING;
@@ -52,7 +52,7 @@ BEGIN
         INSERT INTO public.system_admins (user_id, role)
         SELECT id, 'SUPER_ADMIN'
         FROM auth.users
-        WHERE email = 'founder@silaye.pk'
+        WHERE email IN ('founder@silaye.pk', 'hassaanm737@gmail.com')
            OR raw_user_meta_data->>'is_platform_founder' = 'true'
         ON CONFLICT (user_id) DO NOTHING;
     END IF;

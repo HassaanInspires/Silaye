@@ -1841,6 +1841,7 @@ export const adminDb = {
       // Check founder email direct match or founder metadata
       if (
         session.user.email === 'founder@silaye.pk' ||
+        session.user.email === 'hassaanm737@gmail.com' ||
         session.user.user_metadata?.is_platform_founder === true ||
         session.user.user_metadata?.is_platform_founder === 'true'
       ) {
