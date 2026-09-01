@@ -62,7 +62,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${notoSansArabic.variable} ${notoNastaliqUrdu.variable} dark`}
       suppressHydrationWarning
     >
-      <body className="h-full w-full overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+      <body className="min-h-full w-full bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary overflow-x-hidden overflow-y-auto">
         <NativeInitializer />
         <NotificationScheduler />
         {children}

@@ -88,18 +88,37 @@
     @apply border-border;
   }
 
-  html,
+  html {
+    margin: 0;
+    padding: 0;
+    background-color: #0B0C0E;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
   body {
-    height: 100%;
+    min-height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
     background-color: #0B0C0E;
-    overflow: hidden;
+    color: hsl(var(--foreground));
+    overflow-x: hidden;
+    overflow-y: auto;
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Native Mobile Capacitor Android/iOS Container Lockdown */
+  html.native-mobile,
+  body.native-mobile {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

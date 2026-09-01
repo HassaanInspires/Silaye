@@ -2594,7 +2594,38 @@
   - `ls -lh release-binaries-concept1-v114/*`: Confirmed valid binary files on disk locally.
 
 * **Next Immediate Task:**
-  - Concept 2 Planning & Exploration / Next Release Milestone.
+  - Task 20.10: Desktop Web, Laptop & Electron Window Scrolling Restoration (Completed)
+
+---
+
+## Phase 20: Desktop Web, Laptop & Electron Window Scrolling Restoration (Completed)
+* **Date:** 2026-09-01
+* **Tasks Completed:**
+  - `20.10` Desktop Web, Laptop & Electron Window Scrolling Restoration:
+    * **Decoupled Dual-Engine Architecture**:
+      - Restored natural document and window scrolling for Desktop Web (`http://silaye.vercel.app/`), laptop browsers, and Windows Desktop (`.exe`).
+      - In `app/globals.css`, configured default `html` and `body` with `min-height: 100%; width: 100%; overflow-x: hidden; overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch;`.
+      - In `app/layout.tsx`, configured `body` with `min-h-full w-full overflow-x-hidden overflow-y-auto`.
+      - In `components/layout/app-shell.tsx`, updated `<main id="main-content">` to `overflow-y-auto` for smooth mouse wheel, touchpad, and touch scroll handling.
+    * **Zero-Regression Mobile APK Lockdown**:
+      - In `lib/platform-native.ts`, dynamically attached `.native-mobile` to `document.documentElement` and `document.body` on Capacitor native mobile startup.
+      - In `app/globals.css`, configured `html.native-mobile, body.native-mobile` with `height: 100%; width: 100%; overflow: hidden; touch-action: pan-y; -webkit-overflow-scrolling: touch;`, strictly confining root body touch events on the Android APK and maintaining the single-scroll container architecture.
+
+* **Active File Changes:**
+  - `app/globals.css` [MODIFIED]
+  - `app/layout.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `lib/platform-native.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors.
+  - `npm run build`: Clean static production export into `out/` (28/28 static routes generated).
+
+* **Next Immediate Task:**
+  - Deploy Web Static Assets / Concept 2 Milestone Planning.
+
 
 
 

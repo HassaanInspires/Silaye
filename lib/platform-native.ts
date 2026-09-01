@@ -40,6 +40,12 @@ export async function initializeNativePlatform(config?: NativeSystemBarConfig): 
 
     // Apply status bar text/icon style (Dark = light icons on dark bar)
     await StatusBar.setStyle({ style: barStyle });
+
+    // Attach native-mobile class to root elements for mobile single-scroll touch lockdown
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.add('native-mobile');
+      document.body.classList.add('native-mobile');
+    }
   } catch (err) {
     // Fail gracefully in non-native or unsupported browser contexts
     console.warn('[Silaye Native] System bar initialization notice:', err);

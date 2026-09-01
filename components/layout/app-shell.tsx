@@ -892,7 +892,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         {/* Scrollable Main Viewport */}
         <main
           className={cn(
-            'flex-1 w-full overflow-y-scroll overflow-x-hidden touch-pan-y overscroll-y-contain p-4 md:p-8 pb-safe',
+            'flex-1 w-full overflow-y-auto overflow-x-hidden touch-pan-y overscroll-y-contain p-4 md:p-8 pb-safe',
             navLayout === 'drawer' ? 'pb-8 md:pb-8' : 'pb-36 md:pb-8'
           )}
           id="main-content"

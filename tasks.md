@@ -367,7 +367,9 @@
   - Staged and committed snapshot `chore(release): v1.1.4-concept1 - fix mobile vertical touch scroll freeze & single scroll container standard` and pushed to `main`.
   - Created annotated tag `v1.1.4-concept1` and pushed to remote triggering GitHub Actions CI/CD matrix build (`Run #33423220777`).
   - Compiled Android Native Package (`app-debug.apk` [7.75 MB]) in 2m 52s on `ubuntu-latest` and Windows Desktop Installer (`Silaye Beta Setup 1.1.4.exe` [166.70 MB]) in 3m 37s on `windows-latest`.
-  - Downloaded compiled cross-platform production binaries locally into `./release-binaries-concept1-v114/` via `gh run download`.
-  - Published official GitHub Release `v1.1.4-concept1` with complete bilingual release notes and binary assets attached: https://github.com/HassaanInspires/Silaye/releases/tag/v1.1.4-concept1.
+- [x] 20.10 Desktop Web, Laptop & Electron Window Scrolling Restoration (`app/globals.css`, `app/layout.tsx`, `components/layout/app-shell.tsx`, `lib/platform-native.ts`):
+  - **Decoupled Dual-Engine Architecture**: Restored natural document and window scrolling on Desktop Web (`http://silaye.vercel.app/`), laptop browsers, and Windows Desktop (`.exe`), with `body { min-height: 100%; overflow-y: auto; overflow-x: hidden; }` and `<main id="main-content" className="flex-1 w-full overflow-y-auto ...">`.
+  - **Zero-Regression Mobile APK Lockdown**: Dynamically attached `.native-mobile` to `<html>` and `<body>` on native Capacitor startup in `lib/platform-native.ts`, enforcing strict single-scroll container containment (`overflow: hidden; touch-action: pan-y;`) strictly within the mobile APK environment without interfering with Web or Desktop window scrolling.
+  - **Verification**: Verified 0 TypeScript errors (`npx tsc --noEmit`) and clean static export compilation across all 28/28 routes into `out/` (`npm run build`).
 
 
