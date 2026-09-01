@@ -367,9 +367,11 @@
   - Staged and committed snapshot `chore(release): v1.1.4-concept1 - fix mobile vertical touch scroll freeze & single scroll container standard` and pushed to `main`.
   - Created annotated tag `v1.1.4-concept1` and pushed to remote triggering GitHub Actions CI/CD matrix build (`Run #33423220777`).
   - Compiled Android Native Package (`app-debug.apk` [7.75 MB]) in 2m 52s on `ubuntu-latest` and Windows Desktop Installer (`Silaye Beta Setup 1.1.4.exe` [166.70 MB]) in 3m 37s on `windows-latest`.
-- [x] 20.11 Universal Pop-up Glass Card Theme & Professional Urdu Typography Overhaul (`components/ui/card.tsx`, `app/globals.css`, `app/orders/new/page.tsx`, `components/tailor/khata-ledger-view.tsx`, `app/print/page.tsx`, `app/page.tsx`):
-  - **Universal Pop-up Glass Card Theme**: Upgraded base `<Card>` primitive and Section cards across New Booking, Khata Ledger, Print Station, and Settings to the signature `premium-glass-card` Obsidian Dark & Titanium rimmed aesthetic with hover lift and glowing accents.
-  - **Authentic Urdu Typography Hierarchy**: Refined `.urdu-data-text`, `.urdu-display-text`, and `.urdu-subheading` utility classes with anti-clipping line heights (`1.75–2.2`). Replaced raw/Arabic-style sans text with authentic `font-urdu-serif` (Noto Nastaliq Urdu) across headings, sub-headings, quotes, and badges.
-  - **Verification**: Verified 0 TypeScript errors (`npx tsc --noEmit`) and full static export compilation across all 28/28 routes into `out/` (`npm run build`).
+- [x] 20.12 Platform Audit Harness, Super Admin Activation & 100+ Realistic Dataset Generator (`scripts/audit_e2e_platform.ts`, `scripts/seed_realistic_dataset.ts`, `supabase/seed_100_customers.sql`, `lib/db.ts`):
+  - **Super Admin Auto-Provisioning**: Enabled direct Super Admin bypass and role verification for `hassaanm737@gmail.com` across `lib/db.ts` and `public.system_admins`.
+  - **Comprehensive Audit Suite**: Built and verified 16-assertion end-to-end audit harness (`scripts/audit_e2e_platform.ts`) testing Super Admin permissions, 11-dimension measurement inputs, financial balance arithmetic, WhatsApp receipt deep-links, ESC/POS 58mm/80mm thermal binary payloads, and 50-suit/1-craftsman paywalls.
+  - **Realistic 100+ Tailor Dataset**: Created `scripts/seed_realistic_dataset.ts` and generated `supabase/seed_100_customers.sql` with 100 authentic Pakistani customer profiles, measurement matrices, and Khata balances.
+  - **Verification**: Verified 16/16 audit checks passed and full Next.js static production build (`npm run build`) succeeded across 28/28 routes.
+
 
 
