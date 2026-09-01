@@ -1825,9 +1825,24 @@ export function getMockPlatformMetrics(): PlatformMetrics {
 export function getMockAdminShops(): AdminShopOverview[] {
   return [...mockAdminShopsState];
 }
-
 export const adminDb = {
-  async checkIsSuperAdmin(): Promise<boolean> {
+  async checkIsSuperAdmin(userOverride?: {
+    id?: string;
+    email?: string;
+    app_metadata?: Record<string, any>;
+    user_metadata?: Record<string, any>;
+    aud?: string;
+    created_at?: string;
+  }): Promise<boolean> {
+    if (userOverride) {
+      return (
+        userOverride.email === 'founder@silaye.pk' ||
+        userOverride.email === 'hassaanm737@gmail.com' ||
+        userOverride.user_metadata?.is_platform_founder === true ||
+        userOverride.user_metadata?.is_platform_founder === 'true'
+      );
+    }
+
     if (!isDatabaseConfigured()) {
       return isDemoMode();
     }
