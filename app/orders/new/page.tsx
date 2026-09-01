@@ -136,16 +136,16 @@ interface SectionCardProps {
 
 function SectionCard({ title, urTitle, icon, children, className }: SectionCardProps) {
   return (
-    <Card className={cn('flex flex-col gap-0 border-border/80 bg-card/70 backdrop-blur-xs shadow-md', className)}>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-border/60 pb-3.5 pt-4">
+    <Card className={cn('premium-glass-card flex flex-col gap-0 border-white/10 bg-[#121418]/90 backdrop-blur-xl shadow-2xl hover:border-gold/30 transition-all duration-300', className)}>
+      <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-white/5 pb-3.5 pt-4 bg-gradient-to-r from-gold/5 via-transparent to-transparent">
         <div className="flex items-center gap-2.5">
-          <span className="text-primary">{icon}</span>
-          <CardTitle className="text-sm font-semibold text-foreground">{title}</CardTitle>
+          <span className="text-gold p-1.5 rounded-lg bg-gold/10 border border-gold/20 shadow-[0_0_10px_rgba(212,175,55,0.15)]">{icon}</span>
+          <CardTitle className="text-sm font-semibold text-white tracking-tight">{title}</CardTitle>
         </div>
         <span
           dir="rtl"
           lang="ur"
-          className="font-urdu-serif text-sm leading-urdu-display text-primary"
+          className="font-urdu-serif text-sm leading-urdu-display text-gold font-medium"
         >
           {urTitle}
         </span>

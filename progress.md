@@ -2624,7 +2624,41 @@
   - `npm run build`: Clean static production export into `out/` (28/28 static routes generated).
 
 * **Next Immediate Task:**
-  - Deploy Web Static Assets / Concept 2 Milestone Planning.
+  - Task 20.11: Universal Pop-up Glass Card Theme & Professional Urdu Typography Overhaul (Completed)
+
+---
+
+## Phase 20: Universal Pop-up Glass Card Theme & Professional Urdu Typography Overhaul (Completed)
+* **Date:** 2026-09-01
+* **Tasks Completed:**
+  - `20.11` Universal Pop-up Glass Card Theme & Professional Urdu Typography Overhaul:
+    * **Universal Pop-up Glass Card Theme**:
+      - Upgraded the base `<Card>` primitive in `components/ui/card.tsx` to automatically inherit the signature `premium-glass-card` styling with titanium rim lighting, deep backdrop-blur glass, 3D elevation shadows, and gold hover highlights.
+      - Upgraded `SectionCard` in `app/orders/new/page.tsx` with gold-accented gradient headers and elevated card containers.
+      - Upgraded Market Receivables, Advance Deposits, Net Position, and customer cards in `components/tailor/khata-ledger-view.tsx` to multi-layer color-coded glowing glass cards with interactive hover lifts.
+      - Upgraded metric cards and thermal queues in `app/print/page.tsx` with color-coded ambient glow cards.
+      - Upgraded testimonial and feature cards in `app/page.tsx` to pop-up glass cards.
+    * **Authentic Urdu Typography Hierarchy**:
+      - Enhanced `.urdu-data-text`, `.urdu-display-text`, and `.urdu-subheading` in `app/globals.css` with calibrated line-heights (`1.75–2.2`) and vertical baseline padding to prevent glyph clipping.
+      - Replaced raw Arabic sans styles with authentic `font-urdu-serif` (Noto Nastaliq Urdu) across headings, sub-headings, quotes, and badges on all pages.
+
+* **Active File Changes:**
+  - `components/ui/card.tsx` [MODIFIED]
+  - `app/globals.css` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `components/tailor/khata-ledger-view.tsx` [MODIFIED]
+  - `app/print/page.tsx` [MODIFIED]
+  - `app/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors.
+  - `npm run build`: Clean static production export into `out/` with all 28/28 routes compiled.
+
+* **Next Immediate Task:**
+  - Deploy and publish release updates / Next milestone.
+
 
 
 

@@ -151,27 +151,27 @@ export function KhataLedgerView({
       {/* ------------------------------------------------------------------ */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Receivables (Udhaar) */}
-        <Card className="border-rose-500/20 bg-card relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-rose-500/5 blur-2xl pointer-events-none" />
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <Card className="premium-glass-card border-rose-500/30 bg-gradient-to-br from-rose-500/15 via-[#121418] to-transparent relative overflow-hidden shadow-xl hover:border-rose-500/50 transition-all duration-300">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl pointer-events-none" />
+          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-white/5">
             <div className="space-y-0.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                 Market Receivables
               </span>
-              <div className="urdu-data-text text-xs text-rose-400 font-medium" dir="rtl">
+              <div className="font-urdu-serif text-sm text-rose-300 font-bold leading-urdu-display" dir="rtl">
                 واجب الادا ادھار
               </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-400">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/20 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.25)]">
               <ArrowUpRight className="h-5 w-5" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="font-mono text-2xl font-bold text-rose-400">
+          <CardContent className="pt-3">
+            <div className="font-mono text-2xl font-bold text-rose-300">
               <bdi dir="ltr">Rs. {metrics.totalReceivables.toLocaleString()}</bdi>
             </div>
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Badge variant="status-udhaar-pending" className="px-1.5 py-0 text-[10px]">
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-400">
+              <Badge variant="status-udhaar-pending" className="px-1.5 py-0 text-[10px] font-bold">
                 {metrics.debtorsCount} Debtors
               </Badge>
               <span>awaiting recovery</span>
@@ -180,27 +180,27 @@ export function KhataLedgerView({
         </Card>
 
         {/* Total Advance Deposits Held */}
-        <Card className="border-emerald-500/20 bg-card relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-500/5 blur-2xl pointer-events-none" />
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <Card className="premium-glass-card border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-[#121418] to-transparent relative overflow-hidden shadow-xl hover:border-emerald-500/50 transition-all duration-300">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
+          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-white/5">
             <div className="space-y-0.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                 Advance Deposits Held
               </span>
-              <div className="urdu-data-text text-xs text-emerald-400 font-medium" dir="rtl">
+              <div className="font-urdu-serif text-sm text-emerald-300 font-bold leading-urdu-display" dir="rtl">
                 ایڈوانس رقم (ڈپازٹ)
               </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
               <ArrowDownLeft className="h-5 w-5" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="font-mono text-2xl font-bold text-emerald-400">
+          <CardContent className="pt-3">
+            <div className="font-mono text-2xl font-bold text-emerald-300">
               <bdi dir="ltr">Rs. {metrics.totalAdvances.toLocaleString()}</bdi>
             </div>
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Badge variant="status-advance-credit" className="px-1.5 py-0 text-[10px]">
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-400">
+              <Badge variant="status-advance-credit" className="px-1.5 py-0 text-[10px] font-bold">
                 {metrics.advanceHoldersCount} Accounts
               </Badge>
               <span>in store credit</span>
@@ -209,29 +209,30 @@ export function KhataLedgerView({
         </Card>
 
         {/* Net Market Position */}
-        <Card className="border-border bg-card relative overflow-hidden">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <Card className="premium-glass-card border-gold/30 bg-gradient-to-br from-gold/15 via-[#121418] to-transparent relative overflow-hidden shadow-xl hover:border-gold/50 transition-all duration-300">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gold/10 blur-2xl pointer-events-none" />
+          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-white/5">
             <div className="space-y-0.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                 Net Market Balance
               </span>
-              <div className="urdu-data-text text-xs text-primary font-medium" dir="rtl">
+              <div className="font-urdu-serif text-sm text-gold font-bold leading-urdu-display" dir="rtl">
                 خالص مارکیٹ پوزیشن
               </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold/30 bg-gold/20 text-gold shadow-[0_0_12px_rgba(212,175,55,0.25)]">
               <TrendingUp className="h-5 w-5" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-3">
             <div
               className={cn(
                 'font-mono text-2xl font-bold',
                 metrics.netMarketPosition > 0
-                  ? 'text-rose-400'
+                  ? 'text-rose-300'
                   : metrics.netMarketPosition < 0
-                  ? 'text-emerald-400'
-                  : 'text-foreground'
+                  ? 'text-emerald-300'
+                  : 'text-white'
               )}
             >
               <bdi dir="ltr">
@@ -239,38 +240,38 @@ export function KhataLedgerView({
                 {Math.abs(metrics.netMarketPosition).toLocaleString()}
               </bdi>
             </div>
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-400">
               <span>{metrics.netMarketPosition >= 0 ? 'Net Receivable' : 'Net Advance Credit'}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Active Accounts & Settled Ratio */}
-        <Card className="border-border bg-card relative overflow-hidden">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <Card className="premium-glass-card border-white/10 bg-[#121418]/90 relative overflow-hidden shadow-xl hover:border-white/20 transition-all duration-300">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-white/5">
             <div className="space-y-0.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                 Khata Accounts
               </span>
-              <div className="urdu-data-text text-xs text-muted-foreground font-medium" dir="rtl">
+              <div className="font-urdu-serif text-sm text-gray-300 font-bold leading-urdu-display" dir="rtl">
                 کل گاہک کھاتے
               </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary text-foreground">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300">
               <Users className="h-5 w-5" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="font-mono text-2xl font-bold text-foreground">
+          <CardContent className="pt-3">
+            <div className="font-mono text-2xl font-bold text-white">
               {metrics.totalCustomers}
             </div>
-            <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="text-status-ready font-medium">
-                {metrics.settledCount} Settled (بے باق)
+            <div className="mt-1.5 flex items-center gap-2 text-xs text-gray-400">
+              <span className="text-emerald-400 font-medium font-urdu-sans">
+                {metrics.settledCount} بے باق
               </span>
               <span>•</span>
-              <span className="text-rose-400 font-medium">
-                {metrics.debtorsCount} Pending
+              <span className="text-rose-400 font-medium font-urdu-sans">
+                {metrics.debtorsCount} ادھار
               </span>
             </div>
           </CardContent>
@@ -440,12 +441,12 @@ export function KhataLedgerView({
               <Card
                 key={customer.id}
                 className={cn(
-                  'border transition-all duration-200 hover:border-primary/40 hover:shadow-md flex flex-col justify-between',
+                  'premium-glass-card transition-all duration-300 hover:border-gold/40 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between overflow-hidden',
                   isDebtor
-                    ? 'border-rose-500/30 bg-card hover:shadow-rose-950/10'
+                    ? 'border-rose-500/30 bg-[#121418]/90 hover:shadow-rose-950/20'
                     : isCreditor
-                    ? 'border-emerald-500/30 bg-card hover:shadow-emerald-950/10'
-                    : 'border-border bg-card'
+                    ? 'border-emerald-500/30 bg-[#121418]/90 hover:shadow-emerald-950/20'
+                    : 'border-white/10 bg-[#121418]/90'
                 )}
               >
                 <div>

@@ -126,7 +126,7 @@ function MobileShowcaseSection() {
                       key={label}
                       className="flex items-center justify-between rounded-lg border border-obsidian-border bg-obsidian-bg px-2 py-1.5"
                     >
-                      <span className="urdu-data-text text-[10px] text-muted-foreground" dir="rtl">
+                      <span className="font-urdu-serif text-[11px] text-gray-300 font-medium" dir="rtl">
                         {label}
                       </span>
                       <span className="font-mono text-[10px] font-bold text-primary">
@@ -248,11 +248,11 @@ function TestimonialsSection() {
           {TESTIMONIALS.map((t) => (
             <div
               key={t.name}
-              className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
+              className="premium-glass-card flex flex-col rounded-2xl border border-white/10 bg-[#121418]/90 p-6 shadow-xl hover:border-gold/30 hover:-translate-y-1 transition-all duration-300"
             >
-              {/* Urdu quote */}
+              {/* Authentic Nastaliq Urdu quote */}
               <blockquote
-                className="urdu-data-text text-sm leading-urdu-data text-foreground"
+                className="font-urdu-serif text-base leading-urdu-display text-gold/90 font-medium py-1"
                 dir="rtl"
                 lang="ur"
               >
@@ -263,7 +263,7 @@ function TestimonialsSection() {
               <p className="mt-3 text-sm italic text-muted-foreground">&ldquo;{t.quote}&rdquo;</p>
 
               {/* Author */}
-              <div className="mt-5 border-t border-border pt-4">
+              <div className="mt-5 border-t border-white/5 pt-4">
                 <p className="text-sm font-semibold text-foreground">{t.name}</p>
                 <p className="text-xs text-muted-foreground">{t.shop}</p>
                 <p className="text-xs text-muted-foreground">{t.city}</p>

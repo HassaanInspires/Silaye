@@ -290,46 +290,66 @@ export default function PrintStationPage() {
         {orders.length > 0 && (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Card className="premium-glass-card border-white/5">
+              <Card className="premium-glass-card border-white/10 bg-[#121418]/90 shadow-xl hover:border-white/20 transition-all duration-300">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-400">Total Orders</span>
-                    <Layers className="h-4 w-4 text-gray-400" />
+                    <div>
+                      <span className="text-xs font-medium text-gray-400">Total Orders</span>
+                      <span className="font-urdu-serif text-xs text-gray-400 block" dir="rtl">کل ورکشاپ آرڈرز</span>
+                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-gray-300">
+                      <Layers className="h-4 w-4" />
+                    </div>
                   </div>
-                  <p className="mt-2 text-2xl font-bold text-white">{metrics.total}</p>
+                  <p className="mt-2 text-2xl font-bold text-white font-mono">{metrics.total}</p>
                   <p className="mt-0.5 text-[11px] text-gray-500">In workshop database</p>
                 </CardContent>
               </Card>
 
-              <Card className="premium-glass-card border-white/5">
+              <Card className="premium-glass-card border-gold/30 bg-gradient-to-br from-gold/15 via-[#121418] to-transparent shadow-xl hover:border-gold/50 transition-all duration-300">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gold">Needs 58mm Tag</span>
-                    <Tag className="h-4 w-4 text-gold" />
+                    <div>
+                      <span className="text-xs font-medium text-gold">Needs 58mm Tag</span>
+                      <span className="font-urdu-serif text-xs text-gold/90 block" dir="rtl">کٹنگ ٹیگ پرنٹ</span>
+                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/20 border border-gold/30 text-gold shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                      <Tag className="h-4 w-4" />
+                    </div>
                   </div>
-                  <p className="mt-2 text-2xl font-bold text-gold">{metrics.pendingTags}</p>
+                  <p className="mt-2 text-2xl font-bold text-gold font-mono">{metrics.pendingTags}</p>
                   <p className="mt-0.5 text-[11px] text-gray-500">Booked & in cutting queue</p>
                 </CardContent>
               </Card>
 
-              <Card className="premium-glass-card border-white/5">
+              <Card className="premium-glass-card border-rose-500/30 bg-gradient-to-br from-rose-500/15 via-[#121418] to-transparent shadow-xl hover:border-rose-500/50 transition-all duration-300">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-rose-400">Urgent / Due 48h</span>
-                    <AlertTriangle className="h-4 w-4 text-rose-400" />
+                    <div>
+                      <span className="text-xs font-medium text-rose-400">Urgent / Due 48h</span>
+                      <span className="font-urdu-serif text-xs text-rose-300 block" dir="rtl">ارجنٹ کٹنگ</span>
+                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.2)]">
+                      <AlertTriangle className="h-4 w-4" />
+                    </div>
                   </div>
-                  <p className="mt-2 text-2xl font-bold text-rose-400">{metrics.urgentCount}</p>
+                  <p className="mt-2 text-2xl font-bold text-rose-400 font-mono">{metrics.urgentCount}</p>
                   <p className="mt-0.5 text-[11px] text-gray-500">Priority rush cutting tags</p>
                 </CardContent>
               </Card>
 
-              <Card className="premium-glass-card border-white/5">
+              <Card className="premium-glass-card border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-[#121418] to-transparent shadow-xl hover:border-emerald-500/50 transition-all duration-300">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-emerald-400">Ready for 80mm Slip</span>
-                    <Receipt className="h-4 w-4 text-emerald-400" />
+                    <div>
+                      <span className="text-xs font-medium text-emerald-400">Ready for 80mm Slip</span>
+                      <span className="font-urdu-serif text-xs text-emerald-300 block" dir="rtl">کسٹمر بل تیار</span>
+                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                      <Receipt className="h-4 w-4" />
+                    </div>
                   </div>
-                  <p className="mt-2 text-2xl font-bold text-emerald-400">{metrics.readyInvoices}</p>
+                  <p className="mt-2 text-2xl font-bold text-emerald-400 font-mono">{metrics.readyInvoices}</p>
                   <p className="mt-0.5 text-[11px] text-gray-500">Ready for customer pickup</p>
                 </CardContent>
               </Card>
