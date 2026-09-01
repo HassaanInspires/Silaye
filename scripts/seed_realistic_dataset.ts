@@ -157,7 +157,7 @@ async function runSeed() {
   console.log('📦 GENERATING 100 REALISTIC PAKISTANI TAILOR CUSTOMERS & ORDERS');
   console.log('================================================================\n');
 
-  const shopId = 's0000000-0000-0000-0000-000000000002'; // Pro workshop ID
+  const shopId = 'b0000000-0000-0000-0000-000000000002'; // Pro workshop ID
   const customerList: Customer[] = [];
   const orderList: GarmentOrder[] = [];
 
