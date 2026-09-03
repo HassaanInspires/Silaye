@@ -676,7 +676,7 @@ export default function NewOrderPage() {
       <div className="max-w-7xl mx-auto">
         
         {/* ── Page Header ─────────────────────────────────────────────── */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">
+        <div className="hidden md:flex mb-6 flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold tracking-tight text-foreground">New Booking</h1>
@@ -1162,7 +1162,7 @@ export default function NewOrderPage() {
                       Measurement Matrix • ناپ کا میٹرکس
                     </h3>
                     <p className="text-[10px] text-gray-400">
-                      ٹچ بٹنز کے ذریعے فوری آدھا انچ (+0.5" / -0.5") تبدیل کریں
+                      پورے انچ درج کریں اور کواٹر انچ (0, ¼, ½, ¾) بٹن دبائیں
                     </p>
                   </div>
                   <Ruler className="h-5 w-5 text-gold" />
@@ -1170,78 +1170,71 @@ export default function NewOrderPage() {
               </div>
 
               {/* 2-Column Measurement Touch Grid */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 {MOBILE_MEASUREMENT_FIELDS.map((field) => {
                   const val = measurements[field.key] ?? field.defaultVal;
+                  const base = Math.floor(val);
+                  const currentFrac = Math.round((val - base) * 100) / 100;
+
                   return (
                     <div
                       key={field.key}
-                      className="premium-glass-card p-2.5 border-white/10 bg-[#121418] hover:border-gold/30 space-y-2 rounded-xl"
+                      className="premium-glass-card p-3 border-white/10 bg-[#121418] hover:border-gold/30 space-y-2.5 rounded-2xl shadow-sm"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-urdu-sans text-xs font-bold text-white" dir="rtl">
                           {field.ur}
                         </span>
-                        <span className="text-[10px] text-gray-400 uppercase font-medium">
-                          {field.en}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-gray-400 uppercase font-medium">
+                            {field.en}
+                          </span>
+                          <span className="font-mono text-xs font-bold text-gold">
+                            {val.toFixed(2)}″
+                          </span>
+                        </div>
                       </div>
 
-                      {/* Value Display / Stepper */}
-                      <div className="flex items-center justify-between gap-1 bg-black/40 p-1 rounded-lg border border-white/5">
-                        <button
-                          type="button"
-                          onPointerDown={(e) => e.preventDefault()}
-                          onClick={() =>
-                            handleMeasurementChange(
-                              field.key,
-                              Math.max(0, Math.round((val - 0.5) * 4) / 4)
-                            )
-                          }
-                          className="h-8 w-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center active:scale-90 select-none"
-                          title="Decrease 0.5 inches"
-                        >
-                          -0.5
-                        </button>
-
-                        <span className="font-mono text-base font-bold text-gold tabular-nums text-center flex-1">
-                          {val.toFixed(2)}″
-                        </span>
-
-                        <button
-                          type="button"
-                          onPointerDown={(e) => e.preventDefault()}
-                          onClick={() =>
-                            handleMeasurementChange(
-                              field.key,
-                              Math.round((val + 0.5) * 4) / 4
-                            )
-                          }
-                          className="h-8 w-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center active:scale-90 select-none"
-                          title="Increase 0.5 inches"
-                        >
-                          +0.5
-                        </button>
+                      {/* Large Whole Inches Numeric Input */}
+                      <div>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min="0"
+                          max="120"
+                          value={base === 0 ? '' : base}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const newBase = raw === '' ? 0 : parseInt(raw, 10) || 0;
+                            handleMeasurementChange(field.key, newBase + currentFrac);
+                          }}
+                          placeholder="0"
+                          className="w-full text-xl font-bold font-mono text-center text-gold bg-black/50 border border-white/10 rounded-xl h-11 focus:border-gold focus:outline-none"
+                        />
                       </div>
 
-                      {/* Fractional Pills (.00, .25, .50, .75) */}
-                      <div className="grid grid-cols-4 gap-1">
-                        {[0.0, 0.25, 0.5, 0.75].map((frac) => {
-                          const base = Math.floor(val);
-                          const isFracActive = Math.abs((val - base) - frac) < 0.05;
+                      {/* 4 Full-Height 48px Tactile Fractional Pills (0, ¼, ½, ¾) */}
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                          { label: '0', value: 0.0 },
+                          { label: '¼', value: 0.25 },
+                          { label: '½', value: 0.5 },
+                          { label: '¾', value: 0.75 },
+                        ].map((frac) => {
+                          const isFracActive = Math.abs(currentFrac - frac.value) < 0.05;
                           return (
                             <button
-                              key={frac}
+                              key={frac.label}
                               type="button"
-                              onClick={() => handleMeasurementChange(field.key, base + frac)}
+                              onClick={() => handleMeasurementChange(field.key, base + frac.value)}
                               className={cn(
-                                'h-5 rounded text-[10px] font-mono font-semibold transition-colors flex items-center justify-center',
+                                'h-12 rounded-xl text-sm font-bold font-mono transition-all flex items-center justify-center select-none active:scale-95 cursor-pointer',
                                 isFracActive
-                                  ? 'bg-gold text-black font-bold'
-                                  : 'bg-white/5 text-gray-400 hover:text-white'
+                                  ? 'bg-gold text-[#0B0C0E] font-black shadow-[0_0_12px_rgba(212,175,55,0.35)]'
+                                  : 'bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
                               )}
                             >
-                              {frac === 0 ? '.00' : frac === 0.25 ? '¼' : frac === 0.5 ? '½' : '¾'}
+                              {frac.label}
                             </button>
                           );
                         })}
@@ -1320,7 +1313,7 @@ export default function NewOrderPage() {
           {/* ============================================================== */}
           {/* MOBILE STICKY BOTTOM BOOKING BAR                               */}
           {/* ============================================================== */}
-          <div className="fixed bottom-[60px] left-0 right-0 z-30 bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30 p-3 shadow-[0_-4px_30px_rgba(0,0,0,0.8)] space-y-2">
+          <div className="fixed bottom-0 left-0 right-0 z-30 pb-safe bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30 p-3 shadow-[0_-4px_30px_rgba(0,0,0,0.8)] space-y-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex flex-col">
                 <span className="text-[10px] text-gray-400 uppercase tracking-wider">

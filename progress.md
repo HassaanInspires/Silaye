@@ -2689,3 +2689,94 @@
 
 
 
+
+---
+
+## Phase 21: Automated Deep Mobile Visual Screenshot Capture & Ergonomics Analysis (Completed)
+* **Date:** 2026-09-03
+* **Tasks Completed:**
+  - `21.1` Built `scripts/capture_deep_mobile_audit.ts` Playwright test harness simulating standard Pakistani Android mobile viewport (**360px × 780px @ 2.5 DPR**, `SM-A536B` User-Agent, touch-enabled) with automatic target resolution against `https://silaye.vercel.app`.
+  - `21.2` Executed complete automated capture suite across Pro Master and Super Admin workflows, successfully capturing all **18 high-resolution PNG outputs** in `./audit-screenshots/mobile/`:
+    - `01_login_mobile.png` (1.2 MB)
+    - `02_dashboard_top.png` (1.2 MB)
+    - `03_dashboard_scrolled_mid.png` (867 KB)
+    - `04_dashboard_scrolled_bottom.png` (863 KB)
+    - `05_booking_step1_customer_fabric.png` (1.4 MB)
+    - `06_booking_step2_style_cuts.png` (1.4 MB)
+    - `07_booking_step3_measurements.png` (1.4 MB)
+    - `08_booking_sticky_bar_overlap.png` (1.2 MB)
+    - `09_orders_list_top.png` (755 KB)
+    - `10_orders_card_actions.png` (755 KB)
+    - `11_khata_summary_cards.png` (962 KB)
+    - `12_khata_customer_card.png` (962 KB)
+    - `13_thermal_print_station.png` (970 KB)
+    - `14_admin_metrics_mobile.png` (1.5 MB)
+    - `15_admin_workshops_table_mobile.png` (1.7 MB)
+    - `16_admin_payment_approvals_mobile.png` (1.2 MB)
+    - `17_modal_whatsapp_receipt.png` (630 KB)
+    - `18_modal_thermal_preview.png` (970 KB)
+  - `21.3` Extracted comprehensive DOM telemetry into `audit-screenshots/mobile/ergonomic_telemetry.json` (Chrome height: 64px, usable vertical canvas: 716px / 91.8%, identified sub-44px tap targets, evaluated text truncations, and verified sticky bar clearance).
+  - `21.4` Authored comprehensive ground-reality engineering report `mobile_ground_reality_audit_report.md` with Pass/Fail scorecard, physical shop ergonomics evaluation, and prioritized remediation matrix (P0/P1/P2).
+
+* **Active File Changes:**
+  - `scripts/capture_deep_mobile_audit.ts` [NEW]
+  - `mobile_ground_reality_audit_report.md` [NEW]
+  - `audit-screenshots/mobile/*.png` [NEW - 18 high-resolution PNGs]
+  - `audit-screenshots/mobile/ergonomic_telemetry.json` [NEW]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - Playwright mobile test runner: 18/18 screens captured with 0 errors.
+  - Telemetry validation: 18/18 screen states extracted and saved.
+  - Zero application source code modifications in `app/`, `components/`, `lib/`, `types/` (100% compliant with strict audit protocol).
+
+* **Next Immediate Task:**
+  - Execute Phase 21: Mobile Ergonomic Declutter & Thumb-Zone Refactor on feature branch.
+
+---
+
+## Phase 21: Mobile Ergonomic Declutter & Thumb-Zone Refactor (Task 21.4 Completed)
+* **Date:** 2026-09-03
+* **Tasks Completed:**
+  - `21.4.1` Isolated dedicated feature branch `feature/ergonomic-declutter`, staged and archived all 18 Playwright mobile audit PNG artifacts, telemetry, and ground-reality audit report with commit `chore: archive mobile ergonomics ground-reality visual audit`.
+  - `21.4.2` AppShell Route Guard & Bottom Nav Suppression (`components/layout/app-shell.tsx`):
+    - Suppressed `<MobileBottomNav />` when `pathname?.startsWith('/orders/new') || activeRoute?.startsWith('/orders/new')`.
+    - Adjusted `<main id="main-content">` bottom padding to `pb-8` when on `/orders/new` or in drawer mode (preserving `pb-36` on standard tabs routes).
+  - `21.4.3` Mobile Dashboard Overhaul (`app/dashboard/page.tsx` under `md:hidden`):
+    - Replaced greeting card and 2x2 KPI grid with a high-contrast 64px Glance Strip rendering Ready for Pickup (`readyOrders.length`), Suits in Progress (`inProgressCount`), and Total Udhaar Collectible (`unsettledKhataTotal`).
+    - Placed two 56px-tall primary thumb buttons directly below the glance strip: Primary Gold `[+ Book New Suit / نیا سوٹ بک کریں]` and Glass Outline `[🔍 Search Parchi / گاہک و پرچی تلاش]`.
+    - Replaced horizontal scrolling carousel with an uncrushable vertical urgent deliveries feed equipped with direct 1-tap WhatsApp alert and stage advance buttons (backed by `PIPELINE_COLUMNS` and `ordersDb.updateStatus`).
+    - Stripped redundant 4-chip navigation grid from mobile view while leaving desktop view (`hidden md:block`) 100% untouched.
+  - `21.4.4` Booking Wizard Optimization (`app/orders/new/page.tsx` under `md:hidden`):
+    - Hidden 85px top header on mobile (`hidden md:flex`) so inputs and step progress pills start immediately at the top of the viewport.
+    - Docked sticky booking confirmation bar to `bottom-0 left-0 right-0 z-30 pb-safe bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30 p-3`.
+    - Step 3 (Measurement Matrix): Removed small `[-0.5"]` / `[+0.5"]` steppers and enforced hybrid entry standard: large whole-inches numeric input (`inputMode="numeric"`, `h-11`) + full-height 48px tactile fractional pills (`0`, `¼`, `½`, `¾`).
+  - `21.4.5` Touch Target Hardening:
+    - In `app/(auth)/login/page.tsx`: Expanded password visibility eye toggle to 44x44px (`h-11 w-11 min-h-[44px] min-w-[44px]`) and auth switch tabs to `h-11 min-h-[44px]`.
+    - In `app/orders/page.tsx`: Expanded search clear button to 40x40px, status filter pills to `h-11 min-h-[44px]`, and order card action buttons (WhatsApp, print, advance) to `h-11 min-h-[44px]`.
+  - `21.4.6` Version Bump & Automated Verification:
+    - Bumped version to `1.1.5` in `package.json` and `package-lock.json`.
+    - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    - `scripts/verify_db.ts`: 159/159 database and repository assertions passed.
+    - `npm run build`: 28/28 static routes generated cleanly into `out/`.
+
+* **Active File Changes:**
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `app/(auth)/login/page.tsx` [MODIFIED]
+  - `app/orders/page.tsx` [MODIFIED]
+  - `package.json` [MODIFIED]
+  - `package-lock.json` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 errors).
+  - `scripts/verify_db.ts`: 159/159 assertions passed in offline and fallback environments.
+  - `npm run build`: Static export compiled 28/28 pages cleanly into `out/`.
+
+* **Next Immediate Task:**
+  - Commit changes to `feature/ergonomic-declutter`, push branch, push tag `v1.1.5-preview`, and compile Android Preview APK.
+

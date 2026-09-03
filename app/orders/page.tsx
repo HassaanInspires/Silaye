@@ -372,7 +372,7 @@ export default function OrdersQueuePage() {
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 flex items-center justify-center text-xs"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 min-h-[40px] min-w-[40px] text-gray-400 hover:text-white flex items-center justify-center text-sm cursor-pointer"
                   aria-label="Clear search query"
                 >
                   ✕
@@ -396,7 +396,7 @@ export default function OrdersQueuePage() {
                     type="button"
                     onClick={() => setMobileStatusFilter(tab.id as MobileStatusFilter)}
                     className={cn(
-                      'shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer border',
+                      'shrink-0 flex items-center gap-1.5 px-3.5 h-11 min-h-[44px] rounded-full text-xs font-medium transition-all cursor-pointer border',
                       isActive
                         ? 'bg-gold/15 text-gold border-gold/40 shadow-[0_0_10px_rgba(212,175,55,0.2)] font-semibold'
                         : 'bg-[#121418] text-gray-400 border-white/5 hover:text-gray-200'
@@ -532,10 +532,10 @@ export default function OrdersQueuePage() {
                           e.stopPropagation();
                           handleOpenWhatsApp(order);
                         }}
-                        className="h-9 px-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 flex items-center justify-center gap-1 text-xs font-semibold shrink-0"
+                        className="h-11 min-h-[44px] px-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 flex items-center justify-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer active:scale-95 transition-all"
                         title="WhatsApp Receipt"
                       >
-                        <MessageSquare className="h-3.5 w-3.5" />
+                        <MessageSquare className="h-4 w-4" />
                         <span>رسید</span>
                       </button>
 
@@ -546,10 +546,10 @@ export default function OrdersQueuePage() {
                           e.stopPropagation();
                           handleOpenPrint(order);
                         }}
-                        className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:text-white flex items-center justify-center shrink-0"
+                        className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:text-white flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition-all"
                         title="Print Tag"
                       >
-                        <Printer className="h-3.5 w-3.5" />
+                        <Printer className="h-4 w-4" />
                       </button>
 
                       {/* Next Stage Advancement Button */}
@@ -560,13 +560,13 @@ export default function OrdersQueuePage() {
                             e.stopPropagation();
                             handleSingleOrderAdvance(order.id);
                           }}
-                          className="h-9 flex-1 rounded-xl border border-gold/40 bg-gold/15 text-gold hover:bg-gold/25 flex items-center justify-center gap-1 text-xs font-bold transition-all shadow-[0_0_12px_rgba(212,175,55,0.15)]"
+                          className="h-11 min-h-[44px] flex-1 rounded-xl border border-gold/40 bg-gold/15 text-gold hover:bg-gold/25 flex items-center justify-center gap-1.5 text-xs font-bold transition-all shadow-[0_0_12px_rgba(212,175,55,0.15)] cursor-pointer active:scale-95"
                         >
                           <span className="font-urdu-sans">{nextInfo.labelUrdu}</span>
                         </button>
                       ) : (
-                        <div className="h-9 flex-1 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 flex items-center justify-center gap-1 text-xs font-semibold">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        <div className="h-11 min-h-[44px] flex-1 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 flex items-center justify-center gap-1 text-xs font-semibold">
+                          <CheckCircle2 className="h-4 w-4" />
                           <span>مکمل شدہ (Delivered)</span>
                         </div>
                       )}

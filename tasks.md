@@ -375,3 +375,42 @@
 
 
 
+
+---
+
+## Phase 21: Automated Deep Mobile Visual Screenshot Capture & Ergonomics Analysis
+- [x] 21.1 Playwright Mobile Automation Infrastructure & Harness (`scripts/capture_deep_mobile_audit.ts`):
+  - Configured headless Chromium context matching standard Pakistani Android mobile viewport (**360px width × 780px height** at **2.5 Device Pixel Ratio**, User-Agent: `SM-A536B Chrome/123.0 Mobile`, touch-enabled).
+  - Target Host fallback logic: Verified live remote production deployment `https://silaye.vercel.app`.
+  - Multi-session authentication handling: Automated Pro Master (`hassaanm737+pro@gmail.com`) workshop intake and Super Admin (`hassaanm737@gmail.com`) platform control center.
+- [x] 21.2 18 High-Resolution Viewport Captures & Screen Telemetry (`audit-screenshots/mobile/*.png`, `ergonomic_telemetry.json`):
+  - Captured all 18 target screens in 2.5 DPR high resolution:
+    * `01_login_mobile.png` (Authentication Gate)
+    * `02_dashboard_top.png` (Top Fold Command Center)
+    * `03_dashboard_scrolled_mid.png` (Mid-Fold Quick Actions & Carousels)
+    * `04_dashboard_scrolled_bottom.png` (Bottom Fold & pb-36 Clearance)
+    * `05_booking_step1_customer_fabric.png` (Intake Wizard Step 1 Customer & Fabric)
+    * `06_booking_step2_style_cuts.png` (Intake Wizard Step 2 Style & Cuts)
+    * `07_booking_step3_measurements.png` (Intake Wizard Step 3 Measurements Matrix)
+    * `08_booking_sticky_bar_overlap.png` (Sticky Booking Bar & Safe Padding Clearance)
+    * `09_orders_list_top.png` (Pipeline Queue View)
+    * `10_orders_card_actions.png` (Order Card Quick Actions Close-Up)
+    * `11_khata_summary_cards.png` (Financial Ledger Summary Cards)
+    * `12_khata_customer_card.png` (Debtor & Khata Customer Detail Card)
+    * `13_thermal_print_station.png` (Thermal Print Station & Slip Dispatch)
+    * `14_admin_metrics_mobile.png` (Super Admin Platform Metrics)
+    * `15_admin_workshops_table_mobile.png` (Super Admin Workshops Directory)
+    * `16_admin_payment_approvals_mobile.png` (Super Admin Payment Approvals Inbox)
+    * `17_modal_whatsapp_receipt.png` (WhatsApp Digital Receipt & Alert Engine Dialog)
+    * `18_modal_thermal_preview.png` (Thermal Slip & Tag Preview Dialog)
+- [x] 21.3 Ground-Reality Ergonomics Evaluation & Actionable Report (`mobile_ground_reality_audit_report.md`):
+  - Extracted exact DOM metrics: Top Header Height (64px / 0px), Usable Canvas Height (716px / 91.8%), small tap targets (< 44px), string truncations, and layer occlusion.
+  - Published comprehensive audit report with Pass/Fail scorecard, physical shop ergonomics evaluation, and prioritized engineering recommendations (P0/P1/P2).
+- [x] 21.4 Mobile Ergonomic Declutter & Thumb-Zone Refactor on Isolated Feature Branch (`components/layout/app-shell.tsx`, `app/dashboard/page.tsx`, `app/orders/new/page.tsx`, `app/(auth)/login/page.tsx`, `app/orders/page.tsx`):
+  - **Feature Branch Isolation**: Created `feature/ergonomic-declutter`, committed and archived all 18 Playwright mobile audit artifacts.
+  - **AppShell Route Guard & Bottom Nav Suppression (`components/layout/app-shell.tsx`)**: Suppressed `<MobileBottomNav />` when `pathname?.startsWith('/orders/new') || activeRoute?.startsWith('/orders/new')` and clamped main padding to `pb-8` on `/orders/new` or drawer mode.
+  - **Mobile Dashboard Overhaul (`app/dashboard/page.tsx` under `md:hidden`)**: Replaced greeting card and 2x2 grid with 64px Glance Strip (Ready for Pickup, In Progress, Udhaar Collectible), added two 56px thumb-zone primary buttons (`[+ Book New Suit / نیا سوٹ]` and `[🔍 Search Parchi / پرچی تلاش]`), replaced horizontal carousel with uncrushable vertical urgent deliveries list with 1-tap WhatsApp and stage advance buttons, and eliminated redundant quick action chips.
+  - **Booking Wizard Optimization (`app/orders/new/page.tsx` under `md:hidden`)**: Hidden 85px top header on mobile (`hidden md:flex`) so inputs start immediately, docked sticky booking bar to `bottom-0 left-0 right-0 z-30 pb-safe`, and enforced hybrid measurement matrix entry with large numeric whole inches input and 48px tactile fractional pills (`0`, `¼`, `½`, `¾`).
+  - **Touch Target Hardening**: Expanded password visibility eye toggle and auth switch tabs to 44x44px in `app/(auth)/login/page.tsx`, expanded search clear button and filter pills to min 40-44px in `app/orders/page.tsx`, and standardized all order action buttons to min 44px touch targets.
+  - **Automated Verification**: Verified 0 TypeScript errors (`npx tsc --noEmit`), 159/159 database assertions passing (`scripts/verify_db.ts`), and 28/28 static routes compiling cleanly into `out/` (`npm run build`).
+
