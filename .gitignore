@@ -48,3 +48,5 @@ Thumbs.db
 
 # Release artifacts
 /release-binaries*/
+/preview-binaries*/
+
