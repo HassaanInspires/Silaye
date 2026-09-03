@@ -1,0 +1,1658 @@
+{
+  "01_login_mobile.png": {
+    "screenId": "01_login_mobile.png",
+    "url": "/login/",
+    "topHeaderHeight": 0,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 0,
+    "usableViewportHeight": 780,
+    "usableViewportPercentage": 100,
+    "smallTapTargets": [
+      {
+        "tag": "button",
+        "text": "Sign In • لاگ ان",
+        "width": 186,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Register • نیا اکاؤنٹ",
+        "width": 186,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "width": 16,
+        "height": 16,
+        "ariaLabel": "Show password"
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": []
+  },
+  "02_dashboard_top.png": {
+    "screenId": "02_dashboard_top.png",
+    "url": "/dashboard/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "a",
+        "text": "View Full Queue",
+        "width": 141,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "View Full Queue",
+        "width": 141,
+        "height": 32
+      },
+      {
+        "tag": "a",
+        "text": "Book First Suitپہلا آرڈر",
+        "width": 206,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Book First Suitپہلا آرڈر",
+        "width": 206,
+        "height": 40
+      },
+      {
+        "tag": "a",
+        "text": "View Khata",
+        "width": 78,
+        "height": 17
+      },
+      {
+        "tag": "a",
+        "text": "Book New Suitنیا سوٹ",
+        "width": 208,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Book New Suitنیا سوٹ",
+        "width": 208,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Find Customer/",
+        "width": 185,
+        "height": 40
+      },
+      {
+        "tag": "a",
+        "text": "Print Counterپرنٹنگ",
+        "width": 190,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Print Counterپرنٹنگ",
+        "width": 190,
+        "height": 40
+      },
+      {
+        "tag": "a",
+        "text": "View All Orders in Queue",
+        "width": 168,
+        "height": 16
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "03_dashboard_scrolled_mid.png": {
+    "screenId": "03_dashboard_scrolled_mid.png",
+    "url": "/dashboard/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "a",
+        "text": "View Khata",
+        "width": 78,
+        "height": 17
+      },
+      {
+        "tag": "a",
+        "text": "Book New Suitنیا سوٹ",
+        "width": 208,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Book New Suitنیا سوٹ",
+        "width": 208,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Find Customer/",
+        "width": 185,
+        "height": 40
+      },
+      {
+        "tag": "a",
+        "text": "Print Counterپرنٹنگ",
+        "width": 190,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Print Counterپرنٹنگ",
+        "width": 190,
+        "height": 40
+      },
+      {
+        "tag": "a",
+        "text": "View All Orders in Queue",
+        "width": 168,
+        "height": 16
+      },
+      {
+        "tag": "a",
+        "text": "Book New Suit",
+        "width": 133,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Book New Suit",
+        "width": 133,
+        "height": 32
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "04_dashboard_scrolled_bottom.png": {
+    "screenId": "04_dashboard_scrolled_bottom.png",
+    "url": "/dashboard/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "a",
+        "text": "View Khata",
+        "width": 78,
+        "height": 17
+      },
+      {
+        "tag": "a",
+        "text": "Book New Suitنیا سوٹ",
+        "width": 208,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Book New Suitنیا سوٹ",
+        "width": 208,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Find Customer/",
+        "width": 185,
+        "height": 40
+      },
+      {
+        "tag": "a",
+        "text": "Print Counterپرنٹنگ",
+        "width": 190,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Print Counterپرنٹنگ",
+        "width": 190,
+        "height": 40
+      },
+      {
+        "tag": "a",
+        "text": "View All Orders in Queue",
+        "width": 168,
+        "height": 16
+      },
+      {
+        "tag": "a",
+        "text": "Book New Suit",
+        "width": 133,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Book New Suit",
+        "width": 133,
+        "height": 32
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "05_booking_step1_customer_fabric.png": {
+    "screenId": "05_booking_step1_customer_fabric.png",
+    "url": "/orders/new/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "select",
+        "text": "Shalwar Kameez — شلوار قمیضKur",
+        "width": 381,
+        "height": 40
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 182,
+        "height": 40
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "06_booking_step2_style_cuts.png": {
+    "screenId": "06_booking_step2_style_cuts.png",
+    "url": "/orders/new/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "select",
+        "text": "Shalwar Kameez — شلوار قمیضKur",
+        "width": 381,
+        "height": 40
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 182,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Save Draft",
+        "width": 173,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Reset",
+        "width": 76,
+        "height": 32
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "07_booking_step3_measurements.png": {
+    "screenId": "07_booking_step3_measurements.png",
+    "url": "/orders/new/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "select",
+        "text": "Shalwar Kameez — شلوار قمیضKur",
+        "width": 381,
+        "height": 40
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 182,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Enable Urgent Rush",
+        "width": 178,
+        "height": 30
+      },
+      {
+        "tag": "button",
+        "text": "Customer Supplied(گاہک کا کپڑا",
+        "width": 284,
+        "height": 42
+      },
+      {
+        "tag": "button",
+        "text": "Shop In-Stock(دکان کا کپڑا)",
+        "width": 284,
+        "height": 42
+      },
+      {
+        "tag": "button",
+        "text": "Save Draft",
+        "width": 173,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Reset",
+        "width": 76,
+        "height": 32
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "08_booking_sticky_bar_overlap.png": {
+    "screenId": "08_booking_sticky_bar_overlap.png",
+    "url": "/orders/new/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "select",
+        "text": "Shalwar Kameez — شلوار قمیضKur",
+        "width": 381,
+        "height": 40
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 182,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Enable Urgent Rush",
+        "width": 178,
+        "height": 30
+      },
+      {
+        "tag": "button",
+        "text": "Customer Supplied(گاہک کا کپڑا",
+        "width": 284,
+        "height": 42
+      },
+      {
+        "tag": "button",
+        "text": "Shop In-Stock(دکان کا کپڑا)",
+        "width": 284,
+        "height": 42
+      },
+      {
+        "tag": "button",
+        "text": "Proceed to Measurements →",
+        "width": 222,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Save Draft",
+        "width": 173,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Reset",
+        "width": 76,
+        "height": 32
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "17_modal_whatsapp_receipt.png": {
+    "screenId": "17_modal_whatsapp_receipt.png",
+    "url": "/orders/new/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "select",
+        "text": "Shalwar Kameez — شلوار قمیضKur",
+        "width": 381,
+        "height": 40
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 182,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Enable Urgent Rush",
+        "width": 178,
+        "height": 30
+      },
+      {
+        "tag": "button",
+        "text": "Customer Supplied(گاہک کا کپڑا",
+        "width": 284,
+        "height": 42
+      },
+      {
+        "tag": "button",
+        "text": "Shop In-Stock(دکان کا کپڑا)",
+        "width": 284,
+        "height": 42
+      },
+      {
+        "tag": "button",
+        "text": "Proceed to Measurements →",
+        "width": 222,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Save Draft",
+        "width": 173,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Reset",
+        "width": 76,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "width": 24,
+        "height": 24,
+        "ariaLabel": "Close dialog"
+      },
+      {
+        "tag": "button",
+        "text": "📋 Booking(بکنگ)",
+        "width": 203,
+        "height": 30
+      },
+      {
+        "tag": "button",
+        "text": "🔔 Ready Alert(تیار)",
+        "width": 203,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "💰 Khata Balance(کھاتہ)",
+        "width": 203,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Customize",
+        "width": 99,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Copy Message",
+        "width": 136,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Close",
+        "width": 59,
+        "height": 32
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "18_modal_thermal_preview.png": {
+    "screenId": "18_modal_thermal_preview.png",
+    "url": "/print/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Book First Suitپہلا سوٹ بک کری",
+        "width": 264,
+        "height": 40
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "09_orders_list_top.png": {
+    "screenId": "09_orders_list_top.png",
+    "url": "/orders/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "List",
+        "width": 67,
+        "height": 30,
+        "ariaLabel": "Switch to Spreadsheet Data List View"
+      },
+      {
+        "tag": "button",
+        "text": "Kanban",
+        "width": 88,
+        "height": 28,
+        "ariaLabel": "Switch to Kanban Pipeline Board View"
+      },
+      {
+        "tag": "a",
+        "text": "Book SuitNew",
+        "width": 103,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Book SuitNew",
+        "width": 103,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Book First Suitنیا آرڈر بک کری",
+        "width": 247,
+        "height": 40
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "10_orders_card_actions.png": {
+    "screenId": "10_orders_card_actions.png",
+    "url": "/orders/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "List",
+        "width": 67,
+        "height": 30,
+        "ariaLabel": "Switch to Spreadsheet Data List View"
+      },
+      {
+        "tag": "button",
+        "text": "Kanban",
+        "width": 88,
+        "height": 28,
+        "ariaLabel": "Switch to Kanban Pipeline Board View"
+      },
+      {
+        "tag": "a",
+        "text": "Book SuitNew",
+        "width": 103,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Book SuitNew",
+        "width": 103,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Book First Suitنیا آرڈر بک کری",
+        "width": 247,
+        "height": 40
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "11_khata_summary_cards.png": {
+    "screenId": "11_khata_summary_cards.png",
+    "url": "/khata/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Khata Entryنیا اندراج",
+        "width": 204,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Khata Entryپہلا کھاتہ اندر",
+        "width": 258,
+        "height": 40
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "12_khata_customer_card.png": {
+    "screenId": "12_khata_customer_card.png",
+    "url": "/khata/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Khata Entryنیا اندراج",
+        "width": 204,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Khata Entryپہلا کھاتہ اندر",
+        "width": 258,
+        "height": 40
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "13_thermal_print_station.png": {
+    "screenId": "13_thermal_print_station.png",
+    "url": "/print/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Book First Suitپہلا سوٹ بک کری",
+        "width": 264,
+        "height": 40
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 133
+      }
+    ]
+  },
+  "14_admin_metrics_mobile.png": {
+    "screenId": "14_admin_metrics_mobile.png",
+    "url": "/admin/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Workshops7",
+        "width": 146,
+        "height": 30
+      },
+      {
+        "tag": "button",
+        "text": "Sync Live",
+        "width": 104,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Active",
+        "width": 64,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Suspended",
+        "width": 93,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Trial",
+        "width": 52,
+        "height": 28
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 910,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Grant Trial",
+        "title": "Grant Custom Free Trial Access",
+        "width": 97,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Suspend",
+        "width": 97,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "title": "Purge Workshop Test Data",
+        "width": 32,
+        "height": 28
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737@gmail.com",
+        "scrollWidth": 154,
+        "clientWidth": 133
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+free@gmail.com",
+        "scrollWidth": 180,
+        "clientWidth": 170
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 175,
+        "clientWidth": 170
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+staff@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 170
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+free@gmail.com",
+        "scrollWidth": 180,
+        "clientWidth": 170
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 175,
+        "clientWidth": 170
+      }
+    ]
+  },
+  "15_admin_workshops_table_mobile.png": {
+    "screenId": "15_admin_workshops_table_mobile.png",
+    "url": "/admin/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Active",
+        "width": 64,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Suspended",
+        "width": 93,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Trial",
+        "width": 52,
+        "height": 28
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 910,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Grant Trial",
+        "title": "Grant Custom Free Trial Access",
+        "width": 97,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Suspend",
+        "width": 97,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "title": "Purge Workshop Test Data",
+        "width": 32,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Grant Trial",
+        "title": "Grant Custom Free Trial Access",
+        "width": 97,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Suspend",
+        "width": 97,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "title": "Purge Workshop Test Data",
+        "width": 32,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Grant Trial",
+        "title": "Grant Custom Free Trial Access",
+        "width": 97,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Suspend",
+        "width": 97,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "title": "Purge Workshop Test Data",
+        "width": 32,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Grant Trial",
+        "title": "Grant Custom Free Trial Access",
+        "width": 97,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Suspend",
+        "width": 97,
+        "height": 28
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737@gmail.com",
+        "scrollWidth": 154,
+        "clientWidth": 133
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+free@gmail.com",
+        "scrollWidth": 180,
+        "clientWidth": 170
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 175,
+        "clientWidth": 170
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+staff@gmail.com",
+        "scrollWidth": 182,
+        "clientWidth": 170
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+free@gmail.com",
+        "scrollWidth": 180,
+        "clientWidth": 170
+      },
+      {
+        "tag": "span",
+        "text": "hassaanm737+pro@gmail.com",
+        "scrollWidth": 175,
+        "clientWidth": 170
+      }
+    ]
+  },
+  "16_admin_payment_approvals_mobile.png": {
+    "screenId": "16_admin_payment_approvals_mobile.png",
+    "url": "/admin/",
+    "topHeaderHeight": 64,
+    "bottomNavHeight": 0,
+    "totalChromeHeight": 64,
+    "usableViewportHeight": 716,
+    "usableViewportPercentage": 92,
+    "smallTapTargets": [
+      {
+        "tag": "a",
+        "text": "SilayeBETAسلائے ماسٹر",
+        "width": 141,
+        "height": 40
+      },
+      {
+        "tag": "button",
+        "text": "Sign Outلاگ آؤٹ",
+        "title": "Sign Out of Session",
+        "width": 215,
+        "height": 34
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "width": 384,
+        "height": 40,
+        "ariaLabel": "Search customers and orders"
+      },
+      {
+        "tag": "a",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "New Booking",
+        "width": 125,
+        "height": 32
+      },
+      {
+        "tag": "button",
+        "text": "Workshops7",
+        "width": 144,
+        "height": 28
+      },
+      {
+        "tag": "button",
+        "text": "Sync Live",
+        "width": 104,
+        "height": 32
+      }
+    ],
+    "hasStickyOverlap": false,
+    "truncatedElements": [
+      {
+        "tag": "span",
+        "text": "hassaanm737@gmail.com",
+        "scrollWidth": 154,
+        "clientWidth": 133
+      }
+    ]
+  }
+}
