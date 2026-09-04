@@ -1066,6 +1066,8 @@ export default function NewOrderPage() {
                   </>
                 )}
               </Button>
+
+              <div className="h-28 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
@@ -1268,6 +1270,9 @@ export default function NewOrderPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Physical Bottom Spacer to prevent docked bar overlap */}
+              <div className="h-28 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
@@ -1428,6 +1433,9 @@ export default function NewOrderPage() {
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 <span>← واپس ڈیزائن پر جائیں (Back to Style)</span>
               </Button>
+
+              {/* Physical Bottom Spacer to prevent docked bar overlap */}
+              <div className="h-28 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
@@ -1481,10 +1489,12 @@ export default function NewOrderPage() {
                     setMobileStep(3);
                     document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2 font-urdu-serif text-sm hover:opacity-95 active:scale-[0.99]"
+                  className="flex-1 h-12 min-h-[48px] px-2 rounded-xl bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center hover:opacity-95 active:scale-[0.99]"
                 >
-                  <span>اگلا مرحلہ: ناپ درج کریں (Next: Measurements)</span>
-                  <ArrowRight className="h-4 w-4" />
+                  <div className="flex flex-col items-center justify-center leading-none">
+                    <span className="font-urdu-serif text-xs font-bold leading-tight">اگلا مرحلہ: ناپ درج کریں</span>
+                    <span className="text-[9px] font-sans opacity-80 mt-0.5">Next: Measurements Matrix →</span>
+                  </div>
                 </Button>
               </div>
             ) : (
