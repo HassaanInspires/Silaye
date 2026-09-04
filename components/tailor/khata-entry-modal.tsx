@@ -268,7 +268,7 @@ export function KhataEntryModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent aria-describedby={undefined} className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
         {/* Header */}
         <div className="border-b border-border bg-card-elevated px-6 py-4">
           <div className="flex items-center gap-3">

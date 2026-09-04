@@ -736,7 +736,7 @@ export default function NewOrderPage() {
                   <span className="text-[11px] font-urdu-serif font-bold leading-relaxed py-1 truncate">
                     {s.labelUrdu}
                   </span>
-                  <span className="text-[9px] font-medium opacity-70 truncate">
+                  <span className={cn('text-[9px] font-medium truncate', isCurrent ? 'text-amber-200' : 'text-gray-300')}>
                     {s.labelEn}
                   </span>
                 </button>
@@ -878,7 +878,7 @@ export default function NewOrderPage() {
                             {isSelected && <span className="mr-1 text-gold">✓</span>}
                             {g.ur}
                           </span>
-                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
                             {g.en}
                           </span>
                         </button>
@@ -988,7 +988,7 @@ export default function NewOrderPage() {
                         {fabricSource === 'CUSTOMER' && <span className="mr-1 text-gold">✓</span>}
                         گاہک کا کپڑا
                       </span>
-                      <span className="text-[9px] opacity-70 font-medium font-sans">
+                      <span className={cn('text-[10px] font-medium font-sans', fabricSource === 'CUSTOMER' ? 'text-amber-200' : 'text-gray-300')}>
                         Customer Fabric
                       </span>
                     </button>
@@ -1006,7 +1006,7 @@ export default function NewOrderPage() {
                         {fabricSource === 'SHOP' && <span className="mr-1 text-gold">✓</span>}
                         دکان کا کپڑا
                       </span>
-                      <span className="text-[9px] opacity-70 font-medium font-sans">
+                      <span className={cn('text-[10px] font-medium font-sans', fabricSource === 'SHOP' ? 'text-amber-200' : 'text-gray-300')}>
                         Shop Fabric
                       </span>
                     </button>
@@ -1067,7 +1067,7 @@ export default function NewOrderPage() {
                 )}
               </Button>
 
-              <div className="h-28 w-full shrink-0" aria-hidden="true" />
+              <div className="h-32 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
@@ -1109,7 +1109,7 @@ export default function NewOrderPage() {
                             {isSelected && <span className="mr-1 text-gold">✓</span>}
                             {item.labelUrdu}
                           </span>
-                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
                             {item.label}
                           </span>
                         </button>
@@ -1145,7 +1145,7 @@ export default function NewOrderPage() {
                             {isSelected && <span className="mr-1 text-gold">✓</span>}
                             {item.labelUrdu}
                           </span>
-                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
                             {item.label}
                           </span>
                         </button>
@@ -1189,7 +1189,7 @@ export default function NewOrderPage() {
                             {isSelected && <span className="mr-1 text-gold">✓</span>}
                             {item.labelUrdu}
                           </span>
-                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
                             {item.label}
                           </span>
                         </button>
@@ -1225,7 +1225,7 @@ export default function NewOrderPage() {
                             {isSelected && <span className="mr-1 text-gold">✓</span>}
                             {item.labelUrdu}
                           </span>
-                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
                             {item.label}
                           </span>
                         </button>
@@ -1261,7 +1261,7 @@ export default function NewOrderPage() {
                             {isSelected && <span className="mr-1 text-gold">✓</span>}
                             {item.labelUrdu}
                           </span>
-                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
                             {item.label}
                           </span>
                         </button>
@@ -1272,7 +1272,7 @@ export default function NewOrderPage() {
               </div>
 
               {/* Physical Bottom Spacer to prevent docked bar overlap */}
-              <div className="h-28 w-full shrink-0" aria-hidden="true" />
+              <div className="h-32 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
@@ -1435,7 +1435,7 @@ export default function NewOrderPage() {
               </Button>
 
               {/* Physical Bottom Spacer to prevent docked bar overlap */}
-              <div className="h-28 w-full shrink-0" aria-hidden="true" />
+              <div className="h-32 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
@@ -1493,7 +1493,7 @@ export default function NewOrderPage() {
                 >
                   <div className="flex flex-col items-center justify-center leading-none">
                     <span className="font-urdu-serif text-xs font-bold leading-tight">اگلا مرحلہ: ناپ درج کریں</span>
-                    <span className="text-[9px] font-sans opacity-80 mt-0.5">Next: Measurements Matrix →</span>
+                    <span className="text-[10px] text-black/80 font-sans font-semibold mt-0.5">Next: Measurements Matrix →</span>
                   </div>
                 </Button>
               </div>
@@ -2588,7 +2588,7 @@ export default function NewOrderPage() {
 
         {/* Monthly Quota Exceeded Luxury Obsidian Dark Dialog */}
         {isQuotaModalOpen && quotaDetails && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="quota-dialog-title" aria-describedby="quota-dialog-desc">
             <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-gold/40 bg-[#0F1115]/95 p-6 sm:p-8 shadow-[0_0_50px_rgba(212,175,55,0.2)]">
               {/* Decorative radial top glow */}
               <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-gold/15 blur-3xl" />
@@ -2601,12 +2601,12 @@ export default function NewOrderPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold text-foreground">Monthly Quota Reached</h2>
+                      <h2 id="quota-dialog-title" className="text-lg font-bold text-foreground">Monthly Quota Reached</h2>
                       <Badge variant="outline" className="border-gold/50 bg-gold/10 text-gold text-[10px] uppercase tracking-wider font-semibold">
                         {currentShop.subscription_status === 'TRIALING' ? 'Trial Expired' : 'Free Tier'}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p id="quota-dialog-desc" className="text-xs text-muted-foreground">
                       Maximum monthly suit quota exhausted
                     </p>
                   </div>

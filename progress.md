@@ -2885,7 +2885,35 @@
   - `npm run build`: Clean static export into `out/` (28/28 static routes compiled with 0 errors).
 
 * **Next Immediate Task:**
+  - Sub-Phase 21.3.2.1: Accessibility & Mobile Clearance Hardening (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.2.1 - Accessibility & Mobile Clearance Hardening (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.2.1` Accessibility & Mobile Clearance Hardening (`app/orders/new/page.tsx`, `components/tailor/*.tsx`):
+    - **Radix UI Dialog A11y Remediation**: Added `aria-describedby={undefined}` and sr-only `DialogTitle` & `DialogDescription` components to modal dialogs (`WhatsAppReceiptModal`, `ThermalSlipModal`, `CustomerKhataDetailModal`, `KhataEntryModal`), completely eliminating DevTools missing accessible title/description warnings. Augmented the custom Monthly Quota Exceeded modal with `role="dialog" aria-modal="true" aria-labelledby="quota-dialog-title" aria-describedby="quota-dialog-desc"` and corresponding element IDs.
+    - **WCAG AA Contrast Remediation**: Replaced low-contrast `text-[9px] opacity-70` English subtitles across garment chips, fabric source segmented toggles, and Step 2 style option chips (Collar, Daman, Pockets, Stitching, Patti) with high-contrast tokens (`text-[10px] font-medium font-sans` with `text-amber-200` for active state and `text-gray-300` for inactive state), exceeding the WCAG 4.5:1 contrast ratio against obsidian dark glass surfaces.
+    - **Mobile Bottom Scroll-Lock & Docked Action Bar Refinement**: Placed physical uncollapsible bottom spacers (`<div className="h-32 w-full shrink-0" aria-hidden="true" />`) directly before the closing tag of Step 1, Step 2, and Step 3 content wrappers, guaranteeing that the lowest interactive section ("FRONT PATTI • سامنے پٹی") and form inputs never clip behind the docked bottom action bar at maximum scroll. Upgraded the Step 2 docked bottom button with a centered vertical stack and high-contrast subtitle (`<span className="text-[10px] text-black/80 font-sans font-semibold mt-0.5">Next: Measurements Matrix →</span>`).
+    - **Isolation Guardrails**: Desktop layouts (`hidden md:block`) and underlying data structures remained strictly untouched.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `components/tailor/whatsapp-receipt-modal.tsx` [MODIFIED]
+  - `components/tailor/thermal-slip-modal.tsx` [MODIFIED]
+  - `components/tailor/customer-khata-detail-modal.tsx` [MODIFIED]
+  - `components/tailor/khata-entry-modal.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npm run build`: Static export compiled cleanly into `out/` across all 28/28 routes with 0 errors.
+
+* **Next Immediate Task:**
   - Sub-Phase 21.3.3: Step 3 (Measurement Matrix & Craftsman Assignment) Mobile Overhaul.
+
 
 
 

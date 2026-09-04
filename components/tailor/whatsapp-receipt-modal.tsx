@@ -230,7 +230,9 @@ export function WhatsAppReceiptModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl overflow-hidden p-0 bg-card border-border sm:rounded-2xl shadow-2xl">
+      <DialogContent aria-describedby={undefined} className="max-w-2xl overflow-hidden p-0 bg-card border-border sm:rounded-2xl shadow-2xl">
+        <DialogTitle className="sr-only">Order Action</DialogTitle>
+        <DialogDescription className="sr-only">Order details and actions</DialogDescription>
         {/* ================================================================
             MODAL HEADER
             ================================================================ */}

@@ -136,7 +136,9 @@ export function ThermalSlipModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-2xl overflow-y-auto bg-card border-border">
+      <DialogContent aria-describedby={undefined} className="max-h-[92vh] max-w-2xl overflow-y-auto bg-card border-border">
+        <DialogTitle className="sr-only">Order Action</DialogTitle>
+        <DialogDescription className="sr-only">Order details and actions</DialogDescription>
         {/* Header with Format Switcher */}
         <DialogHeader className="space-y-3 pb-2 border-b border-border">
           <div className="flex flex-wrap items-center justify-between gap-3">
