@@ -708,7 +708,7 @@ export default function NewOrderPage() {
         {/* ================================================================ */}
         {/* MOBILE 3-STEP WIZARD (md:hidden)                                 */}
         {/* ================================================================ */}
-        <div className="block md:hidden space-y-4 pb-36 pb-safe">
+        <div className="block md:hidden space-y-4 pb-44 pb-safe">
           {/* Step Progress Pills Header */}
           <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#121418] rounded-xl border border-white/5 shadow-md">
             {[
@@ -732,7 +732,7 @@ export default function NewOrderPage() {
                       : 'text-gray-400 border-transparent'
                   )}
                 >
-                  <span className="text-[11px] font-urdu-sans font-bold leading-tight truncate">
+                  <span className="text-[11px] font-urdu-serif font-bold leading-relaxed py-1 truncate">
                     {s.labelUrdu}
                   </span>
                   <span className="text-[9px] font-medium opacity-70 truncate">
@@ -747,7 +747,7 @@ export default function NewOrderPage() {
           {/* STEP 1: CUSTOMER & SUIT DETAILS                                */}
           {/* ============================================================== */}
           {mobileStep === 1 && (
-            <div className="space-y-4">
+            <div className="space-y-4 pb-44 pb-safe">
               {/* Customer Phone & Lookup */}
               <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
                 <div className="flex items-center justify-between">
@@ -959,7 +959,7 @@ export default function NewOrderPage() {
           {/* STEP 2: STYLE & PREFERENCES                                    */}
           {/* ============================================================== */}
           {mobileStep === 2 && (
-            <div className="space-y-4">
+            <div className="space-y-4 pb-44 pb-safe">
               {/* Collar Style Selection */}
               <div className="premium-glass-card p-4 border-white/10 space-y-2.5 bg-[#121418]">
                 <span className="text-xs font-bold text-white uppercase tracking-wider block">
@@ -1154,7 +1154,7 @@ export default function NewOrderPage() {
           {/* STEP 3: MEASUREMENT MATRIX (2-COLUMN TOUCH GRID)                */}
           {/* ============================================================== */}
           {mobileStep === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-4 pb-44 pb-safe">
               <div className="premium-glass-card p-3 border-gold/30 bg-gradient-to-r from-gold/10 via-[#121418] to-transparent">
                 <div className="flex items-center justify-between">
                   <div>

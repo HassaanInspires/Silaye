@@ -2778,5 +2778,39 @@
   - `npm run build`: Static export compiled 28/28 pages cleanly into `out/`.
 
 * **Next Immediate Task:**
-  - Commit changes to `feature/ergonomic-declutter`, push branch, push tag `v1.1.5-preview`, and compile Android Preview APK.
+  - Pass 2: Mobile Orders Queue, Khata Ledger, Universal Bottom Clearance & Authentic Nastaliq Typography Refactor (Completed).
+
+---
+
+## Phase 21: Mobile Ergonomic Declutter & Thumb-Zone Refactor (Pass 2 Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.5` Pass 2: Mobile Orders Queue, Khata Ledger, Universal Bottom Clearance & Authentic Nastaliq Typography Refactor:
+    - **Universal Bottom Clearance Standard (`pb-44 pb-safe`)**:
+      * In `app/orders/page.tsx`, `app/khata/page.tsx`, and `app/settings/page.tsx`, enforced `pb-44 pb-safe` (minimum 176px bottom clearance) on outermost mobile containers, eliminating card, button, and ledger clipping above `<MobileBottomNav />`.
+      * In `app/orders/new/page.tsx`, enforced `pb-44 pb-safe` on both the outermost mobile wrapper AND on scrollable step containers (Step 1 Customer & Fabric, Step 2 Style & Preferences, Step 3 Measurement Matrix) ensuring all fabric inputs and step navigation CTAs sit cleanly above the docked bottom confirmation bar (`fixed bottom-0 z-30`).
+    - **Header CTA Clashes Eradication**:
+      * In `app/orders/page.tsx` under `md:hidden`: Removed the top-right yellow `[+ نیا سوٹ]` button and link from the mobile header bar, establishing the bottom center FAB as the single, un-conflicted primary booking trigger.
+      * In `app/khata/page.tsx` under `md:hidden`: Removed the top-right yellow `[+ نیا اندراج]` button from the mobile header bar.
+    - **Horizontal Filter Pills Overflow Fix**:
+      * In `app/orders/page.tsx` and `app/khata/page.tsx`: Updated scrollable filter pill containers to `flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none touch-pan-x -mx-4 pl-4 pr-10`, preventing end chips (`[ڈیلیورڈ]`, `[بے باق]`) from being sliced in half by viewport overflow.
+    - **Authentic Noto Nastaliq Urdu Typography (`font-urdu-serif leading-relaxed py-1`)**:
+      * In `app/orders/page.tsx`, `app/khata/page.tsx`, and `app/settings/page.tsx`, replaced all occurrences of flat Arabic font (`font-urdu-sans`) with authentic Nastaliq (`font-urdu-serif leading-relaxed py-1`) across empty state headings, descriptions, and action buttons (`کوئی آرڈر نہیں ملا`, `کوئی کھاتہ نہیں ملا`, `تمام فلٹرز صاف کریں`), horizontal filter pills (`تمام`, `کٹنگ`, `سلائی`, `تیار`, `ڈیلیورڈ`, `ادھار`, `ایڈوانس`, `بے باق`), order card stage labels, balance due tags, advance CTAs, and settings tab titles and section subtitles.
+
+* **Active File Changes:**
+  - `app/orders/page.tsx` [MODIFIED]
+  - `app/khata/page.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `scripts/verify_db.ts`: 159/159 database and repository test assertions passed.
+  - `npm run build`: Clean static export into `out/` (28/28 static routes compiled).
+
+* **Next Immediate Task:**
+  - Stage, commit, and push Pass 2 changes to `origin/feature/ergonomic-declutter`.
+
 

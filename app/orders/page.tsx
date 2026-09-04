@@ -332,29 +332,20 @@ export default function OrdersQueuePage() {
         {/* ================================================================= */}
         {/* MOBILE PIPELINE VIEWPORT (md:hidden)                              */}
         {/* ================================================================= */}
-        <div className="block md:hidden space-y-3">
+        <div className="block md:hidden space-y-3 pb-44 pb-safe">
           {/* 1. Mobile Header Bar */}
           <div className="flex items-center justify-between pb-1">
             <div>
               <h1 className="text-xl font-bold text-white flex items-center gap-2">
                 <span>Production Queue</span>
-                <span className="font-urdu-serif text-base text-gold" dir="rtl">
+                <span className="font-urdu-serif text-base text-gold leading-relaxed py-1" dir="rtl">
                   سلائی کیو
                 </span>
               </h1>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-[11px] text-gray-400 font-urdu-serif leading-relaxed py-1">
                 {orders.length} کل آرڈرز ورکشاپ میں
               </p>
             </div>
-            <a href="/orders/new">
-              <Button
-                size="sm"
-                className="h-8 px-2.5 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold text-xs shadow-[0_0_12px_rgba(212,175,55,0.2)]"
-              >
-                <PlusCircle className="h-3.5 w-3.5 mr-1" />
-                <span>نیا سوٹ</span>
-              </Button>
-            </a>
           </div>
 
           {/* 2. Sticky Top Mobile Search Bar & Horizontal Status Pills */}
@@ -381,7 +372,7 @@ export default function OrdersQueuePage() {
             </div>
 
             {/* Horizontal Scrollable Status Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto py-2.5 scrollbar-none touch-pan-x -mx-4 px-4">
+            <div className="flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none touch-pan-x -mx-4 pl-4 pr-10">
               {[
                 { id: 'ALL', labelUrdu: 'تمام', labelEn: 'All', count: mobileStatusCounts.all },
                 { id: 'CUTTING', labelUrdu: 'کٹنگ', labelEn: 'Cutting', count: mobileStatusCounts.cutting },
@@ -402,7 +393,7 @@ export default function OrdersQueuePage() {
                         : 'bg-[#121418] text-gray-400 border-white/5 hover:text-gray-200'
                     )}
                   >
-                    <span className="font-urdu-sans">{tab.labelUrdu}</span>
+                    <span className="font-urdu-serif leading-relaxed py-1">{tab.labelUrdu}</span>
                     <span className="text-[10px] opacity-70">({tab.labelEn})</span>
                     <span
                       className={cn(
@@ -422,8 +413,8 @@ export default function OrdersQueuePage() {
           {mobileFilteredOrders.length === 0 ? (
             <div className="premium-glass-card p-8 text-center space-y-3 border-white/10 my-4">
               <Search className="h-8 w-8 text-gray-500 mx-auto" />
-              <h3 className="text-sm font-semibold text-white">کوئی آرڈر نہیں ملا</h3>
-              <p className="text-xs text-gray-400">
+              <h3 className="text-sm font-semibold text-white font-urdu-serif leading-relaxed py-1">کوئی آرڈر نہیں ملا</h3>
+              <p className="text-xs text-gray-400 font-urdu-serif leading-relaxed py-1">
                 دیے گئے فلٹر یا تلاش کے مطابق کوئی آرڈر موجود نہیں ہے۔
               </p>
               <Button
@@ -433,7 +424,7 @@ export default function OrdersQueuePage() {
                   setSearchQuery('');
                   setMobileStatusFilter('ALL');
                 }}
-                className="text-xs border-white/10"
+                className="text-xs border-white/10 font-urdu-serif leading-relaxed py-1"
               >
                 تمام فلٹرز صاف کریں
               </Button>
@@ -506,13 +497,13 @@ export default function OrdersQueuePage() {
                         <Badge variant={stageConfig.variant} className="text-[10px] px-2 py-0.5">
                           {stageConfig.label}
                         </Badge>
-                        <span className="font-urdu-sans text-xs text-gray-400" dir="rtl">
+                        <span className="font-urdu-serif text-xs text-gray-400 leading-relaxed py-1" dir="rtl">
                           {stageConfig.labelUrdu}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-1 text-xs">
-                        <span className="text-gray-400 text-[11px]">باقی:</span>
+                        <span className="text-gray-400 text-[11px] font-urdu-serif leading-relaxed py-1">باقی:</span>
                         {order.balance_due === 0 ? (
                           <span className="text-emerald-400 font-semibold font-mono">Paid</span>
                         ) : (
@@ -536,7 +527,7 @@ export default function OrdersQueuePage() {
                         title="WhatsApp Receipt"
                       >
                         <MessageSquare className="h-4 w-4" />
-                        <span>رسید</span>
+                        <span className="font-urdu-serif leading-relaxed py-1">رسید</span>
                       </button>
 
                       {/* Thermal Print Button */}
@@ -562,12 +553,12 @@ export default function OrdersQueuePage() {
                           }}
                           className="h-11 min-h-[44px] flex-1 rounded-xl border border-gold/40 bg-gold/15 text-gold hover:bg-gold/25 flex items-center justify-center gap-1.5 text-xs font-bold transition-all shadow-[0_0_12px_rgba(212,175,55,0.15)] cursor-pointer active:scale-95"
                         >
-                          <span className="font-urdu-sans">{nextInfo.labelUrdu}</span>
+                          <span className="font-urdu-serif leading-relaxed py-1">{nextInfo.labelUrdu}</span>
                         </button>
                       ) : (
                         <div className="h-11 min-h-[44px] flex-1 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 flex items-center justify-center gap-1 text-xs font-semibold">
                           <CheckCircle2 className="h-4 w-4" />
-                          <span>مکمل شدہ (Delivered)</span>
+                          <span className="font-urdu-serif leading-relaxed py-1">مکمل شدہ (Delivered)</span>
                         </div>
                       )}
                     </div>
