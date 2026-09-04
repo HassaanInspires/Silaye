@@ -2861,6 +2861,31 @@
   - `npm run build`: Static export compiled cleanly into `out/` across all 28/28 routes with 0 errors.
 
 * **Next Immediate Task:**
-  - Sub-Phase 21.3.3: Step 2 (Style & Preferences) Mobile Overhaul.
+  - Sub-Phase 21.3.2: Step 2 (Style & Design) Mobile Overhaul (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.2 - Step 2 (Style & Design) Mobile Overhaul (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.2` Step 2 (Style & Design) Mobile Overhaul (`app/orders/new/page.tsx`):
+    - **Unified Single Surface (Eliminated Nested Card Bloat)**: Replaced 5 heavy separate `.premium-glass-card` wrappers with a unified obsidian glass container matching Step 1 (`rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl`) separated by subtle hairline dividers (`border-b border-white/5 pb-3.5`).
+    - **Preserved Existing Data Structures & Pakistani Defaults**: Kept all existing option arrays and values intact without altering type definitions or schemas (`FULL_BAN`, `HALF_BAN`, `SHERWANI_COLLAR`, `SHIRT_COLLAR`, `SOFT_BAN`; `CHORAS_DAMAN`, `GOOL_DAMAN`; `FRONT_CHEST`, `RIGHT_SIDE`, `LEFT_SIDE`, `MOBILE_INSIDE`; `DOUBLE_SILAI`, `SINGLE_SILAI`; `GUM_PATTI`, `OPEN_PATTI`). Pakistani adult defaults (`FULL_BAN`, `CHORAS_DAMAN`, `FRONT_CHEST` + `RIGHT_SIDE`, `DOUBLE_SILAI`, `GUM_PATTI`) are pre-selected and glowing on first load.
+    - **Verified 3D Tactile Chip Geometry (Vertical Stack)**: Implemented centered vertical column stacks (`h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all`) across all 5 sections. Rendered authentic Nastaliq Urdu on top (`font-urdu-serif text-xs font-bold leading-relaxed py-0.5`) with checkmark `{isSelected && <span className="mr-1 text-gold">✓</span>}`, English subtitle below (`text-[9px] opacity-70 font-medium font-sans`), 3D gold pop-up active styling (`bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98`), and inactive styling (`bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98`). Configured Collar Cut with `grid grid-cols-2 gap-2` and the 5th option spanning `col-span-2`, and 2-column grids for all remaining sections.
+    - **Dynamic Step 2 Docked Bottom Action Bar**: Suppressed premature Total PKR and Advance payment inputs on Step 2. Rendered a dedicated 2-button thumb-docked action bar (`fixed bottom-0 left-0 right-0 z-30 pb-safe p-3 bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30`) with `[← واپس]` and `[اگلا مرحلہ: ناپ درج کریں (Next: Measurements) →]`, smoothly resetting container scroll to top on step advancement, and preserved `pb-44 pb-safe` bottom clearance.
+    - **Isolation Guardrails**: Desktop views (`hidden md:block`), Step 1 (`mobileStep === 1`), and Step 3 (`mobileStep === 3`) remained strictly untouched.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npm run build`: Clean static export into `out/` (28/28 static routes compiled with 0 errors).
+
+* **Next Immediate Task:**
+  - Sub-Phase 21.3.3: Step 3 (Measurement Matrix & Craftsman Assignment) Mobile Overhaul.
+
 
 

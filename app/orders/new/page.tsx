@@ -1074,120 +1074,137 @@ export default function NewOrderPage() {
           {/* ============================================================== */}
           {mobileStep === 2 && (
             <div className="space-y-4 pb-44 pb-safe">
-              {/* Collar Style Selection */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-2.5 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Collar Cut • گلا اور بین کا سٹائل
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'FULL_BAN', ur: 'مکمل بین', en: 'Full Ban' },
-                    { id: 'HALF_BAN', ur: 'ہاف بین', en: 'Half Ban' },
-                    { id: 'SHERWANI_COLLAR', ur: 'شیروانی کالر', en: 'Sherwani' },
-                    { id: 'SHIRT_COLLAR', ur: 'شرٹ کالر', en: 'Shirt Collar' },
-                    { id: 'SOFT_BAN', ur: 'سافٹ بین', en: 'Soft Ban' },
-                  ].map((item) => {
-                    const isSelected = stylePreferences.collar_style === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleStyleChange('collar_style', item.id as any)}
-                        className={cn(
-                          'p-2.5 rounded-xl border text-left transition-all flex flex-col gap-0.5 cursor-pointer',
-                          isSelected
-                            ? 'border-gold/50 bg-gold/15 text-gold font-bold shadow-[0_0_10px_rgba(212,175,55,0.15)]'
-                            : 'border-white/5 bg-black/30 text-gray-300 hover:border-white/15'
-                        )}
-                      >
-                        <span className="font-urdu-sans text-xs font-bold" dir="rtl">{item.ur}</span>
-                        <span className="text-[10px] text-gray-400">{item.en}</span>
-                      </button>
-                    );
-                  })}
+              {/* Unified Single Surface Card */}
+              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+                {/* 1. Collar Cut Selection */}
+                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                    Collar Cut • گلا اور بین کا سٹائل
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'FULL_BAN', labelUrdu: 'مکمل بین', label: 'Full Ban' },
+                      { id: 'HALF_BAN', labelUrdu: 'ہاف بین', label: 'Half Ban' },
+                      { id: 'SHERWANI_COLLAR', labelUrdu: 'شیروانی کالر', label: 'Sherwani' },
+                      { id: 'SHIRT_COLLAR', labelUrdu: 'شرٹ کالر', label: 'Shirt Collar' },
+                      { id: 'SOFT_BAN', labelUrdu: 'سافٹ بین', label: 'Soft Ban' },
+                    ].map((item, idx) => {
+                      const isSelected = stylePreferences.collar_style === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => handleStyleChange('collar_style', item.id as any)}
+                          className={cn(
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            idx === 4 ? 'col-span-2' : '',
+                            isSelected
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                          )}
+                        >
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* Daman Cut Selection */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-2.5 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Daman Cut • دامن کا ڈیزائن
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'CHORAS_DAMAN', ur: 'چورس دامن', en: 'Square Daman' },
-                    { id: 'GOOL_DAMAN', ur: 'گول دامن', en: 'Round Daman' },
-                  ].map((item) => {
-                    const isSelected = stylePreferences.daman_style === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleStyleChange('daman_style', item.id as any)}
-                        className={cn(
-                          'p-3 rounded-xl border text-center transition-all flex flex-col gap-1 cursor-pointer',
-                          isSelected
-                            ? 'border-gold/50 bg-gold/15 text-gold font-bold shadow-[0_0_10px_rgba(212,175,55,0.15)]'
-                            : 'border-white/5 bg-black/30 text-gray-300 hover:border-white/15'
-                        )}
-                      >
-                        <span className="font-urdu-sans text-sm font-bold">{item.ur}</span>
-                        <span className="text-[10px] text-gray-400">{item.en}</span>
-                      </button>
-                    );
-                  })}
+                {/* 2. Daman Cut Selection */}
+                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                    Daman Cut • دامن کا ڈیزائن
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'CHORAS_DAMAN', labelUrdu: 'چورس دامن', label: 'Square Daman' },
+                      { id: 'GOOL_DAMAN', labelUrdu: 'گول دامن', label: 'Round Daman' },
+                    ].map((item) => {
+                      const isSelected = stylePreferences.daman_style === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => handleStyleChange('daman_style', item.id as any)}
+                          className={cn(
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            isSelected
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                          )}
+                        >
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* Pocket Configurations */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-2.5 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Pockets • جیبوں کی ترتیب
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'FRONT_CHEST', ur: 'سامنے والی جیب', en: 'Front Chest' },
-                    { id: 'RIGHT_SIDE', ur: 'دائیں سائیڈ جیب', en: 'Right Side' },
-                    { id: 'LEFT_SIDE', ur: 'بائیں سائیڈ جیب', en: 'Left Side' },
-                    { id: 'MOBILE_INSIDE', ur: 'اندرونی موبائل جیب', en: 'Mobile Pocket' },
-                  ].map((item) => {
-                    const isSelected = stylePreferences.pockets?.includes(item.id as any);
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          const current = stylePreferences.pockets || [];
-                          const next = isSelected
-                            ? current.filter((p) => p !== item.id)
-                            : [...current, item.id as any];
-                          handleStyleChange('pockets', next);
-                        }}
-                        className={cn(
-                          'p-2.5 rounded-xl border text-left transition-all flex flex-col gap-0.5 cursor-pointer',
-                          isSelected
-                            ? 'border-gold/50 bg-gold/15 text-gold font-bold'
-                            : 'border-white/5 bg-black/30 text-gray-400'
-                        )}
-                      >
-                        <span className="font-urdu-sans text-xs font-bold" dir="rtl">{item.ur}</span>
-                        <span className="text-[10px] opacity-70">{item.en}</span>
-                      </button>
-                    );
-                  })}
+                {/* 3. Pocket Configurations (Multi-Select) */}
+                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                    Pockets • جیبوں کی ترتیب
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'FRONT_CHEST', labelUrdu: 'سامنے والی جیب', label: 'Front Chest' },
+                      { id: 'RIGHT_SIDE', labelUrdu: 'دائیں سائیڈ جیب', label: 'Right Side' },
+                      { id: 'LEFT_SIDE', labelUrdu: 'بائیں سائیڈ جیب', label: 'Left Side' },
+                      { id: 'MOBILE_INSIDE', labelUrdu: 'اندرونی موبائل جیب', label: 'Mobile Pocket' },
+                    ].map((item) => {
+                      const isSelected = stylePreferences.pockets?.includes(item.id as any);
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            const current = stylePreferences.pockets || [];
+                            const next = isSelected
+                              ? current.filter((p) => p !== item.id)
+                              : [...current, item.id as any];
+                            handleStyleChange('pockets', next);
+                          }}
+                          className={cn(
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            isSelected
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                          )}
+                        >
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* Stitching & Patti Options */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <div>
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block mb-2">
+                {/* 4. Stitching Type Selection */}
+                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
                     Stitching Type • سلائی کی قسم
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: 'DOUBLE_SILAI', ur: 'ڈبل سلائی (مضبوط)', en: 'Double Stitch' },
-                      { id: 'SINGLE_SILAI', ur: 'سنگل سلائی (کلاسک)', en: 'Single Stitch' },
+                      { id: 'DOUBLE_SILAI', labelUrdu: 'ڈبل سلائی (مضبوط)', label: 'Double Stitch' },
+                      { id: 'SINGLE_SILAI', labelUrdu: 'سنگل سلائی (کلاسک)', label: 'Single Stitch' },
                     ].map((item) => {
                       const isSelected = stylePreferences.stitch_type === item.id;
                       return (
@@ -1196,28 +1213,34 @@ export default function NewOrderPage() {
                           type="button"
                           onClick={() => handleStyleChange('stitch_type', item.id as any)}
                           className={cn(
-                            'p-2.5 rounded-xl border text-center transition-all',
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
                             isSelected
-                              ? 'border-gold/50 bg-gold/15 text-gold font-bold'
-                              : 'border-white/5 bg-black/30 text-gray-400'
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
                           )}
                         >
-                          <span className="font-urdu-sans text-xs block font-bold">{item.ur}</span>
-                          <span className="text-[9px] opacity-70">{item.en}</span>
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                            {item.label}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-white/5">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block mb-2">
+                {/* 5. Front Patti Selection */}
+                <div className="space-y-2.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
                     Front Patti • سامنے پٹی
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: 'GUM_PATTI', ur: 'گم پٹی', en: 'Hidden' },
-                      { id: 'OPEN_PATTI', ur: 'اوپن پٹی', en: 'Open Button' },
+                      { id: 'GUM_PATTI', labelUrdu: 'گم پٹی', label: 'Hidden' },
+                      { id: 'OPEN_PATTI', labelUrdu: 'اوپن پٹی', label: 'Open Button' },
                     ].map((item) => {
                       const isSelected = stylePreferences.front_patti === item.id;
                       return (
@@ -1226,40 +1249,24 @@ export default function NewOrderPage() {
                           type="button"
                           onClick={() => handleStyleChange('front_patti', item.id as any)}
                           className={cn(
-                            'p-2.5 rounded-xl border text-center transition-all',
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
                             isSelected
-                              ? 'border-gold/50 bg-gold/15 text-gold font-bold'
-                              : 'border-white/5 bg-black/30 text-gray-400'
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
                           )}
                         >
-                          <span className="font-urdu-sans text-xs block font-bold">{item.ur}</span>
-                          <span className="text-[9px] opacity-70">{item.en}</span>
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className="text-[9px] opacity-70 font-medium font-sans">
+                            {item.label}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
-              </div>
-
-              {/* Navigation CTAs */}
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setMobileStep(1)}
-                  className="h-11 px-4 border-white/10 text-xs text-gray-300"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  <span>واپس</span>
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => setMobileStep(3)}
-                  className="flex-1 h-11 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.25)] flex items-center justify-center gap-2"
-                >
-                  <span>اگلا مرحلہ: ناپ میٹرکس</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
               </div>
             </div>
           )}
@@ -1456,6 +1463,30 @@ export default function NewOrderPage() {
                   </>
                 )}
               </Button>
+            ) : mobileStep === 2 ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setMobileStep(1);
+                    document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="h-12 px-4 rounded-xl border border-white/15 bg-white/5 text-gray-300 font-urdu-serif text-xs hover:bg-white/10 active:scale-98"
+                >
+                  ← واپس
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setMobileStep(3);
+                    document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2 font-urdu-serif text-sm hover:opacity-95 active:scale-[0.99]"
+                >
+                  <span>اگلا مرحلہ: ناپ درج کریں (Next: Measurements)</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
             ) : (
               <>
                 <div className="flex items-center justify-between gap-2">
