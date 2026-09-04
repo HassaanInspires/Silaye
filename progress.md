@@ -2942,7 +2942,47 @@
   - `npm run build`: Clean static export into `out/` (all 28/28 static routes generated with 0 errors).
 
 * **Next Immediate Task:**
-  - Commit and push `feature/ergonomic-declutter` snapshot.
+  - Merge `feature/ergonomic-declutter` into `main` and compile Android Debug APK (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.4 - Native Android Debug Release & Main Branch Integration (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.4` Native Android Debug Release & Main Branch Integration:
+    - **Main Branch Fast-Forward Integration**: Checked out `main`, pulled latest remote commits, merged `feature/ergonomic-declutter` with `--no-ff` (`merge(mobile): integrate complete ergonomic declutter & counter-velocity booking wizard`), and pushed `main` to `origin/main`.
+    - **Full Production Verification Suite**:
+      * TypeScript typecheck: `npx tsc --noEmit` -> 0 errors.
+      * Database & offline replication tests: `npx --yes tsx scripts/verify_db.ts` -> 159/159 assertions passed.
+      * Next.js App Router static export: `npm run build` -> Clean static export into `out/` (all 28/28 routes generated).
+    - **Capacitor Sync & OpenJDK 21 Toolchain Setup**:
+      * Synchronized native platform: `npx cap sync android` (updated `capacitor.build.gradle` and `capacitor.settings.gradle` for local notifications).
+      * Provisioned Eclipse Adoptium Temurin OpenJDK 21 LTS (`21.0.12.1+1`) into `~/.local/java/jdk-21` to satisfy Gradle 8.14 and Capacitor 8's plugin toolchain requirement (`jvmToolchain(21)`).
+      * Updated `~/.android_env.sh` to target OpenJDK 21.
+    - **Native Android Debug APK Compilation**:
+      * Compiled native debug APK via `source ~/.android_env.sh && ./gradlew assembleDebug` in `android/`.
+      * Result: `BUILD SUCCESSFUL` (214 actionable tasks executed).
+      * Verified output APK at `android/app/build/outputs/apk/debug/app-debug.apk`:
+        - Size: 8,133,039 bytes (7.8 MB)
+        - Timestamp: 2026-09-04 23:03:28 +0500
+        - Architecture: Android package (APK) with gradle app-metadata.properties
+
+* **Active File Changes:**
+  - `android/app/capacitor.build.gradle` [MODIFIED]
+  - `android/capacitor.settings.gradle` [MODIFIED]
+  - `~/.android_env.sh` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 database assertions passed.
+  - `npm run build`: Static export compiled cleanly into `out/` (28/28 routes).
+  - `assembleDebug`: Exit code 0 (214/214 tasks executed successfully).
+  - APK Artifact: `android/app/build/outputs/apk/debug/app-debug.apk` exists, size 8,133,039 bytes.
+
+* **Next Immediate Task:**
+  - Mobile device field testing and user acceptance validation of the newly compiled APK.
 
 
 

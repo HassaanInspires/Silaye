@@ -443,6 +443,11 @@
   * **Collapsible Administration (Staff & Notes)**: Collapsed Cutting Master, Stitching Craftsman, and Special Notes behind a single clean toggle button (`[+ کاریگر تفویض اور خصوصی ہدایات درج کریں / Staff Assignment & Notes]`) with live active dot indicator and added inline back button to Step 2.
   * **Docked Financial Settlement Bar & Clearance**: Activated the full financial summary bar on Step 3 (Total PKR in white, Advance Paid numeric input with gold text, Balance Due in rose-400) and primary glowing booking CTA `[✨ سوٹ بکنگ مکمل کریں اور پرچی بنائیں • Confirm & Book Suit]` (`h-13 min-h-[52px]` shadow-[0_0_25px_rgba(212,175,55,0.4)]) wired to `handleCreateOrder(false)` / `handleBookOrder`, with an explicit physical spacer (`h-36 w-full shrink-0`) preventing card clipping.
   * **Verification Suite**: 0 TypeScript compiler errors (`npx tsc --noEmit`), 159/159 database assertions passing (`scripts/verify_db.ts`), and 28/28 static export routes compiled into `out/` (`npm run build`).
+- [x] 21.3.4 Native Android Debug Release & Main Branch Integration:
+  * **Main Branch Integration**: Merged `feature/ergonomic-declutter` into `main` with `--no-ff` ("merge(mobile): integrate complete ergonomic declutter & counter-velocity booking wizard") and pushed to `origin/main`.
+  * **Full Production Verification Suite**: Validated TypeScript compilation (`npx tsc --noEmit` -> 0 errors), verified SQLite schema and migrations (`npx --yes tsx scripts/verify_db.ts` -> 159/159 assertions passing), and confirmed static Next.js App Router export (`npm run build` -> 28/28 routes in `out/`).
+  * **Capacitor Sync & Toolchain Provisioning**: Synchronized compiled static assets and plugins (`npx cap sync android`), provisioned OpenJDK 21 LTS (`~/.local/java/jdk-21`) to satisfy Gradle 8.14 and Capacitor 8's `jvmToolchain(21)` requirement, and updated `~/.android_env.sh`.
+  * **Native Debug APK Assembly**: Built native debug APK via `./gradlew assembleDebug` (214/214 actionable tasks executed successfully). Output artifact verified at `android/app/build/outputs/apk/debug/app-debug.apk` (8,133,039 bytes / 7.8MB).
 
 
 
