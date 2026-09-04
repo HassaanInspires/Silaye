@@ -247,19 +247,19 @@ export default function DashboardPage() {
         {/* MOBILE VIEWPORT ONLY (md:hidden)                                 */}
         {/* ================================================================ */}
         <div className="block md:hidden space-y-3">
-          {/* Block 1: 64px Glance Strip */}
-          <div className="h-16 rounded-2xl border border-white/10 bg-[#121418]/95 backdrop-blur-xl px-4 flex items-center justify-between shadow-md">
+          {/* Block 1: 64px Glance Strip with Luxury Top-Border Highlight */}
+          <div className="h-16 rounded-2xl border border-white/5 border-t border-t-white/10 bg-[#121418]/95 backdrop-blur-xl px-4 flex items-center justify-between shadow-lg">
             {/* Ready for Pickup */}
             <div className="flex items-center gap-2 min-w-0">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
                 <CheckCircle2 className="h-4 w-4" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-urdu-sans text-xs font-bold text-emerald-300 leading-tight truncate" dir="rtl">
+                <span className="font-urdu-sans text-[11px] font-bold text-emerald-300 leading-tight truncate" dir="rtl">
                   تیار سوٹ
                 </span>
-                <span className="font-mono text-xs font-bold text-white truncate">
-                  {readyOrders.length} Ready
+                <span className="font-mono text-base font-bold text-emerald-400 truncate leading-none mt-0.5">
+                  {readyOrders.length} <span className="text-[10px] font-medium text-emerald-300/70 font-sans">Ready</span>
                 </span>
               </div>
             </div>
@@ -272,11 +272,11 @@ export default function DashboardPage() {
                 <Scissors className="h-4 w-4" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-urdu-sans text-xs font-bold text-sky-300 leading-tight truncate" dir="rtl">
+                <span className="font-urdu-sans text-[11px] font-bold text-sky-300 leading-tight truncate" dir="rtl">
                   ورکشاپ جاری
                 </span>
-                <span className="font-mono text-xs font-bold text-white truncate">
-                  {inProgressCount} Active
+                <span className="font-mono text-base font-bold text-sky-400 truncate leading-none mt-0.5">
+                  {inProgressCount} <span className="text-[10px] font-medium text-sky-300/70 font-sans">Active</span>
                 </span>
               </div>
             </div>
@@ -289,11 +289,11 @@ export default function DashboardPage() {
                 <Wallet className="h-4 w-4" />
               </div>
               <div className="flex flex-col items-end min-w-0">
-                <span className="font-urdu-sans text-xs font-bold text-rose-300 leading-tight truncate" dir="rtl">
+                <span className="font-urdu-sans text-[11px] font-bold text-rose-300 leading-tight truncate" dir="rtl">
                   باقی ادھار
                 </span>
-                <span className="font-mono text-xs font-bold text-rose-400 truncate max-w-[85px]">
-                  Rs. {unsettledKhataTotal >= 10000 ? `${(unsettledKhataTotal / 1000).toFixed(1)}k` : unsettledKhataTotal.toLocaleString()}
+                <span className="font-mono text-base font-bold text-rose-400 truncate max-w-[90px] leading-none mt-0.5">
+                  Rs.{unsettledKhataTotal >= 10000 ? `${(unsettledKhataTotal / 1000).toFixed(1)}k` : unsettledKhataTotal.toLocaleString()}
                 </span>
               </div>
             </div>
@@ -359,15 +359,16 @@ export default function DashboardPage() {
             </div>
 
             {urgentOrders.length === 0 ? (
-              <div className="premium-glass-card p-6 border-white/10 text-center space-y-2.5 rounded-2xl bg-[#121418]">
-                <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto" />
-                <h4 className="text-sm font-semibold text-white font-urdu-sans">تمام شیڈول کلئیر ہے</h4>
-                <p className="text-xs text-gray-400">All Caught Up! No urgent suits due today.</p>
-                <a href="/orders/new" className="inline-block pt-1">
-                  <Button size="sm" className="h-10 px-4 text-xs font-bold bg-gold text-[#0B0C0E] hover:bg-gold-hover rounded-xl shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-                    <PlusCircle className="h-3.5 w-3.5 mr-1" /> نیا سوٹ بک کریں
-                  </Button>
-                </a>
+              <div className="p-5 rounded-2xl border border-white/5 bg-[#121418]/60 backdrop-blur-md text-center space-y-2 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <h4 className="text-sm font-semibold text-white font-urdu-serif leading-relaxed" dir="rtl">
+                  تمام شیڈول کلیئر ہے
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  All Caught Up! No urgent suits due today.
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
