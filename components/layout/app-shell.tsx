@@ -893,7 +893,9 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         <main
           className={cn(
             'flex-1 w-full overflow-y-auto overflow-x-hidden touch-pan-y overscroll-y-contain p-4 md:p-8 pb-safe',
-            navLayout === 'drawer' ? 'pb-8 md:pb-8' : 'pb-36 md:pb-8'
+            navLayout === 'drawer' || pathname?.startsWith('/orders/new') || activeRoute?.startsWith('/orders/new')
+              ? 'pb-8 md:pb-8'
+              : 'pb-36 md:pb-8'
           )}
           id="main-content"
         >
@@ -950,9 +952,12 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       </div>
 
       {/* Mobile Native Bottom Navigation Bar & FAB */}
-      {!isPublic && navLayout !== 'drawer' && (
-        <MobileBottomNav activeRoute={activeRoute || pathname} navLayout={navLayout} />
-      )}
+      {!isPublic &&
+        navLayout !== 'drawer' &&
+        !pathname?.startsWith('/orders/new') &&
+        !activeRoute?.startsWith('/orders/new') && (
+          <MobileBottomNav activeRoute={activeRoute || pathname} navLayout={navLayout} />
+        )}
     </div>
   );
 }

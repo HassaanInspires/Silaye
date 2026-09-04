@@ -21,6 +21,8 @@ import { cn } from '@/lib/utils';
 import { AppShell } from '@/components/layout/app-shell';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PIPELINE_COLUMNS } from '@/components/tailor/pipeline-board';
+import { getDeliveryUrgency } from '@/components/tailor/order-card';
 import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal';
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
 import { ordersDb, customersDb, shopsDb } from '@/lib/db';
@@ -192,297 +194,241 @@ export default function DashboardPage() {
     }
   };
 
+  // Advance order to next stage in pipeline for mobile feed
+  const handleSingleOrderAdvance = (orderId: string) => {
+    const currentOrder = orders.find((o) => o.id === orderId);
+    if (!currentOrder || currentOrder.status === 'COMPLETED') return;
+
+    const currentCol = PIPELINE_COLUMNS.find((col) =>
+      col.statuses.includes(currentOrder.status)
+    );
+    if (!currentCol) return;
+
+    const nextStatus = currentCol.nextStatus;
+    if (nextStatus === currentOrder.status) return;
+
+    const updatedOrder: GarmentOrder = {
+      ...currentOrder,
+      status: nextStatus,
+      actual_delivery_date:
+        nextStatus === 'COMPLETED' ? new Date().toISOString() : currentOrder.actual_delivery_date,
+      updated_at: new Date().toISOString(),
+    };
+
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? updatedOrder : o))
+    );
+
+    // Persist status change
+    ordersDb.updateStatus(orderId, nextStatus).catch((err) => {
+      console.warn('Failed to persist status change:', err);
+    });
+  };
+
+  const getNextStatusInfo = (currentStatus: OrderStatus) => {
+    const currentCol = PIPELINE_COLUMNS.find((col) =>
+      col.statuses.includes(currentStatus)
+    );
+    if (!currentCol || currentCol.nextStatus === currentStatus || currentStatus === 'COMPLETED') {
+      return null;
+    }
+    const nextCol = PIPELINE_COLUMNS.find((col) => col.statuses.includes(currentCol.nextStatus));
+    return {
+      nextStatus: currentCol.nextStatus,
+      labelUrdu: nextCol ? `${nextCol.labelUrdu} →` : 'اگلا مرحلہ →',
+      labelEn: nextCol ? nextCol.label : 'Advance',
+    };
+  };
+
   return (
     <AppShell activeRoute="/dashboard">
       <div className="space-y-6 max-w-7xl mx-auto">
         {/* ================================================================ */}
         {/* MOBILE VIEWPORT ONLY (md:hidden)                                 */}
         {/* ================================================================ */}
-        <div className="block md:hidden space-y-4">
-          {/* 1. Mobile Greeting Card */}
-          <div className="premium-glass-card p-4 border-gold/25 bg-gradient-to-br from-gold/15 via-[#121418] to-transparent relative overflow-hidden shadow-[0_0_25px_rgba(212,175,55,0.1)]">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] text-emerald-400 font-semibold">
-                    آن لائن • Live Sync
-                  </span>
-                </div>
-                <h1 className="font-urdu-serif text-xl font-bold text-white tracking-tight leading-urdu-display pt-0.5" dir="rtl">
-                  السلام علیکم، ماسٹر صاحب
-                </h1>
-                <p className="text-xs text-gray-300 font-medium truncate max-w-[220px]">
-                  {shop?.name || 'Master Workshop Counter'}
-                </p>
+        <div className="block md:hidden space-y-3">
+          {/* Block 1: 64px Glance Strip with Luxury Top-Border Highlight */}
+          <div className="h-16 rounded-2xl border border-white/5 border-t border-t-white/10 bg-[#121418]/95 backdrop-blur-xl px-4 flex items-center justify-between shadow-lg">
+            {/* Ready for Pickup */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
+                <CheckCircle2 className="h-4 w-4" />
               </div>
-
-              <div className="flex flex-col items-end gap-1.5 shrink-0">
-                <span className="text-[10px] text-gray-400 font-mono">
-                  {new Date().toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
+              <div className="flex flex-col min-w-0">
+                <span className="font-urdu-sans text-[11px] font-bold text-emerald-300 leading-tight truncate" dir="rtl">
+                  تیار سوٹ
                 </span>
-                <a href="/orders/new">
-                  <Button
-                    size="sm"
-                    className="h-8 px-2.5 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_15px_rgba(212,175,55,0.25)] text-xs gap-1"
-                  >
-                    <PlusCircle className="h-3.5 w-3.5" />
-                    <span>سوٹ بک کریں</span>
-                  </Button>
-                </a>
+                <span className="font-mono text-base font-bold text-emerald-400 truncate leading-none mt-0.5">
+                  {readyOrders.length} <span className="text-[10px] font-medium text-emerald-300/70 font-sans">Ready</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="h-7 w-px bg-white/10 shrink-0 mx-1" />
+
+            {/* Suits in Progress */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 shrink-0">
+                <Scissors className="h-4 w-4" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="font-urdu-sans text-[11px] font-bold text-sky-300 leading-tight truncate" dir="rtl">
+                  ورکشاپ جاری
+                </span>
+                <span className="font-mono text-base font-bold text-sky-400 truncate leading-none mt-0.5">
+                  {inProgressCount} <span className="text-[10px] font-medium text-sky-300/70 font-sans">Active</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="h-7 w-px bg-white/10 shrink-0 mx-1" />
+
+            {/* Total Udhaar Collectible */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 shrink-0">
+                <Wallet className="h-4 w-4" />
+              </div>
+              <div className="flex flex-col items-end min-w-0">
+                <span className="font-urdu-sans text-[11px] font-bold text-rose-300 leading-tight truncate" dir="rtl">
+                  باقی ادھار
+                </span>
+                <span className="font-mono text-base font-bold text-rose-400 truncate max-w-[90px] leading-none mt-0.5">
+                  Rs.{unsettledKhataTotal >= 10000 ? `${(unsettledKhataTotal / 1000).toFixed(1)}k` : unsettledKhataTotal.toLocaleString()}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* 2. 2x2 High-Contrast KPI Grid */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {/* Card 1: Due Today (آج کی ڈیلیوری - Amber) */}
-            <div className="premium-glass-card p-3 border-amber-500/30 bg-gradient-to-br from-amber-500/15 via-[#121418] to-transparent relative overflow-hidden">
-              <div className="flex items-center justify-between pb-1.5">
-                <div className="flex flex-col">
-                  <span className="font-urdu-sans text-xs font-bold text-amber-300" dir="rtl">
-                    آج کی ڈیلیوری
-                  </span>
-                  <span className="text-[9px] uppercase tracking-wider text-amber-400/70 font-semibold">
-                    Due Today
-                  </span>
-                </div>
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/20 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-                  <Clock className="h-3.5 w-3.5 animate-pulse" />
-                </div>
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-xl font-bold text-amber-300 font-mono">
-                  <bdi dir="ltr">{dueTodayOrders.length}</bdi>{' '}
-                  <span className="text-[11px] font-urdu-sans font-normal text-amber-400/80">سوٹ</span>
-                </div>
-                <div className="text-[10px] text-gray-400 flex items-center justify-between pt-1 border-t border-white/5">
-                  <span>Due Value</span>
-                  <span className="font-mono font-semibold text-amber-300">
-                    Rs. {dueTodayValue.toLocaleString()}
+          {/* Block 2: Two 56px Thumb Buttons */}
+          <div className="grid grid-cols-2 gap-2.5 mt-3">
+            {/* Primary Gold: Book New Suit */}
+            <a href="/orders/new" className="block">
+              <button
+                type="button"
+                className="w-full h-14 rounded-2xl bg-gold hover:bg-gold-hover text-[#0B0C0E] font-bold shadow-[0_0_20px_rgba(212,175,55,0.25)] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 cursor-pointer"
+              >
+                <div className="flex items-center gap-1.5">
+                  <PlusCircle className="h-4 w-4 text-[#0B0C0E] shrink-0" />
+                  <span className="font-urdu-sans text-xs font-bold leading-tight" dir="rtl">
+                    نیا سوٹ بک کریں
                   </span>
                 </div>
-              </div>
-            </div>
-
-            {/* Card 2: In Progress (ورکشاپ سلائی - Sky/Blue) */}
-            <div className="premium-glass-card p-3 border-sky-500/30 bg-gradient-to-br from-sky-500/15 via-[#121418] to-transparent relative overflow-hidden">
-              <div className="flex items-center justify-between pb-1.5">
-                <div className="flex flex-col">
-                  <span className="font-urdu-sans text-xs font-bold text-sky-300" dir="rtl">
-                    ورکشاپ سلائی
-                  </span>
-                  <span className="text-[9px] uppercase tracking-wider text-sky-400/70 font-semibold">
-                    In Progress
-                  </span>
-                </div>
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-sky-500/30 bg-sky-500/20 text-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.2)]">
-                  <Scissors className="h-3.5 w-3.5" />
-                </div>
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-xl font-bold text-sky-300 font-mono">
-                  <bdi dir="ltr">{inProgressCount}</bdi>{' '}
-                  <span className="text-[11px] font-urdu-sans font-normal text-sky-400/80">جاری</span>
-                </div>
-                <div className="text-[10px] text-gray-400 flex items-center justify-between pt-1 border-t border-white/5">
-                  <span className="truncate">{inCutCount} کٹنگ</span>
-                  <span className="font-mono text-sky-300">{inStitchCount} سلائی</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Ready for Pickup (تیار سوٹ - Emerald) */}
-            <div className="premium-glass-card p-3 border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-[#121418] to-transparent relative overflow-hidden">
-              <div className="flex items-center justify-between pb-1.5">
-                <div className="flex flex-col">
-                  <span className="font-urdu-sans text-xs font-bold text-emerald-300" dir="rtl">
-                    تیار سوٹ
-                  </span>
-                  <span className="text-[9px] uppercase tracking-wider text-emerald-400/70 font-semibold">
-                    Ready
-                  </span>
-                </div>
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.2)]">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                </div>
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-xl font-bold text-emerald-300 font-mono">
-                  <bdi dir="ltr">{readyOrders.length}</bdi>{' '}
-                  <span className="text-[11px] font-urdu-sans font-normal text-emerald-400/80">تیار</span>
-                </div>
-                <div className="text-[10px] text-gray-400 flex items-center justify-between pt-1 border-t border-white/5">
-                  <span>ڈلیوری تیار</span>
-                  <span className="font-mono text-emerald-400">Ready</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 4: Udhaar Balance (باقی ادھار - Rose) */}
-            <div className="premium-glass-card p-3 border-rose-500/30 bg-gradient-to-br from-rose-500/15 via-[#121418] to-transparent relative overflow-hidden">
-              <div className="flex items-center justify-between pb-1.5">
-                <div className="flex flex-col">
-                  <span className="font-urdu-sans text-xs font-bold text-rose-300" dir="rtl">
-                    باقی ادھار
-                  </span>
-                  <span className="text-[9px] uppercase tracking-wider text-rose-400/70 font-semibold">
-                    Pending Khata
-                  </span>
-                </div>
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/20 text-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.2)]">
-                  <Wallet className="h-3.5 w-3.5" />
-                </div>
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-lg font-bold text-rose-300 font-mono truncate">
-                  <bdi dir="ltr">Rs. {unsettledKhataTotal.toLocaleString()}</bdi>
-                </div>
-                <div className="text-[10px] text-gray-400 flex items-center justify-between pt-1 border-t border-white/5">
-                  <span>{debtorsCount} گاہک</span>
-                  <a href="/khata" className="text-gold hover:underline">
-                    کھاتہ →
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Quick Action Chips */}
-          <div className="grid grid-cols-2 gap-2">
-            <a
-              href="/orders"
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#121418] p-2.5 text-xs text-gray-200 hover:border-gold/30 active:scale-95 transition-all shadow-sm"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-gold shrink-0">
-                <Search className="h-3.5 w-3.5" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-white truncate">تلاش کریں</span>
-                <span className="text-[10px] text-gray-400 truncate">Search Queue</span>
-              </div>
+                <span className="text-[10px] font-semibold text-[#0B0C0E]/85">
+                  + Book New Suit
+                </span>
+              </button>
             </a>
 
-            <a
-              href="/khata"
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#121418] p-2.5 text-xs text-gray-200 hover:border-gold/30 active:scale-95 transition-all shadow-sm"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400 shrink-0">
-                <Wallet className="h-3.5 w-3.5" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-white truncate">کھاتہ رجسٹر</span>
-                <span className="text-[10px] text-gray-400 truncate">Khata Ledger</span>
-              </div>
-            </a>
-
-            <a
-              href="/print"
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#121418] p-2.5 text-xs text-gray-200 hover:border-gold/30 active:scale-95 transition-all shadow-sm"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400 shrink-0">
-                <Printer className="h-3.5 w-3.5" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-white truncate">ٹیگ پرنٹ</span>
-                <span className="text-[10px] text-gray-400 truncate">Reprint Tags</span>
-              </div>
-            </a>
-
-            <a
-              href="/orders/new"
-              className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/10 p-2.5 text-xs text-gold hover:bg-gold/20 active:scale-95 transition-all shadow-sm"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold text-[#0B0C0E] font-bold shrink-0">
-                <PlusCircle className="h-4 w-4" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-gold truncate">نیا سوٹ</span>
-                <span className="text-[10px] text-amber-200/80 truncate">Book Order</span>
-              </div>
+            {/* Glass Outline: Search Parchi */}
+            <a href="/orders" className="block">
+              <button
+                type="button"
+                className="w-full h-14 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 text-white font-semibold shadow-sm active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 backdrop-blur-md cursor-pointer"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Search className="h-4 w-4 text-gold shrink-0" />
+                  <span className="font-urdu-sans text-xs font-bold leading-tight text-white" dir="rtl">
+                    گاہک و پرچی تلاش
+                  </span>
+                </div>
+                <span className="text-[10px] text-gray-400 font-medium">
+                  Search Parchi
+                </span>
+              </button>
             </a>
           </div>
 
-          {/* 4. Horizontal Urgent Deliveries Carousel */}
-          <div className="space-y-2.5">
+          {/* Block 3: Vertical Urgent Deliveries Feed */}
+          <div className="space-y-3 mt-4">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
                 <span className="font-urdu-serif text-sm font-bold text-white" dir="rtl">
                   فوری ترسیلات
                 </span>
                 <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold text-amber-300">
-                  Urgent
+                  Urgent Deliveries
                 </span>
               </div>
               <a
                 href="/orders"
-                className="inline-flex items-center gap-1 text-xs text-gold font-medium hover:underline"
+                className="inline-flex items-center gap-1 text-xs text-gold font-medium h-10 px-3 rounded-xl border border-gold/20 bg-gold/5 hover:bg-gold/15 transition-colors"
               >
                 <span>تمام آرڈرز</span>
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </a>
             </div>
 
             {urgentOrders.length === 0 ? (
-              <div className="premium-glass-card p-6 border-white/10 text-center space-y-2">
-                <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto" />
-                <h4 className="text-xs font-semibold text-white">آج کوئی فوری ڈلیوری نہیں ہے</h4>
-                <p className="text-[11px] text-gray-400">تمام شیڈول کلئیر ہے۔ نیا آرڈر بک کریں۔</p>
-                <a href="/orders/new" className="inline-block pt-1">
-                  <Button size="sm" variant="outline" className="text-xs border-gold/30 text-gold bg-gold/5">
-                    <PlusCircle className="h-3 w-3 mr-1" /> نیا سوٹ بک کریں
-                  </Button>
-                </a>
+              <div className="p-5 rounded-2xl border border-white/5 bg-[#121418]/60 backdrop-blur-md text-center space-y-2 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <h4 className="text-sm font-semibold text-white font-urdu-serif leading-relaxed" dir="rtl">
+                  تمام شیڈول کلیئر ہے
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  All Caught Up! No urgent suits due today.
+                </p>
               </div>
             ) : (
-              <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none touch-pan-x -mx-4 px-4">
+              <div className="space-y-3">
                 {urgentOrders.map((order) => {
                   const customer = customerMap.get(order.customer_id);
                   const isDueToday = order.delivery_date === todayStr;
                   const garmentName =
                     GARMENT_DISPLAY_NAMES[order.garment_type] || order.garment_type;
+                  const urgencyInfo = getDeliveryUrgency(order.delivery_date);
+                  const nextInfo = getNextStatusInfo(order.status);
+                  const stageConfig = STAGE_BADGE_CONFIG[order.status] || {
+                    label: order.status,
+                    labelUrdu: '',
+                    variant: 'status-booked',
+                  };
 
                   return (
                     <div
                       key={order.id}
-                      className="w-[280px] shrink-0 snap-start premium-glass-card p-3.5 border-white/10 bg-[#121418] hover:border-gold/30 space-y-2.5 shadow-lg"
+                      className="premium-glass-card p-3.5 border-white/10 bg-[#121418] hover:border-gold/30 space-y-3 rounded-2xl shadow-lg transition-all"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-bold text-gold">
-                          #{order.order_number}
+                      {/* Top Row: Customer name, Order #, Due Date Urgency Badge */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-white truncate">
+                              {customer?.full_name || 'Walk-in Customer'}
+                            </span>
+                            <span className="font-mono text-xs font-bold text-gold shrink-0">
+                              #{order.order_number}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-gray-400 font-mono">
+                            {customer?.phone || 'No phone'}
+                          </div>
+                        </div>
+
+                        <span
+                          className={cn(
+                            'shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-full border font-mono',
+                            urgencyInfo.urgency === 'critical' || isDueToday
+                              ? 'border-amber-500/40 bg-amber-500/15 text-amber-300 animate-pulse'
+                              : order.delivery_date < todayStr
+                              ? 'border-rose-500/40 bg-rose-500/15 text-rose-300'
+                              : 'border-white/10 bg-white/5 text-gray-300'
+                          )}
+                        >
+                          {isDueToday ? 'آج کی ڈلیوری' : order.delivery_date}
                         </span>
-                        <div className="flex items-center gap-1">
-                          <span
-                            className={cn(
-                              'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-                              isDueToday
-                                ? 'border-amber-500/40 bg-amber-500/15 text-amber-300'
-                                : 'border-rose-500/40 bg-rose-500/15 text-rose-300'
-                            )}
-                          >
-                            {isDueToday ? 'آج کی ڈلیوری' : order.delivery_date}
-                          </span>
-                        </div>
                       </div>
 
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-sm text-white truncate">
-                          {customer?.full_name || 'Walk-in Customer'}
-                        </div>
-                        <div className="text-[11px] text-gray-400 font-mono">
-                          {customer?.phone || 'No phone'}
-                        </div>
-                        <div className="text-xs text-gray-300 font-medium truncate pt-0.5">
-                          {order.quantity}x {garmentName} • {order.fabric_color || 'کپڑا'}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-gray-400">باقی رقم</span>
+                      {/* Specs & Stage / Balance Row */}
+                      <div className="flex items-center justify-between text-xs py-1.5 px-3 rounded-xl bg-white/[0.02] border border-white/5">
+                        <span className="text-gray-200 font-medium truncate">
+                          <bdi dir="ltr">{order.quantity}×</bdi> {garmentName} • {order.fabric_color || 'کپڑا'}
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge variant={stageConfig.variant} className="text-[10px] px-2 py-0.5">
+                            {stageConfig.label}
+                          </Badge>
                           <span
                             className={cn(
                               'font-mono text-xs font-bold',
@@ -492,32 +438,48 @@ export default function DashboardPage() {
                             {order.balance_due === 0 ? 'Paid' : `Rs. ${order.balance_due.toLocaleString()}`}
                           </span>
                         </div>
+                      </div>
 
-                        <div className="flex items-center gap-1.5">
+                      {/* Action Buttons: 1-Tap WhatsApp, Print, and 1-Tap Advance */}
+                      <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                        {/* 1-Tap WhatsApp Receipt/Alert Button (min 44px) */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenWhatsApp(order)}
+                          title="WhatsApp Alert"
+                          className="h-11 min-h-[44px] px-3.5 flex-1 rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 active:scale-95 transition-all text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <MessageSquare className="h-4 w-4 shrink-0" />
+                          <span>رسید / WhatsApp</span>
+                        </button>
+
+                        {/* 1-Tap Print Button (min 44px) */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPrint(order)}
+                          title="Print Tag"
+                          className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:text-white flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer"
+                        >
+                          <Printer className="h-4 w-4" />
+                        </button>
+
+                        {/* 1-Tap Next Stage Advancement Button (min 44px) */}
+                        {nextInfo ? (
                           <button
                             type="button"
-                            onClick={() => handleOpenWhatsApp(order)}
-                            title="WhatsApp Alert"
-                            className="flex h-8 px-2.5 items-center justify-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 text-xs font-semibold"
+                            onClick={() => handleSingleOrderAdvance(order.id)}
+                            title={`Advance to ${nextInfo.labelEn}`}
+                            className="h-11 min-h-[44px] px-3.5 flex-1 rounded-xl border border-gold/30 bg-gold/15 text-gold hover:bg-gold/25 active:scale-95 transition-all text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
                           >
-                            <MessageSquare className="h-3.5 w-3.5" />
-                            <span>پیغام</span>
+                            <span className="font-urdu-sans">{nextInfo.labelUrdu}</span>
+                            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenPrint(order)}
-                            title="Print Tag"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white"
-                          >
-                            <Printer className="h-3.5 w-3.5" />
-                          </button>
-                          <a
-                            href="/orders"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gold/30 bg-gold/10 text-gold hover:bg-gold/20"
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </a>
-                        </div>
+                        ) : (
+                          <div className="h-11 min-h-[44px] px-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-semibold flex items-center justify-center gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span>مکمل شدہ</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

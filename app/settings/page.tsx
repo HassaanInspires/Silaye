@@ -1102,7 +1102,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell activeRoute="/settings">
-      <div className="space-y-8 max-w-7xl mx-auto">
+      <div className="space-y-8 max-w-7xl mx-auto pb-44 pb-safe">
         {/* Top Header & Context */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
           <div>
@@ -1114,7 +1114,7 @@ export default function SettingsPage() {
                 <h1 className="font-editorial text-2xl sm:text-3xl font-medium tracking-tight text-white">
                   Workshop Settings
                 </h1>
-                <p className="font-urdu-serif text-sm text-gold/80 -mt-0.5" dir="rtl">
+                <p className="font-urdu-serif text-sm text-gold/80 -mt-0.5 leading-relaxed py-1" dir="rtl">
                   ورکشاپ پروفائل اور عملہ کی ترتیبات
                 </p>
               </div>
@@ -1176,7 +1176,7 @@ export default function SettingsPage() {
           >
             <Building2 className="h-4 w-4" />
             <span>Workshop Profile</span>
-            <span className="font-urdu-sans text-[11px] opacity-70">(ورکشاپ پروفائل)</span>
+            <span className="font-urdu-serif text-[11px] opacity-70 leading-relaxed py-1">(ورکشاپ پروفائل)</span>
           </button>
 
           <button
@@ -1190,7 +1190,7 @@ export default function SettingsPage() {
           >
             <Users className="h-4 w-4" />
             <span>Staff & Roles</span>
-            <span className="font-urdu-sans text-[11px] opacity-70">(کاریگر اور عملہ)</span>
+            <span className="font-urdu-serif text-[11px] opacity-70 leading-relaxed py-1">(کاریگر اور عملہ)</span>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
               {staffMembers.length}
             </span>
@@ -1207,7 +1207,7 @@ export default function SettingsPage() {
           >
             <Scissors className="h-4 w-4" />
             <span>Catalog & Rates</span>
-            <span className="font-urdu-sans text-[11px] opacity-70">(ریٹ لسٹ)</span>
+            <span className="font-urdu-serif text-[11px] opacity-70 leading-relaxed py-1">(ریٹ لسٹ)</span>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
               {garmentRates.filter((r) => r.is_active).length}/{garmentRates.length || 6}
             </span>
@@ -1224,7 +1224,7 @@ export default function SettingsPage() {
           >
             <Printer className="h-4 w-4" />
             <span>Thermal Printer</span>
-            <span className="font-urdu-sans text-[11px] opacity-70">(پرنٹر)</span>
+            <span className="font-urdu-serif text-[11px] opacity-70 leading-relaxed py-1">(پرنٹر)</span>
           </button>
 
           <button
@@ -1238,7 +1238,7 @@ export default function SettingsPage() {
           >
             <CreditCard className="h-4 w-4" />
             <span>Billing & Subscriptions</span>
-            <span className="font-urdu-sans text-[11px] opacity-70">(بلنگ اور سبسکرپشن)</span>
+            <span className="font-urdu-serif text-[11px] opacity-70 leading-relaxed py-1">(بلنگ اور سبسکرپشن)</span>
             <span
               className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full border ${
                 shop.plan_tier === 'PRO'
@@ -1277,7 +1277,7 @@ export default function SettingsPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                       <span>Workshop / Shop Name</span>
-                      <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                      <span className="font-urdu-serif text-[11px] text-gold/80 leading-relaxed py-1" dir="rtl">
                         دکان / ورکشاپ کا نام
                       </span>
                     </label>
@@ -1295,7 +1295,7 @@ export default function SettingsPage() {
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                         <span>Primary Phone</span>
-                        <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                        <span className="font-urdu-serif text-[11px] text-gold/80 leading-relaxed py-1" dir="rtl">
                           بنیادی فون نمبر
                         </span>
                       </label>
@@ -1313,7 +1313,7 @@ export default function SettingsPage() {
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                         <span>Secondary / Counter Phone</span>
-                        <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                        <span className="font-urdu-serif text-[11px] text-gold/80 leading-relaxed py-1" dir="rtl">
                           کاؤنٹر فون نمبر
                         </span>
                       </label>
@@ -1349,7 +1349,7 @@ export default function SettingsPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                       <span>Physical Address</span>
-                      <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                      <span className="font-urdu-serif text-[11px] text-gold/80 leading-relaxed py-1" dir="rtl">
                         ورکشاپ کا پتہ
                       </span>
                     </label>
@@ -1367,7 +1367,7 @@ export default function SettingsPage() {
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                         <span>City</span>
-                        <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                        <span className="font-urdu-serif text-[11px] text-gold/80 leading-relaxed py-1" dir="rtl">
                           شہر
                         </span>
                       </label>
@@ -1383,7 +1383,7 @@ export default function SettingsPage() {
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                         <span>Tax / NTN Number</span>
-                        <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                        <span className="font-urdu-serif text-[11px] text-gold/80 leading-relaxed py-1" dir="rtl">
                           این ٹی این نمبر
                         </span>
                       </label>
@@ -1419,7 +1419,7 @@ export default function SettingsPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                       <span>Receipt Header Note</span>
-                      <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                      <span className="font-urdu-serif text-[11px] text-gold/80 leading-relaxed py-1" dir="rtl">
                         رسید کے اوپر کا پیغام
                       </span>
                     </label>
@@ -1435,7 +1435,7 @@ export default function SettingsPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                       <span>Receipt Footer Note & Policy</span>
-                      <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                      <span className="font-urdu-serif text-[11px] text-gold/80 leading-relaxed py-1" dir="rtl">
                         رسید کے نیچے کا پیغام و شرائط
                       </span>
                     </label>
@@ -1517,7 +1517,7 @@ export default function SettingsPage() {
                           <span className="text-sm font-semibold text-white">
                             Modern Tabs + Action Button
                           </span>
-                          <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                          <span className="font-urdu-serif text-xs text-gold leading-relaxed py-1" dir="rtl">
                             ماڈرن باٹم ٹیبز
                           </span>
                           <Badge variant="outline" className="text-[10px] text-gold border-gold/30 bg-gold/5 py-0 px-1.5">
@@ -1527,7 +1527,7 @@ export default function SettingsPage() {
                         <p className="text-xs text-gray-400 leading-relaxed">
                           4 Tabs + Center Gold FAB for 1-thumb use. Clean minimal top header without menu clutter.
                         </p>
-                        <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                        <p className="font-urdu-serif text-[11px] text-gray-400 leading-relaxed py-1" dir="rtl">
                           4 باٹم ٹیبز اور درمیان میں گولڈ نیا سوٹ بٹن — ایک ہاتھ اور انگوٹھے سے تیز رفتار استعمال کے لیے۔
                         </p>
                       </div>
@@ -1569,7 +1569,7 @@ export default function SettingsPage() {
                           <span className="text-sm font-semibold text-white">
                             Classic Drawer Only
                           </span>
-                          <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                          <span className="font-urdu-serif text-xs text-gold leading-relaxed py-1" dir="rtl">
                             کلاسک ڈراور
                           </span>
                           <Badge variant="outline" className="text-[10px] text-cyan-300 border-cyan-500/30 bg-cyan-500/5 py-0 px-1.5">
@@ -1579,7 +1579,7 @@ export default function SettingsPage() {
                         <p className="text-xs text-gray-400 leading-relaxed">
                           Fullscreen view with top hamburger menu. Hides the bottom bar to maximize vertical space.
                         </p>
-                        <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                        <p className="font-urdu-serif text-[11px] text-gray-400 leading-relaxed py-1" dir="rtl">
                           مکمل فل سکرین ویو اور اوپر ہیمبرگر مینو — باٹم بار چھپا کر ڈیٹا کے لیے زیادہ جگہ فراہم کرتا ہے۔
                         </p>
                       </div>
@@ -1621,7 +1621,7 @@ export default function SettingsPage() {
                           <span className="text-sm font-semibold text-white">
                             Hybrid Master
                           </span>
-                          <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                          <span className="font-urdu-serif text-xs text-gold leading-relaxed py-1" dir="rtl">
                             ہائبرڈ ماسٹر
                           </span>
                           <Badge variant="outline" className="text-[10px] text-amber-300 border-amber-500/30 bg-amber-500/5 py-0 px-1.5">
@@ -1631,7 +1631,7 @@ export default function SettingsPage() {
                         <p className="text-xs text-gray-400 leading-relaxed">
                           Bottom tabs + Top hamburger drawer. Access quick counter shortcuts and full slide-out sidebar simultaneously.
                         </p>
-                        <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                        <p className="font-urdu-serif text-[11px] text-gray-400 leading-relaxed py-1" dir="rtl">
                           باٹم ٹیبز اور اوپر ہیمبرگر ڈراور دونوں بیک وقت فعال — فوری بکنگ اور مکمل مینو دونوں دستیاب۔
                         </p>
                       </div>
@@ -1680,7 +1680,7 @@ export default function SettingsPage() {
                         <span className="text-sm font-semibold text-white">
                           Morning Delivery Briefing
                         </span>
-                        <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                        <span className="font-urdu-serif text-xs text-gold leading-relaxed py-1" dir="rtl">
                           صبح 9:00 بجے ڈیلیوری الرٹ
                         </span>
                         <Badge variant="outline" className="text-[10px] text-amber-300 border-amber-500/30 bg-amber-500/5 py-0 px-1.5">
@@ -1690,7 +1690,7 @@ export default function SettingsPage() {
                       <p className="text-xs text-gray-400 leading-relaxed">
                         Automated morning briefing summarizing all garments scheduled for delivery today.
                       </p>
-                      <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                      <p className="font-urdu-serif text-[11px] text-gray-400 leading-relaxed py-1" dir="rtl">
                         روزانہ صبح 9:00 بجے آج ڈیلیور ہونے والے تمام سوٹوں کی سمری اور الرٹ وصول کریں۔
                       </p>
                     </div>
@@ -1735,7 +1735,7 @@ export default function SettingsPage() {
                         <span className="text-sm font-semibold text-white">
                           Urgent Due Date Warnings
                         </span>
-                        <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                        <span className="font-urdu-serif text-xs text-gold leading-relaxed py-1" dir="rtl">
                           24 گھنٹے پہلے فوری وارننگ
                         </span>
                         <Badge variant="outline" className="text-[10px] text-rose-300 border-rose-500/30 bg-rose-500/5 py-0 px-1.5">
@@ -1745,7 +1745,7 @@ export default function SettingsPage() {
                       <p className="text-xs text-gray-400 leading-relaxed">
                         High-priority alerts when an in-production suit is due within 24 hours or overdue.
                       </p>
-                      <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                      <p className="font-urdu-serif text-[11px] text-gray-400 leading-relaxed py-1" dir="rtl">
                         جب کوئی زیرِ تکمیل سوٹ 24 گھنٹے کے اندر ڈیلیور ہونا ہو یا تاخیر کا شکار ہو تو فوری وارننگ وصول کریں۔
                       </p>
                     </div>
@@ -1790,7 +1790,7 @@ export default function SettingsPage() {
                         <span className="text-sm font-semibold text-white">
                           Sound & Vibration
                         </span>
-                        <span className="font-urdu-sans text-xs text-gold" dir="rtl">
+                        <span className="font-urdu-serif text-xs text-gold leading-relaxed py-1" dir="rtl">
                           آواز اور وائبریشن
                         </span>
                         <Badge variant="outline" className="text-[10px] text-cyan-300 border-cyan-500/30 bg-cyan-500/5 py-0 px-1.5">
@@ -1800,7 +1800,7 @@ export default function SettingsPage() {
                       <p className="text-xs text-gray-400 leading-relaxed">
                         Play workshop acoustic chime and trigger device vibration when alerts arrive.
                       </p>
-                      <p className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                      <p className="font-urdu-serif text-[11px] text-gray-400 leading-relaxed py-1" dir="rtl">
                         الرٹس موصول ہونے پر مخصوص آواز اور وائبریشن بجائیں۔
                       </p>
                     </div>
@@ -2027,7 +2027,7 @@ export default function SettingsPage() {
                     <Users className="h-5 w-5" />
                   </div>
                 </div>
-                <p className="text-[11px] text-gold/80 font-urdu-sans mt-2" dir="rtl">
+                <p className="text-[11px] text-gold/80 font-urdu-serif leading-relaxed py-1 mt-2" dir="rtl">
                   کل کاریگر و ورکشاپ عملہ
                 </p>
               </Card>
@@ -2044,7 +2044,7 @@ export default function SettingsPage() {
                     <Scissors className="h-5 w-5" />
                   </div>
                 </div>
-                <p className="text-[11px] text-amber-300/80 font-urdu-sans mt-2" dir="rtl">
+                <p className="text-[11px] text-amber-300/80 font-urdu-serif leading-relaxed py-1 mt-2" dir="rtl">
                   ماسٹر کٹر / کٹائی ماسٹر
                 </p>
               </Card>
@@ -2061,7 +2061,7 @@ export default function SettingsPage() {
                     <Sparkles className="h-5 w-5" />
                   </div>
                 </div>
-                <p className="text-[11px] text-cyan-300/80 font-urdu-sans mt-2" dir="rtl">
+                <p className="text-[11px] text-cyan-300/80 font-urdu-serif leading-relaxed py-1 mt-2" dir="rtl">
                   درزی / سلائی کاریگر
                 </p>
               </Card>
@@ -2078,7 +2078,7 @@ export default function SettingsPage() {
                     <Store className="h-5 w-5" />
                   </div>
                 </div>
-                <p className="text-[11px] text-emerald-300/80 font-urdu-sans mt-2" dir="rtl">
+                <p className="text-[11px] text-emerald-300/80 font-urdu-serif leading-relaxed py-1 mt-2" dir="rtl">
                   کاؤنٹر کلرک و پریس مین
                 </p>
               </Card>
@@ -2137,7 +2137,7 @@ export default function SettingsPage() {
               >
                 <UserPlus className="h-4 w-4" />
                 <span>Add Staff Member</span>
-                <span className="font-urdu-sans text-xs opacity-80">(نیا کاریگر)</span>
+                <span className="font-urdu-serif leading-relaxed py-1 text-xs opacity-80">(نیا کاریگر)</span>
               </Button>
             </div>
 
@@ -2157,7 +2157,7 @@ export default function SettingsPage() {
                         Upgrade to Pro to add unlimited Cutting Masters &amp; Stitchers
                       </span>
                     </div>
-                    <p className="font-urdu-sans text-xs text-gold/90 mt-1" dir="rtl">
+                    <p className="font-urdu-serif leading-relaxed py-1 text-xs text-gold/90 mt-1" dir="rtl">
                       مفت پلان پر صرف 1 کاریگر کی حد ہے۔ لامحدود ماسٹر کٹر اور درزی شامل کرنے کے لیے پرو ورکشاپ میں اپ گریڈ کریں۔
                     </p>
                   </div>
@@ -2299,7 +2299,7 @@ export default function SettingsPage() {
                                 <RoleIcon className="h-3.5 w-3.5" />
                                 <span>{meta.label}</span>
                               </div>
-                              <p className="font-urdu-sans text-[11px] text-gray-400 mt-0.5" dir="rtl">
+                              <p className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gray-400 mt-0.5" dir="rtl">
                                 {meta.urLabel}
                               </p>
                             </div>
@@ -2339,7 +2339,7 @@ export default function SettingsPage() {
                 <span>
                   Showing <bdi dir="ltr">{filteredStaff.length}</bdi> of <bdi dir="ltr">{staffMembers.length}</bdi> staff members
                 </span>
-                <span className="font-urdu-sans text-[11px] text-gold/70" dir="rtl">
+                <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gold/70" dir="rtl">
                   تمام کاریگر کٹائی اور سلائی آرڈرز تفویض کے لیے دستیاب ہیں۔
                 </span>
               </CardFooter>
@@ -2377,7 +2377,7 @@ export default function SettingsPage() {
                     <Scissors className="h-5 w-5" />
                   </div>
                 </div>
-                <p className="text-[11px] text-gold/80 font-urdu-sans mt-2" dir="rtl">
+                <p className="text-[11px] text-gold/80 font-urdu-serif leading-relaxed py-1 mt-2" dir="rtl">
                   فعال سلائی کیٹیگریز
                 </p>
               </Card>
@@ -2403,7 +2403,7 @@ export default function SettingsPage() {
                     <TrendingUp className="h-5 w-5" />
                   </div>
                 </div>
-                <p className="text-[11px] text-amber-300/80 font-urdu-sans mt-2" dir="rtl">
+                <p className="text-[11px] text-amber-300/80 font-urdu-serif leading-relaxed py-1 mt-2" dir="rtl">
                   اوسط سلائی اجرت (روپے)
                 </p>
               </Card>
@@ -2425,7 +2425,7 @@ export default function SettingsPage() {
                     <Zap className="h-5 w-5" />
                   </div>
                 </div>
-                <p className="text-[11px] text-cyan-300/80 font-urdu-sans mt-2" dir="rtl">
+                <p className="text-[11px] text-cyan-300/80 font-urdu-serif leading-relaxed py-1 mt-2" dir="rtl">
                   تیز ترین ارجنٹ ڈیلیوری
                 </p>
               </Card>
@@ -2442,7 +2442,7 @@ export default function SettingsPage() {
                     <Clock className="h-5 w-5" />
                   </div>
                 </div>
-                <p className="text-[11px] text-emerald-300/80 font-urdu-sans mt-2" dir="rtl">
+                <p className="text-[11px] text-emerald-300/80 font-urdu-serif leading-relaxed py-1 mt-2" dir="rtl">
                   معمول کا ڈیلیوری ٹائم
                 </p>
               </Card>
@@ -2556,7 +2556,7 @@ export default function SettingsPage() {
                       <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                           <span>Base Stitching Rate (PKR)</span>
-                          <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                          <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gold/80" dir="rtl">
                             بنیادی سلائی ریٹ
                           </span>
                         </label>
@@ -2582,7 +2582,7 @@ export default function SettingsPage() {
                       <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                           <span>Urgent Rush Surcharge (PKR)</span>
-                          <span className="font-urdu-sans text-[11px] text-amber-300/80" dir="rtl">
+                          <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-amber-300/80" dir="rtl">
                             ارجنٹ سلائی چارجز
                           </span>
                         </label>
@@ -2609,7 +2609,7 @@ export default function SettingsPage() {
                         <div className="space-y-1.5">
                           <label className="text-[11px] font-medium text-gray-300 flex items-center justify-between">
                             <span>Standard Days</span>
-                            <span className="font-urdu-sans text-[10px] text-gray-400" dir="rtl">
+                            <span className="font-urdu-serif leading-relaxed py-1 text-[10px] text-gray-400" dir="rtl">
                               معمول کے دن
                             </span>
                           </label>
@@ -2634,7 +2634,7 @@ export default function SettingsPage() {
                         <div className="space-y-1.5">
                           <label className="text-[11px] font-medium text-gray-300 flex items-center justify-between">
                             <span>Urgent Days</span>
-                            <span className="font-urdu-sans text-[10px] text-cyan-400/80" dir="rtl">
+                            <span className="font-urdu-serif leading-relaxed py-1 text-[10px] text-cyan-400/80" dir="rtl">
                               ارجنٹ دن
                             </span>
                           </label>
@@ -2780,7 +2780,7 @@ export default function SettingsPage() {
                         Choose the default format for order slips and workshop tickets
                       </p>
                     </div>
-                    <span className="font-urdu-sans text-xs text-gold/80" dir="rtl">
+                    <span className="font-urdu-serif leading-relaxed py-1 text-xs text-gold/80" dir="rtl">
                       پرنٹر کاغذ کی چوڑائی
                     </span>
                   </div>
@@ -2818,7 +2818,7 @@ export default function SettingsPage() {
                         </Badge>
                       </div>
                       <div className="text-xs font-bold text-white">58mm Fabric Staple Tag</div>
-                      <div className="font-urdu-sans text-[11px] text-gold/80 mt-0.5" dir="rtl">
+                      <div className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gold/80 mt-0.5" dir="rtl">
                         چھوٹا ٹیگ - ۳۲ کالم برائے کٹنگ کاریگر
                       </div>
                       <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
@@ -2858,7 +2858,7 @@ export default function SettingsPage() {
                         </Badge>
                       </div>
                       <div className="text-xs font-bold text-white">80mm Customer Invoice</div>
-                      <div className="font-urdu-sans text-[11px] text-gold/80 mt-0.5" dir="rtl">
+                      <div className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gold/80 mt-0.5" dir="rtl">
                         بڑا بل - ۴۸ کالم کسٹمر رسید
                       </div>
                       <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
@@ -2880,7 +2880,7 @@ export default function SettingsPage() {
                         Automations and receipt visual elements
                       </p>
                     </div>
-                    <span className="font-urdu-sans text-xs text-gold/80" dir="rtl">
+                    <span className="font-urdu-serif leading-relaxed py-1 text-xs text-gold/80" dir="rtl">
                       پرنٹنگ اور بارکوڈ آپشنز
                     </span>
                   </div>
@@ -2900,7 +2900,7 @@ export default function SettingsPage() {
                         <p className="text-[11px] text-gray-400 leading-tight">
                           Automatically launch the thermal printing dialog immediately when a new booking is saved.
                         </p>
-                        <span className="font-urdu-sans text-[10px] text-gold/70 block pt-0.5" dir="rtl">
+                        <span className="font-urdu-serif leading-relaxed py-1 text-[10px] text-gold/70 block pt-0.5" dir="rtl">
                           نئی بکنگ محفوظ ہوتے ہی خودکار پرنٹ ڈائیلاگ کھولیں
                         </span>
                       </div>
@@ -2933,7 +2933,7 @@ export default function SettingsPage() {
                         <p className="text-[11px] text-gray-400 leading-tight">
                           Embed standard machine-scannable Code 128 barcode representing the order token on slips.
                         </p>
-                        <span className="font-urdu-sans text-[10px] text-gold/70 block pt-0.5" dir="rtl">
+                        <span className="font-urdu-serif leading-relaxed py-1 text-[10px] text-gold/70 block pt-0.5" dir="rtl">
                           کپڑے کے ٹیگ اور رسید پر سکین کے لیے بارکوڈ پرنٹ کریں
                         </span>
                       </div>
@@ -2966,7 +2966,7 @@ export default function SettingsPage() {
                         <p className="text-[11px] text-gray-400 leading-tight">
                           Print direct online customer portal tracking URL on 80mm booking slips.
                         </p>
-                        <span className="font-urdu-sans text-[10px] text-gold/70 block pt-0.5" dir="rtl">
+                        <span className="font-urdu-serif leading-relaxed py-1 text-[10px] text-gold/70 block pt-0.5" dir="rtl">
                           کسٹمر کے لیے آن لائن لائیو آرڈر ٹریکنگ لنک کی شمولیت
                         </span>
                       </div>
@@ -2999,7 +2999,7 @@ export default function SettingsPage() {
                         <p className="text-[11px] text-gray-400 leading-tight">
                           Display bilingual Urdu garment categories, receipt notices, and workshop notes.
                         </p>
-                        <span className="font-urdu-sans text-[10px] text-gold/70 block pt-0.5" dir="rtl">
+                        <span className="font-urdu-serif leading-relaxed py-1 text-[10px] text-gold/70 block pt-0.5" dir="rtl">
                           رسید پر اردو عنوانات اور شکریہ کا پیغام دکھائیں
                         </span>
                       </div>
@@ -3032,7 +3032,7 @@ export default function SettingsPage() {
                         Blank line feeds before paper cut (prevents cutting through barcode/text)
                       </p>
                     </div>
-                    <span className="font-urdu-sans text-xs text-gold/80" dir="rtl">
+                    <span className="font-urdu-serif leading-relaxed py-1 text-xs text-gold/80" dir="rtl">
                       کاٹنے سے پہلے خالی لائنیں (۰ تا ۱۰)
                     </span>
                   </div>
@@ -3133,7 +3133,7 @@ export default function SettingsPage() {
                             <div className="font-bold flex items-baseline justify-between">
                               <span>ITEM: SHALWAR KAMEEZ (1 PR)</span>
                               {printerSettings.show_urdu_labels && (
-                                <span className="font-urdu-sans text-[9px] text-neutral-800" dir="rtl">
+                                <span className="font-urdu-serif leading-relaxed py-1 text-[9px] text-neutral-800" dir="rtl">
                                   شلوار قمیض
                                 </span>
                               )}
@@ -3238,7 +3238,7 @@ export default function SettingsPage() {
                                 <div className="w-1/2 min-w-0 pr-1">
                                   <div className="truncate font-medium">Men Shalwar Kameez</div>
                                   {printerSettings.show_urdu_labels && (
-                                    <div className="font-urdu-sans text-[9px] text-neutral-600 truncate" dir="rtl">
+                                    <div className="font-urdu-serif leading-relaxed py-1 text-[9px] text-neutral-600 truncate" dir="rtl">
                                       مردانہ شلوار قمیض
                                     </div>
                                   )}
@@ -3271,7 +3271,7 @@ export default function SettingsPage() {
                           </div>
 
                           {printerSettings.show_urdu_labels && shop.receipt_footer && (
-                            <div className="border-t border-dashed border-black pt-1 text-[8px] text-neutral-600 font-urdu-sans text-center" dir="rtl">
+                            <div className="border-t border-dashed border-black pt-1 text-[8px] text-neutral-600 font-urdu-serif leading-relaxed py-1 text-center" dir="rtl">
                               {shop.receipt_footer}
                             </div>
                           )}
@@ -3384,7 +3384,7 @@ export default function SettingsPage() {
                           <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
                           <span>Payment Under Review</span>
                         </span>
-                        <span className="font-urdu-sans text-xs text-amber-400 font-semibold" dir="rtl">
+                        <span className="font-urdu-serif leading-relaxed py-1 text-xs text-amber-400 font-semibold" dir="rtl">
                           (تصدیق زیر جائزہ ہے)
                         </span>
                       </div>
@@ -3547,7 +3547,7 @@ export default function SettingsPage() {
                   <span className="text-gray-300 font-medium flex items-center gap-1.5">
                     <TrendingUp className="h-4 w-4 text-gold" />
                     <span>Monthly Tailoring Quota Meter</span>
-                    <span className="font-urdu-sans text-xs text-gold/70" dir="rtl">(ماہانہ کوٹہ)</span>
+                    <span className="font-urdu-serif leading-relaxed py-1 text-xs text-gold/70" dir="rtl">(ماہانہ کوٹہ)</span>
                   </span>
 
                   {shop.plan_tier === 'FREE' ? (
@@ -3667,7 +3667,7 @@ export default function SettingsPage() {
                           <div className="inline-flex items-center gap-1.5 rounded-full border border-gold bg-gold px-3.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0B0C0E] shadow-[0_0_15px_rgba(212,175,55,0.3)]">
                             <Crown className="h-3 w-3 fill-current" />
                             <span>{plan.badge}</span>
-                            <span className="font-urdu-sans text-[9px] -mt-0.5" dir="rtl">({plan.badgeUr})</span>
+                            <span className="font-urdu-serif leading-relaxed py-1 text-[9px] -mt-0.5" dir="rtl">({plan.badgeUr})</span>
                           </div>
                         </div>
                       )}
@@ -3867,7 +3867,7 @@ export default function SettingsPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                   <span>Craftsman User Email</span>
-                  <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                  <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gold/80" dir="rtl">
                     کاریگر کی ای میل
                   </span>
                 </label>
@@ -3890,7 +3890,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                   <span>Workshop Role & Responsibilities</span>
-                  <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                  <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gold/80" dir="rtl">
                     ورکشاپ کا عہدہ و ذمہ داری
                   </span>
                 </label>
@@ -3925,7 +3925,7 @@ export default function SettingsPage() {
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-white">{title}</span>
                           </div>
-                          <span className="font-urdu-sans text-[11px] text-gold/80 block" dir="rtl">
+                          <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gold/80 block" dir="rtl">
                             {urTitle}
                           </span>
                         </div>
@@ -4107,7 +4107,7 @@ export default function SettingsPage() {
                   <Building2 className="h-4 w-4 text-gold" />
                   <span className="text-xs font-bold text-white">Official Pakistani Bank Accounts</span>
                 </div>
-                <span className="font-urdu-sans text-[11px] text-gold/80" dir="rtl">
+                <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gold/80" dir="rtl">
                   میزان بینک اور راست اکاونٹ
                 </span>
               </div>
@@ -4216,7 +4216,7 @@ export default function SettingsPage() {
               <div className="space-y-1.5">
                 <label className="text-xs text-gray-300 font-medium flex items-center justify-between">
                   <span>Transfer Channel Used:</span>
-                  <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                  <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gray-400" dir="rtl">
                     ادائیگی کا طریقہ منتخب کریں
                   </span>
                 </label>
@@ -4240,7 +4240,7 @@ export default function SettingsPage() {
                         }`}
                       >
                         <span className="font-semibold text-xs block truncate">{m.label}</span>
-                        <span className="font-urdu-sans text-[10px] text-gold/80 block mt-0.5" dir="rtl">
+                        <span className="font-urdu-serif leading-relaxed py-1 text-[10px] text-gold/80 block mt-0.5" dir="rtl">
                           {m.ur}
                         </span>
                       </button>
@@ -4253,7 +4253,7 @@ export default function SettingsPage() {
               <div className="space-y-1.5">
                 <label className="text-xs text-gray-300 font-medium flex items-center justify-between">
                   <span>Transaction ID / Reference Number <span className="text-rose-400">*</span>:</span>
-                  <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                  <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gray-400" dir="rtl">
                     ٹرانزیکشن آئی ڈی / یو ٹی آر نمبر
                   </span>
                 </label>
@@ -4271,7 +4271,7 @@ export default function SettingsPage() {
               <div className="space-y-1.5">
                 <label className="text-xs text-gray-300 font-medium flex items-center justify-between">
                   <span>Upload Payment Receipt / Slip Screenshot <span className="text-rose-400">*</span>:</span>
-                  <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                  <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gray-400" dir="rtl">
                     بینک رسید یا اسکرین شاٹ اپ لوڈ کریں
                   </span>
                 </label>
@@ -4417,7 +4417,7 @@ export default function SettingsPage() {
                   <h3 className="font-editorial text-lg font-bold text-white">
                     Reset Workshop Data
                   </h3>
-                  <p className="font-urdu-sans text-xs text-rose-400" dir="rtl">
+                  <p className="font-urdu-serif leading-relaxed py-1 text-xs text-rose-400" dir="rtl">
                     ورکشاپ ٹیسٹ ڈیٹا صفائی
                   </p>
                 </div>
@@ -4448,7 +4448,7 @@ export default function SettingsPage() {
                   <li>Customer directory contacts</li>
                   <li>Monthly tailoring quota usage reset to 0</li>
                 </ul>
-                <p className="font-urdu-sans text-rose-400 pt-1" dir="rtl">
+                <p className="font-urdu-serif leading-relaxed py-1 text-rose-400 pt-1" dir="rtl">
                   تمام کسٹمرز، آرڈرز اور کھاتہ رجسٹر مکمل ڈیلیٹ ہو جائے گا۔
                 </p>
               </div>
@@ -4460,7 +4460,7 @@ export default function SettingsPage() {
               <div className="space-y-1.5 pt-1">
                 <label className="text-xs text-gray-300 flex items-center justify-between font-medium">
                   <span>Type <strong className="text-rose-400 font-mono">PURGE</strong> to confirm:</span>
-                  <span className="font-urdu-sans text-[11px] text-gray-400" dir="rtl">
+                  <span className="font-urdu-serif leading-relaxed py-1 text-[11px] text-gray-400" dir="rtl">
                     تصدیق کے لیے PURGE لکھیں
                   </span>
                 </label>

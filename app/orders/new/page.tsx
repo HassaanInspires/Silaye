@@ -77,21 +77,34 @@ function getFutureDateString(days: number): string {
   return target.toISOString().split('T')[0];
 }
 
+function formatMeasurementDisplay(val: number): string {
+  if (isNaN(val) || val <= 0) return '0″';
+  const whole = Math.floor(val);
+  const frac = Math.round((val - whole) * 100) / 100;
+  let fracStr = '';
+  if (Math.abs(frac - 0.25) < 0.05) fracStr = ' ¼';
+  else if (Math.abs(frac - 0.5) < 0.05) fracStr = ' ½';
+  else if (Math.abs(frac - 0.75) < 0.05) fracStr = ' ¾';
+
+  if (whole === 0 && fracStr) return `${fracStr.trim()}″`;
+  return `${whole}${fracStr}″`;
+}
+
 // ---------------------------------------------------------------------------
-// Default measurement values (spec mid-range defaults, quarter-inch aligned)
+// Default measurement values (Pakistani adult standard baseline, quarter-inch aligned)
 // ---------------------------------------------------------------------------
 
 const DEFAULT_MEASUREMENTS: ShalwarKameezMeasurements = {
-  kameez_length:  42.0,
-  chest:          40.0,
-  waist:          38.0,
+  kameez_length:  40.0,
+  chest:          38.0,
+  waist:          36.0,
   shoulder_teera: 17.5,
-  sleeve_length:  24.0,
+  sleeve_length:  23.5,
   neck_gala:      15.5,
   daman_width:    22.0,
-  shalwar_length: 39.0,
+  shalwar_length: 38.0,
   paincha:        8.5,
-  aasan:          17.0,
+  aasan:          16.5,
 };
 
 const DEFAULT_STYLES: StylePreferences = {
@@ -110,16 +123,16 @@ const MOBILE_MEASUREMENT_FIELDS: Array<{
   en: string;
   defaultVal: number;
 }> = [
-  { key: 'kameez_length', ur: 'لمبائی', en: 'Length', defaultVal: 42 },
-  { key: 'chest', ur: 'چھاتی', en: 'Chest', defaultVal: 40 },
-  { key: 'waist', ur: 'کمر', en: 'Waist', defaultVal: 38 },
+  { key: 'kameez_length', ur: 'لمبائی', en: 'Length', defaultVal: 40 },
+  { key: 'chest', ur: 'چھاتی', en: 'Chest', defaultVal: 38 },
+  { key: 'waist', ur: 'کمر', en: 'Waist', defaultVal: 36 },
   { key: 'shoulder_teera', ur: 'تیرا', en: 'Shoulder', defaultVal: 17.5 },
-  { key: 'sleeve_length', ur: 'بازو', en: 'Sleeve', defaultVal: 24 },
+  { key: 'sleeve_length', ur: 'بازو', en: 'Sleeve', defaultVal: 23.5 },
   { key: 'neck_gala', ur: 'گلا', en: 'Collar', defaultVal: 15.5 },
   { key: 'daman_width', ur: 'دامن', en: 'Daman', defaultVal: 22 },
-  { key: 'shalwar_length', ur: 'شلوار لمبائی', en: 'Shalwar', defaultVal: 39 },
+  { key: 'shalwar_length', ur: 'شلوار لمبائی', en: 'Shalwar', defaultVal: 38 },
   { key: 'paincha', ur: 'پائینچہ', en: 'Paincha', defaultVal: 8.5 },
-  { key: 'aasan', ur: 'آسن', en: 'Aasan', defaultVal: 17 },
+  { key: 'aasan', ur: 'آسن', en: 'Aasan', defaultVal: 16.5 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -274,6 +287,7 @@ export default function NewOrderPage() {
   // ── Customer form fields ───────────────────────────────────────────────
   const [customerName, setCustomerName] = React.useState<string>('');
   const [customerAddress, setCustomerAddress] = React.useState<string>('');
+  const [showAddressNotes, setShowAddressNotes] = React.useState<boolean>(false);
 
   // ── Garment & fabric ──────────────────────────────────────────────────
   const [garmentType, setGarmentType] = React.useState<GarmentType>('MEN_SHALWAR_KAMEEZ');
@@ -332,6 +346,7 @@ export default function NewOrderPage() {
   const [newBookedOrder, setNewBookedOrder] = React.useState<GarmentOrder | null>(null);
   const [newBookedCustomer, setNewBookedCustomer] = React.useState<Customer | null>(null);
   const [draftSavedToast, setDraftSavedToast] = React.useState<boolean>(false);
+  const [showMobileAdmin, setShowMobileAdmin] = React.useState<boolean>(false);
 
   // --------------------------------------------------------------------------
   // Load workshop staff, catalog rates & printer settings dynamically
@@ -667,6 +682,11 @@ export default function NewOrderPage() {
     }
   };
 
+  const isSubmitting = isCheckingQuota;
+  const handleCreateOrder = (_skipPrint?: boolean) => {
+    handleBookOrder();
+  };
+
   // --------------------------------------------------------------------------
   // Render
   // --------------------------------------------------------------------------
@@ -676,7 +696,7 @@ export default function NewOrderPage() {
       <div className="max-w-7xl mx-auto">
         
         {/* ── Page Header ─────────────────────────────────────────────── */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">
+        <div className="hidden md:flex mb-6 flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold tracking-tight text-foreground">New Booking</h1>
@@ -708,7 +728,7 @@ export default function NewOrderPage() {
         {/* ================================================================ */}
         {/* MOBILE 3-STEP WIZARD (md:hidden)                                 */}
         {/* ================================================================ */}
-        <div className="block md:hidden space-y-4 pb-36 pb-safe">
+        <div className="block md:hidden space-y-4 pb-44 pb-safe">
           {/* Step Progress Pills Header */}
           <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#121418] rounded-xl border border-white/5 shadow-md">
             {[
@@ -732,10 +752,10 @@ export default function NewOrderPage() {
                       : 'text-gray-400 border-transparent'
                   )}
                 >
-                  <span className="text-[11px] font-urdu-sans font-bold leading-tight truncate">
+                  <span className="text-[11px] font-urdu-serif font-bold leading-relaxed py-1 truncate">
                     {s.labelUrdu}
                   </span>
-                  <span className="text-[9px] font-medium opacity-70 truncate">
+                  <span className={cn('text-[9px] font-medium truncate', isCurrent ? 'text-amber-200' : 'text-gray-300')}>
                     {s.labelEn}
                   </span>
                 </button>
@@ -747,211 +767,326 @@ export default function NewOrderPage() {
           {/* STEP 1: CUSTOMER & SUIT DETAILS                                */}
           {/* ============================================================== */}
           {mobileStep === 1 && (
-            <div className="space-y-4">
-              {/* Customer Phone & Lookup */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">
-                    Customer Lookup • گاہک کا اندراج
-                  </span>
-                  {foundProfile && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      پروفائل موجود ہے
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300 font-medium">موبائل نمبر (Mobile Phone)</label>
-                  <Input
-                    type="tel"
-                    placeholder="0300-1234567"
-                    value={phone}
-                    onChange={(e) => setPhone(formatPakistaniPhone(e.target.value))}
-                    leftIcon={<Phone className="h-4 w-4 text-gold" />}
-                    className="h-10 text-sm font-mono bg-black/40 border-white/10"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300 font-medium">گاہک کا نام (Customer Name) *</label>
-                  <Input
-                    type="text"
-                    placeholder="e.g. محمد بلال"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    leftIcon={<User className="h-4 w-4 text-gold" />}
-                    className="h-10 text-sm bg-black/40 border-white/10"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-400">پتہ / شہر (Address / City - اختیاری)</label>
-                  <Input
-                    type="text"
-                    placeholder="e.g. کینٹ، واہ"
-                    value={customerAddress}
-                    onChange={(e) => setCustomerAddress(e.target.value)}
-                    leftIcon={<MapPin className="h-4 w-4 text-gray-500" />}
-                    className="h-9 text-xs bg-black/40 border-white/10"
-                  />
-                </div>
-              </div>
-
-              {/* Garment Type Selection */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Garment Type • لباس کی قسم
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {GARMENT_TYPE_OPTIONS.map((g) => {
-                    const isSelected = garmentType === g.value;
-                    return (
-                      <button
-                        key={g.value}
-                        type="button"
-                        onClick={() => handleGarmentTypeChange(g.value)}
-                        className={cn(
-                          'p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1 cursor-pointer',
-                          isSelected
-                            ? 'border-gold/50 bg-gold/15 text-gold shadow-[0_0_12px_rgba(212,175,55,0.15)]'
-                            : 'border-white/5 bg-black/30 text-gray-300 hover:border-white/15'
-                        )}
-                      >
-                        <span className="font-urdu-sans text-sm font-bold" dir="rtl">{g.ur}</span>
-                        <span className="text-[10px] text-gray-400 font-medium">{g.en}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Suit Quantity Stepper */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                  <div>
-                    <span className="text-xs font-semibold text-white block">سوٹ تعداد (Quantity)</span>
-                    <span className="text-[10px] text-gray-400">Total Suits</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-sm flex items-center justify-center active:scale-95"
-                    >
-                      −
-                    </button>
-                    <span className="font-mono text-base font-bold text-gold w-6 text-center">
-                      {quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-sm flex items-center justify-center active:scale-95"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Delivery Date & Rush */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <div className="space-y-2">
+            <div className="space-y-4 pb-44 pb-safe">
+              {/* Unified Single Surface Card */}
+              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+                {/* 1. Customer Intake & Smart Collapsible Address */}
+                <div className="space-y-3 border-b border-white/5 pb-4">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs text-gray-300 font-medium">تاریخ ترسیل (Delivery Date) *</label>
-                    {isUrgent && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                        فوری ترسیل (Urgent)
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Customer Intake • گاہک کا اندراج
+                    </span>
+                    {foundProfile && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        پروفائل موجود ہے
                       </span>
                     )}
                   </div>
-                  <Input
-                    type="date"
-                    value={deliveryDate}
-                    onChange={(e) => setDeliveryDate(e.target.value)}
-                    className="h-10 text-sm font-mono bg-black/40 border-white/10"
-                  />
-                </div>
 
-                {/* Urgent Rush Toggle */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleUrgent(!isUrgent)}
-                  className={cn(
-                    'w-full p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all',
-                    isUrgent
-                      ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
-                      : 'border-white/5 bg-black/20 text-gray-400 hover:text-white'
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <Zap className={cn('h-4 w-4', isUrgent ? 'text-amber-400' : 'text-gray-500')} />
-                    <span>فوری ڈلیوری (Urgent Rush Order)</span>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-300 font-medium">موبائل نمبر (Mobile Phone)</label>
+                    <Input
+                      type="tel"
+                      inputMode="tel"
+                      placeholder="0300-1234567"
+                      value={phone}
+                      onChange={(e) => setPhone(formatPakistaniPhone(e.target.value))}
+                      leftIcon={<Phone className="h-4 w-4 text-gold" />}
+                      className="h-10 text-sm font-mono bg-black/40 border-white/10"
+                    />
                   </div>
-                  <span className="font-mono font-semibold">
-                    {isUrgent ? 'فعال ✓' : '+ فاسٹ ٹریک'}
-                  </span>
-                </button>
-              </div>
 
-              {/* Fabric Specs */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Fabric Details • کپڑے کی تفصیلات
-                </span>
-                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-300 font-medium">گاہک کا نام (Customer Name) *</label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. محمد بلال"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      leftIcon={<User className="h-4 w-4 text-gold" />}
+                      className="h-10 text-sm bg-black/40 border-white/10"
+                    />
+                  </div>
+
+                  {/* Smart Collapsible Address & Notes Button */}
                   <button
                     type="button"
-                    onClick={() => setFabricSource('CUSTOMER')}
+                    onClick={() => setShowAddressNotes(!showAddressNotes)}
                     className={cn(
-                      'p-2.5 rounded-xl border text-xs font-medium transition-all text-center',
-                      fabricSource === 'CUSTOMER'
-                        ? 'border-gold/40 bg-gold/15 text-gold font-bold'
-                        : 'border-white/5 bg-black/30 text-gray-400'
+                      'w-full min-h-[40px] px-3.5 py-2 rounded-xl border text-xs font-medium flex items-center justify-between transition-all active:scale-[0.99] cursor-pointer',
+                      customerAddress.trim()
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                        : 'border-white/10 bg-white/5 hover:bg-white/10 text-gray-300'
                     )}
                   >
-                    گاہک کا کپڑا (Customer)
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <MapPin className={cn('h-3.5 w-3.5 shrink-0', customerAddress.trim() ? 'text-emerald-400' : 'text-gold/70')} />
+                      {customerAddress.trim() ? (
+                        <span className="font-urdu-serif leading-relaxed truncate text-[11px]">
+                          ✓ پتہ محفوظ ہے: <span className="font-sans font-normal text-white">{customerAddress}</span> - تبدیل کرنے کے لیے ٹیپ کریں
+                        </span>
+                      ) : (
+                        <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
+                          {showAddressNotes ? '− پتہ اور اضافی تفصیلات چھپائیں' : '+ پتہ اور اضافی تفصیلات درج کریں / Add Address & Notes'}
+                        </span>
+                      )}
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200', showAddressNotes && 'rotate-180')} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setFabricSource('SHOP')}
-                    className={cn(
-                      'p-2.5 rounded-xl border text-xs font-medium transition-all text-center',
-                      fabricSource === 'SHOP'
-                        ? 'border-gold/40 bg-gold/15 text-gold font-bold'
-                        : 'border-white/5 bg-black/30 text-gray-400'
-                    )}
-                  >
-                    ورکشاپ کا کپڑا (Shop)
-                  </button>
+
+                  {/* Collapsible Address & Notes Fields */}
+                  {showAddressNotes && (
+                    <div className="space-y-2.5 pt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">
+                          پتہ اور شہر (Address / City - اختیاری)
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. کینٹ، واہ / Sector, Area, City"
+                          value={customerAddress}
+                          onChange={(e) => setCustomerAddress(e.target.value)}
+                          leftIcon={<MapPin className="h-4 w-4 text-gray-500" />}
+                          className="h-10 text-xs bg-black/40 border-white/10"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">
+                          اضافی ہدایات و نوٹ (Special Instructions / Notes)
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. کالر پر کڑھائی، بٹن خصوصی لکڑی والے"
+                          value={specialNotes}
+                          onChange={(e) => setSpecialNotes(e.target.value)}
+                          leftIcon={<FileText className="h-4 w-4 text-gray-500" />}
+                          className="h-10 text-xs bg-black/40 border-white/10"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <Input
-                    type="text"
-                    placeholder="رنگ (e.g. سفید / کریم)"
-                    value={fabricColor}
-                    onChange={(e) => setFabricColor(e.target.value)}
-                    className="h-9 text-xs bg-black/40 border-white/10"
-                  />
-                  <Input
-                    type="text"
-                    placeholder="برانڈ (e.g. پاشا لٹھا)"
-                    value={fabricBrand}
-                    onChange={(e) => setFabricBrand(e.target.value)}
-                    className="h-9 text-xs bg-black/40 border-white/10"
-                  />
+                {/* 2. Sleek 3D Pop-up Garment Selection Chips & Quantity */}
+                <div className="space-y-3 border-b border-white/5 pb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Garment Type • لباس کی قسم
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      {GARMENT_TYPE_OPTIONS.find((g) => g.value === garmentType)?.en}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {GARMENT_TYPE_OPTIONS.map((g) => {
+                      const isSelected = garmentType === g.value;
+                      return (
+                        <button
+                          key={g.value}
+                          type="button"
+                          onClick={() => handleGarmentTypeChange(g.value)}
+                          className={cn(
+                            'h-auto min-h-11 px-3 rounded-xl border transition-all duration-200 flex flex-col items-center justify-center text-center py-1 cursor-pointer active:scale-98',
+                            isSelected
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02]'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 hover:border-white/20'
+                          )}
+                        >
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {g.ur}
+                          </span>
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
+                            {g.en}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Suit Quantity Stepper */}
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <span className="text-xs font-semibold text-white block font-urdu-serif leading-relaxed py-0.5">
+                        سوٹ تعداد (Quantity)
+                      </span>
+                      <span className="text-[10px] text-gray-400">Total Suits</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-base flex items-center justify-center active:scale-95 transition-all"
+                        aria-label="Decrease quantity"
+                      >
+                        −
+                      </button>
+                      <span className="font-mono text-base font-bold text-gold w-7 text-center">
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-base flex items-center justify-center active:scale-95 transition-all"
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Turnaround Date & Fast-Track Side-by-Side Row */}
+                <div className="border-b border-white/5 pb-4">
+                  <div className="grid grid-cols-2 gap-2.5 items-end">
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-gray-300 font-medium block font-urdu-serif leading-relaxed py-0.5">
+                        تاریخ ترسیل (Delivery Date) *
+                      </label>
+                      <Input
+                        type="date"
+                        value={deliveryDate}
+                        onChange={(e) => setDeliveryDate(e.target.value)}
+                        className="h-11 text-xs font-mono bg-black/40 border-white/10"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <label className="text-gray-300 font-medium font-urdu-serif leading-relaxed py-0.5">فوری ترسیل (Rush)</label>
+                        {isUrgent && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            فعال ✓
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleUrgent(!isUrgent)}
+                        className={cn(
+                          'w-full h-11 px-3 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all duration-200 active:scale-98 cursor-pointer',
+                          isUrgent
+                            ? 'border-amber-500/60 bg-amber-500/15 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                            : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                        )}
+                      >
+                        <Zap className={cn('h-4 w-4', isUrgent ? 'text-amber-400 fill-amber-400' : 'text-gray-500')} />
+                        <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
+                          {isUrgent ? 'فوری سوٹ (Urgent)' : '+ فاسٹ ٹریک'}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Fabric Details & Source Segmented Toggle */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Fabric Details • کپڑے کی تفصیلات
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      {fabricSource === 'CUSTOMER' ? 'Customer Fabric' : 'Shop Fabric'}
+                    </span>
+                  </div>
+
+                  {/* Two-way Source Pills */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFabricSource('CUSTOMER')}
+                      className={cn(
+                        'h-auto min-h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex flex-col items-center justify-center text-center py-1 active:scale-98 cursor-pointer',
+                        fabricSource === 'CUSTOMER'
+                          ? 'bg-gold/15 border-gold text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)] font-semibold scale-[1.01]'
+                          : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200'
+                      )}
+                    >
+                      <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                        {fabricSource === 'CUSTOMER' && <span className="mr-1 text-gold">✓</span>}
+                        گاہک کا کپڑا
+                      </span>
+                      <span className={cn('text-[10px] font-medium font-sans', fabricSource === 'CUSTOMER' ? 'text-amber-200' : 'text-gray-300')}>
+                        Customer Fabric
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFabricSource('SHOP')}
+                      className={cn(
+                        'h-auto min-h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex flex-col items-center justify-center text-center py-1 active:scale-98 cursor-pointer',
+                        fabricSource === 'SHOP'
+                          ? 'bg-gold/15 border-gold text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)] font-semibold scale-[1.01]'
+                          : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200'
+                      )}
+                    >
+                      <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                        {fabricSource === 'SHOP' && <span className="mr-1 text-gold">✓</span>}
+                        دکان کا کپڑا
+                      </span>
+                      <span className={cn('text-[10px] font-medium font-sans', fabricSource === 'SHOP' ? 'text-amber-200' : 'text-gray-300')}>
+                        Shop Fabric
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Color & Brand Inputs */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">رنگ (Color)</label>
+                      <Input
+                        type="text"
+                        placeholder="e.g. سفید / کریم"
+                        value={fabricColor}
+                        onChange={(e) => setFabricColor(e.target.value)}
+                        className="h-10 text-xs bg-black/40 border-white/10"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">برانڈ (Brand)</label>
+                      <Input
+                        type="text"
+                        placeholder="e.g. پاشا لٹھا"
+                        value={fabricBrand}
+                        onChange={(e) => setFabricBrand(e.target.value)}
+                        className="h-10 text-xs bg-black/40 border-white/10"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Next Button */}
+              {/* Step 1 Inline Advancement CTA */}
               <Button
                 type="button"
-                onClick={() => setMobileStep(2)}
-                className="w-full h-11 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.25)] flex items-center justify-center gap-2"
+                disabled={!customerName.trim()}
+                onClick={() => {
+                  if (!customerName.trim()) return;
+                  setMobileStep(2);
+                  document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={cn(
+                  'w-full h-12 font-bold text-sm flex items-center justify-center gap-2 rounded-xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.25)]',
+                  !customerName.trim()
+                    ? 'bg-white/10 text-gray-400 border border-white/10 cursor-not-allowed'
+                    : 'bg-gold text-[#0B0C0E] hover:bg-gold-hover active:scale-[0.99]'
+                )}
               >
-                <span>اگلا مرحلہ: ڈیزائن و کٹ منتخب کریں</span>
-                <ArrowRight className="h-4 w-4" />
+                <span className="font-urdu-serif leading-relaxed py-0.5 text-sm">
+                  {!customerName.trim()
+                    ? 'گاہک کا نام درج کریں (Enter Customer Name)'
+                    : 'اگلا مرحلہ: ڈیزائن اور کٹ منتخب کریں'}
+                </span>
+                {customerName.trim() && (
+                  <>
+                    <span className="text-xs font-sans opacity-80">(Next: Style & Cut)</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </Button>
+
+              <div className="h-32 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
@@ -959,121 +1094,138 @@ export default function NewOrderPage() {
           {/* STEP 2: STYLE & PREFERENCES                                    */}
           {/* ============================================================== */}
           {mobileStep === 2 && (
-            <div className="space-y-4">
-              {/* Collar Style Selection */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-2.5 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Collar Cut • گلا اور بین کا سٹائل
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'FULL_BAN', ur: 'مکمل بین', en: 'Full Ban' },
-                    { id: 'HALF_BAN', ur: 'ہاف بین', en: 'Half Ban' },
-                    { id: 'SHERWANI_COLLAR', ur: 'شیروانی کالر', en: 'Sherwani' },
-                    { id: 'SHIRT_COLLAR', ur: 'شرٹ کالر', en: 'Shirt Collar' },
-                    { id: 'SOFT_BAN', ur: 'سافٹ بین', en: 'Soft Ban' },
-                  ].map((item) => {
-                    const isSelected = stylePreferences.collar_style === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleStyleChange('collar_style', item.id as any)}
-                        className={cn(
-                          'p-2.5 rounded-xl border text-left transition-all flex flex-col gap-0.5 cursor-pointer',
-                          isSelected
-                            ? 'border-gold/50 bg-gold/15 text-gold font-bold shadow-[0_0_10px_rgba(212,175,55,0.15)]'
-                            : 'border-white/5 bg-black/30 text-gray-300 hover:border-white/15'
-                        )}
-                      >
-                        <span className="font-urdu-sans text-xs font-bold" dir="rtl">{item.ur}</span>
-                        <span className="text-[10px] text-gray-400">{item.en}</span>
-                      </button>
-                    );
-                  })}
+            <div className="space-y-4 pb-44 pb-safe">
+              {/* Unified Single Surface Card */}
+              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+                {/* 1. Collar Cut Selection */}
+                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                    Collar Cut • گلا اور بین کا سٹائل
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'FULL_BAN', labelUrdu: 'مکمل بین', label: 'Full Ban' },
+                      { id: 'HALF_BAN', labelUrdu: 'ہاف بین', label: 'Half Ban' },
+                      { id: 'SHERWANI_COLLAR', labelUrdu: 'شیروانی کالر', label: 'Sherwani' },
+                      { id: 'SHIRT_COLLAR', labelUrdu: 'شرٹ کالر', label: 'Shirt Collar' },
+                      { id: 'SOFT_BAN', labelUrdu: 'سافٹ بین', label: 'Soft Ban' },
+                    ].map((item, idx) => {
+                      const isSelected = stylePreferences.collar_style === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => handleStyleChange('collar_style', item.id as any)}
+                          className={cn(
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            idx === 4 ? 'col-span-2' : '',
+                            isSelected
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                          )}
+                        >
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* Daman Cut Selection */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-2.5 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Daman Cut • دامن کا ڈیزائن
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'CHORAS_DAMAN', ur: 'چورس دامن', en: 'Square Daman' },
-                    { id: 'GOOL_DAMAN', ur: 'گول دامن', en: 'Round Daman' },
-                  ].map((item) => {
-                    const isSelected = stylePreferences.daman_style === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleStyleChange('daman_style', item.id as any)}
-                        className={cn(
-                          'p-3 rounded-xl border text-center transition-all flex flex-col gap-1 cursor-pointer',
-                          isSelected
-                            ? 'border-gold/50 bg-gold/15 text-gold font-bold shadow-[0_0_10px_rgba(212,175,55,0.15)]'
-                            : 'border-white/5 bg-black/30 text-gray-300 hover:border-white/15'
-                        )}
-                      >
-                        <span className="font-urdu-sans text-sm font-bold">{item.ur}</span>
-                        <span className="text-[10px] text-gray-400">{item.en}</span>
-                      </button>
-                    );
-                  })}
+                {/* 2. Daman Cut Selection */}
+                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                    Daman Cut • دامن کا ڈیزائن
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'CHORAS_DAMAN', labelUrdu: 'چورس دامن', label: 'Square Daman' },
+                      { id: 'GOOL_DAMAN', labelUrdu: 'گول دامن', label: 'Round Daman' },
+                    ].map((item) => {
+                      const isSelected = stylePreferences.daman_style === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => handleStyleChange('daman_style', item.id as any)}
+                          className={cn(
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            isSelected
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                          )}
+                        >
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* Pocket Configurations */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-2.5 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Pockets • جیبوں کی ترتیب
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'FRONT_CHEST', ur: 'سامنے والی جیب', en: 'Front Chest' },
-                    { id: 'RIGHT_SIDE', ur: 'دائیں سائیڈ جیب', en: 'Right Side' },
-                    { id: 'LEFT_SIDE', ur: 'بائیں سائیڈ جیب', en: 'Left Side' },
-                    { id: 'MOBILE_INSIDE', ur: 'اندرونی موبائل جیب', en: 'Mobile Pocket' },
-                  ].map((item) => {
-                    const isSelected = stylePreferences.pockets?.includes(item.id as any);
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          const current = stylePreferences.pockets || [];
-                          const next = isSelected
-                            ? current.filter((p) => p !== item.id)
-                            : [...current, item.id as any];
-                          handleStyleChange('pockets', next);
-                        }}
-                        className={cn(
-                          'p-2.5 rounded-xl border text-left transition-all flex flex-col gap-0.5 cursor-pointer',
-                          isSelected
-                            ? 'border-gold/50 bg-gold/15 text-gold font-bold'
-                            : 'border-white/5 bg-black/30 text-gray-400'
-                        )}
-                      >
-                        <span className="font-urdu-sans text-xs font-bold" dir="rtl">{item.ur}</span>
-                        <span className="text-[10px] opacity-70">{item.en}</span>
-                      </button>
-                    );
-                  })}
+                {/* 3. Pocket Configurations (Multi-Select) */}
+                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                    Pockets • جیبوں کی ترتیب
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'FRONT_CHEST', labelUrdu: 'سامنے والی جیب', label: 'Front Chest' },
+                      { id: 'RIGHT_SIDE', labelUrdu: 'دائیں سائیڈ جیب', label: 'Right Side' },
+                      { id: 'LEFT_SIDE', labelUrdu: 'بائیں سائیڈ جیب', label: 'Left Side' },
+                      { id: 'MOBILE_INSIDE', labelUrdu: 'اندرونی موبائل جیب', label: 'Mobile Pocket' },
+                    ].map((item) => {
+                      const isSelected = stylePreferences.pockets?.includes(item.id as any);
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            const current = stylePreferences.pockets || [];
+                            const next = isSelected
+                              ? current.filter((p) => p !== item.id)
+                              : [...current, item.id as any];
+                            handleStyleChange('pockets', next);
+                          }}
+                          className={cn(
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            isSelected
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                          )}
+                        >
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* Stitching & Patti Options */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <div>
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block mb-2">
+                {/* 4. Stitching Type Selection */}
+                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
                     Stitching Type • سلائی کی قسم
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: 'DOUBLE_SILAI', ur: 'ڈبل سلائی (مضبوط)', en: 'Double Stitch' },
-                      { id: 'SINGLE_SILAI', ur: 'سنگل سلائی (کلاسک)', en: 'Single Stitch' },
+                      { id: 'DOUBLE_SILAI', labelUrdu: 'ڈبل سلائی (مضبوط)', label: 'Double Stitch' },
+                      { id: 'SINGLE_SILAI', labelUrdu: 'سنگل سلائی (کلاسک)', label: 'Single Stitch' },
                     ].map((item) => {
                       const isSelected = stylePreferences.stitch_type === item.id;
                       return (
@@ -1082,28 +1234,34 @@ export default function NewOrderPage() {
                           type="button"
                           onClick={() => handleStyleChange('stitch_type', item.id as any)}
                           className={cn(
-                            'p-2.5 rounded-xl border text-center transition-all',
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
                             isSelected
-                              ? 'border-gold/50 bg-gold/15 text-gold font-bold'
-                              : 'border-white/5 bg-black/30 text-gray-400'
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
                           )}
                         >
-                          <span className="font-urdu-sans text-xs block font-bold">{item.ur}</span>
-                          <span className="text-[9px] opacity-70">{item.en}</span>
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
+                            {item.label}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-white/5">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block mb-2">
+                {/* 5. Front Patti Selection */}
+                <div className="space-y-2.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
                     Front Patti • سامنے پٹی
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: 'GUM_PATTI', ur: 'گم پٹی', en: 'Hidden' },
-                      { id: 'OPEN_PATTI', ur: 'اوپن پٹی', en: 'Open Button' },
+                      { id: 'GUM_PATTI', labelUrdu: 'گم پٹی', label: 'Hidden' },
+                      { id: 'OPEN_PATTI', labelUrdu: 'اوپن پٹی', label: 'Open Button' },
                     ].map((item) => {
                       const isSelected = stylePreferences.front_patti === item.id;
                       return (
@@ -1112,14 +1270,19 @@ export default function NewOrderPage() {
                           type="button"
                           onClick={() => handleStyleChange('front_patti', item.id as any)}
                           className={cn(
-                            'p-2.5 rounded-xl border text-center transition-all',
+                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
                             isSelected
-                              ? 'border-gold/50 bg-gold/15 text-gold font-bold'
-                              : 'border-white/5 bg-black/30 text-gray-400'
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
                           )}
                         >
-                          <span className="font-urdu-sans text-xs block font-bold">{item.ur}</span>
-                          <span className="text-[9px] opacity-70">{item.en}</span>
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {item.labelUrdu}
+                          </span>
+                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
+                            {item.label}
+                          </span>
                         </button>
                       );
                     })}
@@ -1127,247 +1290,350 @@ export default function NewOrderPage() {
                 </div>
               </div>
 
-              {/* Navigation CTAs */}
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setMobileStep(1)}
-                  className="h-11 px-4 border-white/10 text-xs text-gray-300"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  <span>واپس</span>
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => setMobileStep(3)}
-                  className="flex-1 h-11 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.25)] flex items-center justify-center gap-2"
-                >
-                  <span>اگلا مرحلہ: ناپ میٹرکس</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
+              {/* Physical Bottom Spacer to prevent docked bar overlap */}
+              <div className="h-32 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
           {/* ============================================================== */}
-          {/* STEP 3: MEASUREMENT MATRIX (2-COLUMN TOUCH GRID)                */}
+          {/* STEP 3: MEASUREMENT MATRIX & FINAL LEDGER                      */}
           {/* ============================================================== */}
           {mobileStep === 3 && (
-            <div className="space-y-4">
-              <div className="premium-glass-card p-3 border-gold/30 bg-gradient-to-r from-gold/10 via-[#121418] to-transparent">
-                <div className="flex items-center justify-between">
+            <div className="space-y-4 pb-44 pb-safe">
+              {/* Unified Obsidian Glass Measurement Matrix Surface */}
+              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+                {/* Surface Header */}
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
                   <div>
                     <h3 className="text-xs font-bold text-white uppercase tracking-wider">
                       Measurement Matrix • ناپ کا میٹرکس
                     </h3>
-                    <p className="text-[10px] text-gray-400">
-                      ٹچ بٹنز کے ذریعے فوری آدھا انچ (+0.5" / -0.5") تبدیل کریں
+                    <p className="text-[10px] text-gray-400 font-urdu-sans">
+                      پورے انچ درج کریں اور کواٹر انچ (0, ¼, ½, ¾) بٹن دبائیں
                     </p>
                   </div>
-                  <Ruler className="h-5 w-5 text-gold" />
+                  <Ruler className="h-5 w-5 text-gold shrink-0" />
+                </div>
+
+                {/* Single-Surface Full-Width Measurement Rows */}
+                <div className="space-y-3.5">
+                  {MOBILE_MEASUREMENT_FIELDS.map((field, idx) => {
+                    const val = measurements[field.key] ?? field.defaultVal;
+                    const base = Math.max(1, Math.floor(val));
+                    const currentFrac = Math.round((val - Math.floor(val)) * 100) / 100;
+
+                    return (
+                      <div
+                        key={field.key}
+                        className={cn(
+                          'space-y-2',
+                          idx < MOBILE_MEASUREMENT_FIELDS.length - 1 && 'border-b border-white/5 pb-3.5'
+                        )}
+                      >
+                        {/* Row Header: Bilingual title (Urdu right, English left) + live formatted badge */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-300 uppercase tracking-wide">
+                              {field.en}
+                            </span>
+                            <bdi className="font-mono text-gold font-bold text-xs bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-lg">
+                              {formatMeasurementDisplay(val)}
+                            </bdi>
+                          </div>
+                          <span className="font-urdu-serif text-sm font-bold text-white leading-relaxed" dir="rtl">
+                            {field.ur}
+                          </span>
+                        </div>
+
+                        {/* Controls Bar layout (strictly sized for 360px viewports) */}
+                        <div className="flex items-center gap-1 w-full">
+                          {/* Whole Steppers: [-1], numeric input, [+1] */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newBase = Math.max(1, base - 1);
+                                const newVal = Math.round((newBase + currentFrac) * 100) / 100;
+                                handleMeasurementChange(field.key, newVal);
+                              }}
+                              className="h-11 w-9 text-sm font-bold bg-white/5 border border-white/10 rounded-xl active:scale-95 text-gray-300 hover:text-white flex items-center justify-center select-none cursor-pointer"
+                              aria-label={`Decrease ${field.en} by 1 inch`}
+                            >
+                              -1
+                            </button>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="1"
+                              max="120"
+                              value={base === 0 ? '' : base}
+                              onChange={(e) => {
+                                const parsed = parseInt(e.target.value, 10);
+                                const newBase = isNaN(parsed) || parsed < 1 ? 1 : parsed;
+                                const newVal = Math.round((newBase + currentFrac) * 100) / 100;
+                                handleMeasurementChange(field.key, newVal);
+                              }}
+                              placeholder="0"
+                              className="h-11 w-12 text-center font-mono font-bold text-gold bg-black/50 border border-white/10 rounded-xl focus:border-gold focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newBase = base + 1;
+                                const newVal = Math.round((newBase + currentFrac) * 100) / 100;
+                                handleMeasurementChange(field.key, newVal);
+                              }}
+                              className="h-11 w-9 text-sm font-bold bg-white/5 border border-white/10 rounded-xl active:scale-95 text-gray-300 hover:text-white flex items-center justify-center select-none cursor-pointer"
+                              aria-label={`Increase ${field.en} by 1 inch`}
+                            >
+                              +1
+                            </button>
+                          </div>
+
+                          {/* Spacer divider */}
+                          <div className="w-px h-7 bg-white/10 mx-1 shrink-0" aria-hidden="true" />
+
+                          {/* Fraction Pills (0, ¼, ½, ¾) */}
+                          <div className="grid grid-cols-4 gap-1 flex-1 min-w-0">
+                            {[
+                              { label: '0', value: 0.0 },
+                              { label: '¼', value: 0.25 },
+                              { label: '½', value: 0.5 },
+                              { label: '¾', value: 0.75 },
+                            ].map((frac) => {
+                              const isFracActive = Math.abs(currentFrac - frac.value) < 0.05;
+                              return (
+                                <button
+                                  key={frac.label}
+                                  type="button"
+                                  onClick={() => {
+                                    const newVal = Math.round((base + frac.value) * 100) / 100;
+                                    handleMeasurementChange(field.key, newVal);
+                                  }}
+                                  className={cn(
+                                    'h-11 rounded-xl font-mono font-bold text-xs flex items-center justify-center select-none transition-all cursor-pointer',
+                                    isFracActive
+                                      ? 'bg-gold text-black shadow-[0_0_12px_rgba(212,175,55,0.3)]'
+                                      : 'bg-white/5 border border-white/10 text-gray-300 hover:text-white active:scale-95'
+                                  )}
+                                >
+                                  {frac.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* 2-Column Measurement Touch Grid */}
-              <div className="grid grid-cols-2 gap-2">
-                {MOBILE_MEASUREMENT_FIELDS.map((field) => {
-                  const val = measurements[field.key] ?? field.defaultVal;
-                  return (
-                    <div
-                      key={field.key}
-                      className="premium-glass-card p-2.5 border-white/10 bg-[#121418] hover:border-gold/30 space-y-2 rounded-xl"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-urdu-sans text-xs font-bold text-white" dir="rtl">
-                          {field.ur}
-                        </span>
-                        <span className="text-[10px] text-gray-400 uppercase font-medium">
-                          {field.en}
-                        </span>
-                      </div>
+              {/* Collapsible Administration (Staff & Notes) */}
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowMobileAdmin((prev) => !prev)}
+                  className="w-full py-3 px-4 rounded-xl border border-white/10 bg-[#121418]/60 backdrop-blur-md hover:bg-white/5 active:scale-[0.99] text-xs font-semibold text-gray-300 flex items-center justify-between transition-all cursor-pointer shadow-sm"
+                >
+                  <span className="font-urdu-serif text-xs leading-relaxed py-0.5">
+                    {showMobileAdmin
+                      ? 'کاریگر تفویض اور خصوصی ہدایات چھپائیں'
+                      : '+ کاریگر تفویض اور خصوصی ہدایات درج کریں'}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-gray-400 font-sans">
+                      {showMobileAdmin ? 'Hide Staff & Notes' : 'Staff Assignment & Notes'}
+                    </span>
+                    {(assignedCutterId || assignedStitcherId || specialNotes.trim()) && (
+                      <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
+                    )}
+                  </div>
+                </button>
 
-                      {/* Value Display / Stepper */}
-                      <div className="flex items-center justify-between gap-1 bg-black/40 p-1 rounded-lg border border-white/5">
-                        <button
-                          type="button"
-                          onPointerDown={(e) => e.preventDefault()}
-                          onClick={() =>
-                            handleMeasurementChange(
-                              field.key,
-                              Math.max(0, Math.round((val - 0.5) * 4) / 4)
-                            )
-                          }
-                          className="h-8 w-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center active:scale-90 select-none"
-                          title="Decrease 0.5 inches"
+                {showMobileAdmin && (
+                  <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-3 shadow-xl animate-fade-in">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                      Staff Assignment • کاریگر کا انتخاب
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-gray-400">کٹنگ ماسٹر</label>
+                        <select
+                          value={assignedCutterId}
+                          onChange={(e) => setAssignedCutterId(e.target.value)}
+                          className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
                         >
-                          -0.5
-                        </button>
-
-                        <span className="font-mono text-base font-bold text-gold tabular-nums text-center flex-1">
-                          {val.toFixed(2)}″
-                        </span>
-
-                        <button
-                          type="button"
-                          onPointerDown={(e) => e.preventDefault()}
-                          onClick={() =>
-                            handleMeasurementChange(
-                              field.key,
-                              Math.round((val + 0.5) * 4) / 4
-                            )
-                          }
-                          className="h-8 w-8 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center active:scale-90 select-none"
-                          title="Increase 0.5 inches"
-                        >
-                          +0.5
-                        </button>
+                          <option value="">کوئی نہیں (None)</option>
+                          {cuttingMasters.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-
-                      {/* Fractional Pills (.00, .25, .50, .75) */}
-                      <div className="grid grid-cols-4 gap-1">
-                        {[0.0, 0.25, 0.5, 0.75].map((frac) => {
-                          const base = Math.floor(val);
-                          const isFracActive = Math.abs((val - base) - frac) < 0.05;
-                          return (
-                            <button
-                              key={frac}
-                              type="button"
-                              onClick={() => handleMeasurementChange(field.key, base + frac)}
-                              className={cn(
-                                'h-5 rounded text-[10px] font-mono font-semibold transition-colors flex items-center justify-center',
-                                isFracActive
-                                  ? 'bg-gold text-black font-bold'
-                                  : 'bg-white/5 text-gray-400 hover:text-white'
-                              )}
-                            >
-                              {frac === 0 ? '.00' : frac === 0.25 ? '¼' : frac === 0.5 ? '½' : '¾'}
-                            </button>
-                          );
-                        })}
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-gray-400">سلائی کاریگر</label>
+                        <select
+                          value={assignedStitcherId}
+                          onChange={(e) => setAssignedStitcherId(e.target.value)}
+                          className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
+                        >
+                          <option value="">کوئی نہیں (None)</option>
+                          {stitchers.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
 
-              {/* Craftsman Assignment */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Staff Assignment • کاریگر کا انتخاب
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-gray-400">کٹنگ ماسٹر</label>
-                    <select
-                      value={assignedCutterId}
-                      onChange={(e) => setAssignedCutterId(e.target.value)}
-                      className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
-                    >
-                      <option value="">کوئی نہیں (None)</option>
-                      {cuttingMasters.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="space-y-1 pt-1">
+                      <label className="text-xs font-bold text-white uppercase tracking-wider block">
+                        Special Notes • خصوصی ہدایات
+                      </label>
+                      <textarea
+                        rows={2}
+                        placeholder="e.g. کالر پر کڑھائی، بٹن خصوصی لکڑی والے"
+                        value={specialNotes}
+                        onChange={(e) => setSpecialNotes(e.target.value)}
+                        className="w-full rounded-lg border border-white/10 bg-black/40 p-2.5 text-xs text-white placeholder-gray-500 focus:border-gold/50 focus:outline-none"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-gray-400">سلائی کاریگر</label>
-                    <select
-                      value={assignedStitcherId}
-                      onChange={(e) => setAssignedStitcherId(e.target.value)}
-                      className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
-                    >
-                      <option value="">کوئی نہیں (None)</option>
-                      {stitchers.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                )}
               </div>
 
-              {/* Special Instructions */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-2 bg-[#121418]">
-                <label className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Special Notes • خصوصی ہدایات
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="e.g. کالر پر کڑھائی، بٹن خصوصی لکڑی والے"
-                  value={specialNotes}
-                  onChange={(e) => setSpecialNotes(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-black/40 p-2.5 text-xs text-white placeholder-gray-500 focus:border-gold/50 focus:outline-none"
-                />
-              </div>
-
-              {/* Back to Step 2 */}
-              <Button
+              {/* Inline back button to Step 2 */}
+              <button
                 type="button"
-                variant="outline"
-                onClick={() => setMobileStep(2)}
-                className="w-full h-10 border-white/10 text-xs text-gray-300"
+                onClick={() => {
+                  setMobileStep(2);
+                  document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="w-full h-11 rounded-xl border border-white/10 bg-white/5 text-gray-300 font-urdu-serif text-xs hover:bg-white/10 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                <span>← واپس ڈیزائن پر جائیں (Back to Style)</span>
-              </Button>
+                <ArrowLeft className="h-4 w-4" />
+                <span>← واپس ڈیزائن اور کٹ پر جائیں (Back to Style)</span>
+              </button>
+
+              {/* Physical Bottom Spacer to prevent docked bar overlap */}
+              <div className="h-36 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
           {/* ============================================================== */}
           {/* MOBILE STICKY BOTTOM BOOKING BAR                               */}
           {/* ============================================================== */}
-          <div className="fixed bottom-[60px] left-0 right-0 z-30 bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30 p-3 shadow-[0_-4px_30px_rgba(0,0,0,0.8)] space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider">
-                  Total PKR
+          <div className="fixed bottom-0 left-0 right-0 z-30 pb-safe bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30 p-3 shadow-[0_-4px_30px_rgba(0,0,0,0.8)] space-y-2">
+            {mobileStep === 1 ? (
+              <Button
+                type="button"
+                disabled={!customerName.trim()}
+                onClick={() => {
+                  if (!customerName.trim()) return;
+                  setMobileStep(2);
+                  document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={cn(
+                  'w-full h-12 font-bold text-sm flex items-center justify-center gap-2 rounded-xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)]',
+                  !customerName.trim()
+                    ? 'bg-white/10 text-gray-400 border border-white/10 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black hover:opacity-95 active:scale-[0.99]'
+                )}
+              >
+                <span className="font-urdu-serif leading-relaxed py-0.5 text-sm">
+                  {!customerName.trim()
+                    ? 'گاہک کا نام درج کریں (Enter Customer Name)'
+                    : 'اگلا مرحلہ: ڈیزائن اور کٹ منتخب کریں'}
                 </span>
-                <span className="font-mono text-sm font-bold text-gold">
-                  Rs. {financials.total_amount.toLocaleString()}
-                </span>
+                {customerName.trim() && (
+                  <>
+                    <span className="text-xs font-sans opacity-80">(Next: Style & Cut)</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            ) : mobileStep === 2 ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setMobileStep(1);
+                    document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="h-12 px-4 rounded-xl border border-white/15 bg-white/5 text-gray-300 font-urdu-serif text-xs hover:bg-white/10 active:scale-98"
+                >
+                  ← واپس
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setMobileStep(3);
+                    document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="flex-1 h-12 min-h-[48px] px-2 rounded-xl bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center hover:opacity-95 active:scale-[0.99]"
+                >
+                  <div className="flex flex-col items-center justify-center leading-none">
+                    <span className="font-urdu-serif text-xs font-bold leading-tight">اگلا مرحلہ: ناپ درج کریں</span>
+                    <span className="text-[10px] text-black/80 font-sans font-semibold mt-0.5">Next: Measurements Matrix →</span>
+                  </div>
+                </Button>
               </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">
+                      Total PKR
+                    </span>
+                    <span className="font-mono text-sm font-bold text-white">
+                      Rs. {financials.total_amount.toLocaleString()}
+                    </span>
+                  </div>
 
-              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-lg">
-                <span className="text-[11px] text-gray-300">ایڈوانس:</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={advancePaid}
-                  onChange={(e) => setAdvancePaid(parseFloat(e.target.value) || 0)}
-                  className="w-16 h-6 rounded bg-black/60 border border-white/15 px-1 text-right font-mono text-xs font-bold text-white focus:outline-none focus:border-gold"
-                />
-              </div>
+                  <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-lg">
+                    <span className="text-[11px] text-gray-300">ایڈوانس:</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      value={advancePaid === 0 ? '' : advancePaid}
+                      placeholder="0"
+                      onChange={(e) => setAdvancePaid(Number(e.target.value) || 0)}
+                      className="h-9 w-24 text-center font-mono font-bold text-gold bg-black/60 border border-white/20 rounded-lg focus:outline-none focus:border-gold"
+                    />
+                  </div>
 
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider">
-                  باقی بیلنس
-                </span>
-                <span className="font-mono text-xs font-bold text-rose-400">
-                  Rs. {financials.balance_due.toLocaleString()}
-                </span>
-              </div>
-            </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">
+                      باقی بیلنس
+                    </span>
+                    <span className="font-mono text-sm font-bold text-rose-400">
+                      Rs. {financials.balance_due.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
 
-            <Button
-              type="button"
-              disabled={!isFormValidToBook || isCheckingQuota}
-              isLoading={isCheckingQuota}
-              onClick={handleBookOrder}
-              className="w-full h-11 bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black hover:opacity-95 font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              <span>
-                {isCheckingQuota
-                  ? 'تصدیق جاری ہے...'
-                  : !customerName.trim()
-                  ? 'گاہک کا نام درج کریں'
-                  : 'بکنگ مکمل کریں • Book Order'}
-              </span>
-            </Button>
+                <Button
+                  type="button"
+                  disabled={!isFormValidToBook || isSubmitting}
+                  isLoading={isSubmitting}
+                  onClick={() => handleCreateOrder(false)}
+                  className="w-full h-13 min-h-[52px] rounded-xl bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black font-bold text-base shadow-[0_0_25px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2 hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer"
+                >
+                  <Sparkles className="h-4 w-4 shrink-0 text-black" />
+                  <span className="font-urdu-serif leading-relaxed py-0.5 text-sm font-bold">
+                    {isSubmitting
+                      ? 'تصدیق جاری ہے...'
+                      : !customerName.trim()
+                      ? 'گاہک کا نام درج کریں'
+                      : '✨ سوٹ بکنگ مکمل کریں اور پرچی بنائیں • Confirm & Book Suit'}
+                  </span>
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -2408,7 +2674,7 @@ export default function NewOrderPage() {
 
         {/* Monthly Quota Exceeded Luxury Obsidian Dark Dialog */}
         {isQuotaModalOpen && quotaDetails && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="quota-dialog-title" aria-describedby="quota-dialog-desc">
             <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-gold/40 bg-[#0F1115]/95 p-6 sm:p-8 shadow-[0_0_50px_rgba(212,175,55,0.2)]">
               {/* Decorative radial top glow */}
               <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-gold/15 blur-3xl" />
@@ -2421,12 +2687,12 @@ export default function NewOrderPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold text-foreground">Monthly Quota Reached</h2>
+                      <h2 id="quota-dialog-title" className="text-lg font-bold text-foreground">Monthly Quota Reached</h2>
                       <Badge variant="outline" className="border-gold/50 bg-gold/10 text-gold text-[10px] uppercase tracking-wider font-semibold">
                         {currentShop.subscription_status === 'TRIALING' ? 'Trial Expired' : 'Free Tier'}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p id="quota-dialog-desc" className="text-xs text-muted-foreground">
                       Maximum monthly suit quota exhausted
                     </p>
                   </div>

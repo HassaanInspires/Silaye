@@ -2689,3 +2689,261 @@
 
 
 
+
+---
+
+## Phase 21: Automated Deep Mobile Visual Screenshot Capture & Ergonomics Analysis (Completed)
+* **Date:** 2026-09-03
+* **Tasks Completed:**
+  - `21.1` Built `scripts/capture_deep_mobile_audit.ts` Playwright test harness simulating standard Pakistani Android mobile viewport (**360px × 780px @ 2.5 DPR**, `SM-A536B` User-Agent, touch-enabled) with automatic target resolution against `https://silaye.vercel.app`.
+  - `21.2` Executed complete automated capture suite across Pro Master and Super Admin workflows, successfully capturing all **18 high-resolution PNG outputs** in `./audit-screenshots/mobile/`:
+    - `01_login_mobile.png` (1.2 MB)
+    - `02_dashboard_top.png` (1.2 MB)
+    - `03_dashboard_scrolled_mid.png` (867 KB)
+    - `04_dashboard_scrolled_bottom.png` (863 KB)
+    - `05_booking_step1_customer_fabric.png` (1.4 MB)
+    - `06_booking_step2_style_cuts.png` (1.4 MB)
+    - `07_booking_step3_measurements.png` (1.4 MB)
+    - `08_booking_sticky_bar_overlap.png` (1.2 MB)
+    - `09_orders_list_top.png` (755 KB)
+    - `10_orders_card_actions.png` (755 KB)
+    - `11_khata_summary_cards.png` (962 KB)
+    - `12_khata_customer_card.png` (962 KB)
+    - `13_thermal_print_station.png` (970 KB)
+    - `14_admin_metrics_mobile.png` (1.5 MB)
+    - `15_admin_workshops_table_mobile.png` (1.7 MB)
+    - `16_admin_payment_approvals_mobile.png` (1.2 MB)
+    - `17_modal_whatsapp_receipt.png` (630 KB)
+    - `18_modal_thermal_preview.png` (970 KB)
+  - `21.3` Extracted comprehensive DOM telemetry into `audit-screenshots/mobile/ergonomic_telemetry.json` (Chrome height: 64px, usable vertical canvas: 716px / 91.8%, identified sub-44px tap targets, evaluated text truncations, and verified sticky bar clearance).
+  - `21.4` Authored comprehensive ground-reality engineering report `mobile_ground_reality_audit_report.md` with Pass/Fail scorecard, physical shop ergonomics evaluation, and prioritized remediation matrix (P0/P1/P2).
+
+* **Active File Changes:**
+  - `scripts/capture_deep_mobile_audit.ts` [NEW]
+  - `mobile_ground_reality_audit_report.md` [NEW]
+  - `audit-screenshots/mobile/*.png` [NEW - 18 high-resolution PNGs]
+  - `audit-screenshots/mobile/ergonomic_telemetry.json` [NEW]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - Playwright mobile test runner: 18/18 screens captured with 0 errors.
+  - Telemetry validation: 18/18 screen states extracted and saved.
+  - Zero application source code modifications in `app/`, `components/`, `lib/`, `types/` (100% compliant with strict audit protocol).
+
+* **Next Immediate Task:**
+  - Execute Phase 21: Mobile Ergonomic Declutter & Thumb-Zone Refactor on feature branch.
+
+---
+
+## Phase 21: Mobile Ergonomic Declutter & Thumb-Zone Refactor (Task 21.4 Completed)
+* **Date:** 2026-09-03
+* **Tasks Completed:**
+  - `21.4.1` Isolated dedicated feature branch `feature/ergonomic-declutter`, staged and archived all 18 Playwright mobile audit PNG artifacts, telemetry, and ground-reality audit report with commit `chore: archive mobile ergonomics ground-reality visual audit`.
+  - `21.4.2` AppShell Route Guard & Bottom Nav Suppression (`components/layout/app-shell.tsx`):
+    - Suppressed `<MobileBottomNav />` when `pathname?.startsWith('/orders/new') || activeRoute?.startsWith('/orders/new')`.
+    - Adjusted `<main id="main-content">` bottom padding to `pb-8` when on `/orders/new` or in drawer mode (preserving `pb-36` on standard tabs routes).
+  - `21.4.3` Mobile Dashboard Overhaul (`app/dashboard/page.tsx` under `md:hidden`):
+    - Replaced greeting card and 2x2 KPI grid with a high-contrast 64px Glance Strip rendering Ready for Pickup (`readyOrders.length`), Suits in Progress (`inProgressCount`), and Total Udhaar Collectible (`unsettledKhataTotal`).
+    - Placed two 56px-tall primary thumb buttons directly below the glance strip: Primary Gold `[+ Book New Suit / نیا سوٹ بک کریں]` and Glass Outline `[🔍 Search Parchi / گاہک و پرچی تلاش]`.
+    - Replaced horizontal scrolling carousel with an uncrushable vertical urgent deliveries feed equipped with direct 1-tap WhatsApp alert and stage advance buttons (backed by `PIPELINE_COLUMNS` and `ordersDb.updateStatus`).
+    - Stripped redundant 4-chip navigation grid from mobile view while leaving desktop view (`hidden md:block`) 100% untouched.
+  - `21.4.4` Booking Wizard Optimization (`app/orders/new/page.tsx` under `md:hidden`):
+    - Hidden 85px top header on mobile (`hidden md:flex`) so inputs and step progress pills start immediately at the top of the viewport.
+    - Docked sticky booking confirmation bar to `bottom-0 left-0 right-0 z-30 pb-safe bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30 p-3`.
+    - Step 3 (Measurement Matrix): Removed small `[-0.5"]` / `[+0.5"]` steppers and enforced hybrid entry standard: large whole-inches numeric input (`inputMode="numeric"`, `h-11`) + full-height 48px tactile fractional pills (`0`, `¼`, `½`, `¾`).
+  - `21.4.5` Touch Target Hardening:
+    - In `app/(auth)/login/page.tsx`: Expanded password visibility eye toggle to 44x44px (`h-11 w-11 min-h-[44px] min-w-[44px]`) and auth switch tabs to `h-11 min-h-[44px]`.
+    - In `app/orders/page.tsx`: Expanded search clear button to 40x40px, status filter pills to `h-11 min-h-[44px]`, and order card action buttons (WhatsApp, print, advance) to `h-11 min-h-[44px]`.
+  - `21.4.6` Version Bump & Automated Verification:
+    - Bumped version to `1.1.5` in `package.json` and `package-lock.json`.
+    - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    - `scripts/verify_db.ts`: 159/159 database and repository assertions passed.
+    - `npm run build`: 28/28 static routes generated cleanly into `out/`.
+
+* **Active File Changes:**
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `app/(auth)/login/page.tsx` [MODIFIED]
+  - `app/orders/page.tsx` [MODIFIED]
+  - `package.json` [MODIFIED]
+  - `package-lock.json` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 errors).
+  - `scripts/verify_db.ts`: 159/159 assertions passed in offline and fallback environments.
+  - `npm run build`: Static export compiled 28/28 pages cleanly into `out/`.
+
+* **Next Immediate Task:**
+  - Pass 2: Mobile Orders Queue, Khata Ledger, Universal Bottom Clearance & Authentic Nastaliq Typography Refactor (Completed).
+
+---
+
+## Phase 21: Mobile Ergonomic Declutter & Thumb-Zone Refactor (Pass 2 Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.5` Pass 2: Mobile Orders Queue, Khata Ledger, Universal Bottom Clearance & Authentic Nastaliq Typography Refactor:
+    - **Universal Bottom Clearance Standard (`pb-44 pb-safe`)**:
+      * In `app/orders/page.tsx`, `app/khata/page.tsx`, and `app/settings/page.tsx`, enforced `pb-44 pb-safe` (minimum 176px bottom clearance) on outermost mobile containers, eliminating card, button, and ledger clipping above `<MobileBottomNav />`.
+      * In `app/orders/new/page.tsx`, enforced `pb-44 pb-safe` on both the outermost mobile wrapper AND on scrollable step containers (Step 1 Customer & Fabric, Step 2 Style & Preferences, Step 3 Measurement Matrix) ensuring all fabric inputs and step navigation CTAs sit cleanly above the docked bottom confirmation bar (`fixed bottom-0 z-30`).
+    - **Header CTA Clashes Eradication**:
+      * In `app/orders/page.tsx` under `md:hidden`: Removed the top-right yellow `[+ نیا سوٹ]` button and link from the mobile header bar, establishing the bottom center FAB as the single, un-conflicted primary booking trigger.
+      * In `app/khata/page.tsx` under `md:hidden`: Removed the top-right yellow `[+ نیا اندراج]` button from the mobile header bar.
+    - **Horizontal Filter Pills Overflow Fix**:
+      * In `app/orders/page.tsx` and `app/khata/page.tsx`: Updated scrollable filter pill containers to `flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none touch-pan-x -mx-4 pl-4 pr-10`, preventing end chips (`[ڈیلیورڈ]`, `[بے باق]`) from being sliced in half by viewport overflow.
+    - **Authentic Noto Nastaliq Urdu Typography (`font-urdu-serif leading-relaxed py-1`)**:
+      * In `app/orders/page.tsx`, `app/khata/page.tsx`, and `app/settings/page.tsx`, replaced all occurrences of flat Arabic font (`font-urdu-sans`) with authentic Nastaliq (`font-urdu-serif leading-relaxed py-1`) across empty state headings, descriptions, and action buttons (`کوئی آرڈر نہیں ملا`, `کوئی کھاتہ نہیں ملا`, `تمام فلٹرز صاف کریں`), horizontal filter pills (`تمام`, `کٹنگ`, `سلائی`, `تیار`, `ڈیلیورڈ`, `ادھار`, `ایڈوانس`, `بے باق`), order card stage labels, balance due tags, advance CTAs, and settings tab titles and section subtitles.
+
+* **Active File Changes:**
+  - `app/orders/page.tsx` [MODIFIED]
+  - `app/khata/page.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `scripts/verify_db.ts`: 159/159 database and repository test assertions passed.
+  - `npm run build`: Clean static export into `out/` (28/28 static routes compiled).
+
+* **Next Immediate Task:**
+  - Sub-Phase 21.3.1: Step 1 (Customer & Suit Details) Mobile Overhaul (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.1 - Step 1 (Customer & Suit Details) Mobile Overhaul (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.1` Step 1 (Customer & Suit Details) Mobile Overhaul (`app/orders/new/page.tsx`):
+    - **Unified Single Surface (Removed Nested Grey Cards)**: Removed 4 heavy nested `premium-glass-card` containers and consolidated Step 1 inputs onto a unified obsidian glass surface (`rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4`) separated by subtle hairline dividers (`border-b border-white/5 pb-4`).
+    - **Smart Collapsible Address & Notes**: Kept phone input (`inputMode="tel"`) with auto-lookup badge, customer name input, and collapsed address & notes behind a tactile toggle button. When phone lookup matches an existing customer profile with saved address, dynamically displays `[✓ پتہ محفوظ ہے: (Address) - تبدیل کرنے کے لیے ٹیپ کریں]`, preserving 90px of vertical space.
+    - **3D Pop-up Garment Selection Chips**: Replaced 6 massive card boxes with a compact 2-column tactile chip grid (`grid grid-cols-2 gap-2`) with 3D pop-up active styling (`bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02]`) and inactive styling (`bg-white/5 border-white/10 text-gray-400 hover:text-gray-200`). Integrated suit quantity stepper and wired `handleGarmentTypeChange(g.value)` to synchronize rates and delivery turnaround days.
+    - **Turnaround Date & Fabric Details Alignment**: Combined Delivery Date input and Urgent Fast-Track toggle side-by-side (`grid grid-cols-2 gap-2.5 items-end`), added two-way segmented fabric source toggle (`[✓ گاہک کا کپڑا]` vs `[دکان کا کپڑا]`), and compact 2-column Color & Brand inputs (`grid grid-cols-2 gap-2.5`).
+    - **Dynamic Step-Aware Bottom Action Bar**: On Step 1 (`mobileStep === 1`), suppressed premature Total/Advance payment fields and rendered a dedicated, full-width gold advancement button `[اگلا مرحلہ: ڈیزائن اور کٹ منتخب کریں → / Next: Style & Cut]` docked at `bottom-0 z-30 pb-safe`, validating customer name entry and smoothly resetting container scroll (`document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });`).
+    - **Content Bottom Clearance**: Preserved `pb-44 pb-safe` on Step 1 scroll container ensuring no content is clipped behind the bottom bar.
+    - **Isolation Guardrails**: Desktop views (`hidden md:block`), Step 2 (`mobileStep === 2`), and Step 3 (`mobileStep === 3`) remained strictly untouched.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `scripts/verify_db.ts`: 159/159 database and repository test assertions passed.
+  - `npm run build`: Static export compiled cleanly into `out/` across all 28/28 routes.
+
+* **Next Immediate Task:**
+  - Sub-Phase 21.3.2: Fix Garment Chip & Fabric Source Text Truncation in Step 1 Mobile (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.2 - Fix Garment Chip & Fabric Source Text Truncation in Step 1 Mobile (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.2` Fix Garment Chip & Fabric Source Text Truncation in Step 1 Mobile (`app/orders/new/page.tsx`):
+    - **Garment Type Chips Layout Overhaul (`GARMENT_TYPE_OPTIONS.map`)**: Replaced horizontal flex row (`flex items-center justify-between gap-1.5 text-left`) with a centered vertical flex column (`flex flex-col items-center justify-center text-center py-1`) and `h-auto min-h-11`. Removed `truncate` classes from both the Urdu span (`font-urdu-serif text-xs font-bold leading-relaxed py-0.5`) and the English span (`text-[9px] opacity-70 font-medium font-sans`), guaranteeing that Urdu renders fully on top and English renders cleanly below without `..` ellipsis dots.
+    - **Fabric Source Segmented Toggle (`CUSTOMER` vs `SHOP`)**: Converted both `CUSTOMER` and `SHOP` source buttons to the identical vertical column stack (`h-auto min-h-11 py-1 flex flex-col items-center justify-center text-center`), separating "گاہک کا کپڑا" and "دکان کا کپڑا" into full-visibility Urdu top headers and "Customer Fabric" / "Shop Fabric" English subtitles below, completely eliminating text clipping.
+    - **Visual Design & Token Preservation**: Kept the exact colors, backgrounds, borders, active 3D gold pop-up glow (`bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02]`), and micro-interactions (`active:scale-98`) from commit `5334e13`.
+    - **Isolation Guardrails**: No modifications made to desktop layout or other wizard steps.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npm run build`: Static export compiled cleanly into `out/` across all 28/28 routes with 0 errors.
+
+* **Next Immediate Task:**
+  - Sub-Phase 21.3.2: Step 2 (Style & Design) Mobile Overhaul (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.2 - Step 2 (Style & Design) Mobile Overhaul (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.2` Step 2 (Style & Design) Mobile Overhaul (`app/orders/new/page.tsx`):
+    - **Unified Single Surface (Eliminated Nested Card Bloat)**: Replaced 5 heavy separate `.premium-glass-card` wrappers with a unified obsidian glass container matching Step 1 (`rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl`) separated by subtle hairline dividers (`border-b border-white/5 pb-3.5`).
+    - **Preserved Existing Data Structures & Pakistani Defaults**: Kept all existing option arrays and values intact without altering type definitions or schemas (`FULL_BAN`, `HALF_BAN`, `SHERWANI_COLLAR`, `SHIRT_COLLAR`, `SOFT_BAN`; `CHORAS_DAMAN`, `GOOL_DAMAN`; `FRONT_CHEST`, `RIGHT_SIDE`, `LEFT_SIDE`, `MOBILE_INSIDE`; `DOUBLE_SILAI`, `SINGLE_SILAI`; `GUM_PATTI`, `OPEN_PATTI`). Pakistani adult defaults (`FULL_BAN`, `CHORAS_DAMAN`, `FRONT_CHEST` + `RIGHT_SIDE`, `DOUBLE_SILAI`, `GUM_PATTI`) are pre-selected and glowing on first load.
+    - **Verified 3D Tactile Chip Geometry (Vertical Stack)**: Implemented centered vertical column stacks (`h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all`) across all 5 sections. Rendered authentic Nastaliq Urdu on top (`font-urdu-serif text-xs font-bold leading-relaxed py-0.5`) with checkmark `{isSelected && <span className="mr-1 text-gold">✓</span>}`, English subtitle below (`text-[9px] opacity-70 font-medium font-sans`), 3D gold pop-up active styling (`bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98`), and inactive styling (`bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98`). Configured Collar Cut with `grid grid-cols-2 gap-2` and the 5th option spanning `col-span-2`, and 2-column grids for all remaining sections.
+    - **Dynamic Step 2 Docked Bottom Action Bar & Physical Bottom Spacers**: Suppressed premature Total PKR and Advance payment inputs on Step 2. Rendered a dedicated 2-button thumb-docked action bar (`fixed bottom-0 left-0 right-0 z-30 pb-safe p-3 bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30`) with `[← واپس]` and centered vertical stack `[اگلا مرحلہ: ناپ درج کریں / Next: Measurements Matrix →]` (`px-2 min-h-[48px]`), smoothly resetting container scroll to top on step advancement. Added uncollapsible physical bottom spacers (`h-28 w-full shrink-0`) across Step 1, Step 2, and Step 3 to prevent card clipping behind the docked bar at full scroll.
+    - **Isolation Guardrails**: Desktop views (`hidden md:block`), Step 1 (`mobileStep === 1`), and Step 3 (`mobileStep === 3`) remained strictly untouched.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npm run build`: Clean static export into `out/` (28/28 static routes compiled with 0 errors).
+
+* **Next Immediate Task:**
+  - Sub-Phase 21.3.2.1: Accessibility & Mobile Clearance Hardening (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.2.1 - Accessibility & Mobile Clearance Hardening (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.2.1` Accessibility & Mobile Clearance Hardening (`app/orders/new/page.tsx`, `components/tailor/*.tsx`):
+    - **Radix UI Dialog A11y Remediation**: Added `aria-describedby={undefined}` and sr-only `DialogTitle` & `DialogDescription` components to modal dialogs (`WhatsAppReceiptModal`, `ThermalSlipModal`, `CustomerKhataDetailModal`, `KhataEntryModal`), completely eliminating DevTools missing accessible title/description warnings. Augmented the custom Monthly Quota Exceeded modal with `role="dialog" aria-modal="true" aria-labelledby="quota-dialog-title" aria-describedby="quota-dialog-desc"` and corresponding element IDs.
+    - **WCAG AA Contrast Remediation**: Replaced low-contrast `text-[9px] opacity-70` English subtitles across garment chips, fabric source segmented toggles, and Step 2 style option chips (Collar, Daman, Pockets, Stitching, Patti) with high-contrast tokens (`text-[10px] font-medium font-sans` with `text-amber-200` for active state and `text-gray-300` for inactive state), exceeding the WCAG 4.5:1 contrast ratio against obsidian dark glass surfaces.
+    - **Mobile Bottom Scroll-Lock & Docked Action Bar Refinement**: Placed physical uncollapsible bottom spacers (`<div className="h-32 w-full shrink-0" aria-hidden="true" />`) directly before the closing tag of Step 1, Step 2, and Step 3 content wrappers, guaranteeing that the lowest interactive section ("FRONT PATTI • سامنے پٹی") and form inputs never clip behind the docked bottom action bar at maximum scroll. Upgraded the Step 2 docked bottom button with a centered vertical stack and high-contrast subtitle (`<span className="text-[10px] text-black/80 font-sans font-semibold mt-0.5">Next: Measurements Matrix →</span>`).
+    - **Isolation Guardrails**: Desktop layouts (`hidden md:block`) and underlying data structures remained strictly untouched.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `components/tailor/whatsapp-receipt-modal.tsx` [MODIFIED]
+  - `components/tailor/thermal-slip-modal.tsx` [MODIFIED]
+  - `components/tailor/customer-khata-detail-modal.tsx` [MODIFIED]
+  - `components/tailor/khata-entry-modal.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npm run build`: Static export compiled cleanly into `out/` across all 28/28 routes with 0 errors.
+
+* **Next Immediate Task:**
+  - Sub-Phase 21.3.3: Step 3 (Measurement Matrix & Final Booking Ledger) Mobile Overhaul (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.3 - Step 3 (Measurement Matrix & Final Booking Ledger) Mobile Overhaul (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.3` Step 3 (Measurement Matrix & Final Booking Ledger) Mobile Overhaul (`app/orders/new/page.tsx`):
+    - **Unified Obsidian Glass Measurement Matrix Surface**: Eradicated the 10 separate bulky `.premium-glass-card` elements, replacing them with a unified obsidian glass single-surface container (`rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl`) separated by hairline dividers (`border-b border-white/5 pb-3.5`).
+    - **Pakistani Adult Standard Baseline Auto-Fill**: Updated default baseline measurements (`DEFAULT_MEASUREMENTS` and `MOBILE_MEASUREMENT_FIELDS`) to standard Pakistani adult dimensions (Length 40, Chest 38, Waist 36, Shoulder 17.5, Sleeve 23.5, Collar 15.5, Daman 22, Shalwar Length 38, Paincha 8.5, Aasan 16.5) for new customers, while strictly preserving existing customer profiles loaded via phone auto-lookup.
+    - **Triple-Speed Measurement Controls Bar (360px-Safe)**:
+      * Added `formatMeasurementDisplay(val: number): string` converting decimal inches into authentic tailoring notation (`40 ½″`, `38 ¼″`, `36 ¾″`, `40″`).
+      * Rendered live formatted badge in each row header: `<bdi className="font-mono text-gold font-bold text-xs bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-lg">{formatMeasurementDisplay(val)}</bdi>`.
+      * Integrated whole-inch steppers (`[-1]` w-9, direct numeric input `w-12`, `[+1]` w-9) protected with `Math.round((...) * 100) / 100` to eliminate IEEE-754 floating-point drift.
+      * Placed vertical hairline separator (`w-px h-7 bg-white/10 mx-1`) flanking 4 tactile fractional pills (`0`, `¼`, `½`, `¾` at `h-11`) with active gold glow styling (`bg-gold text-black shadow-[0_0_12px_rgba(212,175,55,0.3)]`).
+    - **Collapsible Administration (Staff & Notes)**: Collapsed Cutting Master, Stitching Craftsman, and Special Notes behind a single clean toggle button (`[+ کاریگر تفویض اور خصوصی ہدایات درج کریں / Staff Assignment & Notes]`) with an active pulse indicator dot, and added an inline back button to Step 2 (`[← واپس ڈیزائن اور کٹ پر جائیں (Back to Style)]`).
+    - **Docked Financial Settlement Bar & Clearance**: Activated the complete financial summary bar on Step 3 (Total PKR in white, Advance Paid numeric input in gold, Balance Due in rose-400) and primary glowing booking CTA `[✨ سوٹ بکنگ مکمل کریں اور پرچی بنائیں • Confirm & Book Suit]` (`h-13 min-h-[52px]` with gold gradient and `shadow-[0_0_25px_rgba(212,175,55,0.4)]`) wired to `handleCreateOrder(false)` / `handleBookOrder`. Added physical uncollapsible bottom spacer (`<div className="h-36 w-full shrink-0" aria-hidden="true" />`) preventing input occlusion behind the docked bar.
+    - **Isolation Guardrails**: Desktop layouts (`hidden md:block`), Step 1 (`mobileStep === 1`), and Step 2 (`mobileStep === 2`) remained strictly untouched.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 database, migration, mapper, offline fallback, and notification assertions passed.
+  - `npm run build`: Clean static export into `out/` (all 28/28 static routes generated with 0 errors).
+
+* **Next Immediate Task:**
+  - Commit and push `feature/ergonomic-declutter` snapshot.
+
+
+
+

@@ -302,59 +302,51 @@ export default function KhataPage() {
         {/* ================================================================ */}
         {/* MOBILE KHATA LEDGER VIEWPORT (md:hidden)                         */}
         {/* ================================================================ */}
-        <div className="block md:hidden space-y-4">
+        <div className="block md:hidden space-y-4 pb-44 pb-safe">
           {/* Mobile Header Bar */}
           <div className="flex items-center justify-between pb-1">
             <div>
               <h1 className="text-xl font-bold text-white flex items-center gap-2">
                 <span>Khata Ledger</span>
-                <span className="font-urdu-serif text-base text-gold" dir="rtl">
+                <span className="font-urdu-serif text-base text-gold leading-relaxed py-1" dir="rtl">
                   کھاتہ رجسٹر
                 </span>
               </h1>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-[11px] text-gray-400 font-urdu-serif leading-relaxed py-1">
                 مارکیٹ ادھار اور ایڈوانس حساب کتاب
               </p>
             </div>
-            <Button
-              size="sm"
-              onClick={() => handleOpenNewTransaction()}
-              className="h-8 px-2.5 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold text-xs shadow-[0_0_12px_rgba(212,175,55,0.25)] gap-1"
-            >
-              <PlusCircle className="h-3.5 w-3.5" />
-              <span>نیا اندراج</span>
-            </Button>
           </div>
 
           {/* 1. Mobile Financial Summary Card */}
           <div className="premium-glass-card p-4 border-rose-500/30 bg-gradient-to-br from-rose-500/15 via-[#121418] to-transparent relative overflow-hidden shadow-lg space-y-3">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold tracking-wider uppercase text-rose-400">
+                <span className="text-[10px] font-bold tracking-wider uppercase text-rose-400 font-urdu-serif leading-relaxed py-1">
                   Total Market Receivables • ادھار
                 </span>
                 <div className="font-mono text-2xl font-bold text-rose-300">
                   <bdi dir="ltr">Rs. {metrics.totalReceivables.toLocaleString()}</bdi>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-xs font-semibold font-urdu-serif leading-relaxed py-1">
                 {metrics.debtorsCount} گاہک
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5 text-center">
               <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-                <span className="text-[9px] text-gray-400 block truncate">واجب الادا</span>
+                <span className="text-[9px] text-gray-400 block truncate font-urdu-serif leading-relaxed py-1">واجب الادا</span>
                 <span className="font-mono text-xs font-bold text-rose-400">{metrics.debtorsCount}</span>
               </div>
               <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-                <span className="text-[9px] text-gray-400 block truncate">ایڈوانس رقم</span>
+                <span className="text-[9px] text-gray-400 block truncate font-urdu-serif leading-relaxed py-1">ایڈوانس رقم</span>
                 <span className="font-mono text-xs font-bold text-emerald-400">
                   Rs. {metrics.totalAdvances.toLocaleString()}
                 </span>
               </div>
               <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-                <span className="text-[9px] text-gray-400 block truncate">بے باق کھاتے</span>
+                <span className="text-[9px] text-gray-400 block truncate font-urdu-serif leading-relaxed py-1">بے باق کھاتے</span>
                 <span className="font-mono text-xs font-bold text-gray-200">{metrics.settledCount}</span>
               </div>
             </div>
@@ -383,7 +375,7 @@ export default function KhataPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none touch-pan-x -mx-4 px-4">
+            <div className="flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none touch-pan-x -mx-4 pl-4 pr-10">
               {[
                 { id: 'ALL', labelUrdu: 'تمام', labelEn: 'All', count: customers.length },
                 { id: 'DEBTORS', labelUrdu: 'ادھار', labelEn: 'Udhaar', count: metrics.debtorsCount },
@@ -403,7 +395,7 @@ export default function KhataPage() {
                         : 'bg-[#121418] text-gray-400 border-white/5 hover:text-gray-200'
                     )}
                   >
-                    <span className="font-urdu-sans">{tab.labelUrdu}</span>
+                    <span className="font-urdu-serif leading-relaxed py-1">{tab.labelUrdu}</span>
                     <span className="text-[10px] opacity-70">({tab.labelEn})</span>
                     <span
                       className={cn(
@@ -423,8 +415,8 @@ export default function KhataPage() {
           {mobileFilteredCustomers.length === 0 ? (
             <div className="premium-glass-card p-8 text-center space-y-3 border-white/10 my-4">
               <Search className="h-8 w-8 text-gray-500 mx-auto" />
-              <h3 className="text-sm font-semibold text-white">کوئی کھاتہ نہیں ملا</h3>
-              <p className="text-xs text-gray-400">
+              <h3 className="text-sm font-semibold text-white font-urdu-serif leading-relaxed py-1">کوئی کھاتہ نہیں ملا</h3>
+              <p className="text-xs text-gray-400 font-urdu-serif leading-relaxed py-1">
                 دیے گئے فلٹر یا تلاش کے مطابق کوئی گاہک موجود نہیں ہے۔
               </p>
               <Button
@@ -434,9 +426,9 @@ export default function KhataPage() {
                   setMobileSearchQuery('');
                   setMobileKhataTab('ALL');
                 }}
-                className="text-xs border-white/10"
+                className="text-xs border-white/10 font-urdu-serif leading-relaxed py-1"
               >
-                فلٹرز صاف کریں
+                تمام فلٹرز صاف کریں
               </Button>
             </div>
           ) : (
@@ -476,19 +468,19 @@ export default function KhataPage() {
                         {isDebtor && (
                           <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-bold font-mono">
                             <bdi dir="ltr">Rs. {customer.current_khata_balance.toLocaleString()}</bdi>
-                            <span className="font-urdu-sans text-[10px] font-normal">واجب الادا</span>
+                            <span className="font-urdu-serif text-[10px] font-normal leading-relaxed py-1">واجب الادا</span>
                           </div>
                         )}
                         {isCreditor && (
                           <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-bold font-mono">
                             <bdi dir="ltr">Rs. {Math.abs(customer.current_khata_balance).toLocaleString()}</bdi>
-                            <span className="font-urdu-sans text-[10px] font-normal">ایڈوانس</span>
+                            <span className="font-urdu-serif text-[10px] font-normal leading-relaxed py-1">ایڈوانس</span>
                           </div>
                         )}
                         {isSettled && (
                           <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-xs font-semibold">
                             <CheckCircle2 className="h-3 w-3" />
-                            <span className="font-urdu-sans text-[10px]">بے باق (Settled)</span>
+                            <span className="font-urdu-serif text-[10px] leading-relaxed py-1">بے باق (Settled)</span>
                           </div>
                         )}
                       </div>
@@ -496,8 +488,8 @@ export default function KhataPage() {
 
                     {/* Stats summary */}
                     <div className="flex items-center justify-between text-[11px] text-gray-400 px-2 py-1 rounded-lg bg-black/40 border border-white/5">
-                      <span>{customer.total_orders_count} آرڈرز مکمل</span>
-                      <span>کل خریداری: Rs. {customer.total_spent.toLocaleString()}</span>
+                      <span className="font-urdu-serif leading-relaxed py-1">{customer.total_orders_count} آرڈرز مکمل</span>
+                      <span className="font-urdu-serif leading-relaxed py-1">کل خریداری: Rs. {customer.total_spent.toLocaleString()}</span>
                     </div>
 
                     {/* Action buttons */}
@@ -513,7 +505,7 @@ export default function KhataPage() {
                         title="Send WhatsApp Reminder"
                       >
                         <MessageSquare className="h-3.5 w-3.5" />
-                        <span>یاد دہانی</span>
+                        <span className="font-urdu-serif leading-relaxed py-1">یاد دہانی</span>
                       </button>
 
                       {/* + Record Transaction */}
@@ -526,7 +518,7 @@ export default function KhataPage() {
                         className="h-8 flex-1 rounded-lg border border-gold/40 bg-gold/15 text-gold hover:bg-gold/25 flex items-center justify-center gap-1 text-xs font-bold transition-all shadow-[0_0_10px_rgba(212,175,55,0.15)]"
                       >
                         <PlusCircle className="h-3.5 w-3.5" />
-                        <span>رقم وصولی / کھاتہ</span>
+                        <span className="font-urdu-serif leading-relaxed py-1">رقم وصولی / کھاتہ</span>
                       </button>
 
                       {/* Details Statement Chevron */}

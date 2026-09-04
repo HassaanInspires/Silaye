@@ -140,7 +140,9 @@ export function CustomerKhataDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto p-0 print:m-0 print:max-w-none print:p-4 print:border-none print:shadow-none">
+      <DialogContent aria-describedby={undefined} className="max-w-4xl max-h-[92vh] overflow-y-auto p-0 print:m-0 print:max-w-none print:p-4 print:border-none print:shadow-none">
+        <DialogTitle className="sr-only">Order Action</DialogTitle>
+        <DialogDescription className="sr-only">Order details and actions</DialogDescription>
         {/* Top Header Card */}
         <div className="border-b border-border bg-card-elevated px-6 py-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

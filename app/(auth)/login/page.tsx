@@ -200,7 +200,7 @@ export default function LoginPage() {
                 setMode('signin');
                 setErrorMsg(null);
               }}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+              className={`h-11 min-h-[44px] flex items-center justify-center text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 mode === 'signin'
                   ? 'bg-gold text-[#0B0C0E] shadow-[0_0_12px_rgba(212,175,55,0.25)]'
                   : 'text-gray-400 hover:text-gray-200'
@@ -214,7 +214,7 @@ export default function LoginPage() {
                 setMode('signup');
                 setErrorMsg(null);
               }}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+              className={`h-11 min-h-[44px] flex items-center justify-center text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 mode === 'signup'
                   ? 'bg-gold text-[#0B0C0E] shadow-[0_0_12px_rgba(212,175,55,0.25)]'
                   : 'text-gray-400 hover:text-gray-200'
@@ -287,14 +287,14 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   leftIcon={<Lock className="h-4 w-4 text-gray-400" />}
-                  className="h-11 bg-[#0B0C0E]/50 pr-10"
+                  className="h-11 bg-[#0B0C0E]/50 pr-12"
                   autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 h-11 w-11 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-gray-200 focus:outline-none cursor-pointer"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
