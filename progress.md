@@ -2838,6 +2838,29 @@
   - `npm run build`: Static export compiled cleanly into `out/` across all 28/28 routes.
 
 * **Next Immediate Task:**
-  - Sub-Phase 21.3.2: Step 2 (Style & Preferences) Mobile Overhaul.
+  - Sub-Phase 21.3.2: Fix Garment Chip & Fabric Source Text Truncation in Step 1 Mobile (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.2 - Fix Garment Chip & Fabric Source Text Truncation in Step 1 Mobile (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.2` Fix Garment Chip & Fabric Source Text Truncation in Step 1 Mobile (`app/orders/new/page.tsx`):
+    - **Garment Type Chips Layout Overhaul (`GARMENT_TYPE_OPTIONS.map`)**: Replaced horizontal flex row (`flex items-center justify-between gap-1.5 text-left`) with a centered vertical flex column (`flex flex-col items-center justify-center text-center py-1`) and `h-auto min-h-11`. Removed `truncate` classes from both the Urdu span (`font-urdu-serif text-xs font-bold leading-relaxed py-0.5`) and the English span (`text-[9px] opacity-70 font-medium font-sans`), guaranteeing that Urdu renders fully on top and English renders cleanly below without `..` ellipsis dots.
+    - **Fabric Source Segmented Toggle (`CUSTOMER` vs `SHOP`)**: Converted both `CUSTOMER` and `SHOP` source buttons to the identical vertical column stack (`h-auto min-h-11 py-1 flex flex-col items-center justify-center text-center`), separating "گاہک کا کپڑا" and "دکان کا کپڑا" into full-visibility Urdu top headers and "Customer Fabric" / "Shop Fabric" English subtitles below, completely eliminating text clipping.
+    - **Visual Design & Token Preservation**: Kept the exact colors, backgrounds, borders, active 3D gold pop-up glow (`bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02]`), and micro-interactions (`active:scale-98`) from commit `5334e13`.
+    - **Isolation Guardrails**: No modifications made to desktop layout or other wizard steps.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npm run build`: Static export compiled cleanly into `out/` across all 28/28 routes with 0 errors.
+
+* **Next Immediate Task:**
+  - Sub-Phase 21.3.3: Step 2 (Style & Preferences) Mobile Overhaul.
 
 

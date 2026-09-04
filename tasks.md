@@ -426,5 +426,10 @@
   - **Dynamic Step-Aware Bottom Action Bar**: On Step 1 (`mobileStep === 1`), suppressed premature Total/Advance payment fields and rendered dedicated full-width gold action button `[اگلا مرحلہ: ڈیزائن اور کٹ منتخب کریں → / Next: Style & Cut]` docked at `bottom-0 z-30 pb-safe`, validating customer name entry and resetting container scroll (`document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });`).
   - **Bottom Clearance**: Preserved `pb-44 pb-safe` bottom clearance to prevent bottom bar overlap.
   - **Verification Suite**: 0 TypeScript compiler errors (`npx tsc --noEmit`), 159/159 database assertions passing (`scripts/verify_db.ts`), and 28/28 static routes generated into `out/` (`npm run build`).
+- [x] 21.3.2 Fix Garment Chip & Fabric Source Text Truncation in Step 1 Mobile (`app/orders/new/page.tsx`):
+  - **Garment Type Chips (`GARMENT_TYPE_OPTIONS.map`)**: Converted button/text container from horizontal row to centered vertical flex column (`flex flex-col items-center justify-center text-center py-1`) with `h-auto min-h-11` and removed `truncate`, ensuring Urdu displays fully on top and English displays below without ellipsis dots.
+  - **Fabric Source Toggle (`CUSTOMER` vs `SHOP`)**: Applied matching vertical column stack with `h-auto min-h-11 py-1` and distinct Urdu and English subtitle spans, preventing "گاہک کا کپڑا" and "دکان کا کپڑا" from clipping.
+  - **Visual Design Preservation**: Preserved all colors, borders, fonts, and active scale animations from commit `5334e13`.
+  - **Verification Suite**: 0 TypeScript compiler errors (`npx tsc --noEmit`) and static export compiled all 28/28 routes cleanly into `out/` (`npm run build`).
 
 

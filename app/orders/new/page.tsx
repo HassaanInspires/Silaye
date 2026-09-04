@@ -868,17 +868,17 @@ export default function NewOrderPage() {
                           type="button"
                           onClick={() => handleGarmentTypeChange(g.value)}
                           className={cn(
-                            'h-11 px-3 rounded-xl border text-left transition-all duration-200 flex items-center justify-between gap-1.5 cursor-pointer active:scale-98',
+                            'h-auto min-h-11 px-3 rounded-xl border transition-all duration-200 flex flex-col items-center justify-center text-center py-1 cursor-pointer active:scale-98',
                             isSelected
                               ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02]'
                               : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 hover:border-white/20'
                           )}
                         >
-                          <span className="font-urdu-serif text-xs font-bold truncate leading-relaxed py-0.5">
+                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
                             {isSelected && <span className="mr-1 text-gold">✓</span>}
                             {g.ur}
                           </span>
-                          <span className="text-[9px] opacity-70 font-medium truncate font-sans">
+                          <span className="text-[9px] opacity-70 font-medium font-sans">
                             {g.en}
                           </span>
                         </button>
@@ -978,30 +978,36 @@ export default function NewOrderPage() {
                       type="button"
                       onClick={() => setFabricSource('CUSTOMER')}
                       className={cn(
-                        'h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer',
+                        'h-auto min-h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex flex-col items-center justify-center text-center py-1 active:scale-98 cursor-pointer',
                         fabricSource === 'CUSTOMER'
                           ? 'bg-gold/15 border-gold text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)] font-semibold scale-[1.01]'
                           : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200'
                       )}
                     >
-                      <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
-                        {fabricSource === 'CUSTOMER' && <span className="mr-1">✓</span>}
-                        گاہک کا کپڑا (Customer)
+                      <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                        {fabricSource === 'CUSTOMER' && <span className="mr-1 text-gold">✓</span>}
+                        گاہک کا کپڑا
+                      </span>
+                      <span className="text-[9px] opacity-70 font-medium font-sans">
+                        Customer Fabric
                       </span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setFabricSource('SHOP')}
                       className={cn(
-                        'h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer',
+                        'h-auto min-h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex flex-col items-center justify-center text-center py-1 active:scale-98 cursor-pointer',
                         fabricSource === 'SHOP'
                           ? 'bg-gold/15 border-gold text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)] font-semibold scale-[1.01]'
                           : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200'
                       )}
                     >
-                      <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
-                        {fabricSource === 'SHOP' && <span className="mr-1">✓</span>}
-                        دکان کا کپڑا (Shop)
+                      <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
+                        {fabricSource === 'SHOP' && <span className="mr-1 text-gold">✓</span>}
+                        دکان کا کپڑا
+                      </span>
+                      <span className="text-[9px] opacity-70 font-medium font-sans">
+                        Shop Fabric
                       </span>
                     </button>
                   </div>
