@@ -2811,6 +2811,33 @@
   - `npm run build`: Clean static export into `out/` (28/28 static routes compiled).
 
 * **Next Immediate Task:**
-  - Stage, commit, and push Pass 2 changes to `origin/feature/ergonomic-declutter`.
+  - Sub-Phase 21.3.1: Step 1 (Customer & Suit Details) Mobile Overhaul (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.1 - Step 1 (Customer & Suit Details) Mobile Overhaul (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.1` Step 1 (Customer & Suit Details) Mobile Overhaul (`app/orders/new/page.tsx`):
+    - **Unified Single Surface (Removed Nested Grey Cards)**: Removed 4 heavy nested `premium-glass-card` containers and consolidated Step 1 inputs onto a unified obsidian glass surface (`rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4`) separated by subtle hairline dividers (`border-b border-white/5 pb-4`).
+    - **Smart Collapsible Address & Notes**: Kept phone input (`inputMode="tel"`) with auto-lookup badge, customer name input, and collapsed address & notes behind a tactile toggle button. When phone lookup matches an existing customer profile with saved address, dynamically displays `[✓ پتہ محفوظ ہے: (Address) - تبدیل کرنے کے لیے ٹیپ کریں]`, preserving 90px of vertical space.
+    - **3D Pop-up Garment Selection Chips**: Replaced 6 massive card boxes with a compact 2-column tactile chip grid (`grid grid-cols-2 gap-2`) with 3D pop-up active styling (`bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02]`) and inactive styling (`bg-white/5 border-white/10 text-gray-400 hover:text-gray-200`). Integrated suit quantity stepper and wired `handleGarmentTypeChange(g.value)` to synchronize rates and delivery turnaround days.
+    - **Turnaround Date & Fabric Details Alignment**: Combined Delivery Date input and Urgent Fast-Track toggle side-by-side (`grid grid-cols-2 gap-2.5 items-end`), added two-way segmented fabric source toggle (`[✓ گاہک کا کپڑا]` vs `[دکان کا کپڑا]`), and compact 2-column Color & Brand inputs (`grid grid-cols-2 gap-2.5`).
+    - **Dynamic Step-Aware Bottom Action Bar**: On Step 1 (`mobileStep === 1`), suppressed premature Total/Advance payment fields and rendered a dedicated, full-width gold advancement button `[اگلا مرحلہ: ڈیزائن اور کٹ منتخب کریں → / Next: Style & Cut]` docked at `bottom-0 z-30 pb-safe`, validating customer name entry and smoothly resetting container scroll (`document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });`).
+    - **Content Bottom Clearance**: Preserved `pb-44 pb-safe` on Step 1 scroll container ensuring no content is clipped behind the bottom bar.
+    - **Isolation Guardrails**: Desktop views (`hidden md:block`), Step 2 (`mobileStep === 2`), and Step 3 (`mobileStep === 3`) remained strictly untouched.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `scripts/verify_db.ts`: 159/159 database and repository test assertions passed.
+  - `npm run build`: Static export compiled cleanly into `out/` across all 28/28 routes.
+
+* **Next Immediate Task:**
+  - Sub-Phase 21.3.2: Step 2 (Style & Preferences) Mobile Overhaul.
 
 

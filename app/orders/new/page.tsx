@@ -274,6 +274,7 @@ export default function NewOrderPage() {
   // ── Customer form fields ───────────────────────────────────────────────
   const [customerName, setCustomerName] = React.useState<string>('');
   const [customerAddress, setCustomerAddress] = React.useState<string>('');
+  const [showAddressNotes, setShowAddressNotes] = React.useState<boolean>(false);
 
   // ── Garment & fabric ──────────────────────────────────────────────────
   const [garmentType, setGarmentType] = React.useState<GarmentType>('MEN_SHALWAR_KAMEEZ');
@@ -748,209 +749,316 @@ export default function NewOrderPage() {
           {/* ============================================================== */}
           {mobileStep === 1 && (
             <div className="space-y-4 pb-44 pb-safe">
-              {/* Customer Phone & Lookup */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">
-                    Customer Lookup • گاہک کا اندراج
-                  </span>
-                  {foundProfile && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      پروفائل موجود ہے
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300 font-medium">موبائل نمبر (Mobile Phone)</label>
-                  <Input
-                    type="tel"
-                    placeholder="0300-1234567"
-                    value={phone}
-                    onChange={(e) => setPhone(formatPakistaniPhone(e.target.value))}
-                    leftIcon={<Phone className="h-4 w-4 text-gold" />}
-                    className="h-10 text-sm font-mono bg-black/40 border-white/10"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300 font-medium">گاہک کا نام (Customer Name) *</label>
-                  <Input
-                    type="text"
-                    placeholder="e.g. محمد بلال"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    leftIcon={<User className="h-4 w-4 text-gold" />}
-                    className="h-10 text-sm bg-black/40 border-white/10"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-400">پتہ / شہر (Address / City - اختیاری)</label>
-                  <Input
-                    type="text"
-                    placeholder="e.g. کینٹ، واہ"
-                    value={customerAddress}
-                    onChange={(e) => setCustomerAddress(e.target.value)}
-                    leftIcon={<MapPin className="h-4 w-4 text-gray-500" />}
-                    className="h-9 text-xs bg-black/40 border-white/10"
-                  />
-                </div>
-              </div>
-
-              {/* Garment Type Selection */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Garment Type • لباس کی قسم
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {GARMENT_TYPE_OPTIONS.map((g) => {
-                    const isSelected = garmentType === g.value;
-                    return (
-                      <button
-                        key={g.value}
-                        type="button"
-                        onClick={() => handleGarmentTypeChange(g.value)}
-                        className={cn(
-                          'p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1 cursor-pointer',
-                          isSelected
-                            ? 'border-gold/50 bg-gold/15 text-gold shadow-[0_0_12px_rgba(212,175,55,0.15)]'
-                            : 'border-white/5 bg-black/30 text-gray-300 hover:border-white/15'
-                        )}
-                      >
-                        <span className="font-urdu-sans text-sm font-bold" dir="rtl">{g.ur}</span>
-                        <span className="text-[10px] text-gray-400 font-medium">{g.en}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Suit Quantity Stepper */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                  <div>
-                    <span className="text-xs font-semibold text-white block">سوٹ تعداد (Quantity)</span>
-                    <span className="text-[10px] text-gray-400">Total Suits</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-sm flex items-center justify-center active:scale-95"
-                    >
-                      −
-                    </button>
-                    <span className="font-mono text-base font-bold text-gold w-6 text-center">
-                      {quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-sm flex items-center justify-center active:scale-95"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Delivery Date & Rush */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <div className="space-y-2">
+              {/* Unified Single Surface Card */}
+              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+                {/* 1. Customer Intake & Smart Collapsible Address */}
+                <div className="space-y-3 border-b border-white/5 pb-4">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs text-gray-300 font-medium">تاریخ ترسیل (Delivery Date) *</label>
-                    {isUrgent && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                        فوری ترسیل (Urgent)
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Customer Intake • گاہک کا اندراج
+                    </span>
+                    {foundProfile && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        پروفائل موجود ہے
                       </span>
                     )}
                   </div>
-                  <Input
-                    type="date"
-                    value={deliveryDate}
-                    onChange={(e) => setDeliveryDate(e.target.value)}
-                    className="h-10 text-sm font-mono bg-black/40 border-white/10"
-                  />
-                </div>
 
-                {/* Urgent Rush Toggle */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleUrgent(!isUrgent)}
-                  className={cn(
-                    'w-full p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all',
-                    isUrgent
-                      ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
-                      : 'border-white/5 bg-black/20 text-gray-400 hover:text-white'
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <Zap className={cn('h-4 w-4', isUrgent ? 'text-amber-400' : 'text-gray-500')} />
-                    <span>فوری ڈلیوری (Urgent Rush Order)</span>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-300 font-medium">موبائل نمبر (Mobile Phone)</label>
+                    <Input
+                      type="tel"
+                      inputMode="tel"
+                      placeholder="0300-1234567"
+                      value={phone}
+                      onChange={(e) => setPhone(formatPakistaniPhone(e.target.value))}
+                      leftIcon={<Phone className="h-4 w-4 text-gold" />}
+                      className="h-10 text-sm font-mono bg-black/40 border-white/10"
+                    />
                   </div>
-                  <span className="font-mono font-semibold">
-                    {isUrgent ? 'فعال ✓' : '+ فاسٹ ٹریک'}
-                  </span>
-                </button>
-              </div>
 
-              {/* Fabric Specs */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Fabric Details • کپڑے کی تفصیلات
-                </span>
-                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-300 font-medium">گاہک کا نام (Customer Name) *</label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. محمد بلال"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      leftIcon={<User className="h-4 w-4 text-gold" />}
+                      className="h-10 text-sm bg-black/40 border-white/10"
+                    />
+                  </div>
+
+                  {/* Smart Collapsible Address & Notes Button */}
                   <button
                     type="button"
-                    onClick={() => setFabricSource('CUSTOMER')}
+                    onClick={() => setShowAddressNotes(!showAddressNotes)}
                     className={cn(
-                      'p-2.5 rounded-xl border text-xs font-medium transition-all text-center',
-                      fabricSource === 'CUSTOMER'
-                        ? 'border-gold/40 bg-gold/15 text-gold font-bold'
-                        : 'border-white/5 bg-black/30 text-gray-400'
+                      'w-full min-h-[40px] px-3.5 py-2 rounded-xl border text-xs font-medium flex items-center justify-between transition-all active:scale-[0.99] cursor-pointer',
+                      customerAddress.trim()
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                        : 'border-white/10 bg-white/5 hover:bg-white/10 text-gray-300'
                     )}
                   >
-                    گاہک کا کپڑا (Customer)
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <MapPin className={cn('h-3.5 w-3.5 shrink-0', customerAddress.trim() ? 'text-emerald-400' : 'text-gold/70')} />
+                      {customerAddress.trim() ? (
+                        <span className="font-urdu-serif leading-relaxed truncate text-[11px]">
+                          ✓ پتہ محفوظ ہے: <span className="font-sans font-normal text-white">{customerAddress}</span> - تبدیل کرنے کے لیے ٹیپ کریں
+                        </span>
+                      ) : (
+                        <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
+                          {showAddressNotes ? '− پتہ اور اضافی تفصیلات چھپائیں' : '+ پتہ اور اضافی تفصیلات درج کریں / Add Address & Notes'}
+                        </span>
+                      )}
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200', showAddressNotes && 'rotate-180')} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setFabricSource('SHOP')}
-                    className={cn(
-                      'p-2.5 rounded-xl border text-xs font-medium transition-all text-center',
-                      fabricSource === 'SHOP'
-                        ? 'border-gold/40 bg-gold/15 text-gold font-bold'
-                        : 'border-white/5 bg-black/30 text-gray-400'
-                    )}
-                  >
-                    ورکشاپ کا کپڑا (Shop)
-                  </button>
+
+                  {/* Collapsible Address & Notes Fields */}
+                  {showAddressNotes && (
+                    <div className="space-y-2.5 pt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">
+                          پتہ اور شہر (Address / City - اختیاری)
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. کینٹ، واہ / Sector, Area, City"
+                          value={customerAddress}
+                          onChange={(e) => setCustomerAddress(e.target.value)}
+                          leftIcon={<MapPin className="h-4 w-4 text-gray-500" />}
+                          className="h-10 text-xs bg-black/40 border-white/10"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">
+                          اضافی ہدایات و نوٹ (Special Instructions / Notes)
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. کالر پر کڑھائی، بٹن خصوصی لکڑی والے"
+                          value={specialNotes}
+                          onChange={(e) => setSpecialNotes(e.target.value)}
+                          leftIcon={<FileText className="h-4 w-4 text-gray-500" />}
+                          className="h-10 text-xs bg-black/40 border-white/10"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <Input
-                    type="text"
-                    placeholder="رنگ (e.g. سفید / کریم)"
-                    value={fabricColor}
-                    onChange={(e) => setFabricColor(e.target.value)}
-                    className="h-9 text-xs bg-black/40 border-white/10"
-                  />
-                  <Input
-                    type="text"
-                    placeholder="برانڈ (e.g. پاشا لٹھا)"
-                    value={fabricBrand}
-                    onChange={(e) => setFabricBrand(e.target.value)}
-                    className="h-9 text-xs bg-black/40 border-white/10"
-                  />
+                {/* 2. Sleek 3D Pop-up Garment Selection Chips & Quantity */}
+                <div className="space-y-3 border-b border-white/5 pb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Garment Type • لباس کی قسم
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      {GARMENT_TYPE_OPTIONS.find((g) => g.value === garmentType)?.en}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {GARMENT_TYPE_OPTIONS.map((g) => {
+                      const isSelected = garmentType === g.value;
+                      return (
+                        <button
+                          key={g.value}
+                          type="button"
+                          onClick={() => handleGarmentTypeChange(g.value)}
+                          className={cn(
+                            'h-11 px-3 rounded-xl border text-left transition-all duration-200 flex items-center justify-between gap-1.5 cursor-pointer active:scale-98',
+                            isSelected
+                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02]'
+                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 hover:border-white/20'
+                          )}
+                        >
+                          <span className="font-urdu-serif text-xs font-bold truncate leading-relaxed py-0.5">
+                            {isSelected && <span className="mr-1 text-gold">✓</span>}
+                            {g.ur}
+                          </span>
+                          <span className="text-[9px] opacity-70 font-medium truncate font-sans">
+                            {g.en}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Suit Quantity Stepper */}
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <span className="text-xs font-semibold text-white block font-urdu-serif leading-relaxed py-0.5">
+                        سوٹ تعداد (Quantity)
+                      </span>
+                      <span className="text-[10px] text-gray-400">Total Suits</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-base flex items-center justify-center active:scale-95 transition-all"
+                        aria-label="Decrease quantity"
+                      >
+                        −
+                      </button>
+                      <span className="font-mono text-base font-bold text-gold w-7 text-center">
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-base flex items-center justify-center active:scale-95 transition-all"
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Turnaround Date & Fast-Track Side-by-Side Row */}
+                <div className="border-b border-white/5 pb-4">
+                  <div className="grid grid-cols-2 gap-2.5 items-end">
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-gray-300 font-medium block font-urdu-serif leading-relaxed py-0.5">
+                        تاریخ ترسیل (Delivery Date) *
+                      </label>
+                      <Input
+                        type="date"
+                        value={deliveryDate}
+                        onChange={(e) => setDeliveryDate(e.target.value)}
+                        className="h-11 text-xs font-mono bg-black/40 border-white/10"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <label className="text-gray-300 font-medium font-urdu-serif leading-relaxed py-0.5">فوری ترسیل (Rush)</label>
+                        {isUrgent && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            فعال ✓
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleUrgent(!isUrgent)}
+                        className={cn(
+                          'w-full h-11 px-3 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all duration-200 active:scale-98 cursor-pointer',
+                          isUrgent
+                            ? 'border-amber-500/60 bg-amber-500/15 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                            : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                        )}
+                      >
+                        <Zap className={cn('h-4 w-4', isUrgent ? 'text-amber-400 fill-amber-400' : 'text-gray-500')} />
+                        <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
+                          {isUrgent ? 'فوری سوٹ (Urgent)' : '+ فاسٹ ٹریک'}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Fabric Details & Source Segmented Toggle */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Fabric Details • کپڑے کی تفصیلات
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      {fabricSource === 'CUSTOMER' ? 'Customer Fabric' : 'Shop Fabric'}
+                    </span>
+                  </div>
+
+                  {/* Two-way Source Pills */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFabricSource('CUSTOMER')}
+                      className={cn(
+                        'h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer',
+                        fabricSource === 'CUSTOMER'
+                          ? 'bg-gold/15 border-gold text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)] font-semibold scale-[1.01]'
+                          : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200'
+                      )}
+                    >
+                      <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
+                        {fabricSource === 'CUSTOMER' && <span className="mr-1">✓</span>}
+                        گاہک کا کپڑا (Customer)
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFabricSource('SHOP')}
+                      className={cn(
+                        'h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer',
+                        fabricSource === 'SHOP'
+                          ? 'bg-gold/15 border-gold text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)] font-semibold scale-[1.01]'
+                          : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200'
+                      )}
+                    >
+                      <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
+                        {fabricSource === 'SHOP' && <span className="mr-1">✓</span>}
+                        دکان کا کپڑا (Shop)
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Color & Brand Inputs */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">رنگ (Color)</label>
+                      <Input
+                        type="text"
+                        placeholder="e.g. سفید / کریم"
+                        value={fabricColor}
+                        onChange={(e) => setFabricColor(e.target.value)}
+                        className="h-10 text-xs bg-black/40 border-white/10"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">برانڈ (Brand)</label>
+                      <Input
+                        type="text"
+                        placeholder="e.g. پاشا لٹھا"
+                        value={fabricBrand}
+                        onChange={(e) => setFabricBrand(e.target.value)}
+                        className="h-10 text-xs bg-black/40 border-white/10"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Next Button */}
+              {/* Step 1 Inline Advancement CTA */}
               <Button
                 type="button"
-                onClick={() => setMobileStep(2)}
-                className="w-full h-11 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.25)] flex items-center justify-center gap-2"
+                disabled={!customerName.trim()}
+                onClick={() => {
+                  if (!customerName.trim()) return;
+                  setMobileStep(2);
+                  document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={cn(
+                  'w-full h-12 font-bold text-sm flex items-center justify-center gap-2 rounded-xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.25)]',
+                  !customerName.trim()
+                    ? 'bg-white/10 text-gray-400 border border-white/10 cursor-not-allowed'
+                    : 'bg-gold text-[#0B0C0E] hover:bg-gold-hover active:scale-[0.99]'
+                )}
               >
-                <span>اگلا مرحلہ: ڈیزائن و کٹ منتخب کریں</span>
-                <ArrowRight className="h-4 w-4" />
+                <span className="font-urdu-serif leading-relaxed py-0.5 text-sm">
+                  {!customerName.trim()
+                    ? 'گاہک کا نام درج کریں (Enter Customer Name)'
+                    : 'اگلا مرحلہ: ڈیزائن اور کٹ منتخب کریں'}
+                </span>
+                {customerName.trim() && (
+                  <>
+                    <span className="text-xs font-sans opacity-80">(Next: Style & Cut)</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </Button>
             </div>
           )}
@@ -1314,53 +1422,85 @@ export default function NewOrderPage() {
           {/* MOBILE STICKY BOTTOM BOOKING BAR                               */}
           {/* ============================================================== */}
           <div className="fixed bottom-0 left-0 right-0 z-30 pb-safe bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30 p-3 shadow-[0_-4px_30px_rgba(0,0,0,0.8)] space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider">
-                  Total PKR
+            {mobileStep === 1 ? (
+              <Button
+                type="button"
+                disabled={!customerName.trim()}
+                onClick={() => {
+                  if (!customerName.trim()) return;
+                  setMobileStep(2);
+                  document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={cn(
+                  'w-full h-12 font-bold text-sm flex items-center justify-center gap-2 rounded-xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)]',
+                  !customerName.trim()
+                    ? 'bg-white/10 text-gray-400 border border-white/10 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black hover:opacity-95 active:scale-[0.99]'
+                )}
+              >
+                <span className="font-urdu-serif leading-relaxed py-0.5 text-sm">
+                  {!customerName.trim()
+                    ? 'گاہک کا نام درج کریں (Enter Customer Name)'
+                    : 'اگلا مرحلہ: ڈیزائن اور کٹ منتخب کریں'}
                 </span>
-                <span className="font-mono text-sm font-bold text-gold">
-                  Rs. {financials.total_amount.toLocaleString()}
-                </span>
-              </div>
+                {customerName.trim() && (
+                  <>
+                    <span className="text-xs font-sans opacity-80">(Next: Style & Cut)</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">
+                      Total PKR
+                    </span>
+                    <span className="font-mono text-sm font-bold text-gold">
+                      Rs. {financials.total_amount.toLocaleString()}
+                    </span>
+                  </div>
 
-              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-lg">
-                <span className="text-[11px] text-gray-300">ایڈوانس:</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={advancePaid}
-                  onChange={(e) => setAdvancePaid(parseFloat(e.target.value) || 0)}
-                  className="w-16 h-6 rounded bg-black/60 border border-white/15 px-1 text-right font-mono text-xs font-bold text-white focus:outline-none focus:border-gold"
-                />
-              </div>
+                  <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-lg">
+                    <span className="text-[11px] text-gray-300">ایڈوانس:</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={advancePaid}
+                      onChange={(e) => setAdvancePaid(parseFloat(e.target.value) || 0)}
+                      className="w-16 h-6 rounded bg-black/60 border border-white/15 px-1 text-right font-mono text-xs font-bold text-white focus:outline-none focus:border-gold"
+                    />
+                  </div>
 
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider">
-                  باقی بیلنس
-                </span>
-                <span className="font-mono text-xs font-bold text-rose-400">
-                  Rs. {financials.balance_due.toLocaleString()}
-                </span>
-              </div>
-            </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">
+                      باقی بیلنس
+                    </span>
+                    <span className="font-mono text-xs font-bold text-rose-400">
+                      Rs. {financials.balance_due.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
 
-            <Button
-              type="button"
-              disabled={!isFormValidToBook || isCheckingQuota}
-              isLoading={isCheckingQuota}
-              onClick={handleBookOrder}
-              className="w-full h-11 bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black hover:opacity-95 font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              <span>
-                {isCheckingQuota
-                  ? 'تصدیق جاری ہے...'
-                  : !customerName.trim()
-                  ? 'گاہک کا نام درج کریں'
-                  : 'بکنگ مکمل کریں • Book Order'}
-              </span>
-            </Button>
+                <Button
+                  type="button"
+                  disabled={!isFormValidToBook || isCheckingQuota}
+                  isLoading={isCheckingQuota}
+                  onClick={handleBookOrder}
+                  className="w-full h-11 bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black hover:opacity-95 font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>
+                    {isCheckingQuota
+                      ? 'تصدیق جاری ہے...'
+                      : !customerName.trim()
+                      ? 'گاہک کا نام درج کریں'
+                      : 'بکنگ مکمل کریں • Book Order'}
+                  </span>
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
