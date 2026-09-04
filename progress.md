@@ -2912,7 +2912,37 @@
   - `npm run build`: Static export compiled cleanly into `out/` across all 28/28 routes with 0 errors.
 
 * **Next Immediate Task:**
-  - Sub-Phase 21.3.3: Step 3 (Measurement Matrix & Craftsman Assignment) Mobile Overhaul.
+  - Sub-Phase 21.3.3: Step 3 (Measurement Matrix & Final Booking Ledger) Mobile Overhaul (Completed).
+
+---
+
+## Phase 21: Sub-Phase 21.3.3 - Step 3 (Measurement Matrix & Final Booking Ledger) Mobile Overhaul (Completed)
+* **Date:** 2026-09-04
+* **Tasks Completed:**
+  - `21.3.3` Step 3 (Measurement Matrix & Final Booking Ledger) Mobile Overhaul (`app/orders/new/page.tsx`):
+    - **Unified Obsidian Glass Measurement Matrix Surface**: Eradicated the 10 separate bulky `.premium-glass-card` elements, replacing them with a unified obsidian glass single-surface container (`rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl`) separated by hairline dividers (`border-b border-white/5 pb-3.5`).
+    - **Pakistani Adult Standard Baseline Auto-Fill**: Updated default baseline measurements (`DEFAULT_MEASUREMENTS` and `MOBILE_MEASUREMENT_FIELDS`) to standard Pakistani adult dimensions (Length 40, Chest 38, Waist 36, Shoulder 17.5, Sleeve 23.5, Collar 15.5, Daman 22, Shalwar Length 38, Paincha 8.5, Aasan 16.5) for new customers, while strictly preserving existing customer profiles loaded via phone auto-lookup.
+    - **Triple-Speed Measurement Controls Bar (360px-Safe)**:
+      * Added `formatMeasurementDisplay(val: number): string` converting decimal inches into authentic tailoring notation (`40 ½″`, `38 ¼″`, `36 ¾″`, `40″`).
+      * Rendered live formatted badge in each row header: `<bdi className="font-mono text-gold font-bold text-xs bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-lg">{formatMeasurementDisplay(val)}</bdi>`.
+      * Integrated whole-inch steppers (`[-1]` w-9, direct numeric input `w-12`, `[+1]` w-9) protected with `Math.round((...) * 100) / 100` to eliminate IEEE-754 floating-point drift.
+      * Placed vertical hairline separator (`w-px h-7 bg-white/10 mx-1`) flanking 4 tactile fractional pills (`0`, `¼`, `½`, `¾` at `h-11`) with active gold glow styling (`bg-gold text-black shadow-[0_0_12px_rgba(212,175,55,0.3)]`).
+    - **Collapsible Administration (Staff & Notes)**: Collapsed Cutting Master, Stitching Craftsman, and Special Notes behind a single clean toggle button (`[+ کاریگر تفویض اور خصوصی ہدایات درج کریں / Staff Assignment & Notes]`) with an active pulse indicator dot, and added an inline back button to Step 2 (`[← واپس ڈیزائن اور کٹ پر جائیں (Back to Style)]`).
+    - **Docked Financial Settlement Bar & Clearance**: Activated the complete financial summary bar on Step 3 (Total PKR in white, Advance Paid numeric input in gold, Balance Due in rose-400) and primary glowing booking CTA `[✨ سوٹ بکنگ مکمل کریں اور پرچی بنائیں • Confirm & Book Suit]` (`h-13 min-h-[52px]` with gold gradient and `shadow-[0_0_25px_rgba(212,175,55,0.4)]`) wired to `handleCreateOrder(false)` / `handleBookOrder`. Added physical uncollapsible bottom spacer (`<div className="h-36 w-full shrink-0" aria-hidden="true" />`) preventing input occlusion behind the docked bar.
+    - **Isolation Guardrails**: Desktop layouts (`hidden md:block`), Step 1 (`mobileStep === 1`), and Step 2 (`mobileStep === 2`) remained strictly untouched.
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 database, migration, mapper, offline fallback, and notification assertions passed.
+  - `npm run build`: Clean static export into `out/` (all 28/28 static routes generated with 0 errors).
+
+* **Next Immediate Task:**
+  - Commit and push `feature/ergonomic-declutter` snapshot.
 
 
 

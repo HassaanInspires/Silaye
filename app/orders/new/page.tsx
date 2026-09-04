@@ -77,21 +77,34 @@ function getFutureDateString(days: number): string {
   return target.toISOString().split('T')[0];
 }
 
+function formatMeasurementDisplay(val: number): string {
+  if (isNaN(val) || val <= 0) return '0″';
+  const whole = Math.floor(val);
+  const frac = Math.round((val - whole) * 100) / 100;
+  let fracStr = '';
+  if (Math.abs(frac - 0.25) < 0.05) fracStr = ' ¼';
+  else if (Math.abs(frac - 0.5) < 0.05) fracStr = ' ½';
+  else if (Math.abs(frac - 0.75) < 0.05) fracStr = ' ¾';
+
+  if (whole === 0 && fracStr) return `${fracStr.trim()}″`;
+  return `${whole}${fracStr}″`;
+}
+
 // ---------------------------------------------------------------------------
-// Default measurement values (spec mid-range defaults, quarter-inch aligned)
+// Default measurement values (Pakistani adult standard baseline, quarter-inch aligned)
 // ---------------------------------------------------------------------------
 
 const DEFAULT_MEASUREMENTS: ShalwarKameezMeasurements = {
-  kameez_length:  42.0,
-  chest:          40.0,
-  waist:          38.0,
+  kameez_length:  40.0,
+  chest:          38.0,
+  waist:          36.0,
   shoulder_teera: 17.5,
-  sleeve_length:  24.0,
+  sleeve_length:  23.5,
   neck_gala:      15.5,
   daman_width:    22.0,
-  shalwar_length: 39.0,
+  shalwar_length: 38.0,
   paincha:        8.5,
-  aasan:          17.0,
+  aasan:          16.5,
 };
 
 const DEFAULT_STYLES: StylePreferences = {
@@ -110,16 +123,16 @@ const MOBILE_MEASUREMENT_FIELDS: Array<{
   en: string;
   defaultVal: number;
 }> = [
-  { key: 'kameez_length', ur: 'لمبائی', en: 'Length', defaultVal: 42 },
-  { key: 'chest', ur: 'چھاتی', en: 'Chest', defaultVal: 40 },
-  { key: 'waist', ur: 'کمر', en: 'Waist', defaultVal: 38 },
+  { key: 'kameez_length', ur: 'لمبائی', en: 'Length', defaultVal: 40 },
+  { key: 'chest', ur: 'چھاتی', en: 'Chest', defaultVal: 38 },
+  { key: 'waist', ur: 'کمر', en: 'Waist', defaultVal: 36 },
   { key: 'shoulder_teera', ur: 'تیرا', en: 'Shoulder', defaultVal: 17.5 },
-  { key: 'sleeve_length', ur: 'بازو', en: 'Sleeve', defaultVal: 24 },
+  { key: 'sleeve_length', ur: 'بازو', en: 'Sleeve', defaultVal: 23.5 },
   { key: 'neck_gala', ur: 'گلا', en: 'Collar', defaultVal: 15.5 },
   { key: 'daman_width', ur: 'دامن', en: 'Daman', defaultVal: 22 },
-  { key: 'shalwar_length', ur: 'شلوار لمبائی', en: 'Shalwar', defaultVal: 39 },
+  { key: 'shalwar_length', ur: 'شلوار لمبائی', en: 'Shalwar', defaultVal: 38 },
   { key: 'paincha', ur: 'پائینچہ', en: 'Paincha', defaultVal: 8.5 },
-  { key: 'aasan', ur: 'آسن', en: 'Aasan', defaultVal: 17 },
+  { key: 'aasan', ur: 'آسن', en: 'Aasan', defaultVal: 16.5 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -333,6 +346,7 @@ export default function NewOrderPage() {
   const [newBookedOrder, setNewBookedOrder] = React.useState<GarmentOrder | null>(null);
   const [newBookedCustomer, setNewBookedCustomer] = React.useState<Customer | null>(null);
   const [draftSavedToast, setDraftSavedToast] = React.useState<boolean>(false);
+  const [showMobileAdmin, setShowMobileAdmin] = React.useState<boolean>(false);
 
   // --------------------------------------------------------------------------
   // Load workshop staff, catalog rates & printer settings dynamically
@@ -666,6 +680,11 @@ export default function NewOrderPage() {
     } catch {
       // ignore
     }
+  };
+
+  const isSubmitting = isCheckingQuota;
+  const handleCreateOrder = (_skipPrint?: boolean) => {
+    handleBookOrder();
   };
 
   // --------------------------------------------------------------------------
@@ -1277,165 +1296,230 @@ export default function NewOrderPage() {
           )}
 
           {/* ============================================================== */}
-          {/* STEP 3: MEASUREMENT MATRIX (2-COLUMN TOUCH GRID)                */}
+          {/* STEP 3: MEASUREMENT MATRIX & FINAL LEDGER                      */}
           {/* ============================================================== */}
           {mobileStep === 3 && (
             <div className="space-y-4 pb-44 pb-safe">
-              <div className="premium-glass-card p-3 border-gold/30 bg-gradient-to-r from-gold/10 via-[#121418] to-transparent">
-                <div className="flex items-center justify-between">
+              {/* Unified Obsidian Glass Measurement Matrix Surface */}
+              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+                {/* Surface Header */}
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
                   <div>
                     <h3 className="text-xs font-bold text-white uppercase tracking-wider">
                       Measurement Matrix • ناپ کا میٹرکس
                     </h3>
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[10px] text-gray-400 font-urdu-sans">
                       پورے انچ درج کریں اور کواٹر انچ (0, ¼, ½, ¾) بٹن دبائیں
                     </p>
                   </div>
-                  <Ruler className="h-5 w-5 text-gold" />
+                  <Ruler className="h-5 w-5 text-gold shrink-0" />
                 </div>
-              </div>
 
-              {/* 2-Column Measurement Touch Grid */}
-              <div className="grid grid-cols-2 gap-2.5">
-                {MOBILE_MEASUREMENT_FIELDS.map((field) => {
-                  const val = measurements[field.key] ?? field.defaultVal;
-                  const base = Math.floor(val);
-                  const currentFrac = Math.round((val - base) * 100) / 100;
+                {/* Single-Surface Full-Width Measurement Rows */}
+                <div className="space-y-3.5">
+                  {MOBILE_MEASUREMENT_FIELDS.map((field, idx) => {
+                    const val = measurements[field.key] ?? field.defaultVal;
+                    const base = Math.max(1, Math.floor(val));
+                    const currentFrac = Math.round((val - Math.floor(val)) * 100) / 100;
 
-                  return (
-                    <div
-                      key={field.key}
-                      className="premium-glass-card p-3 border-white/10 bg-[#121418] hover:border-gold/30 space-y-2.5 rounded-2xl shadow-sm"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-urdu-sans text-xs font-bold text-white" dir="rtl">
-                          {field.ur}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-gray-400 uppercase font-medium">
-                            {field.en}
-                          </span>
-                          <span className="font-mono text-xs font-bold text-gold">
-                            {val.toFixed(2)}″
+                    return (
+                      <div
+                        key={field.key}
+                        className={cn(
+                          'space-y-2',
+                          idx < MOBILE_MEASUREMENT_FIELDS.length - 1 && 'border-b border-white/5 pb-3.5'
+                        )}
+                      >
+                        {/* Row Header: Bilingual title (Urdu right, English left) + live formatted badge */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-300 uppercase tracking-wide">
+                              {field.en}
+                            </span>
+                            <bdi className="font-mono text-gold font-bold text-xs bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-lg">
+                              {formatMeasurementDisplay(val)}
+                            </bdi>
+                          </div>
+                          <span className="font-urdu-serif text-sm font-bold text-white leading-relaxed" dir="rtl">
+                            {field.ur}
                           </span>
                         </div>
-                      </div>
 
-                      {/* Large Whole Inches Numeric Input */}
-                      <div>
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          min="0"
-                          max="120"
-                          value={base === 0 ? '' : base}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            const newBase = raw === '' ? 0 : parseInt(raw, 10) || 0;
-                            handleMeasurementChange(field.key, newBase + currentFrac);
-                          }}
-                          placeholder="0"
-                          className="w-full text-xl font-bold font-mono text-center text-gold bg-black/50 border border-white/10 rounded-xl h-11 focus:border-gold focus:outline-none"
-                        />
-                      </div>
-
-                      {/* 4 Full-Height 48px Tactile Fractional Pills (0, ¼, ½, ¾) */}
-                      <div className="grid grid-cols-4 gap-1.5">
-                        {[
-                          { label: '0', value: 0.0 },
-                          { label: '¼', value: 0.25 },
-                          { label: '½', value: 0.5 },
-                          { label: '¾', value: 0.75 },
-                        ].map((frac) => {
-                          const isFracActive = Math.abs(currentFrac - frac.value) < 0.05;
-                          return (
+                        {/* Controls Bar layout (strictly sized for 360px viewports) */}
+                        <div className="flex items-center gap-1 w-full">
+                          {/* Whole Steppers: [-1], numeric input, [+1] */}
+                          <div className="flex items-center gap-1 shrink-0">
                             <button
-                              key={frac.label}
                               type="button"
-                              onClick={() => handleMeasurementChange(field.key, base + frac.value)}
-                              className={cn(
-                                'h-12 rounded-xl text-sm font-bold font-mono transition-all flex items-center justify-center select-none active:scale-95 cursor-pointer',
-                                isFracActive
-                                  ? 'bg-gold text-[#0B0C0E] font-black shadow-[0_0_12px_rgba(212,175,55,0.35)]'
-                                  : 'bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
-                              )}
+                              onClick={() => {
+                                const newBase = Math.max(1, base - 1);
+                                const newVal = Math.round((newBase + currentFrac) * 100) / 100;
+                                handleMeasurementChange(field.key, newVal);
+                              }}
+                              className="h-11 w-9 text-sm font-bold bg-white/5 border border-white/10 rounded-xl active:scale-95 text-gray-300 hover:text-white flex items-center justify-center select-none cursor-pointer"
+                              aria-label={`Decrease ${field.en} by 1 inch`}
                             >
-                              {frac.label}
+                              -1
                             </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="1"
+                              max="120"
+                              value={base === 0 ? '' : base}
+                              onChange={(e) => {
+                                const parsed = parseInt(e.target.value, 10);
+                                const newBase = isNaN(parsed) || parsed < 1 ? 1 : parsed;
+                                const newVal = Math.round((newBase + currentFrac) * 100) / 100;
+                                handleMeasurementChange(field.key, newVal);
+                              }}
+                              placeholder="0"
+                              className="h-11 w-12 text-center font-mono font-bold text-gold bg-black/50 border border-white/10 rounded-xl focus:border-gold focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newBase = base + 1;
+                                const newVal = Math.round((newBase + currentFrac) * 100) / 100;
+                                handleMeasurementChange(field.key, newVal);
+                              }}
+                              className="h-11 w-9 text-sm font-bold bg-white/5 border border-white/10 rounded-xl active:scale-95 text-gray-300 hover:text-white flex items-center justify-center select-none cursor-pointer"
+                              aria-label={`Increase ${field.en} by 1 inch`}
+                            >
+                              +1
+                            </button>
+                          </div>
 
-              {/* Craftsman Assignment */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-3 bg-[#121418]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Staff Assignment • کاریگر کا انتخاب
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-gray-400">کٹنگ ماسٹر</label>
-                    <select
-                      value={assignedCutterId}
-                      onChange={(e) => setAssignedCutterId(e.target.value)}
-                      className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
-                    >
-                      <option value="">کوئی نہیں (None)</option>
-                      {cuttingMasters.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-gray-400">سلائی کاریگر</label>
-                    <select
-                      value={assignedStitcherId}
-                      onChange={(e) => setAssignedStitcherId(e.target.value)}
-                      className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
-                    >
-                      <option value="">کوئی نہیں (None)</option>
-                      {stitchers.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                          {/* Spacer divider */}
+                          <div className="w-px h-7 bg-white/10 mx-1 shrink-0" aria-hidden="true" />
+
+                          {/* Fraction Pills (0, ¼, ½, ¾) */}
+                          <div className="grid grid-cols-4 gap-1 flex-1 min-w-0">
+                            {[
+                              { label: '0', value: 0.0 },
+                              { label: '¼', value: 0.25 },
+                              { label: '½', value: 0.5 },
+                              { label: '¾', value: 0.75 },
+                            ].map((frac) => {
+                              const isFracActive = Math.abs(currentFrac - frac.value) < 0.05;
+                              return (
+                                <button
+                                  key={frac.label}
+                                  type="button"
+                                  onClick={() => {
+                                    const newVal = Math.round((base + frac.value) * 100) / 100;
+                                    handleMeasurementChange(field.key, newVal);
+                                  }}
+                                  className={cn(
+                                    'h-11 rounded-xl font-mono font-bold text-xs flex items-center justify-center select-none transition-all cursor-pointer',
+                                    isFracActive
+                                      ? 'bg-gold text-black shadow-[0_0_12px_rgba(212,175,55,0.3)]'
+                                      : 'bg-white/5 border border-white/10 text-gray-300 hover:text-white active:scale-95'
+                                  )}
+                                >
+                                  {frac.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Special Instructions */}
-              <div className="premium-glass-card p-4 border-white/10 space-y-2 bg-[#121418]">
-                <label className="text-xs font-bold text-white uppercase tracking-wider block">
-                  Special Notes • خصوصی ہدایات
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="e.g. کالر پر کڑھائی، بٹن خصوصی لکڑی والے"
-                  value={specialNotes}
-                  onChange={(e) => setSpecialNotes(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-black/40 p-2.5 text-xs text-white placeholder-gray-500 focus:border-gold/50 focus:outline-none"
-                />
+              {/* Collapsible Administration (Staff & Notes) */}
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowMobileAdmin((prev) => !prev)}
+                  className="w-full py-3 px-4 rounded-xl border border-white/10 bg-[#121418]/60 backdrop-blur-md hover:bg-white/5 active:scale-[0.99] text-xs font-semibold text-gray-300 flex items-center justify-between transition-all cursor-pointer shadow-sm"
+                >
+                  <span className="font-urdu-serif text-xs leading-relaxed py-0.5">
+                    {showMobileAdmin
+                      ? 'کاریگر تفویض اور خصوصی ہدایات چھپائیں'
+                      : '+ کاریگر تفویض اور خصوصی ہدایات درج کریں'}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-gray-400 font-sans">
+                      {showMobileAdmin ? 'Hide Staff & Notes' : 'Staff Assignment & Notes'}
+                    </span>
+                    {(assignedCutterId || assignedStitcherId || specialNotes.trim()) && (
+                      <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
+                    )}
+                  </div>
+                </button>
+
+                {showMobileAdmin && (
+                  <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-3 shadow-xl animate-fade-in">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                      Staff Assignment • کاریگر کا انتخاب
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-gray-400">کٹنگ ماسٹر</label>
+                        <select
+                          value={assignedCutterId}
+                          onChange={(e) => setAssignedCutterId(e.target.value)}
+                          className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
+                        >
+                          <option value="">کوئی نہیں (None)</option>
+                          {cuttingMasters.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-gray-400">سلائی کاریگر</label>
+                        <select
+                          value={assignedStitcherId}
+                          onChange={(e) => setAssignedStitcherId(e.target.value)}
+                          className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
+                        >
+                          <option value="">کوئی نہیں (None)</option>
+                          {stitchers.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 pt-1">
+                      <label className="text-xs font-bold text-white uppercase tracking-wider block">
+                        Special Notes • خصوصی ہدایات
+                      </label>
+                      <textarea
+                        rows={2}
+                        placeholder="e.g. کالر پر کڑھائی، بٹن خصوصی لکڑی والے"
+                        value={specialNotes}
+                        onChange={(e) => setSpecialNotes(e.target.value)}
+                        className="w-full rounded-lg border border-white/10 bg-black/40 p-2.5 text-xs text-white placeholder-gray-500 focus:border-gold/50 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Back to Step 2 */}
-              <Button
+              {/* Inline back button to Step 2 */}
+              <button
                 type="button"
-                variant="outline"
-                onClick={() => setMobileStep(2)}
-                className="w-full h-10 border-white/10 text-xs text-gray-300"
+                onClick={() => {
+                  setMobileStep(2);
+                  document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="w-full h-11 rounded-xl border border-white/10 bg-white/5 text-gray-300 font-urdu-serif text-xs hover:bg-white/10 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                <span>← واپس ڈیزائن پر جائیں (Back to Style)</span>
-              </Button>
+                <ArrowLeft className="h-4 w-4" />
+                <span>← واپس ڈیزائن اور کٹ پر جائیں (Back to Style)</span>
+              </button>
 
               {/* Physical Bottom Spacer to prevent docked bar overlap */}
-              <div className="h-32 w-full shrink-0" aria-hidden="true" />
+              <div className="h-36 w-full shrink-0" aria-hidden="true" />
             </div>
           )}
 
@@ -1504,7 +1588,7 @@ export default function NewOrderPage() {
                     <span className="text-[10px] text-gray-400 uppercase tracking-wider">
                       Total PKR
                     </span>
-                    <span className="font-mono text-sm font-bold text-gold">
+                    <span className="font-mono text-sm font-bold text-white">
                       Rs. {financials.total_amount.toLocaleString()}
                     </span>
                   </div>
@@ -1513,10 +1597,12 @@ export default function NewOrderPage() {
                     <span className="text-[11px] text-gray-300">ایڈوانس:</span>
                     <input
                       type="number"
+                      inputMode="numeric"
                       min={0}
-                      value={advancePaid}
-                      onChange={(e) => setAdvancePaid(parseFloat(e.target.value) || 0)}
-                      className="w-16 h-6 rounded bg-black/60 border border-white/15 px-1 text-right font-mono text-xs font-bold text-white focus:outline-none focus:border-gold"
+                      value={advancePaid === 0 ? '' : advancePaid}
+                      placeholder="0"
+                      onChange={(e) => setAdvancePaid(Number(e.target.value) || 0)}
+                      className="h-9 w-24 text-center font-mono font-bold text-gold bg-black/60 border border-white/20 rounded-lg focus:outline-none focus:border-gold"
                     />
                   </div>
 
@@ -1524,7 +1610,7 @@ export default function NewOrderPage() {
                     <span className="text-[10px] text-gray-400 uppercase tracking-wider">
                       باقی بیلنس
                     </span>
-                    <span className="font-mono text-xs font-bold text-rose-400">
+                    <span className="font-mono text-sm font-bold text-rose-400">
                       Rs. {financials.balance_due.toLocaleString()}
                     </span>
                   </div>
@@ -1532,18 +1618,18 @@ export default function NewOrderPage() {
 
                 <Button
                   type="button"
-                  disabled={!isFormValidToBook || isCheckingQuota}
-                  isLoading={isCheckingQuota}
-                  onClick={handleBookOrder}
-                  className="w-full h-11 bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black hover:opacity-95 font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2"
+                  disabled={!isFormValidToBook || isSubmitting}
+                  isLoading={isSubmitting}
+                  onClick={() => handleCreateOrder(false)}
+                  className="w-full h-13 min-h-[52px] rounded-xl bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black font-bold text-base shadow-[0_0_25px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2 hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer"
                 >
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>
-                    {isCheckingQuota
+                  <Sparkles className="h-4 w-4 shrink-0 text-black" />
+                  <span className="font-urdu-serif leading-relaxed py-0.5 text-sm font-bold">
+                    {isSubmitting
                       ? 'تصدیق جاری ہے...'
                       : !customerName.trim()
                       ? 'گاہک کا نام درج کریں'
-                      : 'بکنگ مکمل کریں • Book Order'}
+                      : '✨ سوٹ بکنگ مکمل کریں اور پرچی بنائیں • Confirm & Book Suit'}
                   </span>
                 </Button>
               </>
