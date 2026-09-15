@@ -39,6 +39,9 @@ import {
   CreditCard,
   Layers,
   ArrowRight,
+  ArrowLeft,
+  ChevronRight,
+  Settings,
   Copy,
   Upload,
   Image as ImageIcon,
@@ -307,6 +310,16 @@ const PRICING_PLANS: PricingPlanMeta[] = [
   },
 ];
 
+const SECTION_TITLES: Record<string, { ur: string; en: string }> = {
+  workshop: { ur: 'دکان اور رسید', en: 'Workshop & Receipt' },
+  staff: { ur: 'کاریگر اور عملہ', en: 'Staff & Craftsmen' },
+  rates: { ur: 'سلائی ریٹ لسٹ', en: 'Stitching Rates' },
+  printer: { ur: 'تھرمل پرنٹر', en: 'Thermal Printer' },
+  alerts: { ur: 'آواز اور الرٹس', en: 'Sound & Alerts' },
+  reset: { ur: 'ڈیٹا اور کیشے', en: 'Data & Cache' },
+  account: { ur: 'اکاؤنٹ اور پلان', en: 'Account & Plan' },
+};
+
 export default function SettingsPage() {
   const [shop, setShop] = React.useState<Shop>(mockShop);
   const [loading, setLoading] = React.useState<boolean>(true);
@@ -317,6 +330,44 @@ export default function SettingsPage() {
     type: 'success' | 'error' | 'info';
   } | null>(null);
   const [phoneError, setPhoneError] = React.useState<string | null>(null);
+
+  // Safe Shop Initialization
+  const workshopName = shop?.name || 'Silaye Master Tailors';
+  const primaryPhone = shop?.phone || shop?.owner_phone || '0300-5551234';
+  const planTier = shop?.plan_tier || 'PRO';
+
+  // Mobile Router State & Hash Synchronization
+  const [mobileSection, setMobileSection] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncFromHash = () => {
+      const hash = window.location.hash.replace(/^#/, '');
+      if (hash && SECTION_TITLES[hash]) {
+        setMobileSection(hash);
+      } else {
+        setMobileSection(null);
+      }
+    };
+
+    syncFromHash();
+    window.addEventListener('hashchange', syncFromHash);
+    window.addEventListener('popstate', syncFromHash);
+    return () => {
+      window.removeEventListener('hashchange', syncFromHash);
+      window.removeEventListener('popstate', syncFromHash);
+    };
+  }, []);
+
+  const handleSelectSection = (sectionKey: string) => {
+    setMobileSection(sectionKey);
+    if (typeof window !== 'undefined') {
+      window.location.hash = sectionKey;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // Navigation Layout Preference State
   const [navLayout, setNavLayout] = React.useState<NavLayoutPreference>('tabs');
@@ -1102,7 +1153,1149 @@ export default function SettingsPage() {
 
   return (
     <AppShell activeRoute="/settings">
-      <div className="space-y-8 max-w-7xl mx-auto pb-44 pb-safe">
+      {/* ================================================================= */}
+      {/* MOBILE SETTINGS VIEWPORT ONLY (block md:hidden)                  */}
+      {/* ================================================================= */}
+      <div className="block md:hidden pb-safe">
+        {/* Sticky Back Navigation Bar (When in any sub-view) */}
+        {mobileSection !== null && (
+          <div className="sticky top-0 z-20 -mx-4 px-4 py-3 bg-[#0B0C0E]/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileSection(null);
+                window.history.replaceState(null, '', ' ');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="flex items-center gap-1.5 text-xs text-gold font-medium active:scale-95 cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="font-urdu-serif leading-relaxed">سیٹنگز پر واپس</span>
+              <span className="text-[10px] text-gray-400 font-sans">(Hub)</span>
+            </button>
+            <div className="text-right">
+              <span className="font-urdu-serif text-xs font-bold text-white block leading-tight">
+                {SECTION_TITLES[mobileSection]?.ur}
+              </span>
+              <span className="text-[9px] text-gray-400 font-sans block">
+                {SECTION_TITLES[mobileSection]?.en}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Global Toast Notification for Mobile */}
+        {notification && (
+          <div
+            className={`p-3.5 mb-4 rounded-xl border flex items-center justify-between gap-3 shadow-lg transition-all animate-in fade-in duration-200 ${
+              notification.type === 'success'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : notification.type === 'error'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                : 'bg-gold/10 border-gold/30 text-gold'
+            }`}
+            role="alert"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              {notification.type === 'success' ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+              ) : (
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+              )}
+              <span className="text-xs font-medium truncate">{notification.message}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNotification(null)}
+              className="text-[10px] opacity-70 hover:opacity-100 underline cursor-pointer shrink-0"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* MOBILE SETTINGS HUB (When mobileSection === null)                 */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === null && (
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between py-2 border-b border-white/5 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center text-gold">
+                  <Settings className="h-4 w-4" />
+                </div>
+                <div>
+                  <h1 className="text-sm font-bold text-white font-urdu-serif leading-tight">
+                    ورکشاپ سیٹنگز
+                  </h1>
+                  <p className="text-[10px] text-gray-400 font-sans">
+                    Workshop Configuration Hub
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Group 1: General Workshop (کاروبار اور عملہ) */}
+            <div>
+              <div className="flex items-center justify-between px-1 mb-1.5">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider font-sans">
+                  General Workshop
+                </span>
+                <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
+                  کاروبار اور عملہ
+                </span>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md divide-y divide-white/5 overflow-hidden shadow-xl mb-4">
+                {/* 🏢 Workshop & Receipt */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('workshop')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                      <Store className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                        دکان اور رسید سیٹنگز
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-sans block">
+                        Workshop Identity & Receipts
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
+                </button>
+
+                {/* ✂️ Staff & Craftsmen */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('staff')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                      <Users className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                          کاریگر اور عملہ
+                        </span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-gold/15 text-gold border border-gold/30">
+                          {staffMembers.length}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-sans block">
+                        Staff & Craftsmen Accounts
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
+                </button>
+
+                {/* 💰 Stitching Rates */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('rates')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                      <Scissors className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                        سلائی ریٹ لسٹ
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-sans block">
+                        Stitching Rates & Surcharges
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
+                </button>
+              </div>
+            </div>
+
+            {/* Group 2: Hardware & Preferences (ہارڈویئر اور ترجیحات) */}
+            <div>
+              <div className="flex items-center justify-between px-1 mb-1.5">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider font-sans">
+                  Hardware & Preferences
+                </span>
+                <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
+                  ہارڈویئر اور ترجیحات
+                </span>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md divide-y divide-white/5 overflow-hidden shadow-xl mb-4">
+                {/* 🖨️ Thermal Printer */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('printer')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                      <Printer className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                        تھرمل پرنٹر سیٹ اپ
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-sans block">
+                        58mm/80mm Thermal Printer
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
+                </button>
+
+                {/* 🔔 Sound & Alerts */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('alerts')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                      <Bell className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                        آواز اور الرٹ پیغامات
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-sans block">
+                        Sound, Chimes & Notifications
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
+                </button>
+
+                {/* ⚠️ Workshop Data & Reset */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('reset')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                      <AlertTriangle className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                        ڈیٹا صفائی اور کیشے
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-sans block">
+                        Flush Cache & Purge Test Data
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Docked Account Pill (ChatGPT/Linear Style) */}
+            <button
+              type="button"
+              onClick={() => handleSelectSection('account')}
+              className="w-full p-3 rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.06] to-white/[0.02] hover:border-gold/30 active:scale-[0.99] flex items-center justify-between transition-all shadow-lg cursor-pointer mb-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-gold/20 border border-gold/40 text-gold font-bold text-xs flex items-center justify-center font-mono">
+                  {workshopName.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-white font-sans">{workshopName}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30 font-semibold font-mono">
+                      {planTier}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 font-sans truncate block">
+                    {primaryPhone} • ورکشاپ مالک
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-gold text-xs font-sans font-medium">
+                <span className="text-[10px] text-gray-400">Manage</span>
+                <ChevronRight className="h-4 w-4 text-gold/60" />
+              </div>
+            </button>
+
+            {/* Bottom Clearance Spacer for Hub */}
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* SUB-VIEW 1: WORKSHOP & RECEIPT (mobileSection === 'workshop')      */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === 'workshop' && (
+          <div className="space-y-4">
+            <form onSubmit={handleSaveSettings} className="space-y-4">
+              {/* Identity Card */}
+              <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <Store className="h-4 w-4 text-gold" />
+                    <span>Workshop Identity</span>
+                    <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
+                      دکان کی شناخت
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
+                      <span>Shop Name</span>
+                      <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">نام</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={shop?.name || ''}
+                      onChange={(e) => handleFieldChange('name', e.target.value)}
+                      placeholder="Silaye Master Tailors"
+                      required
+                      className="bg-black/30 border-white/10 focus:border-gold text-white text-xs h-10"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
+                      <span>Primary Phone</span>
+                      <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">فون نمبر</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={shop?.phone || shop?.owner_phone || ''}
+                      onChange={(e) => handleFieldChange('phone', e.target.value)}
+                      placeholder="0300-1234567"
+                      leftIcon={<Phone className="h-3.5 w-3.5 text-gray-400" />}
+                      error={phoneError || undefined}
+                      className="bg-black/30 border-white/10 focus:border-gold text-white font-mono text-xs h-10"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
+                      <span>Counter Phone (Optional)</span>
+                      <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">کاؤنٹر فون</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={shop?.secondary_phone || ''}
+                      onChange={(e) => handleFieldChange('secondary_phone', e.target.value)}
+                      placeholder="0312-7654321"
+                      leftIcon={<Phone className="h-3.5 w-3.5 text-gray-400" />}
+                      className="bg-black/30 border-white/10 focus:border-gold text-white font-mono text-xs h-10"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Location Card */}
+              <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gold" />
+                    <span>Location & NTN</span>
+                    <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
+                      پتہ اور ٹیکس نمبر
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
+                      <span>Address</span>
+                      <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">پتہ</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={shop?.address || ''}
+                      onChange={(e) => handleFieldChange('address', e.target.value)}
+                      placeholder="Shop #14, Main Bazaar"
+                      leftIcon={<MapPin className="h-3.5 w-3.5 text-gray-400" />}
+                      className="bg-black/30 border-white/10 focus:border-gold text-white text-xs h-10"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-300">City</label>
+                      <Input
+                        type="text"
+                        value={shop?.city || 'Wah Cantt'}
+                        onChange={(e) => handleFieldChange('city', e.target.value)}
+                        placeholder="City"
+                        className="bg-black/30 border-white/10 focus:border-gold text-white text-xs h-10"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-300">NTN Number</label>
+                      <Input
+                        type="text"
+                        value={shop?.ntn_number || ''}
+                        onChange={(e) => handleFieldChange('ntn_number', e.target.value)}
+                        placeholder="1234567-8"
+                        className="bg-black/30 border-white/10 focus:border-gold text-white font-mono text-xs h-10"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Receipt Branding Card */}
+              <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <Receipt className="h-4 w-4 text-gold" />
+                    <span>Receipt Header & Footer</span>
+                    <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
+                      رسید نوٹس
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-300">Header Note</label>
+                    <textarea
+                      rows={2}
+                      value={shop?.receipt_header || ''}
+                      onChange={(e) => handleFieldChange('receipt_header', e.target.value)}
+                      placeholder="سِلائی ماسٹر ٹیلرز اینڈ فیبرکس - ماہر سلائی"
+                      className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:border-gold focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-300">Footer Note & Terms</label>
+                    <textarea
+                      rows={2}
+                      value={shop?.receipt_footer || ''}
+                      onChange={(e) => handleFieldChange('receipt_footer', e.target.value)}
+                      placeholder="شکریہ! مال کی واپسی یا تبدیلی 7 یوم کے اندر ممکن ہے۔"
+                      className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:border-gold focus:outline-none"
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="border-t border-white/5 pt-3">
+                  <Button
+                    type="submit"
+                    variant="default"
+                    isLoading={saving}
+                    disabled={saving}
+                    className="w-full bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs py-2.5 rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.25)] gap-2 cursor-pointer"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>Save Workshop Settings (محفوظ کریں)</span>
+                  </Button>
+                </CardFooter>
+              </Card>
+            </form>
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* SUB-VIEW 2: STAFF & CRAFTSMEN (mobileSection === 'staff')          */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === 'staff' && (
+          <div className="space-y-4">
+            {/* 2x2 Metric Summary Grid */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="rounded-xl border border-white/5 bg-[#121418]/80 p-3">
+                <p className="text-[10px] text-gray-400">Total Staff</p>
+                <p className="text-xl font-bold font-mono text-white mt-0.5">{totalCount}</p>
+                <p className="text-[10px] text-gold/80 font-urdu-serif leading-tight mt-1" dir="rtl">کل عملہ</p>
+              </div>
+              <div className="rounded-xl border border-white/5 bg-[#121418]/80 p-3">
+                <p className="text-[10px] text-gray-400">Cutters</p>
+                <p className="text-xl font-bold font-mono text-amber-300 mt-0.5">{cutterCount}</p>
+                <p className="text-[10px] text-amber-300/80 font-urdu-serif leading-tight mt-1" dir="rtl">ماسٹر کٹر</p>
+              </div>
+              <div className="rounded-xl border border-white/5 bg-[#121418]/80 p-3">
+                <p className="text-[10px] text-gray-400">Stitchers</p>
+                <p className="text-xl font-bold font-mono text-cyan-300 mt-0.5">{stitcherCount}</p>
+                <p className="text-[10px] text-cyan-300/80 font-urdu-serif leading-tight mt-1" dir="rtl">سلائی کاریگر</p>
+              </div>
+              <div className="rounded-xl border border-white/5 bg-[#121418]/80 p-3">
+                <p className="text-[10px] text-gray-400">Support</p>
+                <p className="text-xl font-bold font-mono text-purple-300 mt-0.5">{supportCount}</p>
+                <p className="text-[10px] text-purple-300/80 font-urdu-serif leading-tight mt-1" dir="rtl">دیگر عملہ</p>
+              </div>
+            </div>
+
+            {/* Free Tier Quota Limit Callout */}
+            {effectivePlanTier === 'FREE' && totalCount >= 1 && (
+              <div className="p-3 rounded-xl border border-gold/30 bg-gold/10 text-xs text-gold flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Crown className="h-4 w-4 shrink-0 text-gold" />
+                  <span className="text-[11px] leading-tight">Free tier limit: 1 craftsman account. Upgrade to Pro for unlimited staff.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('account')}
+                  className="px-2 py-1 rounded-lg bg-gold text-[#0B0C0E] font-bold text-[10px] shrink-0 active:scale-95"
+                >
+                  Upgrade
+                </button>
+              </div>
+            )}
+
+            {/* Add Staff Button & Search */}
+            <div className="space-y-2.5">
+              <Button
+                type="button"
+                onClick={() => setIsAddModalOpen(true)}
+                disabled={effectivePlanTier === 'FREE' && totalCount >= 1}
+                className="w-full bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs py-2.5 rounded-xl shadow-[0_0_15px_rgba(212,175,55,0.2)] gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>+ Add Craftsman (نیا کاریگر شامل کریں)</span>
+              </Button>
+              <Input
+                type="search"
+                placeholder="Search staff by name or email..."
+                value={staffSearchQuery}
+                onChange={(e) => setStaffSearchQuery(e.target.value)}
+                leftIcon={<Search className="h-3.5 w-3.5 text-gray-400" />}
+                className="bg-black/30 border-white/10 text-xs h-9"
+              />
+            </div>
+
+            {/* Staff List Cards */}
+            <div className="space-y-2">
+              {filteredStaff.map((member) => {
+                const meta = ROLE_METADATA[member.role] || ROLE_METADATA.STAFF;
+                const RoleIcon = meta.icon;
+                const isCurrentUser = member.user_id === currentUserId;
+                const isOwner = member.role === 'OWNER';
+
+                return (
+                  <div
+                    key={member.id}
+                    className="p-3.5 rounded-2xl border border-white/5 bg-[#121418]/70 backdrop-blur-md flex items-center justify-between gap-3 shadow-md"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300">
+                        <RoleIcon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-white truncate">
+                            {member.name || member.email?.split('@')[0] || 'Workshop Craftsman'}
+                          </span>
+                          {isCurrentUser && (
+                            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-gold/15 text-gold border border-gold/30">
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Badge variant="outline" className={cn('text-[9px] py-0 px-1.5', meta.badgeClass)}>
+                            {meta.label}
+                          </Badge>
+                          <span className="font-urdu-serif text-[10px] text-gray-400" dir="rtl">
+                            {meta.urLabel}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {!isOwner && !isCurrentUser && (
+                      <button
+                        type="button"
+                        onClick={() => setMemberToDelete(member)}
+                        className="p-1.5 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0 cursor-pointer"
+                        title="Remove Craftsman"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* SUB-VIEW 3: STITCHING RATES (mobileSection === 'rates')            */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === 'rates' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-1">
+              <div>
+                <h3 className="text-xs font-bold text-white font-sans">Garment Stitching Rates</h3>
+                <p className="text-[10px] text-gray-400 font-urdu-serif leading-tight" dir="rtl">سلائی ریٹ لسٹ اور ہنگامی فیس</p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSaveRates}
+                disabled={savingRates}
+                isLoading={savingRates}
+                className="bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs h-8 px-3 rounded-lg shadow-sm cursor-pointer"
+              >
+                <Save className="h-3.5 w-3.5" />
+                <span>Save Rates</span>
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {garmentRates.map((rate) => {
+                const meta = GARMENT_METADATA[rate.garment_type] || {
+                  title: rate.garment_type,
+                  urTitle: 'سلائی کیٹیگری',
+                  description: 'Garment category configuration',
+                  icon: Scissors,
+                  accentColor: 'border-gold/40 bg-gold/10 text-gold',
+                };
+                const GarmentIcon = meta.icon;
+
+                return (
+                  <div
+                    key={rate.garment_type}
+                    className="p-3.5 rounded-2xl border border-white/5 bg-[#121418]/70 backdrop-blur-md space-y-3 shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-8 w-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center text-gold">
+                          <GarmentIcon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-white block">{meta.title}</span>
+                          <span className="font-urdu-serif text-[11px] text-gold/80 block -mt-0.5" dir="rtl">{meta.urTitle}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRateFieldChange(rate.garment_type, 'is_active', !rate.is_active)}
+                        className={cn(
+                          'px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all cursor-pointer',
+                          rate.is_active
+                            ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                            : 'border-gray-600/40 bg-gray-600/15 text-gray-400'
+                        )}
+                      >
+                        {rate.is_active ? 'Active' : 'Disabled'}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 pt-1 border-t border-white/5">
+                      <div>
+                        <label className="text-[10px] text-gray-400 block mb-0.5">Base Rate (PKR)</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={50}
+                          value={rate.base_stitching_rate}
+                          onChange={(e) =>
+                            handleRateFieldChange(
+                              rate.garment_type,
+                              'base_stitching_rate',
+                              Math.max(0, parseFloat(e.target.value) || 0)
+                            )
+                          }
+                          disabled={!rate.is_active}
+                          className="bg-black/30 border-white/10 text-xs font-mono h-8"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-400 block mb-0.5">Urgent Surcharge</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={50}
+                          value={rate.urgent_surcharge}
+                          onChange={(e) =>
+                            handleRateFieldChange(
+                              rate.garment_type,
+                              'urgent_surcharge',
+                              Math.max(0, parseFloat(e.target.value) || 0)
+                            )
+                          }
+                          disabled={!rate.is_active}
+                          className="bg-black/30 border-white/10 text-xs font-mono h-8"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="text-[10px] text-gray-400 block mb-0.5">Standard (Days)</label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={rate.standard_delivery_days}
+                          onChange={(e) =>
+                            handleRateFieldChange(
+                              rate.garment_type,
+                              'standard_delivery_days',
+                              Math.max(1, parseInt(e.target.value) || 1)
+                            )
+                          }
+                          disabled={!rate.is_active}
+                          className="bg-black/30 border-white/10 text-xs font-mono text-center h-8"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-400 block mb-0.5">Urgent (Days)</label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={15}
+                          value={rate.urgent_delivery_days}
+                          onChange={(e) =>
+                            handleRateFieldChange(
+                              rate.garment_type,
+                              'urgent_delivery_days',
+                              Math.max(1, parseInt(e.target.value) || 1)
+                            )
+                          }
+                          disabled={!rate.is_active}
+                          className="bg-black/30 border-white/10 text-xs font-mono text-center h-8"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleResetRates}
+              disabled={resettingRates || savingRates}
+              className="w-full border-white/10 text-gray-400 hover:text-white text-xs h-9 mt-2 cursor-pointer"
+            >
+              <RotateCcw className={cn("h-3.5 w-3.5 mr-1.5", resettingRates && "animate-spin")} />
+              <span>Reset to Market Standard Rates</span>
+            </Button>
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* SUB-VIEW 4: THERMAL PRINTER (mobileSection === 'printer')          */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === 'printer' && (
+          <div className="space-y-4">
+            <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-white flex items-center gap-2">
+                  <Printer className="h-4 w-4 text-gold" />
+                  <span>Thermal Paper Roll Size</span>
+                  <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">رول سائز</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 pt-0">
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => handlePaperWidthChange('58mm')}
+                    className={cn(
+                      'p-3 rounded-xl border text-center transition-all cursor-pointer',
+                      printerSettings.paper_width === '58mm'
+                        ? 'border-gold bg-gold/15 text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)]'
+                        : 'border-white/10 bg-white/5 text-gray-400'
+                    )}
+                  >
+                    <span className="text-xs font-bold block">58mm Roll</span>
+                    <span className="text-[10px] opacity-75 block mt-0.5">2-Inch Fabric Tag</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePaperWidthChange('80mm')}
+                    className={cn(
+                      'p-3 rounded-xl border text-center transition-all cursor-pointer',
+                      printerSettings.paper_width === '80mm'
+                        ? 'border-gold bg-gold/15 text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)]'
+                        : 'border-white/10 bg-white/5 text-gray-400'
+                    )}
+                  >
+                    <span className="text-xs font-bold block">80mm Roll</span>
+                    <span className="text-[10px] opacity-75 block mt-0.5">3-Inch Customer Slip</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-white/5">
+                  <label className="flex items-center justify-between text-xs text-gray-300 cursor-pointer">
+                    <div>
+                      <span className="font-medium block">Auto-Print on Booking</span>
+                      <span className="text-[10px] text-gray-400 block font-urdu-serif" dir="rtl">بکنگ مکمل ہونے پر خودکار پرنٹ</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={printerSettings.auto_print_on_booking}
+                      onChange={() => handleTogglePrinterSetting('auto_print_on_booking')}
+                      className="rounded border-white/10 bg-black/40 text-gold focus:ring-gold h-4 w-4"
+                    />
+                  </label>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-2 pt-3 border-t border-white/5">
+                <Button
+                  type="button"
+                  onClick={() => setIsTestModalOpen(true)}
+                  variant="outline"
+                  className="w-full border-gold/40 text-gold text-xs h-9 cursor-pointer"
+                >
+                  <Printer className="h-3.5 w-3.5 mr-1.5" />
+                  <span>Print Test Receipt (ٹیسٹ سلائی پرچی)</span>
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSavePrinterSettings}
+                  disabled={savingPrinter}
+                  isLoading={savingPrinter}
+                  className="w-full bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs h-9 shadow-md cursor-pointer"
+                >
+                  <Save className="h-3.5 w-3.5 mr-1.5" />
+                  <span>Save Printer Settings</span>
+                </Button>
+              </CardFooter>
+            </Card>
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* SUB-VIEW 5: SOUND & ALERTS (mobileSection === 'alerts')            */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === 'alerts' && (
+          <div className="space-y-4">
+            <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-white flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-gold" />
+                  <span>Sound & Due Alerts</span>
+                  <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
+                    آواز اور الرٹس
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 pt-0">
+                {/* Morning Delivery Briefing */}
+                <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-black/20">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-semibold text-white block">Morning Briefing (9:00 AM)</span>
+                    <span className="text-[10px] text-gray-400 block font-urdu-serif" dir="rtl">صبح 9 بجے ڈیلیوری خلاصہ الرٹ</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notificationPrefs.morningBriefing}
+                    onChange={() => handleToggleNotificationPref('morningBriefing')}
+                    className="rounded border-white/10 bg-black/40 text-gold focus:ring-gold h-4 w-4 cursor-pointer"
+                  />
+                </div>
+
+                {/* Urgent Due Warnings */}
+                <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-black/20">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-semibold text-white block">Urgent Warnings (&lt; 24h)</span>
+                    <span className="text-[10px] text-gray-400 block font-urdu-serif" dir="rtl">آج کی ڈیلیوری کے اہم انتباہات</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notificationPrefs.urgentAlerts}
+                    onChange={() => handleToggleNotificationPref('urgentAlerts')}
+                    className="rounded border-white/10 bg-black/40 text-gold focus:ring-gold h-4 w-4 cursor-pointer"
+                  />
+                </div>
+
+                {/* Sound & Vibration */}
+                <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-black/20">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-semibold text-white block">Sound & Vibration Chime</span>
+                    <span className="text-[10px] text-gray-400 block font-urdu-serif" dir="rtl">الرٹس پر مخصوص آواز اور وائبریشن</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notificationPrefs.soundEnabled}
+                    onChange={() => handleToggleNotificationPref('soundEnabled')}
+                    className="rounded border-white/10 bg-black/40 text-gold focus:ring-gold h-4 w-4 cursor-pointer"
+                  />
+                </div>
+              </CardContent>
+              <CardFooter className="pt-2 border-t border-white/5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSendTestAlert}
+                  disabled={sendingTestAlert}
+                  className="w-full border-gold/40 text-gold text-xs h-9 cursor-pointer"
+                >
+                  <Bell className={cn('h-3.5 w-3.5 mr-1.5', sendingTestAlert && 'animate-bounce')} />
+                  <span>{sendingTestAlert ? 'بھیجا جا رہا ہے...' : 'Send Test Alert (ٹیسٹ الرٹ بھیجیں)'}</span>
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* Navigation Layout Preference */}
+            <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-white flex items-center gap-2">
+                  <Sliders className="h-4 w-4 text-gold" />
+                  <span>Navigation Style</span>
+                  <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
+                    نیویگیشن انداز
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 pt-0">
+                {(['tabs', 'drawer', 'hybrid'] as NavLayoutPreference[]).map((layout) => (
+                  <button
+                    key={layout}
+                    type="button"
+                    onClick={() => handleNavLayoutChange(layout)}
+                    className={cn(
+                      'w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer',
+                      navLayout === layout
+                        ? 'border-gold bg-gold/15 text-white shadow-sm'
+                        : 'border-white/5 bg-black/20 text-gray-400'
+                    )}
+                  >
+                    <div>
+                      <span className="text-xs font-bold capitalize block">
+                        {layout === 'tabs' ? 'Modern Tabs (نیچے نیویگیشن بار)' : layout === 'drawer' ? 'Classic Drawer (مینو دراز)' : 'Hybrid Master (مشترکہ موڈ)'}
+                      </span>
+                      <span className="text-[10px] text-gray-400 block mt-0.5">
+                        {layout === 'tabs' ? 'Bottom bar with FAB' : layout === 'drawer' ? 'Slide-out drawer only' : 'Both tabs and drawer'}
+                      </span>
+                    </div>
+                    {navLayout === layout && <Check className="h-4 w-4 text-gold" />}
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* SUB-VIEW 6: DATA & RESET (mobileSection === 'reset')               */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === 'reset' && (
+          <div className="space-y-4">
+            <Card className="border-rose-500/20 bg-[#0B0C0E]/70 backdrop-blur-xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-rose-300 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-rose-400" />
+                  <span>Workshop Data Purification</span>
+                  <span className="font-urdu-serif text-xs text-rose-400" dir="rtl">
+                    ڈیٹا صفائی
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 pt-0">
+                <div className="p-3 rounded-xl border border-rose-500/20 bg-rose-500/5 text-xs text-gray-300 space-y-1.5">
+                  <p className="font-semibold text-rose-300">Ready for Live Production?</p>
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    Purging test data deletes all dummy orders, customer profiles, and Khata financial entries while retaining shop identity, staff, rates, and printer hardware preferences.
+                  </p>
+                  <p className="font-urdu-serif text-[11px] text-rose-400/90 leading-relaxed" dir="rtl">
+                    تمام فرضی آرڈرز اور کسٹمرز ڈیلیٹ ہو جائیں گے، جبکہ دکان سیٹنگز محفوظ رہیں گی۔
+                  </p>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-2.5 pt-3 border-t border-white/5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleFlushLocalCache}
+                  disabled={flushingCache}
+                  className="w-full border-white/10 text-gray-300 text-xs h-9 cursor-pointer"
+                >
+                  <RotateCcw className={cn("h-3.5 w-3.5 mr-1.5", flushingCache && "animate-spin text-gold")} />
+                  <span>{flushingCache ? 'Flushing Cache...' : 'Flush Local Cache (کیشے صاف کریں)'}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleOpenResetModal}
+                  className="w-full border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold h-9 shadow-md cursor-pointer"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5 text-rose-400" />
+                  <span>Purge Test Data (ورکشاپ ڈیٹا صاف کریں)</span>
+                </Button>
+              </CardFooter>
+            </Card>
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* SUB-VIEW 7: ACCOUNT & BILLING (mobileSection === 'account')         */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === 'account' && (
+          <div className="space-y-4">
+            {/* Active Subscription & Quota Card */}
+            <div className="p-4 rounded-2xl border border-white/10 bg-[#121418]/80 backdrop-blur-md space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-gold" />
+                  <div>
+                    <span className="text-xs font-bold text-white block">{workshopName}</span>
+                    <span className="text-[10px] text-gray-400 font-sans block">{shop?.city || 'Pakistan'}</span>
+                  </div>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'text-[10px] font-mono uppercase font-bold py-0.5 px-2',
+                    effectivePlanTier === 'PRO'
+                      ? 'border-gold/40 bg-gold/20 text-gold shadow-[0_0_10px_rgba(212,175,55,0.2)]'
+                      : effectivePlanTier === 'ENTERPRISE'
+                      ? 'border-cyan-500/40 bg-cyan-500/20 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                      : 'border-slate-500/40 bg-slate-500/20 text-slate-300'
+                  )}
+                >
+                  {effectivePlanTier} PLAN
+                </Badge>
+              </div>
+
+              {/* Monthly Quota Meter */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">Monthly Orders:</span>
+                  <span className="font-mono text-white font-bold">
+                    {shopUsage.orders_count} / {effectivePlanTier === 'FREE' ? '50' : '∞ Unlimited'}
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className={cn(
+                      'h-full transition-all duration-500',
+                      effectivePlanTier === 'FREE' && shopUsage.orders_count >= 50
+                        ? 'bg-rose-500'
+                        : 'bg-gold'
+                    )}
+                    style={{
+                      width: `${
+                        effectivePlanTier === 'FREE'
+                          ? Math.min(100, (shopUsage.orders_count / 50) * 100)
+                          : 100
+                      }%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Pending Payment Review Alert */}
+            {pendingPayment && (
+              <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Hourglass className="h-4 w-4 text-amber-400 animate-spin" />
+                  <span className="text-xs font-bold text-amber-300">Payment Under Review (تصدیق زیر جائزہ)</span>
+                </div>
+                <p className="text-[11px] text-amber-200/80 leading-tight">
+                  Your payment receipt ({pendingPayment.transaction_reference}) is being verified by admin.
+                </p>
+              </div>
+            )}
+
+            {/* Billing Cycle Toggle */}
+            <div className="flex items-center justify-center gap-3 py-1">
+              <span className={cn('text-xs font-medium', !isAnnual ? 'text-white font-bold' : 'text-gray-400')}>
+                Monthly
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsAnnual(!isAnnual)}
+                className={cn(
+                  'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
+                  isAnnual ? 'bg-gold' : 'bg-white/20'
+                )}
+              >
+                <span
+                  className={cn(
+                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#0B0C0E] shadow transition duration-200 ease-in-out',
+                    isAnnual ? 'translate-x-5' : 'translate-x-0'
+                  )}
+                />
+              </button>
+              <span className={cn('text-xs font-medium flex items-center gap-1', isAnnual ? 'text-gold font-bold' : 'text-gray-400')}>
+                Annual <span className="text-[9px] px-1 py-0.2 rounded bg-gold/20 text-gold font-mono">-20%</span>
+              </span>
+            </div>
+
+            {/* Pricing Cards */}
+            <div className="space-y-3">
+              {PRICING_PLANS.map((plan) => {
+                const isCurrent = effectivePlanTier === plan.tier;
+                const price = isAnnual ? plan.annualMonthlyPKR : plan.monthlyPKR;
+
+                return (
+                  <div
+                    key={plan.tier}
+                    className={cn(
+                      'p-4 rounded-2xl border transition-all space-y-3 shadow-md',
+                      isCurrent
+                        ? 'border-gold bg-gold/10'
+                        : 'border-white/10 bg-[#121418]/70 backdrop-blur-md'
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-xs font-bold text-white">{plan.title}</h4>
+                          {plan.highlight && (
+                            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-gold text-[#0B0C0E] font-bold">
+                              POPULAR
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-urdu-serif text-[11px] text-gold/80 block" dir="rtl">{plan.urTitle}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-mono text-sm font-bold text-white">Rs. {price.toLocaleString()}</span>
+                        <span className="text-[9px] text-gray-400 block font-sans">/{isAnnual ? 'year' : 'month'}</span>
+                      </div>
+                    </div>
+
+                    <ul className="text-[11px] text-gray-300 space-y-1">
+                      {plan.features.slice(0, 3).map((feat, idx) => (
+                        <li key={idx} className="flex items-center gap-1.5">
+                          <Check className="h-3 w-3 text-gold shrink-0" />
+                          <span className="truncate">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {isCurrent ? (
+                      <div className="w-full py-2 rounded-xl bg-white/5 border border-white/10 text-center text-xs text-gray-400 font-medium">
+                        Active Plan
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        onClick={() => handleOpenUpgradeModal(plan.tier)}
+                        className="w-full bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs py-2 rounded-xl shadow-md cursor-pointer"
+                      >
+                        Upgrade to {plan.title}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
+      </div>
+
+      {/* ================================================================= */}
+      {/* DESKTOP SETTINGS VIEWPORT ONLY (hidden md:block)                 */}
+      {/* ================================================================= */}
+      <div className="hidden md:block space-y-8 max-w-7xl mx-auto pb-44 pb-safe">
         {/* Top Header & Context */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
           <div>

@@ -449,6 +449,23 @@
   * **Capacitor Sync & Toolchain Provisioning**: Synchronized compiled static assets and plugins (`npx cap sync android`), provisioned OpenJDK 21 LTS (`~/.local/java/jdk-21`) to satisfy Gradle 8.14 and Capacitor 8's `jvmToolchain(21)` requirement, and updated `~/.android_env.sh`.
   * **Native Debug APK Assembly**: Built native debug APK via `./gradlew assembleDebug` (214/214 actionable tasks executed successfully). Output artifact verified at `android/app/build/outputs/apk/debug/app-debug.apk` (8,133,039 bytes / 7.8MB).
 
+---
+
+## Phase 22: Settings Page Overhaul (Mobile Hub-and-Spoke Navigation)
+- [x] 22.1 Step 1: Implement Hub-and-Spoke Router, Grouped Mobile Menu & Docked Account Pill (`app/settings/page.tsx`):
+  * **State-Driven Mobile Router**: Added hash-aware `mobileSection` router state (`null` for Hub, section key for isolated sub-views) with `window.location.hash` and `popstate`/`hashchange` event listeners for Android hardware back button compatibility.
+  * **Localized Sticky Back Bar**: Rendered sticky header when `mobileSection !== null` (`sticky top-0 z-20 -mx-4 px-4 py-3 bg-[#0B0C0E]/95 backdrop-blur-md border-b border-white/10`) with `ArrowLeft`, smooth scroll-to-top on click, and bilingual section title from `SECTION_TITLES` dictionary.
+  * **Grouped Mobile Settings Hub (`mobileSection === null`)**:
+    - Mobile Header: `Settings` icon with `ورکشاپ سیٹنگز` / `Workshop Configuration Hub`.
+    - Group 1 (General Workshop): Rounded obsidian glass surface with 3 rows (Workshop & Receipt, Staff & Craftsmen, Stitching Rates) with icons, Urdu/English labels, and right chevrons.
+    - Group 2 (Hardware & Preferences): Matching surface with 3 rows (Thermal Printer, Sound & Alerts, Workshop Data & Reset).
+    - Bottom Docked Account Pill: Linear/ChatGPT style card with workshop initials avatar, workshop name, owner role, phone, and Pro plan badge.
+    - Bottom Clearance: `h-36 w-full shrink-0` spacer eliminating any collision with `<MobileBottomNav />`.
+  * **Isolated Sub-Views**: Wired all 7 sections (`workshop`, `staff`, `rates`, `printer`, `alerts`, `reset`, `account`) into their respective sub-views with strict null-safety and form preservation.
+  * **Desktop Layout Preservation**: Enforced `hidden md:block` on the entire desktop layout, preserving all tabs, cards, and mutation handlers without alteration.
+  * **Verification Suite**: 0 TypeScript errors (`npx tsc --noEmit`), 159/159 database assertions passing (`scripts/verify_db.ts`), and 28/28 static export routes cleanly generated into `out/` (`npm run build`).
+
+
 
 
 

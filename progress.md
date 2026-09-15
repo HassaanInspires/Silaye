@@ -2982,7 +2982,40 @@
   - APK Artifact: `android/app/build/outputs/apk/debug/app-debug.apk` exists, size 8,133,039 bytes.
 
 * **Next Immediate Task:**
-  - Mobile device field testing and user acceptance validation of the newly compiled APK.
+  - Phase 22 (Completed)
+
+---
+
+## Phase 22: Settings Page Overhaul (Step 1 Completed)
+* **Date:** 2026-09-16
+* **Tasks Completed:**
+  - `22.1` Settings Page Overhaul: Implement the Hub-and-Spoke Router, Grouped Mobile Menu & Docked Account Pill (`app/settings/page.tsx`):
+    - **Safe Initialization & Dictionary**: Defined `SECTION_TITLES` dictionary with bilingual Urdu and English labels for all 7 workshop domain sections. Implemented safe null-tolerant initialization for `workshopName`, `primaryPhone`, and `planTier`.
+    - **Hash-Aware Mobile Router**: Implemented `mobileSection` router state with URL hash two-way binding (`window.location.hash`), listening to `hashchange` and `popstate` events to provide native Android hardware back button compatibility.
+    - **Sticky Back Navigation Bar**: Rendered sticky back bar (`sticky top-0 z-20 -mx-4 px-4 py-3 bg-[#0B0C0E]/95 backdrop-blur-md border-b border-white/10`) with `ArrowLeft`, dual viewport top scroll (`window.scrollTo` and `document.getElementById('main-content')?.scrollTo`), and dynamic bilingual section title badge.
+    - **Grouped Mobile Settings Hub (`mobileSection === null`)**:
+      * Mobile Header with `Settings` icon and bilingual title.
+      * Group 1 (General Workshop): Rounded obsidian glass container with 3 interactive rows: Workshop & Receipt (`workshop`), Staff & Craftsmen (`staff`), Stitching Rates (`rates`).
+      * Group 2 (Hardware & Preferences): Matching container with 3 interactive rows: Thermal Printer (`printer`), Sound & Alerts (`alerts`), Workshop Data & Reset (`reset`).
+      * Bottom Docked Account Pill: Linear/ChatGPT style account card displaying shop initials, workshop name, owner role, phone number, Pro plan badge, and manage chevron (`account`).
+      * Bottom Physical Clearance: Universal `h-36 w-full shrink-0` spacer ensuring zero collision with `<MobileBottomNav />`.
+    - **Isolated Sub-Views**: Wired all 7 sub-views under matching section conditions (`workshop`, `staff`, `rates`, `printer`, `alerts`, `reset`, `account`) while preserving all input fields, validation rules, and submission handlers.
+    - **Desktop Isolation**: Isolated the entire existing desktop settings layout under `hidden md:block space-y-8 max-w-7xl mx-auto pb-44 pb-safe`, maintaining 100% fidelity on desktop viewports.
+    - **Shared Root Modals**: Preserved all global modal dialogs (`ThermalSlipModal`, `AddStaffModal`, `DeleteStaffModal`, `UpgradeModal`, `ReceiptLightboxModal`, `ResetWorkshopModal`) at the root level, accessible from both mobile sub-views and desktop tabs.
+
+* **Active File Changes:**
+  - `app/settings/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `npm run build`: Production static export cleanly generated all 28/28 routes into `out/` with 0 errors.
+
+* **Next Immediate Task:**
+  - Step 2 of Settings Page Overhaul or end-user mobile device testing.
+
 
 
 
