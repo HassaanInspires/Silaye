@@ -506,6 +506,8 @@ export default function SettingsPage() {
   const [savingPrinter, setSavingPrinter] = React.useState<boolean>(false);
   const [resettingPrinter, setResettingPrinter] = React.useState<boolean>(false);
   const [isTestModalOpen, setIsTestModalOpen] = React.useState<boolean>(false);
+  const [isSlipModalOpen, setIsSlipModalOpen] = React.useState<boolean>(false);
+  const [showNtnInput, setShowNtnInput] = React.useState<boolean>(false);
 
   // Danger Zone & Workshop Reset State
   const [isResetModalOpen, setIsResetModalOpen] = React.useState<boolean>(false);
@@ -1439,18 +1441,21 @@ export default function SettingsPage() {
         {mobileSection === 'workshop' && (
           <div className="space-y-4">
             <form onSubmit={handleSaveSettings} className="space-y-4">
-              {/* Identity Card */}
-              <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm text-white flex items-center gap-2">
-                    <Store className="h-4 w-4 text-gold" />
-                    <span>Workshop Identity</span>
+              {/* Unified Single Surface */}
+              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+                {/* Section 1: Shop Identity & Dual Phones */}
+                <div className="border-b border-white/5 pb-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Store className="h-4 w-4 text-gold" />
+                      <h3 className="text-xs font-semibold text-white tracking-wide uppercase">Workshop Identity</h3>
+                    </div>
                     <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
                       دکان کی شناخت
                     </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-0">
+                  </div>
+
+                  {/* Shop Name - Full Width */}
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                       <span>Shop Name</span>
@@ -1465,53 +1470,57 @@ export default function SettingsPage() {
                       className="bg-black/30 border-white/10 focus:border-gold text-white text-xs h-10"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
-                      <span>Primary Phone</span>
-                      <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">فون نمبر</span>
-                    </label>
-                    <Input
-                      type="text"
-                      value={shop?.phone || shop?.owner_phone || ''}
-                      onChange={(e) => handleFieldChange('phone', e.target.value)}
-                      placeholder="0300-1234567"
-                      leftIcon={<Phone className="h-3.5 w-3.5 text-gray-400" />}
-                      error={phoneError || undefined}
-                      className="bg-black/30 border-white/10 focus:border-gold text-white font-mono text-xs h-10"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
-                      <span>Counter Phone (Optional)</span>
-                      <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">کاؤنٹر فون</span>
-                    </label>
-                    <Input
-                      type="text"
-                      value={shop?.secondary_phone || ''}
-                      onChange={(e) => handleFieldChange('secondary_phone', e.target.value)}
-                      placeholder="0312-7654321"
-                      leftIcon={<Phone className="h-3.5 w-3.5 text-gray-400" />}
-                      className="bg-black/30 border-white/10 focus:border-gold text-white font-mono text-xs h-10"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
 
-              {/* Location Card */}
-              <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm text-white flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-gold" />
-                    <span>Location & NTN</span>
+                  {/* Dual Phones - 2-Column Grid with Stacked Urdu/English Labels */}
+                  <div className="grid grid-cols-2 gap-2.5 items-end">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-300 flex flex-col">
+                        <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">فون نمبر</span>
+                        <span className="text-[10px] text-gray-400 font-sans">Primary Phone</span>
+                      </label>
+                      <Input
+                        type="text"
+                        value={shop?.phone || shop?.owner_phone || ''}
+                        onChange={(e) => handleFieldChange('phone', e.target.value)}
+                        placeholder="0300-1234567"
+                        leftIcon={<Phone className="h-3.5 w-3.5 text-gray-400" />}
+                        error={phoneError || undefined}
+                        className="bg-black/30 border-white/10 focus:border-gold text-white font-mono text-xs h-10"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-300 flex flex-col">
+                        <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">کاؤنٹر فون</span>
+                        <span className="text-[10px] text-gray-400 font-sans">Counter Phone</span>
+                      </label>
+                      <Input
+                        type="text"
+                        value={shop?.secondary_phone || ''}
+                        onChange={(e) => handleFieldChange('secondary_phone', e.target.value)}
+                        placeholder="0312-7654321"
+                        leftIcon={<Phone className="h-3.5 w-3.5 text-gray-400" />}
+                        className="bg-black/30 border-white/10 focus:border-gold text-white font-mono text-xs h-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Location & Collapsible Tax NTN */}
+                <div className="border-b border-white/5 pb-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-gold" />
+                      <h3 className="text-xs font-semibold text-white tracking-wide uppercase">Location & NTN</h3>
+                    </div>
                     <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
                       پتہ اور ٹیکس نمبر
                     </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-0">
+                  </div>
+
+                  {/* Workshop Address - Full Width */}
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
-                      <span>Address</span>
+                      <span>Workshop Address</span>
                       <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">پتہ</span>
                     </label>
                     <Input
@@ -1523,19 +1532,73 @@ export default function SettingsPage() {
                       className="bg-black/30 border-white/10 focus:border-gold text-white text-xs h-10"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-300">City</label>
-                      <Input
-                        type="text"
-                        value={shop?.city || 'Wah Cantt'}
-                        onChange={(e) => handleFieldChange('city', e.target.value)}
-                        placeholder="City"
-                        className="bg-black/30 border-white/10 focus:border-gold text-white text-xs h-10"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-300">NTN Number</label>
+
+                  {/* City Input */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
+                      <span>City</span>
+                      <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">شہر</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={shop?.city || 'Wah Cantt'}
+                      onChange={(e) => handleFieldChange('city', e.target.value)}
+                      placeholder="City"
+                      className="bg-black/30 border-white/10 focus:border-gold text-white text-xs h-10"
+                    />
+                  </div>
+
+                  {/* NTN Collapsible Toggle (CSS toggling so state is never lost) */}
+                  <div>
+                    {Boolean(shop?.ntn_number && shop.ntn_number.trim()) ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowNtnInput(true)}
+                        className={cn(
+                          "w-full py-2.5 px-3 rounded-xl border border-gold/30 bg-gold/5 hover:bg-gold/10 text-xs flex items-center justify-between transition-all cursor-pointer active:scale-98",
+                          showNtnInput && "hidden"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-gold shrink-0" />
+                          <span className="font-urdu-serif text-xs leading-relaxed text-gold/90" dir="rtl">
+                            ✓ NTN درج ہے:
+                          </span>
+                          <span className="font-mono text-xs text-white font-medium">{shop.ntn_number}</span>
+                        </div>
+                        <span className="text-[10px] text-gold/70 font-sans">- تبدیل کریں</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowNtnInput(true)}
+                        className={cn(
+                          "w-full py-2.5 px-3 rounded-xl border border-dashed border-white/15 bg-white/[0.02] hover:bg-white/5 text-gray-400 hover:text-gray-300 text-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98",
+                          showNtnInput && "hidden"
+                        )}
+                      >
+                        <Plus className="h-3.5 w-3.5 text-gold/80" />
+                        <span className="font-urdu-serif text-xs leading-relaxed text-gray-300" dir="rtl">
+                          اختیاری ٹیکس / NTN نمبر درج کریں
+                        </span>
+                        <span className="text-[10px] text-gray-500 font-sans">(Add Tax NTN)</span>
+                      </button>
+                    )}
+
+                    <div className={cn("space-y-1.5", showNtnInput ? "block" : "hidden")}>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+                          <span>Tax / NTN Number</span>
+                          <span className="text-[10px] text-gray-500">(اختیاری)</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowNtnInput(false)}
+                          className="text-[10px] text-gray-400 hover:text-white transition-colors cursor-pointer"
+                        >
+                          چھپائیں (Hide)
+                        </button>
+                      </div>
                       <Input
                         type="text"
                         value={shop?.ntn_number || ''}
@@ -1545,23 +1608,25 @@ export default function SettingsPage() {
                       />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
 
-              {/* Receipt Branding Card */}
-              <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm text-white flex items-center gap-2">
-                    <Receipt className="h-4 w-4 text-gold" />
-                    <span>Receipt Header & Footer</span>
+                {/* Section 3: Receipt Branding */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Receipt className="h-4 w-4 text-gold" />
+                      <h3 className="text-xs font-semibold text-white tracking-wide uppercase">Receipt Header & Footer</h3>
+                    </div>
                     <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
                       رسید نوٹس
                     </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-0">
+                  </div>
+
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-300">Header Note</label>
+                    <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
+                      <span>Header Note</span>
+                      <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">ہیڈر نوٹ</span>
+                    </label>
                     <textarea
                       rows={2}
                       value={shop?.receipt_header || ''}
@@ -1571,7 +1636,10 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-300">Footer Note & Terms</label>
+                    <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
+                      <span>Footer Note & Terms</span>
+                      <span className="font-urdu-serif text-[11px] text-gold/80" dir="rtl">فوٹر نوٹ اور شرائط</span>
+                    </label>
                     <textarea
                       rows={2}
                       value={shop?.receipt_footer || ''}
@@ -1580,22 +1648,33 @@ export default function SettingsPage() {
                       className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:border-gold focus:outline-none"
                     />
                   </div>
-                </CardContent>
-                <CardFooter className="border-t border-white/5 pt-3">
-                  <Button
-                    type="submit"
-                    variant="default"
-                    isLoading={saving}
-                    disabled={saving}
-                    className="w-full bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs py-2.5 rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.25)] gap-2 cursor-pointer"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>Save Workshop Settings (محفوظ کریں)</span>
-                  </Button>
-                </CardFooter>
-              </Card>
+                </div>
+              </div>
+
+              {/* Thermal Slip Live Preview Action Button */}
+              <button
+                type="button"
+                onClick={() => setIsSlipModalOpen(true)}
+                className="w-full h-11 rounded-xl border border-gold/30 bg-gold/5 hover:bg-gold/10 text-gold font-medium text-xs flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer mb-2"
+              >
+                <Eye className="h-4 w-4 text-gold" />
+                <span className="font-urdu-serif leading-relaxed">رسید کا لائیو نمونہ دیکھیں</span>
+                <span className="text-[10px] text-gray-400 font-sans">(Preview Slip)</span>
+              </button>
+
+              {/* Primary Save Button */}
+              <Button
+                type="submit"
+                variant="default"
+                isLoading={saving}
+                disabled={saving}
+                className="w-full bg-gold text-[#0B0C0E] hover:bg-gold-hover font-bold text-xs py-2.5 rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.25)] gap-2 cursor-pointer h-11"
+              >
+                <Save className="h-4 w-4" />
+                <span>Save Workshop Settings (محفوظ کریں)</span>
+              </Button>
             </form>
-            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+            <div className="h-32 w-full shrink-0" aria-hidden="true" />
           </div>
         )}
 
@@ -5005,10 +5084,13 @@ export default function SettingsPage() {
       {/* ========================================================================= */}
       {/* Test Thermal Print Slip Modal                                             */}
       {/* ========================================================================= */}
-      {isTestModalOpen && (
+      {(isTestModalOpen || isSlipModalOpen) && (
         <ThermalSlipModal
-          open={isTestModalOpen}
-          onOpenChange={setIsTestModalOpen}
+          open={isTestModalOpen || isSlipModalOpen}
+          onOpenChange={(val) => {
+            setIsTestModalOpen(val);
+            setIsSlipModalOpen(val);
+          }}
           order={mockOrders[0]}
           customer={mockCustomers[0]}
           shop={shop}

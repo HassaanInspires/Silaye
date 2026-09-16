@@ -464,8 +464,10 @@
   * **Isolated Sub-Views**: Wired all 7 sections (`workshop`, `staff`, `rates`, `printer`, `alerts`, `reset`, `account`) into their respective sub-views with strict null-safety and form preservation.
   * **Desktop Layout Preservation**: Enforced `hidden md:block` on the entire desktop layout, preserving all tabs, cards, and mutation handlers without alteration.
   * **Verification Suite**: 0 TypeScript errors (`npx tsc --noEmit`), 159/159 database assertions passing (`scripts/verify_db.ts`), and 28/28 static export routes cleanly generated into `out/` (`npm run build`).
-
-
-
-
-
+- [x] 22.2 Step 2: Streamline Workshop & Receipt Sub-View with Unified Surface & Collapsible NTN (`app/settings/page.tsx`):
+  * **Unified Obsidian Glass Surface**: Replaced 3 separate `.premium-glass-card` wrappers (Workshop Identity, Location & NTN, Receipt Header & Footer) with a single unified container (`rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl`) and hairline dividers (`border-b border-white/5 pb-4`).
+  * **Dual Phone Ergonomics**: Kept Shop Name full width and combined Primary Phone and Secondary / Counter Phone into a compact 2-column grid (`grid grid-cols-2 gap-2.5 items-end`) with stacked Urdu/English labels to prevent text squishing on 360px screens.
+  * **Collapsible NTN with State Retention**: Collapsed Tax/NTN number input behind an adaptive toggle button (`✓ NTN درج ہے: (Number) - تبدیل کریں` when NTN exists, `[+ اختیاری ٹیکس / NTN نمبر درج کریں (Add Tax NTN)]` when empty) using CSS display toggling (`showNtnInput ? 'block' : 'hidden'`) so typed numbers are never lost.
+  * **Receipt Live Slip Preview**: Added dedicated thermal slip preview button directly above the save action (`setIsSlipModalOpen(true)`) and updated root `ThermalSlipModal` integration to handle both test dialog and slip preview triggers.
+  * **Bottom Clearance**: Preserved primary Save button (`handleSaveSettings`) and added `<div className="h-32 w-full shrink-0" aria-hidden="true" />` spacer to guarantee clear clearance above `<MobileBottomNav />`.
+  * **Verification Suite**: 0 TypeScript compiler errors (`npx tsc --noEmit`), 159/159 database assertions passing (`scripts/verify_db.ts`), and 28/28 static export routes cleanly generated into `out/` (`npm run build`).

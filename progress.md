@@ -3014,9 +3014,30 @@
   - `npm run build`: Production static export cleanly generated all 28/28 routes into `out/` with 0 errors.
 
 * **Next Immediate Task:**
-  - Step 2 of Settings Page Overhaul or end-user mobile device testing.
+  - Phase 22, Step 2 (Completed)
 
+---
 
+## Phase 22: Settings Page Overhaul (Step 2 Completed)
+* **Date:** 2026-09-16
+* **Tasks Completed:**
+  - `22.2` Settings Page Overhaul: Streamline Workshop & Receipt Sub-View with Unified Surface & Collapsible NTN (`app/settings/page.tsx`):
+    - **Unified Obsidian Glass Single Surface**: Replaced the 3 separate `.premium-glass-card` containers (Workshop Identity, Location & NTN, Receipt Header & Footer) with a single continuous unified surface (`rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl`) partitioned with subtle hairline dividers (`border-b border-white/5 pb-4`).
+    - **Dual Phone Responsive Ergonomics**: Maintained full-width Shop Name and combined Primary Phone and Counter Phone into a 2-column grid (`grid grid-cols-2 gap-2.5 items-end`). Stacked Urdu text on top and English below in field labels to prevent horizontal text wrapping on 360px viewport widths.
+    - **Collapsible NTN with State Retention**: Collapsed Tax/NTN number input behind a clean toggle button. If `shop.ntn_number` already exists, displays `✓ NTN درج ہے: (Number) - تبدیل کریں` with a gold border and badge. If empty, displays `[+ اختیاری ٹیکس / NTN نمبر درج کریں (Add Tax NTN)]`. Utilized CSS display toggling (`showNtnInput ? 'block' : 'hidden'`) ensuring entered values remain in component state without being wiped on collapse.
+    - **Thermal Slip Live Modal Preview**: Added thermal slip live preview button directly above the save action (`setIsSlipModalOpen(true)`). Updated root `ThermalSlipModal` integration to open on either `isTestModalOpen` or `isSlipModalOpen` and synchronized `onOpenChange`.
+    - **Primary Action & Bottom Clearance**: Retained the primary "Save Workshop Settings" button wired to `handleSaveSettings`, and appended `<div className="h-32 w-full shrink-0" aria-hidden="true" />` spacer to guarantee complete clearance above `<MobileBottomNav />`.
+    - **Desktop Layout & Logic Isolation**: Left desktop settings layout (`hidden md:block`), other sub-views, and database mutation handlers completely untouched.
 
+* **Active File Changes:**
+  - `app/settings/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
 
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `npm run build`: Production static export cleanly generated all 28/28 routes into `out/` with 0 errors.
 
+* **Next Immediate Task:**
+  - Phase 22, Step 3: Streamline Staff & Craftsmen sub-view or end-user mobile testing.
