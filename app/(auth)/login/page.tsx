@@ -22,7 +22,10 @@ import {
   getSupabaseClient,
   isSupabaseConfigured,
   getSession,
+  getCachedSession,
+  setCachedSession,
 } from '@/lib/supabase/client';
+import { shopsDb } from '@/lib/db';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,8 +56,16 @@ export default function LoginPage() {
       }
     }
 
-    // 2. If already logged in, redirect immediately to dashboard
+    // 2. If already logged in (via cache or active session), redirect immediately to dashboard
     async function checkExistingSession() {
+      if (typeof window !== 'undefined') {
+        const cached = getCachedSession();
+        if (cached?.session) {
+          router.replace('/dashboard');
+          return;
+        }
+      }
+
       if (!isSupabaseConfigured()) return;
       try {
         const session = await getSession();
@@ -99,6 +110,17 @@ export default function LoginPage() {
       }
 
       if (data.session) {
+        let initialShop = null;
+        try {
+          initialShop = await shopsDb.getCurrentShop(data.session.user.id);
+        } catch {
+          // Ignore fallback
+        }
+        setCachedSession({
+          user: data.session.user,
+          session: data.session,
+          shop: initialShop,
+        });
         router.replace('/dashboard');
       }
     } catch (err) {
@@ -147,6 +169,11 @@ export default function LoginPage() {
       }
 
       if (data.session) {
+        setCachedSession({
+          user: data.session.user,
+          session: data.session,
+          shop: null,
+        });
         router.replace('/dashboard');
       } else if (data.user) {
         setSuccessMsg(

@@ -476,3 +476,37 @@
   * **Purge Obsolete Navigation Radios (`mobileSection === 'alerts'`)**: Completely removed the legacy "Navigation Style (Modern Tabs vs Classic Drawer vs Hybrid)" card under `mobileSection === 'alerts'`, preserving only the functional alert toggles (Morning Briefing, Urgent Warnings, Sound & Vibration Chime) and the "Send Test Alert" button.
   * **Bottom Clearance Standard**: Applied universal `<div className="h-32 w-full shrink-0" aria-hidden="true" />` spacer across both sub-views ensuring zero collision with `<MobileBottomNav />`.
   * **Strict Isolation & Verification**: Preserved desktop views (`hidden md:block`), database mutation handlers, and shared modals. Verified with `npx tsc --noEmit` (0 errors), `scripts/verify_db.ts` (159/159 assertions passed), and `npm run build` (clean static export with 28/28 routes).
+- [x] 22.4 Native Android Debug APK Build & Release Verification:
+  * **Static Web Export & Capacitor Sync**: Rebuilt fresh static bundle (`npm run build` -> 28/28 static routes in `out/`) and synchronized web assets and plugins (`npx cap sync android`).
+  * **Native Debug APK Compilation**: Executed `./gradlew assembleDebug` with OpenJDK 21 LTS and local Android SDK (214/214 actionable tasks completed successfully).
+  * **Artifact Verification**: Verified binary existence and integrity at `android/app/build/outputs/apk/debug/app-debug.apk` (8,149,791 bytes / 7.8 MB).
+
+---
+
+## Phase 23: Offline Resilience & Edge-Case Hardening
+- [x] 23.1 Milestone 1: Hardened Offline Session & Route Gatekeeper (`lib/supabase/client.ts`, `components/layout/app-shell.tsx`, `app/settings/page.tsx`, `app/(auth)/login/page.tsx`):
+  * **Fortified Session Cache Utilities (`lib/supabase/client.ts`)**:
+    - Declared strongly typed `CachedSessionPayload` interface (`user`, `session`, `shop`, `cachedAt`).
+    - Implemented safe localStorage accessors: `getCachedSession()`, `setCachedSession()`, `updateCachedShop()`, and `clearCachedSession()`.
+    - Introduced 2.5-second timeout shield `getSessionWithTimeout(timeoutMs = 2500)` utilizing `Promise.race` to eliminate mobile network deadlocks on flaky counter connections.
+    - Updated `signOut()` to invalidate `silaye_cached_session` and `silaye_cached_shop` before remote sign-out.
+  * **Master Route Gatekeeper & Lie-Fi Shielding (`components/layout/app-shell.tsx`)**:
+    - Added `isOfflineAuth` and `isFirstLaunchOffline` state flags.
+    - Implemented Lie-Fi proof route authorization: `hasCachedSession = typeof window !== 'undefined' && Boolean(localStorage.getItem('silaye_cached_session'))`, permitting uninterrupted navigation across `/dashboard`, `/orders/new`, `/orders`, `/khata`, and `/settings` whenever `currentUser || hasCachedSession`.
+    - Integrated fast hydration in `checkAuthSession()`: synchronously hydrates `currentUser` and `shop` states from localStorage cache with zero UI flicker.
+    - Added background network verification via `getSessionWithTimeout(2500)`: keeps offline session active and bypasses `/login` redirects on timeout or network errors.
+    - Added reactive network reconnection listener (`window.addEventListener('online')`) to silently reconcile session tokens and auto-dismiss first-launch offline barrier.
+  * **First-Time Launch Offline Barrier UI (`components/layout/app-shell.tsx`)**:
+    - Implemented centered obsidian glass barrier card for unauthenticated fresh installs launching offline on protected routes:
+      * Bilingual header: `⚠️ انٹرنیٹ کنکشن درکار ہے (Internet Required for First Login)`.
+      * Subtitle: `پہلی بار ورکشاپ اکاؤنٹ میں لاگ ان کے لیے انٹرنیٹ ضروری ہے۔ انٹرنیٹ آن کر کے دوبارہ کوشش کریں۔`.
+      * Action: Full-width gold retry button `[دوبارہ کوشش کریں (Retry)]` invoking `window.location.reload()`.
+  * **Settings & Login Cache Synchronization (`app/settings/page.tsx`, `app/(auth)/login/page.tsx`)**:
+    - Integrated `updateCachedShop(mergedShop)` directly into `handleSaveSettings` in `app/settings/page.tsx` for immediate offline persistence of branding and contact updates.
+    - Integrated `getCachedSession()` fast-path into `checkExistingSession()` in `app/(auth)/login/page.tsx` routing instantly to `/dashboard`.
+    - Persisted `setCachedSession()` upon successful `signInWithPassword` and `signUp`.
+  * **Full Verification Suite**:
+    - 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    - 159/159 database assertions passing across all 17 sections (`scripts/verify_db.ts`).
+    - 28/28 Next.js static routes cleanly compiled into `out/` (`npm run build`).
+

@@ -16,7 +16,96 @@ import {
   type Subscription,
 } from '@supabase/supabase-js';
 
+import type { Shop } from '@/types/tailor';
+
 export type { Session, User, AuthChangeEvent, Subscription };
+
+export const SILAYE_CACHED_SESSION_KEY = 'silaye_cached_session';
+export const SILAYE_CACHED_SHOP_KEY = 'silaye_cached_shop';
+
+export interface CachedSessionPayload {
+  user: User;
+  session: Session;
+  shop?: Shop | null;
+  cachedAt: number;
+}
+
+/**
+ * Retrieves the locally cached authentication session from localStorage.
+ * SSR-safe; returns null if absent, invalid, or during build-time rendering.
+ */
+export function getCachedSession(): CachedSessionPayload | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(SILAYE_CACHED_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && parsed.user && parsed.session) {
+      return parsed as CachedSessionPayload;
+    }
+    return null;
+  } catch (err) {
+    console.warn('Failed to parse silaye_cached_session from localStorage:', err);
+    return null;
+  }
+}
+
+/**
+ * Persists the authenticated user, session, and workshop profile into localStorage
+ * to shield offline counter operations against network drops.
+ */
+export function setCachedSession(payload: {
+  user: User;
+  session: Session;
+  shop?: Shop | null;
+}): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const cachedPayload: CachedSessionPayload = {
+      user: payload.user,
+      session: payload.session,
+      shop: payload.shop || null,
+      cachedAt: Date.now(),
+    };
+    localStorage.setItem(SILAYE_CACHED_SESSION_KEY, JSON.stringify(cachedPayload));
+    if (payload.shop) {
+      localStorage.setItem(SILAYE_CACHED_SHOP_KEY, JSON.stringify(payload.shop));
+    }
+  } catch (err) {
+    console.warn('Failed to set silaye_cached_session in localStorage:', err);
+  }
+}
+
+/**
+ * Updates the workshop profile inside the active cached session in localStorage.
+ */
+export function updateCachedShop(shop: Shop): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const existing = getCachedSession();
+    if (existing) {
+      existing.shop = shop;
+      existing.cachedAt = Date.now();
+      localStorage.setItem(SILAYE_CACHED_SESSION_KEY, JSON.stringify(existing));
+    }
+    localStorage.setItem(SILAYE_CACHED_SHOP_KEY, JSON.stringify(shop));
+  } catch (err) {
+    console.warn('Failed to updateCachedShop in localStorage:', err);
+  }
+}
+
+/**
+ * Completely purges cached session and workshop keys from localStorage on sign-out.
+ */
+export function clearCachedSession(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(SILAYE_CACHED_SESSION_KEY);
+    localStorage.removeItem(SILAYE_CACHED_SHOP_KEY);
+  } catch (err) {
+    console.warn('Failed to clearCachedSession from localStorage:', err);
+  }
+}
 
 export function getSupabaseUrl(): string | undefined {
   return process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -66,23 +155,45 @@ export function getSupabaseClient(): SupabaseClient {
 export const supabase: SupabaseClient = getSupabaseClient();
 
 /**
- * Retrieves the currently active Supabase auth session.
+ * Retrieves the active Supabase session with a strict timeout guard (default 2500ms).
+ * Prevents mobile network hangs on flaky counter connections.
+ */
+export async function getSessionWithTimeout(timeoutMs: number = 2500): Promise<Session | null> {
+  if (!isSupabaseConfigured()) return null;
+
+  try {
+    const client = getSupabaseClient();
+    const sessionPromise = client.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.warn('Supabase getSession error:', error.message);
+        return null;
+      }
+      return data.session;
+    });
+
+    let timer: NodeJS.Timeout | number | undefined;
+    const timeoutPromise = new Promise<Session | null>((resolve) => {
+      timer = setTimeout(() => {
+        console.warn(`Supabase getSession timed out after ${timeoutMs}ms; engaging offline session shield.`);
+        resolve(null);
+      }, timeoutMs);
+    });
+
+    const result = await Promise.race([sessionPromise, timeoutPromise]);
+    if (timer) clearTimeout(timer);
+    return result;
+  } catch (err) {
+    console.warn('Supabase getSessionWithTimeout exception:', err);
+    return null;
+  }
+}
+
+/**
+ * Retrieves the currently active Supabase auth session protected by the 2.5s timeout shield.
  * Safe for SSR / static builds; returns null if unconfigured or unauthenticated.
  */
 export async function getSession(): Promise<Session | null> {
-  if (!isSupabaseConfigured()) return null;
-  try {
-    const client = getSupabaseClient();
-    const { data, error } = await client.auth.getSession();
-    if (error) {
-      console.warn('Supabase getSession warning:', error.message);
-      return null;
-    }
-    return data.session;
-  } catch (err) {
-    console.warn('Supabase getSession exception:', err);
-    return null;
-  }
+  return getSessionWithTimeout(2500);
 }
 
 /**
@@ -121,9 +232,10 @@ export async function getCurrentUser(): Promise<User | null> {
 }
 
 /**
- * Terminates the active Supabase session.
+ * Terminates the active Supabase session and invalidates all local cached auth state.
  */
 export async function signOut(): Promise<{ error: Error | null }> {
+  clearCachedSession();
   if (!isSupabaseConfigured()) {
     return { error: null };
   }

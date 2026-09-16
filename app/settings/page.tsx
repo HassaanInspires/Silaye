@@ -99,7 +99,7 @@ import type {
   PaymentRequestStatus,
 } from '@/types/tailor';
 import { isValidPakistaniPhone } from '@/lib/whatsapp';
-import { getCurrentUser, isSupabaseConfigured } from '@/lib/supabase/client';
+import { getCurrentUser, isSupabaseConfigured, updateCachedShop } from '@/lib/supabase/client';
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
 import { BarcodeRenderer } from '@/components/tailor/barcode-renderer';
 import {
@@ -1033,10 +1033,13 @@ export default function SettingsPage() {
           receipt_footer: shop.receipt_footer || null,
         });
 
-        setShop((prev) => ({
-          ...prev,
+        const mergedShop: Shop = {
+          ...shop,
           ...updated,
-        }));
+        };
+
+        setShop(mergedShop);
+        updateCachedShop(mergedShop);
 
         setNotification({
           message: 'Workshop profile and branding settings updated successfully!',
@@ -1044,6 +1047,7 @@ export default function SettingsPage() {
         });
       } else {
         // Offline / Local save
+        updateCachedShop(shop);
         setNotification({
           message: 'Workshop settings saved locally (Offline mode).',
           type: 'success',

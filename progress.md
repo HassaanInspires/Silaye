@@ -3073,4 +3073,82 @@
   - `npm run build`: Production static export cleanly generated all 28/28 routes into `out/` with 0 errors.
 
 * **Next Immediate Task:**
-  - Phase 22, Step 4: Streamline Staff & Craftsmen sub-view or end-user mobile testing.
+  - Phase 22, Task 22.4: Native Android Debug APK Build & Release Verification (Completed).
+
+---
+
+## Phase 22: Native Android Debug APK Build & Release Verification (Task 22.4 Completed)
+* **Date:** 2026-09-16
+* **Tasks Completed:**
+  - `22.4` Native Android Debug APK Build & Release Verification:
+    * Executed fresh Next.js static production export (`npm run build`), generating all 28/28 static routes into `out/` with zero errors.
+    * Synchronized static web assets and native plugins via Capacitor CLI (`npx cap sync android`) in 5.25s.
+    * Sourced local Android and OpenJDK 21 LTS toolchain (`~/.android_env.sh`) and compiled native debug APK (`./gradlew assembleDebug` in `android/`).
+    * Executed 214 actionable Gradle tasks in 2m 39s with `BUILD SUCCESSFUL`.
+    * Verified output binary integrity at `android/app/build/outputs/apk/debug/app-debug.apk` (8,149,791 bytes / 7.8 MB).
+
+* **Active File Changes:**
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+  - `android/app/build/outputs/apk/debug/app-debug.apk` [GENERATED]
+
+* **Verification Results:**
+  - `npm run build`: Exit code 0 (28/28 static routes compiled).
+  - `npx cap sync android`: Exit code 0 (4 plugins updated, web assets copied).
+  - `./gradlew assembleDebug`: Exit code 0 (BUILD SUCCESSFUL, 214 actionable tasks).
+  - Artifact Size: 8,149,791 bytes (7.8 MB).
+
+* **Next Immediate Task:**
+  - Phase 23: Offline Resilience & Edge-Case Hardening (Milestone 1: Offline Session & Route Gatekeeper).
+
+---
+
+## Phase 23: Offline Resilience & Edge-Case Hardening (Milestone 1 Completed)
+* **Date:** 2026-09-16
+* **Tasks Completed:**
+  - `23.1` Milestone 1: Hardened Offline Session & Route Gatekeeper (`lib/supabase/client.ts`, `components/layout/app-shell.tsx`, `app/settings/page.tsx`, `app/(auth)/login/page.tsx`):
+    * **Fortified Session Cache Utilities (`lib/supabase/client.ts`)**:
+      - Declared strongly typed `CachedSessionPayload` interface containing `user`, `session`, optional `shop`, and `cachedAt` timestamp.
+      - Exported SSR-safe storage helpers with structure validation and error guards:
+        * `getCachedSession(): CachedSessionPayload | null`
+        * `setCachedSession(payload: { user: User; session: Session; shop?: Shop | null }): void`
+        * `updateCachedShop(shop: Shop): void`
+        * `clearCachedSession(): void`
+      - Implemented 2.5-second timeout shield `getSessionWithTimeout(timeoutMs = 2500)` leveraging `Promise.race` to eliminate UI freezes on dead cellular connections.
+      - Updated `getSession()` to safely inherit the 2500ms timeout shield.
+      - Hardened `signOut()` to invalidate `silaye_cached_session` and `silaye_cached_shop` from storage before remote signout.
+    * **Master Route Gatekeeper & Lie-Fi Shielding (`components/layout/app-shell.tsx`)**:
+      - Added `isOfflineAuth` and `isFirstLaunchOffline` state indicators.
+      - Decoupled authorization check from `navigator.onLine` to eradicate Lie-Fi false lockouts:
+        `const hasCachedSession = typeof window !== 'undefined' && Boolean(localStorage.getItem(SILAYE_CACHED_SESSION_KEY));`
+        `const canAccess = Boolean(currentUser || hasCachedSession);`
+      - Integrated synchronous fast hydration on initial state declarations and inside `checkAuthSession()`, mounting `currentUser` and `shop` instantly with zero layout shifts or loading flickers.
+      - Wrapped online Supabase validation in `getSessionWithTimeout(2500)`: on network drop or timeout, preserves offline cache and bypasses `/login` redirects.
+      - Wired reactive network reconnection listener (`window.addEventListener('online')`) silently refreshing tokens and auto-dismissing offline barriers.
+    * **Unauthenticated Offline Barrier UI (`components/layout/app-shell.tsx`)**:
+      - Engineered obsidian glass barrier for unauthenticated fresh installs launching offline on protected routes:
+        * Bilingual header: `⚠️ انٹرنیٹ کنکشن درکار ہے (Internet Required for First Login)`.
+        * Subtitle: `پہلی بار ورکشاپ اکاؤنٹ میں لاگ ان کے لیے انٹرنیٹ ضروری ہے۔ انٹرنیٹ آن کر کے دوبارہ کوشش کریں۔`.
+        * Full-width gold action button: `[دوبارہ کوشش کریں (Retry)]` invoking `window.location.reload()`.
+    * **Settings & Login Cache Synchronization (`app/settings/page.tsx`, `app/(auth)/login/page.tsx`)**:
+      - Integrated `updateCachedShop(mergedShop)` directly into `handleSaveSettings` across both Supabase and offline branches in `app/settings/page.tsx`.
+      - Integrated `getCachedSession()` fast-path into `checkExistingSession()` in `app/(auth)/login/page.tsx` for immediate dashboard routing.
+      - Automatically persisted `setCachedSession()` upon successful `signInWithPassword` and `signUp`.
+
+* **Active File Changes:**
+  - `lib/supabase/client.ts` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `app/(auth)/login/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `npm run build`: Production static export cleanly generated all 28/28 routes into `out/` with 0 errors.
+
+* **Next Immediate Task:**
+  - Milestone 2: Offline Mutation Queue & Conflict-Free Khata Ledger Synchronization.
+
+

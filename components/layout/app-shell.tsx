@@ -42,9 +42,14 @@ import { adminDb, shopsDb } from '@/lib/db';
 import type { PlanTier, Shop, SubscriptionStatus } from '@/types/tailor';
 import {
   getSession,
+  getSessionWithTimeout,
   signOut,
   onAuthStateChange,
   isSupabaseConfigured,
+  getCachedSession,
+  setCachedSession,
+  clearCachedSession,
+  SILAYE_CACHED_SESSION_KEY,
   type User,
 } from '@/lib/supabase/client';
 
@@ -274,14 +279,64 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState<boolean>(false);
   const [searchValue, setSearchValue] = React.useState<string>('');
-  const [currentUser, setCurrentUser] = React.useState<User | null>(null);
-  const [isAuthResolved, setIsAuthResolved] = React.useState<boolean>(() => !isSupabaseConfigured());
+  // Fast hydration: initialize currentUser directly from local cache if available
+  const [currentUser, setCurrentUser] = React.useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = getCachedSession();
+      if (cached?.user) return cached.user;
+    }
+    return null;
+  });
+  const [isAuthResolved, setIsAuthResolved] = React.useState<boolean>(() => {
+    if (!isSupabaseConfigured()) return true;
+    if (typeof window !== 'undefined' && localStorage.getItem(SILAYE_CACHED_SESSION_KEY)) {
+      return true;
+    }
+    return false;
+  });
+  const [isOfflineAuth, setIsOfflineAuth] = React.useState<boolean>(() => {
+    if (typeof window !== 'undefined' && Boolean(localStorage.getItem(SILAYE_CACHED_SESSION_KEY))) {
+      return true;
+    }
+    return false;
+  });
+  const [isFirstLaunchOffline, setIsFirstLaunchOffline] = React.useState<boolean>(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
-  const [shopStatus, setShopStatus] = React.useState<string>('ACTIVE');
-  const [shopPlanTier, setShopPlanTier] = React.useState<PlanTier>('FREE');
-  const [shopSubscriptionStatus, setShopSubscriptionStatus] = React.useState<SubscriptionStatus>('ACTIVE');
-  const [shopPeriodEnd, setShopPeriodEnd] = React.useState<string>('');
-  const [shopName, setShopName] = React.useState<string>('Silaye Master');
+  const [shopStatus, setShopStatus] = React.useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = getCachedSession();
+      if (cached?.shop?.status) return cached.shop.status;
+    }
+    return 'ACTIVE';
+  });
+  const [shopPlanTier, setShopPlanTier] = React.useState<PlanTier>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = getCachedSession();
+      if (cached?.shop?.plan_tier) return cached.shop.plan_tier;
+    }
+    return 'FREE';
+  });
+  const [shopSubscriptionStatus, setShopSubscriptionStatus] = React.useState<SubscriptionStatus>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = getCachedSession();
+      if (cached?.shop?.subscription_status) return cached.shop.subscription_status;
+    }
+    return 'ACTIVE';
+  });
+  const [shopPeriodEnd, setShopPeriodEnd] = React.useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = getCachedSession();
+      if (cached?.shop?.current_period_end) return cached.shop.current_period_end;
+    }
+    return '';
+  });
+  const [shopName, setShopName] = React.useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = getCachedSession();
+      if (cached?.shop?.name) return cached.shop.name;
+    }
+    return 'Silaye Master';
+  });
   const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState<boolean>(false);
   const [navLayout, setNavLayout] = React.useState<NavLayoutPreference>('tabs');
   const isOnline = useOnlineStatus();
@@ -290,6 +345,12 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
 
   const pathname = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
   const isPublic = isPublicRoute(pathname);
+
+  // Lie-Fi Proof Route Protection: Compute access authorization independently of navigator.onLine
+  const hasCachedSession =
+    typeof window !== 'undefined' &&
+    Boolean(localStorage.getItem(SILAYE_CACHED_SESSION_KEY));
+  const canAccess = Boolean(currentUser || hasCachedSession);
 
   // Hydrate navigation layout preference and subscribe to cross-component layout change events
   React.useEffect(() => {
@@ -304,6 +365,55 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       };
     }
   }, []);
+
+  // Reactive Network Reconnection Listener: Silently reconciles token/session on reconnect
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleNetworkReconnected = async () => {
+      // If displaying first launch offline barrier, dismiss and re-verify
+      if (isFirstLaunchOffline) {
+        setIsFirstLaunchOffline(false);
+      }
+
+      if (!isSupabaseConfigured()) return;
+
+      try {
+        const session = await getSessionWithTimeout(3000);
+        if (session) {
+          setCurrentUser(session.user);
+          setIsOfflineAuth(false);
+          setIsAuthResolved(true);
+          let freshShop: Shop | null = null;
+          try {
+            const shop = await shopsDb.getCurrentShop(session.user.id);
+            if (shop) {
+              freshShop = shop;
+              if (shop.status) setShopStatus(shop.status);
+              if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
+              if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
+              if (shop.current_period_end) setShopPeriodEnd(shop.current_period_end);
+              if (shop.name) setShopName(shop.name);
+            }
+          } catch {
+            // Preserve optimistic shop
+          }
+          setCachedSession({
+            user: session.user,
+            session,
+            shop: freshShop || getCachedSession()?.shop || null,
+          });
+        }
+      } catch (err) {
+        console.warn('Network reconnection session reconciliation warning:', err);
+      }
+    };
+
+    window.addEventListener('online', handleNetworkReconnected);
+    return () => {
+      window.removeEventListener('online', handleNetworkReconnected);
+    };
+  }, [isFirstLaunchOffline]);
 
   // Helper to calculate days remaining until trial expiration
   const calculateDaysRemaining = (endDateStr?: string): number => {
@@ -383,6 +493,25 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       const currentPath = typeof window !== 'undefined' ? window.location.pathname : activeRoute;
       const isWhitelisted = isPublicRoute(currentPath);
 
+      // Fast Hydration: Hydrate from cache immediately to guarantee zero UI flicker
+      const cached = getCachedSession();
+      if (cached) {
+        if (!currentUser && isMounted) {
+          setCurrentUser(cached.user);
+        }
+        if (cached.shop && isMounted) {
+          if (cached.shop.status) setShopStatus(cached.shop.status);
+          if (cached.shop.plan_tier) setShopPlanTier(cached.shop.plan_tier);
+          if (cached.shop.subscription_status) setShopSubscriptionStatus(cached.shop.subscription_status);
+          if (cached.shop.current_period_end) setShopPeriodEnd(cached.shop.current_period_end);
+          if (cached.shop.name) setShopName(cached.shop.name);
+        }
+        if (isMounted) {
+          setIsOfflineAuth(true);
+          setIsAuthResolved(true);
+        }
+      }
+
       // Check Super Admin privilege safely
       try {
         const isSuper = await adminDb.checkIsSuperAdmin();
@@ -412,17 +541,22 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       }
 
       try {
-        const session = await getSession();
+        // Background verification with 2.5s timeout shield
+        const session = await getSessionWithTimeout(2500);
         if (!isMounted) return;
         setIsAuthResolved(true);
 
         if (session) {
           setCurrentUser(session.user);
+          setIsOfflineAuth(false);
+          setIsFirstLaunchOffline(false);
 
-          // Fetch tenant shop status & tier for authenticated user
+          // Fetch fresh shop profile for authenticated user
+          let freshShop: Shop | null = null;
           try {
             const shop = await shopsDb.getCurrentShop(session.user.id);
             if (isMounted && shop) {
+              freshShop = shop;
               if (shop.status) setShopStatus(shop.status);
               if (shop.plan_tier) setShopPlanTier(shop.plan_tier);
               if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
@@ -432,12 +566,43 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           } catch {
             // Ignore
           }
-        } else if (!isWhitelisted) {
-          // STRICT AUTH INTERLOCK: Only redirect when auth resolution is complete
-          router.replace('/login');
+
+          // Persist updated session and shop into localStorage
+          setCachedSession({
+            user: session.user,
+            session,
+            shop: freshShop || cached?.shop || null,
+          });
+        } else {
+          // Supabase returned null (timeout, network error, or logged out)
+          const currentCache = getCachedSession();
+          if (currentCache) {
+            // Lie-Fi Shield: keep offline hydration active, NEVER redirect to /login!
+            if (isMounted) {
+              setIsOfflineAuth(true);
+              setIsFirstLaunchOffline(false);
+            }
+          } else {
+            // NO session and NO cache on a protected route
+            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+              if (isMounted) setIsFirstLaunchOffline(true);
+            } else if (!isWhitelisted) {
+              router.replace('/login');
+            }
+          }
         }
       } catch {
-        if (isMounted) setIsAuthResolved(true);
+        if (!isMounted) return;
+        setIsAuthResolved(true);
+        const currentCache = getCachedSession();
+        if (currentCache) {
+          setIsOfflineAuth(true);
+          setIsFirstLaunchOffline(false);
+        } else if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          setIsFirstLaunchOffline(true);
+        } else if (!isWhitelisted) {
+          router.replace('/login');
+        }
       }
     }
 
@@ -448,7 +613,9 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       setIsAuthResolved(true);
 
       if (event === 'SIGNED_OUT') {
+        clearCachedSession();
         setCurrentUser(null);
+        setIsOfflineAuth(false);
         setIsSuperAdmin(false);
         setShopStatus('ACTIVE');
         setShopPlanTier('FREE');
@@ -461,6 +628,8 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         }
       } else if (session) {
         setCurrentUser(session.user);
+        setIsOfflineAuth(false);
+        setIsFirstLaunchOffline(false);
         adminDb.checkIsSuperAdmin().then((isSuper) => {
           if (isMounted) setIsSuperAdmin(isSuper);
         });
@@ -471,10 +640,17 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
             if (shop.subscription_status) setShopSubscriptionStatus(shop.subscription_status);
             if (shop.current_period_end) setShopPeriodEnd(shop.current_period_end);
             if (shop.name) setShopName(shop.name);
+            setCachedSession({ user: session.user, session, shop });
           }
         });
       } else {
-        setCurrentUser(null);
+        const currentCache = getCachedSession();
+        if (currentCache?.user) {
+          setCurrentUser(currentCache.user);
+          setIsOfflineAuth(true);
+        } else {
+          setCurrentUser(null);
+        }
       }
     });
 
@@ -486,12 +662,59 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   }, [activeRoute, router]);
 
   const handleSignOut = async () => {
+    clearCachedSession();
+    setCurrentUser(null);
+    setIsSuperAdmin(false);
+    setIsOfflineAuth(false);
     await signOut();
     router.replace('/login');
   };
 
-  // Strict Auth Wall: Block rendering and show loading skeleton strictly on protected routes while auth is unresolved or unauthenticated
-  if (!isPublic && isSupabaseConfigured() && (!isAuthResolved || !currentUser)) {
+  // 1. Unauthenticated Offline Barrier (First-Time Launch Fallback)
+  if (!isPublic && isFirstLaunchOffline && !canAccess) {
+    return (
+      <div className="min-h-screen bg-ambient-dark text-foreground flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Ambient Halo */}
+        <div
+          className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[300px] bg-amber-500/10 rounded-full blur-3xl"
+          aria-hidden="true"
+        />
+        <div className="relative z-10 w-full max-w-md premium-glass-card rounded-2xl border border-amber-500/20 bg-[#121418]/80 p-6 md:p-8 backdrop-blur-2xl shadow-2xl text-center space-y-5">
+          <div className="mx-auto h-14 w-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+            <WifiOff className="h-7 w-7" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-lg md:text-xl font-bold font-editorial text-white flex items-center justify-center gap-2">
+              <span>⚠️</span>
+              <span>انٹرنیٹ کنکشن درکار ہے</span>
+            </h2>
+            <p className="text-xs font-semibold text-amber-200/90 font-sans">
+              (Internet Required for First Login)
+            </p>
+            <p className="text-sm text-gray-300 font-urdu-serif leading-relaxed pt-2" dir="rtl">
+              پہلی بار ورکشاپ اکاؤنٹ میں لاگ ان کے لیے انٹرنیٹ ضروری ہے۔ انٹرنیٹ آن کر کے دوبارہ کوشش کریں۔
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.reload();
+                }
+              }}
+              className="h-11 px-6 rounded-xl bg-gold text-black font-bold font-urdu-serif cursor-pointer hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+            >
+              دوبارہ کوشش کریں (Retry)
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Strict Auth Wall: Block rendering and show loading skeleton strictly on protected routes while auth is unresolved or unauthenticated
+  if (!isPublic && isSupabaseConfigured() && (!isAuthResolved || !canAccess)) {
     return (
       <div className="min-h-screen bg-ambient-dark flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
