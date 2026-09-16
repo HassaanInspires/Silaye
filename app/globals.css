@@ -174,16 +174,21 @@ body[data-theme="light"] {
 
 /* Overrides for hardcoded dark surfaces in components */
 .light .bg-\[\#121418\],
+.light .bg-\[\#121418\]\/95,
 .light .bg-\[\#121418\]\/90,
 .light .bg-\[\#121418\]\/80,
 .light .bg-\[\#121418\]\/60,
 .light .bg-\[\#121418\]\/50,
 .light .bg-\[\#121316\],
 .light .bg-\[\#121316\]\/95,
+.light .bg-\[\#121316\]\/80,
+.light .bg-\[\#181a1f\]\/95,
 .light .bg-\[\#0B0C0E\]\/95,
-.light .bg-\[\#0B0C0E\]\/70,
-.light .bg-\[\#0B0C0E\]\/50,
+.light .bg-\[\#0B0C0E\]\/90,
 .light .bg-\[\#0B0C0E\]\/80,
+.light .bg-\[\#0B0C0E\]\/70,
+.light .bg-\[\#0B0C0E\]\/60,
+.light .bg-\[\#0B0C0E\]\/50,
 .light .bg-\[\#0B0C0E\],
 .light .bg-\[\#0E1013\]\/95,
 .light .bg-\[\#0F1115\]\/80,
@@ -191,19 +196,48 @@ body[data-theme="light"] {
   background-color: #FFFFFF;
 }
 
+.light aside[aria-label="Main navigation"],
+.light aside {
+  background-color: #FFFFFF;
+  border-right-color: #E5E0D8;
+}
+
+.light .via-\[\#121418\] {
+  --tw-gradient-via: #FFFFFF;
+}
+
+.light .via-blue-900\/40,
+.light .from-blue-950\/70 {
+  background: linear-gradient(to right, #EFF6FF, #DBEAFE) !important;
+  border-color: #BFDBFE !important;
+}
+
+.light .from-blue-950\/70 .text-white,
+.light .from-blue-950\/70 .text-blue-300 {
+  color: #1E3A8A !important;
+}
+
 .light .sticky.top-0 {
   background-color: rgba(249, 248, 245, 0.95);
   border-bottom-color: #E5E0D8;
 }
 
-.light .bg-black\/30,
+.light .bg-black\/50,
 .light .bg-black\/40,
+.light .bg-black\/30,
 .light .bg-\[\#0B0C0E\]\/40,
 .light .bg-white\/5,
 .light .bg-white\/\[0\.02\],
 .light .bg-white\/\[0\.04\],
 .light .bg-white\/\[0\.05\] {
   background-color: #F3F2EC;
+}
+
+/* Neutralize neon glow halos in Light Mode to soft diffused ambient shadows */
+.light [class*="shadow-\[0_0_"],
+.light [class*="shadow-\[0_20px_"],
+.light [class*="shadow-\[0_25px_"] {
+  box-shadow: 0 1px 3px rgba(24, 24, 27, 0.04), 0 4px 12px rgba(24, 24, 27, 0.03) !important;
 }
 
 .light .border-white\/5,
@@ -257,27 +291,38 @@ body[data-theme="light"] {
 /* High contrast WCAG tuning for status indicators on light surfaces */
 .light .text-emerald-400,
 .light .text-emerald-300 {
-  color: #059669;
+  color: #047857 !important;
+  font-weight: 600;
 }
 
 .light .text-rose-400,
 .light .text-rose-300 {
-  color: #DC2626;
+  color: #B91C1C !important;
+  font-weight: 600;
 }
 
 .light .text-amber-400,
 .light .text-amber-300 {
-  color: #D97706;
+  color: #8A6B2D !important;
+  font-weight: 600;
+}
+
+.light .text-sky-400,
+.light .text-sky-300 {
+  color: #0369A1 !important;
+  font-weight: 600;
 }
 
 .light .text-cyan-400,
 .light .text-cyan-300 {
-  color: #0284C7;
+  color: #0F766E !important;
+  font-weight: 600;
 }
 
 .light .text-purple-400,
 .light .text-purple-300 {
-  color: #7C3AED;
+  color: #6D28D9 !important;
+  font-weight: 600;
 }
 
 /* Preserve gold accents and colored badges */

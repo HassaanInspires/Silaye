@@ -27,6 +27,8 @@ import {
   ArrowRight,
   Bell,
   Zap,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -41,6 +43,7 @@ import { useOnlineStatus } from '@/lib/use-online-status';
 import { syncCoordinator, type SyncState } from '@/lib/sync-coordinator';
 import { syncEngine, useSyncStatus } from '@/lib/sync/sync-engine';
 import { adminDb, shopsDb } from '@/lib/db';
+import { useTheme } from '@/lib/theme-provider';
 import type { PlanTier, Shop, SubscriptionStatus } from '@/types/tailor';
 import {
   getSession,
@@ -272,6 +275,8 @@ export const isPublicRoute = (path: string): boolean => {
 
 export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const router = useRouter();
+  const { theme, setTheme, isMounted } = useTheme();
+  const effectiveTheme = isMounted ? theme : 'dark';
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState<boolean>(false);
   const [searchValue, setSearchValue] = React.useState<string>('');
   // Fast hydration: initialize currentUser directly from local cache if available
@@ -950,6 +955,28 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
             </div>
 
             <div className="border-t border-white/5 pt-4 space-y-3">
+              {/* Quick Theme Switcher in Mobile Drawer */}
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs">
+                <span className="text-gray-300 font-medium">Theme (ظاہری شکل)</span>
+                <button
+                  type="button"
+                  onClick={() => setTheme(effectiveTheme === 'light' ? 'dark' : 'light')}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 font-semibold transition-all cursor-pointer"
+                >
+                  {effectiveTheme === 'light' ? (
+                    <>
+                      <Moon className="h-3.5 w-3.5 text-foreground" />
+                      <span>Dark Mode / رات کا موڈ</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sun className="h-3.5 w-3.5 text-gold" />
+                      <span>Light Mode / دن کا موڈ</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-xs font-bold text-gold">
@@ -1045,7 +1072,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 <ConnectionPill />
               </div>
 
-              {/* Mobile Right: Compact Touch Actions [🔍 Search] and [🔔 Notification] */}
+              {/* Mobile Right: Compact Touch Actions [🔍 Search], [☀️/🌙 Theme], and [🔔 Notification] */}
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
@@ -1055,6 +1082,19 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   title="Search"
                 >
                   <Search className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme(effectiveTheme === 'light' ? 'dark' : 'light')}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-gold transition-colors cursor-pointer"
+                  aria-label="Toggle theme"
+                  title={effectiveTheme === 'light' ? 'Switch to Dark Mode (رات کا موڈ)' : 'Switch to Light Mode (دن کا موڈ)'}
+                >
+                  {effectiveTheme === 'light' ? (
+                    <Moon className="h-3.5 w-3.5 text-foreground" />
+                  ) : (
+                    <Sun className="h-3.5 w-3.5 text-gold" />
+                  )}
                 </button>
                 <a
                   href="/settings"
@@ -1087,6 +1127,20 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
 
             <div className="flex items-center gap-3">
               <ConnectionPill />
+
+              <button
+                type="button"
+                onClick={() => setTheme(effectiveTheme === 'light' ? 'dark' : 'light')}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-gold transition-colors cursor-pointer"
+                aria-label="Toggle theme"
+                title={effectiveTheme === 'light' ? 'Switch to Dark Mode (رات کا موڈ)' : 'Switch to Light Mode (دن کا موڈ)'}
+              >
+                {effectiveTheme === 'light' ? (
+                  <Moon className="h-4 w-4 text-foreground" />
+                ) : (
+                  <Sun className="h-4 w-4 text-gold" />
+                )}
+              </button>
 
               <a href="/orders/new">
                 <Button

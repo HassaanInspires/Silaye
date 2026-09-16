@@ -563,3 +563,15 @@
     - `scripts/verify_db.ts`: 159/159 assertions passed.
     - Playwright mobile visual audit: Captured 6 live mobile screenshots (`01_settings_light_mobile.png`, `02_settings_toggled_dark_mobile.png`, `03_settings_toggled_back_light_mobile.png`, `04_login_light_mobile.png`, `05_dashboard_light_mobile.png`, `06_new_booking_light_mobile.png`).
 
+- [x] 23.6 Milestone 6: Forensic Theme Polish, Neon Halo Removal & 1-Tap Header Quick Switcher:
+  * **1-Tap Quick Theme Switcher (`☀️`/`🌙`)**: Mounted directly in Top Command Header (mobile & desktop) and mobile drawer footer in `components/layout/app-shell.tsx`, enabling instant 1-tap switching from any page without navigating to Settings.
+  * **Zero Dark Card Bleeds**: Overrode unmapped dark opacity variants (`.bg-[#121418]/95` on dashboard glance strip, `bg-[#0B0C0E]/60` on desktop sidebar, `bg-black/50`, and neutralized `via-[#121418]` on Khata cards) into pure matte silk (`#FFFFFF`).
+  * **Neon Glow Elimination**: Scoped all `[class*="shadow-[0_0_"]` and `[class*="shadow-[0_20px_"]` in `.light` to soft, diffused ambient shadows (`rgba(24,24,27,0.04)`), stripping radioactive neon halos project-wide.
+  * **Washed-out Text Calibration**: Deepened pastel 300-weight status indicators to rich matte jewel tones (`#8A6B2D` Amber, `#047857` Emerald, `#0369A1` Slate, `#B91C1C` Crimson).
+  * **Full Verification & Visual Audit**:
+    - `npx tsc --noEmit`: 0 errors.
+    - `npm run build`: 28/28 routes exported into `out/`.
+    - `scripts/verify_db.ts`: 159/159 assertions passed.
+    - Captured 8 live mobile audit screenshots (including Khata Ledger and Production Orders Queue).
+
+

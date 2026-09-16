@@ -175,6 +175,26 @@ server.listen(PORT, async () => {
     console.warn('Screenshot 6 notice:', err.message);
   }
 
+  console.log('--- Testing 6: Light Mode Khata Ledger Page ---');
+  try {
+    await page.goto(`http://localhost:${PORT}/khata`, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    await page.waitForTimeout(1500);
+    await page.screenshot({ path: `${outputDir}/07_khata_light_mobile.png`, timeout: 10000 });
+    console.log('Saved 07_khata_light_mobile.png');
+  } catch (err) {
+    console.warn('Screenshot 7 notice:', err.message);
+  }
+
+  console.log('--- Testing 7: Light Mode Production Orders Queue ---');
+  try {
+    await page.goto(`http://localhost:${PORT}/orders`, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    await page.waitForTimeout(1500);
+    await page.screenshot({ path: `${outputDir}/08_orders_light_mobile.png`, timeout: 10000 });
+    console.log('Saved 08_orders_light_mobile.png');
+  } catch (err) {
+    console.warn('Screenshot 8 notice:', err.message);
+  }
+
   await browser.close();
   server.close();
   console.log('Audit complete! All screenshots captured.');
