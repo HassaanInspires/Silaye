@@ -534,4 +534,5 @@
     - `scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
     - `npm run build`: 28/28 static export routes compiled cleanly into `out/`.
 
-
+- [ ] 23.3 Milestone 3: Semantic Token Engine & Capacitor Android Status Bar Sync (Rolled back due to UI instability)
+- [ ] 23.4 Milestone 4: Screen Palette Sweep & High-Contrast Light Mode Polish (Rolled back due to UI instability)

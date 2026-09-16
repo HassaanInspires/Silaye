@@ -3200,5 +3200,18 @@
 * **Next Immediate Task:**
   - Milestone 3: Bi-Directional Delta Sync & Conflict Resolution (or Phase 24 as directed in tasks.md).
 
+---
+
+## Phase 23: Emergency Rollback
+* **Date:** 2026-09-16
+* **Log:**
+  - Emergency Rollback: Executed git reset --hard to d20bb3c to remove unstable Light Mode implementation. Codebase restored to stable Milestone 2 state.
+* **Active File Changes:**
+  - `tasks.md`
+  - `progress.md`
+* **Next Immediate Task:**
+  - Re-evaluate Milestone 3 & 4 Light Mode architecture or continue offline hardening.
+
+
 
 
