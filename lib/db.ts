@@ -52,10 +52,48 @@ import type {
   PaymentMethod,
   PaymentRequestStatus,
   ManualPaymentRequest,
+  SyncStatusType,
+  SyncMetadata,
+  LocalCustomer,
+  LocalOrder,
+  LocalKhataTransaction,
+  LocalMeasurementProfile,
 } from '@/types/tailor';
+import Dexie, { type Table } from 'dexie';
 
 // ==========================================
-// 1. Connection & Runtime Configuration
+// 1. Dexie Offline Storage & Synchronization Database
+// ==========================================
+
+export class SilayeDexieDB extends Dexie {
+  customers!: Table<LocalCustomer, string>;
+  orders!: Table<LocalOrder, string>;
+  khata_transactions!: Table<LocalKhataTransaction, string>;
+  measurements!: Table<LocalMeasurementProfile, string>;
+
+  constructor() {
+    super('silaye_dexie_db');
+    this.version(1).stores({
+      customers: 'id, shop_id, phone, full_name, sync_status, updated_at',
+      orders: 'id, order_number, shop_id, customer_id, status, sync_status, created_at, updated_at',
+      khata_transactions: 'id, shop_id, customer_id, order_id, sync_status, created_at, updated_at',
+      measurements: 'id, shop_id, customer_id, sync_status, updated_at',
+    });
+  }
+}
+
+export const db = new SilayeDexieDB();
+export type {
+  SyncStatusType,
+  SyncMetadata,
+  LocalCustomer,
+  LocalOrder,
+  LocalKhataTransaction,
+  LocalMeasurementProfile,
+};
+
+// ==========================================
+// 1.1 Connection & Runtime Configuration
 // ==========================================
 
 export function getDatabaseUrl(): string | undefined {

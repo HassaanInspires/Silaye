@@ -413,6 +413,25 @@ export interface SyncQueueItem {
   error_message?: string;
 }
 
+/**
+ * Dexie Offline Sync Metadata
+ */
+export type SyncStatusType = 'synced' | 'pending' | 'failed';
+
+export interface SyncMetadata {
+  sync_status: SyncStatusType;
+  sync_retry_count: number;
+  last_sync_error: string | null;
+  synced_at?: string | null;
+  updated_at: string; // ISO 8601 timestamp
+}
+
+export interface LocalCustomer extends Customer, SyncMetadata {}
+export interface LocalOrder extends GarmentOrder, SyncMetadata {}
+export interface LocalKhataTransaction extends KhataTransaction, SyncMetadata {}
+export interface LocalMeasurementProfile extends MeasurementProfile, SyncMetadata {}
+
+
 // ==========================================
 // 4. Super Admin & Platform Operations
 // ==========================================

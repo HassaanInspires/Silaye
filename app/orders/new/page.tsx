@@ -54,7 +54,9 @@ import {
   shopsDb,
   ordersDb,
   DEFAULT_PRINTER_SETTINGS,
+  db,
 } from '@/lib/db';
+import { syncEngine } from '@/lib/sync/sync-engine';
 import { calculateOrderFinancials, formatPakistaniPhone } from '@/lib/validations/tailor';
 import type {
   Customer,
@@ -346,6 +348,7 @@ export default function NewOrderPage() {
   const [newBookedOrder, setNewBookedOrder] = React.useState<GarmentOrder | null>(null);
   const [newBookedCustomer, setNewBookedCustomer] = React.useState<Customer | null>(null);
   const [draftSavedToast, setDraftSavedToast] = React.useState<boolean>(false);
+  const [orderBookedToast, setOrderBookedToast] = React.useState<boolean>(false);
   const [showMobileAdmin, setShowMobileAdmin] = React.useState<boolean>(false);
 
   // --------------------------------------------------------------------------
@@ -607,9 +610,22 @@ export default function NewOrderPage() {
       setIsCheckingQuota(false);
     }
 
-    const orderNum = `DP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    // 1. Generate stable client UUIDs for offline entity integrity
+    const customerId = foundCustomer?.id || crypto.randomUUID();
+    const orderId = crypto.randomUUID();
+    const profileId = foundProfile?.id || crypto.randomUUID();
+    const trackingKey = crypto.randomUUID();
+    const khataTxId = crypto.randomUUID();
+
+    // 2. Offline-safe human order number: ORD-YYMM-XXXX
+    const now = new Date();
+    const yy = now.getFullYear().toString().slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const rnd = Math.floor(1000 + Math.random() * 9000);
+    const orderNum = `ORD-${yy}${mm}-${rnd}`;
+
     const effectiveCust: Customer = foundCustomer || {
-      id: `cust-${Date.now()}`,
+      id: customerId,
       shop_id: currentShop.id,
       full_name: customerName.trim(),
       phone: phone.trim() || '03001234567',
@@ -625,11 +641,11 @@ export default function NewOrderPage() {
     };
 
     const newOrder: GarmentOrder = {
-      id: `ord-${Date.now()}`,
+      id: orderId,
       order_number: orderNum,
       shop_id: currentShop.id,
       customer_id: effectiveCust.id,
-      measurement_profile_id: foundProfile?.id || null,
+      measurement_profile_id: profileId,
       status: 'BOOKED',
       garment_type: garmentType,
       quantity,
@@ -655,21 +671,92 @@ export default function NewOrderPage() {
       snapshot_measurements: measurements,
       snapshot_styles: stylePreferences,
       barcode_token: `BC-${orderNum}`,
-      public_tracking_key: `track-${Date.now()}`,
+      public_tracking_key: trackingKey,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    // Increment monthly quota count
-    await subscriptionDb.incrementUsage(currentShop.id);
+    const measurementProfile: MeasurementProfile = {
+      id: profileId,
+      shop_id: currentShop.id,
+      customer_id: effectiveCust.id,
+      profile_name: `${customerName.trim()} - Standard Fit`,
+      garment_type: garmentType,
+      measurements,
+      style_preferences: stylePreferences,
+      is_default: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    // 3. Atomic Dexie transaction across all workshop stores
+    await db.transaction('rw', [db.orders, db.customers, db.khata_transactions, db.measurements], async () => {
+      await db.customers.put({
+        ...effectiveCust,
+        sync_status: 'pending',
+        sync_retry_count: 0,
+        last_sync_error: null,
+        updated_at: new Date().toISOString(),
+      });
+
+      await db.orders.put({
+        ...newOrder,
+        order_number: orderNum,
+        sync_status: 'pending',
+        sync_retry_count: 0,
+        last_sync_error: null,
+        updated_at: new Date().toISOString(),
+      });
+
+      await db.measurements.put({
+        ...measurementProfile,
+        sync_status: 'pending',
+        sync_retry_count: 0,
+        last_sync_error: null,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (financials.advance_paid > 0) {
+        await db.khata_transactions.put({
+          id: khataTxId,
+          shop_id: currentShop.id,
+          customer_id: effectiveCust.id,
+          order_id: orderId,
+          transaction_type: 'ORDER_ADVANCE',
+          amount: financials.advance_paid,
+          balance_after: financials.balance_due,
+          notes: `Advance payment for Order ${orderNum}`,
+          created_by: null,
+          created_at: new Date().toISOString(),
+          sync_status: 'pending',
+          sync_retry_count: 0,
+          last_sync_error: null,
+          updated_at: new Date().toISOString(),
+        });
+      }
+    });
+
+    // 4. Do NOT await remote Supabase network calls - non-blocking quota update
+    subscriptionDb.incrementUsage(currentShop.id).catch(console.error);
 
     setNewBookedOrder(newOrder);
     setNewBookedCustomer(effectiveCust);
+
+    // 5. Immediately open the thermal receipt modal
     if (printerSettings.auto_print_on_booking) {
       setIsThermalModalOpen(true);
     } else {
       setIsReceiptModalOpen(true);
     }
+
+    // 6. Show bilingual confirmation toast
+    setOrderBookedToast(true);
+    setTimeout(() => {
+      setOrderBookedToast(false);
+    }, 4000);
+
+    // 7. Fire background sync runner non-blockingly
+    syncEngine.processQueue().catch(console.error);
 
     try {
       confetti({
@@ -694,6 +781,24 @@ export default function NewOrderPage() {
   return (
     <AppShell activeRoute="/orders/new">
       <div className="max-w-7xl mx-auto">
+        {/* Floating Bilingual Booking Success Toast */}
+        {orderBookedToast && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed top-16 md:top-20 right-4 md:right-8 z-50 flex items-center gap-2.5 rounded-2xl border border-emerald-500/40 bg-[#0E1013]/95 backdrop-blur-xl px-4 py-3 text-xs text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.3)] animate-in fade-in slide-in-from-top-2"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+            <div className="flex flex-col">
+              <span className="font-urdu-serif font-bold text-sm leading-relaxed" dir="rtl">
+                سوٹ کامیابی سے بک ہو گیا (محفوظ)
+              </span>
+              <span className="text-[10px] text-gray-300 font-sans">
+                Suit booked locally & queued for sync
+              </span>
+            </div>
+          </div>
+        )}
         
         {/* ── Page Header ─────────────────────────────────────────────── */}
         <div className="hidden md:flex mb-6 flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">

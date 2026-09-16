@@ -26,6 +26,7 @@ import {
   CreditCard,
   ArrowRight,
   Bell,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ import {
 } from '@/lib/nav-preferences';
 import { useOnlineStatus } from '@/lib/use-online-status';
 import { syncCoordinator, type SyncState } from '@/lib/sync-coordinator';
+import { syncEngine, useSyncStatus } from '@/lib/sync/sync-engine';
 import { adminDb, shopsDb } from '@/lib/db';
 import type { PlanTier, Shop, SubscriptionStatus } from '@/types/tailor';
 import {
@@ -84,133 +86,126 @@ const NAV_ITEMS: ReadonlyArray<NavItem> = [
 ];
 
 // ---------------------------------------------------------------------------
-// Online/Offline heartbeat pill & Mutation Sync status
+// Online/Offline heartbeat pill & Dexie Mutation Sync telemetry
 // ---------------------------------------------------------------------------
 
+function toUrduDigits(num: number): string {
+  const urduDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  return num.toString().replace(/\d/g, (d) => urduDigits[parseInt(d, 10)]);
+}
+
 function ConnectionPill() {
-  const [syncState, setSyncState] = React.useState<SyncState>(() => syncCoordinator.getState());
-
-  React.useEffect(() => {
-    // Initial fetch of queue counts and live subscription
-    syncCoordinator.refreshQueueCounts();
-    const unsubscribe = syncCoordinator.subscribe((state) => {
-      setSyncState(state);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+  const { isOnline, isSyncing, pendingCount } = useSyncStatus();
 
   const handleManualSync = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (syncState.isOnline && !syncState.isSyncing) {
-      syncCoordinator.processQueue();
+    if (isOnline && !isSyncing) {
+      syncEngine.processQueue().catch(console.error);
     }
   };
 
-  // 1. Auth Required State (Session Expired / Needs Login)
-  if (syncState.status === 'AUTH_REQUIRED') {
-    return (
-      <a
-        href="/login"
-        className={cn(
-          'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur-md transition-all duration-200 cursor-pointer',
-          'border-rose-500/40 bg-rose-500/15 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.15)] hover:bg-rose-500/25 hover:border-rose-500/60'
-        )}
-        role="status"
-        aria-live="polite"
-        aria-label="Authentication required to sync"
-        title="Session expired or login required. Click to log in and sync pending changes."
-      >
-        <Lock className="h-3 w-3 text-rose-400" aria-hidden="true" />
-        <span>Auth Required{syncState.pendingCount > 0 ? ` (${syncState.pendingCount})` : ''}</span>
-      </a>
-    );
-  }
-
-  // 2. Syncing State
-  if (syncState.isSyncing || syncState.status === 'SYNCING') {
+  // 1. Syncing State
+  if (isSyncing) {
     return (
       <div
         className={cn(
-          'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur-md transition-all duration-200',
+          'flex items-center gap-1.5 rounded-full border px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-medium backdrop-blur-md transition-all duration-200',
           'border-gold/40 bg-gold/15 text-gold shadow-[0_0_15px_rgba(212,175,55,0.15)]'
         )}
         role="status"
         aria-live="polite"
-        aria-label="Synchronizing offline mutations"
-        title="Syncing pending changes with server..."
+        aria-label="Synchronizing offline orders"
+        title="Syncing pending orders with server..."
       >
         <RefreshCw className="h-3 w-3 animate-spin text-gold" aria-hidden="true" />
-        <span>Syncing{syncState.pendingCount > 0 ? ` (${syncState.pendingCount})` : ''}...</span>
+        <span className="font-urdu-serif font-bold text-xs" dir="rtl">
+          🔄 <span className="hidden sm:inline">ہم آہنگ ہو رہا ہے...</span>
+        </span>
+        <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• Syncing</span>
       </div>
     );
   }
 
-  // 3. Offline State
-  if (!syncState.isOnline || syncState.status === 'OFFLINE') {
+  // 2. Offline with Pending Records: [ ⚡ ۳ آرڈرز مقامی محفوظ • 3 Pending Sync ]
+  if (!isOnline && pendingCount > 0) {
     return (
       <div
         className={cn(
-          'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur-md transition-all duration-200',
-          'border-amber-500/40 bg-amber-500/10 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+          'flex items-center gap-1.5 rounded-full border px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-medium backdrop-blur-md transition-all duration-200',
+          'border-amber-500/40 bg-amber-500/10 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
         )}
         role="status"
         aria-live="polite"
-        aria-label={
-          syncState.pendingCount > 0
-            ? `Offline with ${syncState.pendingCount} queued changes`
-            : 'Connection: Offline'
-        }
-        title={
-          syncState.pendingCount > 0
-            ? `${syncState.pendingCount} mutation(s) saved locally. Will sync automatically when online.`
-            : 'Working offline. All changes saved locally.'
-        }
+        aria-label={`Offline with ${pendingCount} pending orders saved locally`}
+        title={`${pendingCount} order(s) saved locally in Dexie. Will sync automatically when online.`}
       >
-        <WifiOff className="h-3 w-3 text-amber-400" aria-hidden="true" />
-        <span>
-          Offline{syncState.pendingCount > 0 ? ` (${syncState.pendingCount} queued)` : ''}
+        <Zap className="h-3 w-3 text-amber-400 fill-amber-400/30" aria-hidden="true" />
+        <span className="font-urdu-serif font-bold text-xs" dir="rtl">
+          ⚡ {toUrduDigits(pendingCount)} <span className="hidden sm:inline">آرڈرز مقامی محفوظ</span>
         </span>
+        <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• {pendingCount} Pending Sync</span>
       </div>
     );
   }
 
-  // 3. Online State with pending changes (Sync trigger)
-  if (syncState.pendingCount > 0) {
+  // 3. Offline without Pending Records
+  if (!isOnline) {
+    return (
+      <div
+        className={cn(
+          'flex items-center gap-1.5 rounded-full border px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-medium backdrop-blur-md transition-all duration-200',
+          'border-amber-500/30 bg-amber-500/10 text-amber-400'
+        )}
+        role="status"
+        aria-live="polite"
+        aria-label="Connection: Offline"
+        title="Working offline. All changes saved locally in Dexie."
+      >
+        <WifiOff className="h-3 w-3 text-amber-400" aria-hidden="true" />
+        <span className="font-urdu-serif font-bold text-xs" dir="rtl">آف لائن</span>
+        <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• Offline</span>
+      </div>
+    );
+  }
+
+  // 4. Online with pending changes (Sync trigger)
+  if (pendingCount > 0) {
     return (
       <button
         type="button"
         onClick={handleManualSync}
         className={cn(
-          'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur-md transition-all duration-200',
-          'border-gold/30 bg-gold/10 text-gold hover:bg-gold/20 hover:border-gold/50 cursor-pointer shadow-[0_0_10px_rgba(212,175,55,0.1)]'
+          'flex items-center gap-1.5 rounded-full border px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-medium backdrop-blur-md transition-all duration-200 cursor-pointer',
+          'border-gold/30 bg-gold/10 text-gold hover:bg-gold/20 hover:border-gold/50 shadow-[0_0_10px_rgba(212,175,55,0.1)]'
         )}
         role="status"
         aria-live="polite"
-        title="Click to synchronize pending changes now"
+        title="Click to synchronize pending orders now"
       >
         <RefreshCw className="h-3 w-3 text-gold" aria-hidden="true" />
-        <span>Sync Now ({syncState.pendingCount})</span>
+        <span className="font-urdu-serif font-bold text-xs" dir="rtl">
+          ہم آہنگ کریں ({toUrduDigits(pendingCount)})
+        </span>
+        <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• Sync ({pendingCount})</span>
       </button>
     );
   }
 
-  // 4. Clean Online State
+  // 5. Clean Online State ([ 🟢 آن لائن • Online ])
   return (
     <div
       className={cn(
-        'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur-md transition-all duration-200',
-        'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+        'flex items-center gap-1.5 rounded-full border px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-medium backdrop-blur-md transition-all duration-200',
+        'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]'
       )}
       role="status"
       aria-live="polite"
       aria-label="Connection: Online"
-      title="All changes synchronized"
+      title="All orders synchronized with cloud"
     >
-      <Wifi className="h-3 w-3 text-emerald-400" aria-hidden="true" />
-      <span>Online</span>
+      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
+      <span className="font-urdu-serif font-bold text-xs" dir="rtl">آن لائن</span>
+      <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• Online</span>
     </div>
   );
 }
@@ -375,6 +370,9 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
       if (isFirstLaunchOffline) {
         setIsFirstLaunchOffline(false);
       }
+
+      // Fire Dexie background sync queue upon network reconnection
+      syncEngine.processQueue().catch(console.error);
 
       if (!isSupabaseConfigured()) return;
 
@@ -630,6 +628,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         setCurrentUser(session.user);
         setIsOfflineAuth(false);
         setIsFirstLaunchOffline(false);
+        syncEngine.processQueue().catch(console.error);
         adminDb.checkIsSuperAdmin().then((isSuper) => {
           if (isMounted) setIsSuperAdmin(isSuper);
         });
@@ -1038,21 +1037,12 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 )}
               </div>
 
-              {/* Mobile Center: Workshop Name + Compact Status Dot */}
-              <div className="flex items-center justify-center min-w-0 px-2 flex-1">
-                <span className="text-sm font-semibold text-white truncate max-w-[200px]">
+              {/* Mobile Center: Workshop Name + Ambient Sync Pill */}
+              <div className="flex items-center justify-center min-w-0 px-1.5 flex-1 gap-1.5">
+                <span className="text-xs sm:text-sm font-semibold text-white truncate max-w-[125px] sm:max-w-[180px]">
                   {shopName}
                 </span>
-                <span
-                  className={cn(
-                    "h-2 w-2 rounded-full inline-block ml-1.5 shrink-0 animate-pulse",
-                    isOnline
-                      ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
-                      : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"
-                  )}
-                  title={isOnline ? "Online / آن لائن" : "Offline / آف لائن"}
-                  aria-label={isOnline ? "Online" : "Offline"}
-                />
+                <ConnectionPill />
               </div>
 
               {/* Mobile Right: Compact Touch Actions [🔍 Search] and [🔔 Notification] */}

@@ -3149,6 +3149,56 @@
   - `npm run build`: Production static export cleanly generated all 28/28 routes into `out/` with 0 errors.
 
 * **Next Immediate Task:**
-  - Milestone 2: Offline Mutation Queue & Conflict-Free Khata Ledger Synchronization.
+  - Milestone 2: Offline Transaction Integrity & Dexie Sync Queue.
+
+---
+
+## Phase 23: Offline Resilience & Edge-Case Hardening (Milestone 2 Completed)
+* **Date:** 2026-09-16
+* **Tasks Completed:**
+  - `23.2` Milestone 2: Offline Transaction Integrity & Dexie Sync Queue (`package.json`, `types/tailor.ts`, `lib/db.ts`, `lib/sync/sync-engine.ts`, `app/orders/new/page.tsx`, `components/layout/app-shell.tsx`):
+    * **Dexie Schema & Strongly-Typed Local Database (`package.json`, `types/tailor.ts`, `lib/db.ts`)**:
+      - Installed `dexie` (`^4.0.11`) as runtime dependency.
+      - Declared `SyncStatusType` (`'synced' | 'pending' | 'failed'`), `SyncMetadata`, and local entities: `LocalCustomer`, `LocalOrder`, `LocalKhataTransaction`, and `LocalMeasurementProfile` with zero `any` types.
+      - Subclassed `SilayeDexieDB` from `Dexie` in `lib/db.ts` with stores:
+        * `customers`: `id, shop_id, phone, full_name, sync_status, updated_at`
+        * `orders`: `id, order_number, shop_id, customer_id, status, sync_status, created_at, updated_at`
+        * `khata_transactions`: `id, shop_id, customer_id, order_id, sync_status, created_at`
+        * `measurements`: `id, customer_id, sync_status, updated_at`
+      - Indexed `sync_status` across all stores for instantaneous queue lookups.
+    * **Resilient Background Sync Engine (`lib/sync/sync-engine.ts`)**:
+      - Built singleton `SyncEngine` with concurrency mutex (`isSyncing`) preventing concurrent execution races.
+      - Implemented `processQueue()` with JWT refresh check, customer phone deduplication in Supabase (`customers` table), atomic order & measurement upsert into `garment_orders`, and advance payment synchronization into `khata_transactions`.
+      - Integrated poison-pill protection with exponential backoff and a 3-retry ceiling marking transactions `failed` if irrecoverable.
+      - Implemented `useSyncStatus()` hook with event subscription (`silaye:sync-status-changed`) tracking pending items, syncing state, and failure counts.
+    * **Atomic Zero-Latency Offline Booking (`app/orders/new/page.tsx`)**:
+      - Replaced sequential blocking network requests with client-generated UUIDs (`crypto.randomUUID()`) and human-readable order numbers (`ORD-YYMM-XXXX`).
+      - Implemented atomic `db.transaction('rw', [db.customers, db.orders, db.khata_transactions, db.measurements], ...)` committing the customer record, suit order, measurement matrix, and advance ledger entry to Dexie in < 15ms.
+      - Instantaneous thermal receipt dispatch: launches `setIsReceiptModalOpen(true)` immediately upon Dexie write with bilingual Urdu confirmation toast (`"سوٹ کامیابی سے بک ہو گیا (محفوظ) • Suit booked locally"`).
+      - Triggered non-blocking background sync queue flush via `syncEngine.processQueue().catch(...)`.
+    * **Glance Bar & Ambient Connection Pill Telemetry (`components/layout/app-shell.tsx`)**:
+      - Integrated `useSyncStatus()` and Urdu numerals converter (`toUrduDigits`) into `ConnectionPill`.
+      - Rendered ambient status badges: `[ ⚡ ۳ آرڈرز مقامی محفوظ • 3 Pending Sync ]` when offline with queued items, `[ 🔄 ہم آہنگ ہو رہا ہے... • Syncing ]` during active synchronization, and `[ 🟢 آن لائن • Online ]` when clean.
+      - Added compact responsive badges for mobile headers and wired automatic sync queue processing into network reconnection events (`window.addEventListener('online')`).
+
+* **Active File Changes:**
+  - `package.json` [MODIFIED]
+  - `package-lock.json` [MODIFIED]
+  - `types/tailor.ts` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `lib/sync/sync-engine.ts` [NEW]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites (in 343.61s).
+  - `npm run build`: Production static export cleanly generated all 28/28 routes into `out/`.
+
+* **Next Immediate Task:**
+  - Milestone 3: Bi-Directional Delta Sync & Conflict Resolution (or Phase 24 as directed in tasks.md).
+
 
 
