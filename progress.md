@@ -3040,4 +3040,37 @@
   - `npm run build`: Production static export cleanly generated all 28/28 routes into `out/` with 0 errors.
 
 * **Next Immediate Task:**
-  - Phase 22, Step 3: Streamline Staff & Craftsmen sub-view or end-user mobile testing.
+  - Phase 22, Step 3 (Completed)
+
+---
+
+## Phase 22: Settings Page Overhaul (Step 3 Completed)
+* **Date:** 2026-09-16
+* **Tasks Completed:**
+  - `22.3` Settings Page Overhaul: Compact Stitching Rates Grid & Purge Obsolete Navigation Radios (`app/settings/page.tsx`):
+    - **Compact 2x2 Stitching Rates Grid (`mobileSection === 'rates'`)**:
+      * Refactored each garment rate card (`garmentRates.map`) from a tall, loose 4-row stack into a compact, space-efficient 2x2 grid.
+      * Row 1 (Pricing): Base Rate (PKR) and Urgent Surcharge (PKR) side-by-side (`grid grid-cols-2 gap-2 pt-1 border-t border-white/5`).
+      * Row 2 (Turnaround): Standard Delivery (Days) and Urgent Delivery (Days) side-by-side (`grid grid-cols-2 gap-2 mt-2`).
+      * Stacked bilingual labels: Rendered authentic Urdu calligraphy on top (`font-urdu-serif text-[11px] text-gold/80 block leading-tight` with `dir="rtl"`) and English label below (`text-[10px] text-gray-400 font-sans block`).
+      * Standardized compact input styling: `className="bg-black/30 border-white/10 focus:border-gold h-10 text-xs font-mono font-bold"` (with `text-center` for delivery days).
+      * Preserved "Save Rates" button and "Reset to Market Standard Rates" action with `<div className="h-32 w-full shrink-0" aria-hidden="true" />` spacer.
+    - **Purge Obsolete Navigation Style Radios (`mobileSection === 'alerts'`)**:
+      * Eradicated the obsolete "Navigation Style (Modern Tabs vs Classic Drawer vs Hybrid)" Card from `mobileSection === 'alerts'`, eliminating redundant visual clutter.
+      * Retained only the functional alert toggles (Morning Delivery Briefing 9:00 AM, Urgent Warnings < 24h, Sound & Vibration Chime) and the "Send Test Alert" button.
+      * Appended `<div className="h-32 w-full shrink-0" aria-hidden="true" />` spacer ensuring clear clearance above `<MobileBottomNav />`.
+    - **Strict Isolation & Verification**:
+      * Kept desktop settings layout (`hidden md:block`), database mutation handlers (`handleSaveRates`, `handleResetRates`, `handleToggleNotificationPref`, `handleSendTestAlert`), and shared modals completely untouched.
+
+* **Active File Changes:**
+  - `app/settings/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: Exit code 0 (0 type errors).
+  - `npx --yes tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `npm run build`: Production static export cleanly generated all 28/28 routes into `out/` with 0 errors.
+
+* **Next Immediate Task:**
+  - Phase 22, Step 4: Streamline Staff & Craftsmen sub-view or end-user mobile testing.

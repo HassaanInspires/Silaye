@@ -1864,9 +1864,12 @@ export default function SettingsPage() {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2.5 pt-1 border-t border-white/5">
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/5">
                       <div>
-                        <label className="text-[10px] text-gray-400 block mb-0.5">Base Rate (PKR)</label>
+                        <label className="block mb-1">
+                          <span className="font-urdu-serif text-[11px] text-gold/80 block leading-tight" dir="rtl">بنیادی سلائی</span>
+                          <span className="text-[10px] text-gray-400 font-sans block">Base Rate (PKR)</span>
+                        </label>
                         <Input
                           type="number"
                           min={0}
@@ -1880,11 +1883,14 @@ export default function SettingsPage() {
                             )
                           }
                           disabled={!rate.is_active}
-                          className="bg-black/30 border-white/10 text-xs font-mono h-8"
+                          className="bg-black/30 border-white/10 focus:border-gold h-10 text-xs font-mono font-bold"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-gray-400 block mb-0.5">Urgent Surcharge</label>
+                        <label className="block mb-1">
+                          <span className="font-urdu-serif text-[11px] text-gold/80 block leading-tight" dir="rtl">ہنگامی فیس</span>
+                          <span className="text-[10px] text-gray-400 font-sans block">Urgent Surcharge (PKR)</span>
+                        </label>
                         <Input
                           type="number"
                           min={0}
@@ -1898,14 +1904,17 @@ export default function SettingsPage() {
                             )
                           }
                           disabled={!rate.is_active}
-                          className="bg-black/30 border-white/10 text-xs font-mono h-8"
+                          className="bg-black/30 border-white/10 focus:border-gold h-10 text-xs font-mono font-bold"
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-2 gap-2 mt-2">
                       <div>
-                        <label className="text-[10px] text-gray-400 block mb-0.5">Standard (Days)</label>
+                        <label className="block mb-1">
+                          <span className="font-urdu-serif text-[11px] text-gold/80 block leading-tight" dir="rtl">عام دن</span>
+                          <span className="text-[10px] text-gray-400 font-sans block">Standard (Days)</span>
+                        </label>
                         <Input
                           type="number"
                           min={1}
@@ -1919,11 +1928,14 @@ export default function SettingsPage() {
                             )
                           }
                           disabled={!rate.is_active}
-                          className="bg-black/30 border-white/10 text-xs font-mono text-center h-8"
+                          className="bg-black/30 border-white/10 focus:border-gold h-10 text-xs font-mono font-bold text-center"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-gray-400 block mb-0.5">Urgent (Days)</label>
+                        <label className="block mb-1">
+                          <span className="font-urdu-serif text-[11px] text-gold/80 block leading-tight" dir="rtl">ارجنٹ دن</span>
+                          <span className="text-[10px] text-gray-400 font-sans block">Urgent (Days)</span>
+                        </label>
                         <Input
                           type="number"
                           min={1}
@@ -1937,7 +1949,7 @@ export default function SettingsPage() {
                             )
                           }
                           disabled={!rate.is_active}
-                          className="bg-black/30 border-white/10 text-xs font-mono text-center h-8"
+                          className="bg-black/30 border-white/10 focus:border-gold h-10 text-xs font-mono font-bold text-center"
                         />
                       </div>
                     </div>
@@ -1957,7 +1969,7 @@ export default function SettingsPage() {
               <RotateCcw className={cn("h-3.5 w-3.5 mr-1.5", resettingRates && "animate-spin")} />
               <span>Reset to Market Standard Rates</span>
             </Button>
-            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+            <div className="h-32 w-full shrink-0" aria-hidden="true" />
           </div>
         )}
 
@@ -2117,44 +2129,7 @@ export default function SettingsPage() {
               </CardFooter>
             </Card>
 
-            {/* Navigation Layout Preference */}
-            <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-white flex items-center gap-2">
-                  <Sliders className="h-4 w-4 text-gold" />
-                  <span>Navigation Style</span>
-                  <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
-                    نیویگیشن انداز
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-0">
-                {(['tabs', 'drawer', 'hybrid'] as NavLayoutPreference[]).map((layout) => (
-                  <button
-                    key={layout}
-                    type="button"
-                    onClick={() => handleNavLayoutChange(layout)}
-                    className={cn(
-                      'w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer',
-                      navLayout === layout
-                        ? 'border-gold bg-gold/15 text-white shadow-sm'
-                        : 'border-white/5 bg-black/20 text-gray-400'
-                    )}
-                  >
-                    <div>
-                      <span className="text-xs font-bold capitalize block">
-                        {layout === 'tabs' ? 'Modern Tabs (نیچے نیویگیشن بار)' : layout === 'drawer' ? 'Classic Drawer (مینو دراز)' : 'Hybrid Master (مشترکہ موڈ)'}
-                      </span>
-                      <span className="text-[10px] text-gray-400 block mt-0.5">
-                        {layout === 'tabs' ? 'Bottom bar with FAB' : layout === 'drawer' ? 'Slide-out drawer only' : 'Both tabs and drawer'}
-                      </span>
-                    </div>
-                    {navLayout === layout && <Check className="h-4 w-4 text-gold" />}
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
-            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+            <div className="h-32 w-full shrink-0" aria-hidden="true" />
           </div>
         )}
 
