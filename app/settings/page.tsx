@@ -102,6 +102,7 @@ import { isValidPakistaniPhone } from '@/lib/whatsapp';
 import { getCurrentUser, isSupabaseConfigured, updateCachedShop } from '@/lib/supabase/client';
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
 import { BarcodeRenderer } from '@/components/tailor/barcode-renderer';
+import { AppearanceCard } from '@/components/tailor/appearance-card';
 import {
   formatCurrency,
   formatInch,
@@ -1614,6 +1615,11 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
+                {/* Section 2.5: Appearance & Theme Switcher */}
+                <div className="border-b border-white/5 pb-4">
+                  <AppearanceCard compact />
+                </div>
+
                 {/* Section 3: Receipt Branding */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -2650,6 +2656,9 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Section 2.5: Appearance & Theme Settings */}
+              <AppearanceCard />
 
               {/* Section 3: Receipt Branding & Customer Messages */}
               <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">

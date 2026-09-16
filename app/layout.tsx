@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Noto_Sans_Arabic, Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/lib/theme-provider";
 import { NativeInitializer } from "@/components/platform/native-initializer";
 import { NotificationScheduler } from "@/components/platform/notification-scheduler";
 
@@ -62,10 +63,22 @@ export default function RootLayout({
       className={`${geistSans.variable} ${notoSansArabic.variable} ${notoNastaliqUrdu.variable} dark`}
       suppressHydrationWarning
     >
-      <body className="min-h-full w-full bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary overflow-x-hidden overflow-y-auto">
-        <NativeInitializer />
-        <NotificationScheduler />
-        {children}
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('silaye_theme');var d=document.documentElement;if(t==='light'){d.classList.add('light');d.classList.remove('dark');d.setAttribute('data-theme','light');}else{d.classList.add('dark');d.classList.remove('light');d.setAttribute('data-theme','dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body
+        className="min-h-full w-full bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary overflow-x-hidden overflow-y-auto"
+        suppressHydrationWarning
+      >
+        <ThemeProvider>
+          <NativeInitializer />
+          <NotificationScheduler />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

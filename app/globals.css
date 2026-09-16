@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  /* Default Theme: Obsidian Dark Mode */
+  /* Default Theme: Obsidian Dark Mode (Hex Constants for Legacy/Canvas) */
   --surface-obsidian-bg: #0B0C0E;
   --surface-obsidian-card: #141619;
   --surface-obsidian-card-elevated: #1B1E22;
@@ -11,6 +11,18 @@
   --surface-obsidian-border-subtle: #1C1F24;
   --surface-obsidian-text: #F4F1EA;
   --surface-obsidian-text-muted: #8E95A0;
+
+  /* RGB Channel Tokens (Dark Mode Baseline) */
+  --bg-app: 11 12 14;                 /* #0B0C0E */
+  --surface-card: 20 22 25;           /* #141619 */
+  --surface-card-elevated: 27 30 34;  /* #1B1E22 */
+  --surface-input: 18 20 24;          /* #121418 */
+  --border-card: 36 40 47;            /* #24282F */
+  --border-card-subtle: 28 31 36;     /* #1C1F24 */
+  --border-input: 36 40 47;           /* #24282F */
+  --text-primary: 244 241 234;        /* #F4F1EA */
+  --text-muted: 142 149 160;          /* #8E95A0 */
+  --accent-gold: 234 179 8;           /* #EAB308 */
 
   /* Surface Layers - Warm Raw Linen Mode */
   --surface-linen-bg: #F5F2EB;
@@ -36,27 +48,264 @@
   --status-udhaar-pending: #F43F5E;
 
   /* Default Active Semantic Mappings (Obsidian Dark) */
-  --background: var(--surface-obsidian-bg);
-  --foreground: var(--surface-obsidian-text);
-  --card: var(--surface-obsidian-card);
-  --card-foreground: var(--surface-obsidian-text);
-  --card-elevated: var(--surface-obsidian-card-elevated);
-  --popover: var(--surface-obsidian-card);
-  --popover-foreground: var(--surface-obsidian-text);
-  --primary: var(--accent-gold-primary);
-  --primary-foreground: #0B0C0E;
-  --secondary: var(--surface-obsidian-card-elevated);
-  --secondary-foreground: var(--surface-obsidian-text);
-  --muted: var(--surface-obsidian-border-subtle);
-  --muted-foreground: var(--surface-obsidian-text-muted);
-  --accent: var(--accent-gold-subtle);
-  --accent-foreground: var(--accent-gold-hover);
-  --destructive: var(--status-overdue);
-  --destructive-foreground: #F4F1EA;
-  --border: var(--surface-obsidian-border);
-  --border-subtle: var(--surface-obsidian-border-subtle);
-  --input: var(--surface-obsidian-border);
-  --ring: var(--accent-gold-primary);
+  --background: var(--bg-app);
+  --foreground: var(--text-primary);
+  --card: var(--surface-card);
+  --card-foreground: var(--text-primary);
+  --card-elevated: var(--surface-card-elevated);
+  --popover: var(--surface-card);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent-gold);
+  --primary-foreground: 17 24 39;
+  --secondary: var(--surface-card-elevated);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--border-card-subtle);
+  --muted-foreground: var(--text-muted);
+  --accent: 44 38 30;
+  --accent-foreground: var(--accent-gold);
+  --destructive: 239 68 68;
+  --destructive-foreground: 244 241 234;
+  --border: var(--border-card);
+  --border-subtle: var(--border-card-subtle);
+  --input: var(--border-input);
+  --ring: var(--accent-gold);
+}
+
+/* ============================================================================
+   Light Theme Non-Destructive Scoped Layer & Semantic Tokens
+   ============================================================================ */
+
+html.light,
+html[data-theme="light"],
+body.light,
+body[data-theme="light"] {
+  /* RGB Channel Tokens (Premium Matte Atelier Layer) */
+  --bg-app: 249 248 245;                /* #F9F8F5 Warm Matte Parchment */
+  --surface-card: 255 255 255;          /* #FFFFFF Matte Silk */
+  --surface-card-elevated: 243 242 236; /* #F3F2EC Warm Ledger Surface */
+  --surface-input: 243 242 236;         /* #F3F2EC Matte Input Fill */
+  --border-card: 229 224 216;           /* #E5E0D8 Warm Stone Border */
+  --border-card-subtle: 240 236 229;    /* #F0ECE5 Subtle Hairline */
+  --border-input: 213 208 197;          /* #D5D0C5 Tailor Chalk Border */
+  --text-primary: 24 24 27;             /* #18181B Deep Ink Charcoal */
+  --text-muted: 113 113 122;            /* #71717A Neutral Zinc Muted */
+  --accent-gold: 197 154 63;            /* #C59A3F Bespoke Tilla Gold */
+
+  /* Active Semantic Mappings */
+  --background: var(--bg-app);
+  --foreground: var(--text-primary);
+  --card: var(--surface-card);
+  --card-foreground: var(--text-primary);
+  --card-elevated: var(--surface-card-elevated);
+  --popover: var(--surface-card);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent-gold);
+  --primary-foreground: 24 24 27;
+  --secondary: var(--surface-card-elevated);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--surface-card-elevated);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--border-card);
+  --accent-foreground: var(--text-primary);
+  --destructive: 220 38 38;
+  --destructive-foreground: 255 255 255;
+  --border: var(--border-card);
+  --border-subtle: var(--border-card-subtle);
+  --input: var(--border-input);
+  --ring: var(--accent-gold);
+
+  background-color: #F9F8F5;
+  color: #18181B;
+}
+
+/* Scoped surface overrides for light mode */
+.light .premium-glass-card,
+[data-theme="light"] .premium-glass-card {
+  background: #FFFFFF;
+  border-top: 1px solid #E5E0D8;
+  border-left: 1px solid #E5E0D8;
+  border-right: 1px solid #E5E0D8;
+  border-bottom: 1px solid #E5E0D8;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.03), 0 4px 16px rgba(24, 24, 27, 0.04);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.light .bg-ambient-dark,
+[data-theme="light"] .bg-ambient-dark {
+  background-color: #F9F8F5;
+  background-image: radial-gradient(circle at 50% 0%, rgba(197, 154, 63, 0.06) 0%, transparent 60%);
+}
+
+.light header.sticky,
+[data-theme="light"] header.sticky {
+  background-color: rgba(249, 248, 245, 0.92);
+  border-bottom-color: #E5E0D8;
+}
+
+.light nav[aria-label="Mobile Navigation"],
+[data-theme="light"] nav[aria-label="Mobile Navigation"] {
+  background-color: rgba(255, 255, 255, 0.96);
+  border-top-color: #E5E0D8;
+  box-shadow: 0 -4px 16px rgba(24, 24, 27, 0.04);
+}
+
+.light nav[aria-label="Mobile Navigation"] .border-\[\#0B0C0E\] {
+  border-color: #F9F8F5;
+}
+
+.light input:not([type="checkbox"]):not([type="radio"]),
+.light textarea,
+.light select,
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background-color: #F3F2EC;
+  border-color: #D5D0C5;
+  color: #18181B;
+}
+
+.light input::placeholder,
+.light textarea::placeholder,
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #8E8A82;
+}
+
+/* Overrides for hardcoded dark surfaces in components */
+.light .bg-\[\#121418\],
+.light .bg-\[\#121418\]\/90,
+.light .bg-\[\#121418\]\/80,
+.light .bg-\[\#121418\]\/60,
+.light .bg-\[\#121418\]\/50,
+.light .bg-\[\#121316\],
+.light .bg-\[\#121316\]\/95,
+.light .bg-\[\#0B0C0E\]\/95,
+.light .bg-\[\#0B0C0E\]\/70,
+.light .bg-\[\#0B0C0E\]\/50,
+.light .bg-\[\#0B0C0E\]\/80,
+.light .bg-\[\#0B0C0E\],
+.light .bg-\[\#0E1013\]\/95,
+.light .bg-\[\#0F1115\]\/80,
+.light .bg-\[\#141619\] {
+  background-color: #FFFFFF;
+}
+
+.light .sticky.top-0 {
+  background-color: rgba(249, 248, 245, 0.95);
+  border-bottom-color: #E5E0D8;
+}
+
+.light .bg-black\/30,
+.light .bg-black\/40,
+.light .bg-\[\#0B0C0E\]\/40,
+.light .bg-white\/5,
+.light .bg-white\/\[0\.02\],
+.light .bg-white\/\[0\.04\],
+.light .bg-white\/\[0\.05\] {
+  background-color: #F3F2EC;
+}
+
+.light .border-white\/5,
+.light .border-white\/10,
+.light .border-white\/15,
+.light .border-white\/20,
+.light .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #E5E0D8;
+}
+
+.light .text-white {
+  color: #18181B;
+}
+
+.light .text-gray-200,
+.light .text-gray-300 {
+  color: #27272A;
+}
+
+.light .text-gray-400,
+.light .text-gray-500 {
+  color: #71717A;
+}
+
+/* High-contrast Urdu typography & bespoke gold calligraphic polish */
+.light .font-urdu-serif.text-gold,
+.light .font-urdu-serif.text-gold\/80,
+.light .font-urdu-serif.text-gold\/90,
+.light .font-urdu-serif.text-gold\/70,
+.light .font-urdu-sans.text-gold,
+.light .font-urdu-sans.text-gold\/80 {
+  color: #8A6B2D; /* Rich Antique Bronze Gold — 5.1:1 contrast on white */
+  font-weight: 600;
+}
+
+.light .text-gold {
+  color: #8A6B2D;
+}
+
+.light .text-gold\/80,
+.light .text-gold\/90 {
+  color: #8A6B2D;
+}
+
+.light .border-gold,
+.light .border-gold\/30,
+.light .border-gold\/50 {
+  border-color: #C59A3F;
+}
+
+/* High contrast WCAG tuning for status indicators on light surfaces */
+.light .text-emerald-400,
+.light .text-emerald-300 {
+  color: #059669;
+}
+
+.light .text-rose-400,
+.light .text-rose-300 {
+  color: #DC2626;
+}
+
+.light .text-amber-400,
+.light .text-amber-300 {
+  color: #D97706;
+}
+
+.light .text-cyan-400,
+.light .text-cyan-300 {
+  color: #0284C7;
+}
+
+.light .text-purple-400,
+.light .text-purple-300 {
+  color: #7C3AED;
+}
+
+/* Preserve gold accents and colored badges */
+.light .bg-gold,
+.light .bg-primary {
+  background-color: #C59A3F;
+  color: #18181B;
+}
+
+.light .bg-gold *,
+.light .bg-primary * {
+  color: inherit;
+}
+
+.light .bg-rose-500,
+.light .bg-destructive,
+.light .bg-emerald-500,
+.light .bg-red-500,
+.light .bg-blue-600 {
+  color: #FFFFFF;
+}
+
+.light .bg-rose-500 *,
+.light .bg-destructive *,
+.light .bg-emerald-500 *,
+.light .bg-red-500 *,
+.light .bg-blue-600 * {
+  color: inherit;
 }
 
 .theme-linen {
@@ -102,7 +351,6 @@
     margin: 0;
     padding: 0;
     background-color: #0B0C0E;
-    color: hsl(var(--foreground));
     overflow-x: hidden;
     overflow-y: auto;
     touch-action: pan-y;
