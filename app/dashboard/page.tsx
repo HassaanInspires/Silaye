@@ -27,7 +27,9 @@ import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
 import { ordersDb, customersDb, shopsDb } from '@/lib/db';
 import { isDemoMode, mockShop as defaultMockShop } from '@/lib/mock-data';
+import { useLanguage } from '@/lib/language-provider';
 import type { GarmentOrder, Customer, Shop, OrderStatus } from '@/types/tailor';
+
 
 // ---------------------------------------------------------------------------
 // Helper Mappings
@@ -59,8 +61,10 @@ const STAGE_BADGE_CONFIG: Record<
 };
 
 export default function DashboardPage() {
+  const { language, dir, t } = useLanguage();
   const [orders, setOrders] = React.useState<GarmentOrder[]>([]);
   const [customers, setCustomers] = React.useState<Customer[]>([]);
+
   const [shop, setShop] = React.useState<Shop | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
 
@@ -247,52 +251,52 @@ export default function DashboardPage() {
         {/* MOBILE VIEWPORT ONLY (md:hidden)                                 */}
         {/* ================================================================ */}
         <div className="block md:hidden space-y-3">
-          {/* Block 1: 64px Glance Strip with Luxury Top-Border Highlight */}
-          <div className="h-16 rounded-2xl border border-white/5 border-t border-t-white/10 bg-[#121418]/95 backdrop-blur-xl px-4 flex items-center justify-between shadow-lg">
+          {/* Block 1: Glance Strip with Tactile Border & Tonal Indicators */}
+          <div className="h-16 rounded-2xl border border-border bg-card px-3 sm:px-4 flex items-center justify-between shadow-sm">
             {/* Ready for Pickup */}
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
                 <CheckCircle2 className="h-4 w-4" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-urdu-sans text-[11px] font-bold text-emerald-300 leading-tight truncate" dir="rtl">
-                  تیار سوٹ
+                <span className={cn('text-[11px] font-bold text-emerald-700 dark:text-emerald-300 leading-tight truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.readySuits}
                 </span>
-                <span className="font-mono text-base font-bold text-emerald-400 truncate leading-none mt-0.5">
-                  {readyOrders.length} <span className="text-[10px] font-medium text-emerald-300/70 font-sans">Ready</span>
+                <span className="font-mono text-base font-bold text-emerald-600 dark:text-emerald-400 truncate leading-none mt-0.5">
+                  {readyOrders.length}
                 </span>
               </div>
             </div>
 
-            <div className="h-7 w-px bg-white/10 shrink-0 mx-1" />
+            <div className="h-7 w-px bg-border/60 shrink-0 mx-1" />
 
             {/* Suits in Progress */}
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 shrink-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 shrink-0">
                 <Scissors className="h-4 w-4" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-urdu-sans text-[11px] font-bold text-sky-300 leading-tight truncate" dir="rtl">
-                  ورکشاپ جاری
+                <span className={cn('text-[11px] font-bold text-sky-700 dark:text-sky-300 leading-tight truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.workshopActive}
                 </span>
-                <span className="font-mono text-base font-bold text-sky-400 truncate leading-none mt-0.5">
-                  {inProgressCount} <span className="text-[10px] font-medium text-sky-300/70 font-sans">Active</span>
+                <span className="font-mono text-base font-bold text-sky-600 dark:text-sky-400 truncate leading-none mt-0.5">
+                  {inProgressCount}
                 </span>
               </div>
             </div>
 
-            <div className="h-7 w-px bg-white/10 shrink-0 mx-1" />
+            <div className="h-7 w-px bg-border/60 shrink-0 mx-1" />
 
             {/* Total Udhaar Collectible */}
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 shrink-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
                 <Wallet className="h-4 w-4" />
               </div>
               <div className="flex flex-col items-end min-w-0">
-                <span className="font-urdu-sans text-[11px] font-bold text-rose-300 leading-tight truncate" dir="rtl">
-                  باقی ادھار
+                <span className={cn('text-[11px] font-bold text-rose-700 dark:text-rose-300 leading-tight truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.unsettledKhata}
                 </span>
-                <span className="font-mono text-base font-bold text-rose-400 truncate max-w-[90px] leading-none mt-0.5">
+                <span className="font-mono text-base font-bold text-rose-600 dark:text-rose-400 truncate max-w-[90px] leading-none mt-0.5">
                   Rs.{unsettledKhataTotal >= 10000 ? `${(unsettledKhataTotal / 1000).toFixed(1)}k` : unsettledKhataTotal.toLocaleString()}
                 </span>
               </div>
@@ -305,34 +309,34 @@ export default function DashboardPage() {
             <a href="/orders/new" className="block">
               <button
                 type="button"
-                className="w-full h-14 rounded-2xl bg-gold hover:bg-gold-hover text-[#0B0C0E] font-bold shadow-[0_0_20px_rgba(212,175,55,0.25)] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 cursor-pointer"
+                className="w-full h-14 rounded-2xl bg-gold hover:bg-gold-hover text-[#18181B] font-bold shadow-[0_4px_16px_rgba(197,154,63,0.3)] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 cursor-pointer border border-gold/40"
               >
                 <div className="flex items-center gap-1.5">
-                  <PlusCircle className="h-4 w-4 text-[#0B0C0E] shrink-0" />
-                  <span className="font-urdu-sans text-xs font-bold leading-tight" dir="rtl">
-                    نیا سوٹ بک کریں
+                  <PlusCircle className="h-4 w-4 text-[#18181B] shrink-0" />
+                  <span className={cn('text-xs font-bold leading-tight', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                    {t.bookNewSuit}
                   </span>
                 </div>
-                <span className="text-[10px] font-semibold text-[#0B0C0E]/85">
-                  + Book New Suit
+                <span className={cn('text-[10px] font-semibold text-[#18181B]/80', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.bookNewSuitSub}
                 </span>
               </button>
             </a>
 
-            {/* Glass Outline: Search Parchi */}
+            {/* Ghost Outline: Search Parchi */}
             <a href="/orders" className="block">
               <button
                 type="button"
-                className="w-full h-14 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 text-white font-semibold shadow-sm active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 backdrop-blur-md cursor-pointer"
+                className="w-full h-14 rounded-2xl border border-border bg-card hover:bg-muted/50 text-foreground font-semibold shadow-sm active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 backdrop-blur-md cursor-pointer"
               >
                 <div className="flex items-center gap-1.5">
                   <Search className="h-4 w-4 text-gold shrink-0" />
-                  <span className="font-urdu-sans text-xs font-bold leading-tight text-white" dir="rtl">
-                    گاہک و پرچی تلاش
+                  <span className={cn('text-xs font-bold leading-tight text-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                    {t.searchParchi}
                   </span>
                 </div>
-                <span className="text-[10px] text-gray-400 font-medium">
-                  Search Parchi
+                <span className={cn('text-[10px] text-muted-foreground font-medium', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.searchParchiSub}
                 </span>
               </button>
             </a>
@@ -342,32 +346,32 @@ export default function DashboardPage() {
           <div className="space-y-3 mt-4">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
-                <span className="font-urdu-serif text-sm font-bold text-white" dir="rtl">
-                  فوری ترسیلات
+                <span className={cn('text-sm font-bold text-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.urgentDeliveries}
                 </span>
-                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold text-amber-300">
-                  Urgent Deliveries
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-300">
+                  {t.urgentBadge}
                 </span>
               </div>
               <a
                 href="/orders"
-                className="inline-flex items-center gap-1 text-xs text-gold font-medium h-10 px-3 rounded-xl border border-gold/20 bg-gold/5 hover:bg-gold/15 transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-gold font-medium h-8 px-2.5 rounded-xl border border-gold/20 bg-gold/5 hover:bg-gold/15 transition-colors"
               >
-                <span>تمام آرڈرز</span>
-                <ChevronRight className="h-3.5 w-3.5" />
+                <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.allOrders}</span>
+                <ChevronRight className={cn('h-3.5 w-3.5 transition-transform', dir === 'rtl' ? 'rotate-180' : '')} />
               </a>
             </div>
 
             {urgentOrders.length === 0 ? (
-              <div className="p-5 rounded-2xl border border-white/5 bg-[#121418]/60 backdrop-blur-md text-center space-y-2 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+              <div className="p-5 rounded-2xl border border-border bg-card text-center space-y-2 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 mx-auto shadow-[0_0_15px_rgba(16,185,129,0.15)]">
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
-                <h4 className="text-sm font-semibold text-white font-urdu-serif leading-relaxed" dir="rtl">
-                  تمام شیڈول کلیئر ہے
+                <h4 className={cn('text-sm font-semibold text-foreground leading-relaxed', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.allCaughtUpTitle}
                 </h4>
-                <p className="text-xs text-muted-foreground">
-                  All Caught Up! No urgent suits due today.
+                <p className={cn('text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.allCaughtUpDesc}
                 </p>
               </div>
             ) : (
@@ -388,21 +392,21 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={order.id}
-                      className="premium-glass-card p-3.5 border-white/10 bg-[#121418] hover:border-gold/30 space-y-3 rounded-2xl shadow-lg transition-all"
+                      className="premium-glass-card p-3.5 border-border bg-card hover:border-gold/30 space-y-3 rounded-2xl shadow-sm transition-all"
                     >
                       {/* Top Row: Customer name, Order #, Due Date Urgency Badge */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-0.5 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-sm text-white truncate">
-                              {customer?.full_name || 'Walk-in Customer'}
+                            <span className="font-bold text-sm text-foreground truncate">
+                              {customer?.full_name || t.walkInCustomer}
                             </span>
                             <span className="font-mono text-xs font-bold text-gold shrink-0">
                               #{order.order_number}
                             </span>
                           </div>
-                          <div className="text-[11px] text-gray-400 font-mono">
-                            {customer?.phone || 'No phone'}
+                          <div className="text-[11px] text-muted-foreground font-mono">
+                            {customer?.phone || t.noPhone}
                           </div>
                         </div>
 
@@ -410,55 +414,55 @@ export default function DashboardPage() {
                           className={cn(
                             'shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-full border font-mono',
                             urgencyInfo.urgency === 'critical' || isDueToday
-                              ? 'border-amber-500/40 bg-amber-500/15 text-amber-300 animate-pulse'
+                              ? 'border-amber-500/40 bg-amber-500/15 text-amber-500 dark:text-amber-300 animate-pulse'
                               : order.delivery_date < todayStr
-                              ? 'border-rose-500/40 bg-rose-500/15 text-rose-300'
-                              : 'border-white/10 bg-white/5 text-gray-300'
+                              ? 'border-rose-500/40 bg-rose-500/15 text-rose-500 dark:text-rose-300'
+                              : 'border-border bg-muted/40 text-muted-foreground'
                           )}
                         >
-                          {isDueToday ? 'آج کی ڈلیوری' : order.delivery_date}
+                          {isDueToday ? t.dueTodayBadge : order.delivery_date}
                         </span>
                       </div>
 
                       {/* Specs & Stage / Balance Row */}
-                      <div className="flex items-center justify-between text-xs py-1.5 px-3 rounded-xl bg-white/[0.02] border border-white/5">
-                        <span className="text-gray-200 font-medium truncate">
-                          <bdi dir="ltr">{order.quantity}×</bdi> {garmentName} • {order.fabric_color || 'کپڑا'}
+                      <div className="flex items-center justify-between text-xs py-1.5 px-3 rounded-xl bg-muted/30 border border-border/50">
+                        <span className="text-foreground font-medium truncate">
+                          <bdi dir="ltr">{order.quantity}×</bdi> {garmentName} • {order.fabric_color || (language === 'ur' ? 'کپڑا' : 'Fabric')}
                         </span>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <Badge variant={stageConfig.variant} className="text-[10px] px-2 py-0.5">
-                            {stageConfig.label}
+                            {language === 'ur' && stageConfig.labelUrdu ? stageConfig.labelUrdu : stageConfig.label}
                           </Badge>
                           <span
                             className={cn(
                               'font-mono text-xs font-bold',
-                              order.balance_due === 0 ? 'text-emerald-400' : 'text-rose-400'
+                              order.balance_due === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                             )}
                           >
-                            {order.balance_due === 0 ? 'Paid' : `Rs. ${order.balance_due.toLocaleString()}`}
+                            {order.balance_due === 0 ? t.paidBadge : `Rs. ${order.balance_due.toLocaleString()}`}
                           </span>
                         </div>
                       </div>
 
                       {/* Action Buttons: 1-Tap WhatsApp, Print, and 1-Tap Advance */}
-                      <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                      <div className="flex items-center gap-2 pt-1 border-t border-border/50">
                         {/* 1-Tap WhatsApp Receipt/Alert Button (min 44px) */}
                         <button
                           type="button"
                           onClick={() => handleOpenWhatsApp(order)}
                           title="WhatsApp Alert"
-                          className="h-11 min-h-[44px] px-3.5 flex-1 rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 active:scale-95 transition-all text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                          className="h-11 min-h-[44px] px-3.5 flex-1 rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 active:scale-95 transition-all text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <MessageSquare className="h-4 w-4 shrink-0" />
-                          <span>رسید / WhatsApp</span>
+                          <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.receiptWhatsApp}</span>
                         </button>
 
                         {/* 1-Tap Print Button (min 44px) */}
                         <button
                           type="button"
                           onClick={() => handleOpenPrint(order)}
-                          title="Print Tag"
-                          className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:text-white flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer"
+                          title={t.printTag}
+                          className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl border border-border bg-card hover:bg-muted/50 text-muted-foreground hover:text-foreground flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer shadow-sm"
                         >
                           <Printer className="h-4 w-4" />
                         </button>
@@ -471,13 +475,15 @@ export default function DashboardPage() {
                             title={`Advance to ${nextInfo.labelEn}`}
                             className="h-11 min-h-[44px] px-3.5 flex-1 rounded-xl border border-gold/30 bg-gold/15 text-gold hover:bg-gold/25 active:scale-95 transition-all text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
                           >
-                            <span className="font-urdu-sans">{nextInfo.labelUrdu}</span>
-                            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                            <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>
+                              {language === 'ur' ? nextInfo.labelUrdu : `${nextInfo.labelEn} →`}
+                            </span>
+                            <ChevronRight className={cn('h-3.5 w-3.5 shrink-0 transition-transform', dir === 'rtl' ? 'rotate-180' : '')} />
                           </button>
                         ) : (
-                          <div className="h-11 min-h-[44px] px-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-semibold flex items-center justify-center gap-1">
+                          <div className="h-11 min-h-[44px] px-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center justify-center gap-1">
                             <CheckCircle2 className="h-3.5 w-3.5" />
-                            <span>مکمل شدہ</span>
+                            <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.completedStage}</span>
                           </div>
                         )}
                       </div>
@@ -488,6 +494,7 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
 
         {/* ================================================================ */}
         {/* DESKTOP VIEWPORT ONLY (hidden md:block)                          */}
@@ -501,25 +508,22 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2.5">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
               <span className="text-xs font-semibold tracking-widest uppercase text-gold">
-                Live Workshop Operations
+                {t.workshopOperations}
               </span>
               <span className="text-xs text-muted-foreground">
                 • {shop?.name || 'Master Workshop Counter'}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white flex items-center gap-3">
-              <span>Command Dashboard</span>
-              <span className="font-urdu-serif text-lg font-normal text-gold/80" dir="rtl">
-                ورکشاپ ڈیش بورڈ
-              </span>
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground flex items-center gap-3">
+              <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.commandDashboard}</span>
             </h1>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.02] px-3.5 py-2 text-xs text-gray-300 backdrop-blur-md">
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-muted-foreground shadow-sm">
               <Calendar className="h-3.5 w-3.5 text-gold" />
               <span>
-                {new Date().toLocaleDateString('en-GB', {
+                {new Date().toLocaleDateString(language === 'ur' ? 'ur-PK' : 'en-GB', {
                   weekday: 'short',
                   day: 'numeric',
                   month: 'short',
@@ -531,17 +535,17 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 border-white/10 bg-white/5 hover:bg-white/10 text-xs font-medium text-gray-200"
+                className="gap-1.5 border-border bg-card hover:bg-muted/50 text-xs font-medium text-foreground shadow-sm"
               >
-                <span>View Full Queue</span>
-                <ArrowUpRight className="h-3.5 w-3.5 text-gold" />
+                <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.viewFullQueue}</span>
+                <ArrowUpRight className={cn("h-3.5 w-3.5 text-gold transition-transform", dir === 'rtl' ? 'rotate-[-90deg]' : '')} />
               </Button>
             </a>
           </div>
         </div>
 
         {/* ------------------------------------------------------------------ */}
-        {/* FRESH WORKSHOP ZERO-MOCK CALLOUT (Obsidian Dark Glass)             */}
+        {/* FRESH WORKSHOP ZERO-MOCK CALLOUT                                   */}
         {/* ------------------------------------------------------------------ */}
         {!isLoading && orders.length === 0 && (
           <div className="premium-glass-card p-6 border-gold/30 bg-gradient-to-r from-gold/10 via-amber-500/5 to-transparent relative overflow-hidden shadow-[0_0_30px_rgba(212,175,55,0.1)]">
@@ -552,13 +556,12 @@ export default function DashboardPage() {
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-white">Workshop is Fresh & Ready</h3>
-                    <span className="font-urdu-serif text-sm text-gold" dir="rtl">
-                      ورکشاپ تیار ہے - نیا سوٹ بک کریں
-                    </span>
+                    <h3 className={cn("text-lg font-semibold text-foreground", language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                      {t.freshWorkshopTitle}
+                    </h3>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-300 max-w-2xl">
-                    Zero active production queue. Your ledger is clean and ready. Book your first bespoke suit to track cutting, stitching, and trial deadlines in real-time.
+                  <p className={cn("text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed", language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                    {t.freshWorkshopDesc}
                   </p>
                 </div>
               </div>
@@ -566,18 +569,16 @@ export default function DashboardPage() {
                 <Button
                   variant="default"
                   size="md"
-                  className="w-full sm:w-auto gap-2 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_25px_rgba(212,175,55,0.3)] transition-all hover:scale-[1.02]"
+                  className="w-full sm:w-auto gap-2 bg-gold text-[#18181B] hover:bg-gold-hover font-semibold shadow-[0_4px_16px_rgba(197,154,63,0.3)] transition-all hover:scale-[1.02]"
                 >
                   <PlusCircle className="h-4 w-4" />
-                  <span>Book First Suit</span>
-                  <span className="font-urdu-sans text-xs font-normal opacity-80" dir="rtl">
-                    پہلا آرڈر
-                  </span>
+                  <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.bookFirstSuit}</span>
                 </Button>
               </a>
             </div>
           </div>
         )}
+
 
         {/* ------------------------------------------------------------------ */}
         {/* 2. TOP KPI METRICS RIBBON (2-Cols Mobile / 4-Cols Desktop Grid)     */}

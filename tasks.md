@@ -574,4 +574,13 @@
     - `scripts/verify_db.ts`: 159/159 assertions passed.
     - Captured 8 live mobile audit screenshots (including Khata Ledger and Production Orders Queue).
 
+---
+
+## Phase 24: Atelier Light Theme Polish & BiDi Language Architecture
+- [x] 24.1 Create `LanguageProvider` (`lib/language-provider.tsx`) and Dashboard Translation Dictionary (`lib/i18n/translations.ts`).
+- [x] 24.2 Root Layout Integration & Zero-FOUC Pre-Hydration Script (`app/layout.tsx`).
+- [x] 24.3 BiDi Mobile Header with 1-Tap `[اردو | EN]` Switcher & Direction-Aware Layout (`components/layout/app-shell.tsx`).
+- [x] 24.4 Direction-Aware Mobile Bottom Navigation & Burnished Gold FAB (`components/layout/mobile-bottom-nav.tsx`).
+- [x] 24.5 Home Dashboard Overhaul: Truncation Elimination, Atelier Light Theme Palette, and Balanced CTAs (`app/dashboard/page.tsx`, `app/globals.css`).
+- [x] 24.6 Full Verification Suite (`npx tsc --noEmit`, `scripts/verify_db.ts`, `npm run build`) and Walkthrough Artifact.
 

@@ -9,6 +9,7 @@ import {
   type NavLayoutPreference,
   NAV_LAYOUT_CHANGED_EVENT,
 } from '@/lib/nav-preferences';
+import { useLanguage } from '@/lib/language-provider';
 
 export interface MobileBottomNavProps {
   activeRoute?: string;
@@ -29,7 +30,7 @@ const MOBILE_TABS_LEFT: ReadonlyArray<MobileTabItem> = [
 
 const MOBILE_TABS_RIGHT: ReadonlyArray<MobileTabItem> = [
   { icon: BookOpen, label: 'Khata', labelUrdu: 'کھاتہ', route: '/khata' },
-  { icon: Settings, label: 'More', labelUrdu: 'سیٹنگز', route: '/settings' },
+  { icon: Settings, label: 'Settings', labelUrdu: 'سیٹنگز', route: '/settings' },
 ];
 
 /**
@@ -44,7 +45,6 @@ function isTabActive(tabRoute: string, currentPath: string): boolean {
     return normalized === '/dashboard';
   }
   if (target === '/orders') {
-    // Active for /orders or subpaths, but NOT /orders/new (which belongs to the elevated FAB)
     return normalized === '/orders' || (normalized.startsWith('/orders/') && normalized !== '/orders/new');
   }
   if (target === '/khata') {
@@ -57,6 +57,7 @@ function isTabActive(tabRoute: string, currentPath: string): boolean {
 }
 
 export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNavProps) {
+  const { language, t } = useLanguage();
   const [mountedPath, setMountedPath] = React.useState<string>(activeRoute);
   const [layoutState, setLayoutState] = React.useState<NavLayoutPreference>(
     () => navLayout || 'tabs'
@@ -100,6 +101,7 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
         {MOBILE_TABS_LEFT.map((tab) => {
           const isActive = isTabActive(tab.route, currentPath);
           const Icon = tab.icon;
+          const label = language === 'ur' ? tab.labelUrdu : tab.label;
 
           return (
             <Link
@@ -110,18 +112,23 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
                 'flex flex-col items-center justify-center min-w-[54px] min-h-[48px] px-1 py-1 rounded-xl transition-all duration-200 group',
                 isActive
                   ? 'text-gold bg-gold/10 border border-gold/20 shadow-[0_0_12px_rgba(212,175,55,0.15)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/[0.04] border border-transparent'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04] border border-transparent'
               )}
             >
               <Icon
                 className={cn(
                   'h-5 w-5 transition-transform duration-200',
-                  isActive ? 'text-gold scale-110' : 'text-gray-400 group-hover:text-gray-200'
+                  isActive ? 'text-gold scale-110' : 'text-muted-foreground group-hover:text-foreground'
                 )}
               />
               <span className="flex items-center gap-0.5 mt-0.5">
-                <span className="font-urdu-sans text-[11px] leading-none" dir="rtl">
-                  {tab.labelUrdu}
+                <span
+                  className={cn(
+                    'text-[11px] font-semibold leading-none',
+                    language === 'ur' ? 'font-urdu-sans' : 'font-sans'
+                  )}
+                >
+                  {label}
                 </span>
               </span>
               {isActive ? (
@@ -133,30 +140,30 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
           );
         })}
 
-        {/* Center Slot: Elevated Gold Action FAB */}
+        {/* Center Slot: Elevated Burnished Gold Action FAB */}
         <div className="flex flex-col items-center justify-center relative min-w-[54px]">
           <Link
             href="/orders/new"
-            aria-label="Book New Suit / نیا سوٹ بک کریں"
-            title="Book New Suit / نیا سوٹ بک کریں"
+            aria-label={language === 'ur' ? 'نیا سوٹ بک کریں' : 'Book New Suit'}
+            title={language === 'ur' ? 'نیا سوٹ بک کریں' : 'Book New Suit'}
             className={cn(
               '-translate-y-4 h-14 w-14 rounded-full',
-              'bg-gradient-to-tr from-gold via-amber-400 to-amber-500 text-black',
-              'flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.4)]',
-              'border-4 border-[#0B0C0E] active:scale-95 transition-all duration-200',
-              isFabActive && 'ring-2 ring-gold shadow-[0_0_30px_rgba(212,175,55,0.6)] scale-105'
+              'bg-gradient-to-tr from-[#C59A3F] via-[#D4AF37] to-[#B38A34] text-[#18181B]',
+              'flex items-center justify-center shadow-[0_4px_20px_rgba(197,154,63,0.35)]',
+              'border-4 border-background active:scale-95 transition-all duration-200',
+              isFabActive && 'ring-2 ring-gold shadow-[0_0_25px_rgba(212,175,55,0.6)] scale-105'
             )}
           >
-            <Plus className="h-6 w-6 stroke-[2.5] text-[#0B0C0E]" />
+            <Plus className="h-6 w-6 stroke-[2.5] text-[#18181B]" />
           </Link>
           <span
             className={cn(
-              'font-urdu-sans text-[10px] font-semibold -mt-3 transition-colors',
-              isFabActive ? 'text-gold' : 'text-gray-400'
+              'text-[10px] font-bold -mt-3 transition-colors',
+              language === 'ur' ? 'font-urdu-sans' : 'font-sans',
+              isFabActive ? 'text-gold' : 'text-muted-foreground'
             )}
-            dir="rtl"
           >
-            نیا سوٹ
+            {t.navNewSuit}
           </span>
         </div>
 
@@ -164,6 +171,7 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
         {MOBILE_TABS_RIGHT.map((tab) => {
           const isActive = isTabActive(tab.route, currentPath);
           const Icon = tab.icon;
+          const label = language === 'ur' ? tab.labelUrdu : tab.label;
 
           return (
             <Link
@@ -174,18 +182,23 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
                 'flex flex-col items-center justify-center min-w-[54px] min-h-[48px] px-1 py-1 rounded-xl transition-all duration-200 group',
                 isActive
                   ? 'text-gold bg-gold/10 border border-gold/20 shadow-[0_0_12px_rgba(212,175,55,0.15)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/[0.04] border border-transparent'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04] border border-transparent'
               )}
             >
               <Icon
                 className={cn(
                   'h-5 w-5 transition-transform duration-200',
-                  isActive ? 'text-gold scale-110' : 'text-gray-400 group-hover:text-gray-200'
+                  isActive ? 'text-gold scale-110' : 'text-muted-foreground group-hover:text-foreground'
                 )}
               />
               <span className="flex items-center gap-0.5 mt-0.5">
-                <span className="font-urdu-sans text-[11px] leading-none" dir="rtl">
-                  {tab.labelUrdu}
+                <span
+                  className={cn(
+                    'text-[11px] font-semibold leading-none',
+                    language === 'ur' ? 'font-urdu-sans' : 'font-sans'
+                  )}
+                >
+                  {label}
                 </span>
               </span>
               {isActive ? (
@@ -202,3 +215,4 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
 }
 
 export default MobileBottomNav;
+

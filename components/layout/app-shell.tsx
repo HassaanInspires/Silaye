@@ -44,6 +44,7 @@ import { syncCoordinator, type SyncState } from '@/lib/sync-coordinator';
 import { syncEngine, useSyncStatus } from '@/lib/sync/sync-engine';
 import { adminDb, shopsDb } from '@/lib/db';
 import { useTheme } from '@/lib/theme-provider';
+import { useLanguage } from '@/lib/language-provider';
 import type { PlanTier, Shop, SubscriptionStatus } from '@/types/tailor';
 import {
   getSession,
@@ -99,6 +100,7 @@ function toUrduDigits(num: number): string {
 
 function ConnectionPill() {
   const { isOnline, isSyncing, pendingCount } = useSyncStatus();
+  const { language, t } = useLanguage();
 
   const handleManualSync = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -121,15 +123,14 @@ function ConnectionPill() {
         title="Syncing pending orders with server..."
       >
         <RefreshCw className="h-3 w-3 animate-spin text-gold" aria-hidden="true" />
-        <span className="font-urdu-serif font-bold text-xs" dir="rtl">
-          🔄 <span className="hidden sm:inline">ہم آہنگ ہو رہا ہے...</span>
+        <span className={cn('font-bold text-xs', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+          {t.syncing}
         </span>
-        <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• Syncing</span>
       </div>
     );
   }
 
-  // 2. Offline with Pending Records: [ ⚡ ۳ آرڈرز مقامی محفوظ • 3 Pending Sync ]
+  // 2. Offline with Pending Records
   if (!isOnline && pendingCount > 0) {
     return (
       <div
@@ -143,10 +144,9 @@ function ConnectionPill() {
         title={`${pendingCount} order(s) saved locally in Dexie. Will sync automatically when online.`}
       >
         <Zap className="h-3 w-3 text-amber-400 fill-amber-400/30" aria-hidden="true" />
-        <span className="font-urdu-serif font-bold text-xs" dir="rtl">
-          ⚡ {toUrduDigits(pendingCount)} <span className="hidden sm:inline">آرڈرز مقامی محفوظ</span>
+        <span className={cn('font-bold text-xs', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+          {language === 'ur' ? `⚡ ${toUrduDigits(pendingCount)} ${t.pendingSync}` : `⚡ ${pendingCount} ${t.pendingSync}`}
         </span>
-        <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• {pendingCount} Pending Sync</span>
       </div>
     );
   }
@@ -165,8 +165,9 @@ function ConnectionPill() {
         title="Working offline. All changes saved locally in Dexie."
       >
         <WifiOff className="h-3 w-3 text-amber-400" aria-hidden="true" />
-        <span className="font-urdu-serif font-bold text-xs" dir="rtl">آف لائن</span>
-        <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• Offline</span>
+        <span className={cn('font-bold text-xs', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+          {t.offline}
+        </span>
       </div>
     );
   }
@@ -186,15 +187,14 @@ function ConnectionPill() {
         title="Click to synchronize pending orders now"
       >
         <RefreshCw className="h-3 w-3 text-gold" aria-hidden="true" />
-        <span className="font-urdu-serif font-bold text-xs" dir="rtl">
-          ہم آہنگ کریں ({toUrduDigits(pendingCount)})
+        <span className={cn('font-bold text-xs', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+          {language === 'ur' ? `ہم آہنگ کریں (${toUrduDigits(pendingCount)})` : `Sync (${pendingCount})`}
         </span>
-        <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• Sync ({pendingCount})</span>
       </button>
     );
   }
 
-  // 5. Clean Online State ([ 🟢 آن لائن • Online ])
+  // 5. Clean Online State ([ 🟢 آن لائن ] or [ 🟢 Online ])
   return (
     <div
       className={cn(
@@ -207,11 +207,13 @@ function ConnectionPill() {
       title="All orders synchronized with cloud"
     >
       <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
-      <span className="font-urdu-serif font-bold text-xs" dir="rtl">آن لائن</span>
-      <span className="text-[10px] opacity-80 font-sans hidden sm:inline">• Online</span>
+      <span className={cn('font-bold text-xs', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+        {t.online}
+      </span>
     </div>
   );
 }
+
 
 // ---------------------------------------------------------------------------
 // Sidebar nav item
@@ -276,7 +278,9 @@ export const isPublicRoute = (path: string): boolean => {
 export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   const router = useRouter();
   const { theme, setTheme, isMounted } = useTheme();
+  const { language, toggleLanguage, dir, t } = useLanguage();
   const effectiveTheme = isMounted ? theme : 'dark';
+
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState<boolean>(false);
   const [searchValue, setSearchValue] = React.useState<string>('');
   // Fast hydration: initialize currentUser directly from local cache if available
@@ -1022,7 +1026,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 <Input
                   ref={mobileSearchRef}
                   type="search"
-                  placeholder="Search customer, order…"
+                  placeholder={t.searchPlaceholder}
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
                   leftIcon={<Search className="h-4 w-4 text-gold" />}
@@ -1044,7 +1048,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
             </div>
           ) : (
             <div className="flex md:hidden items-center justify-between w-full h-14 min-h-14 px-3.5">
-              {/* Mobile Left: Hamburger (Drawer/Hybrid) or Gold Scissors (Tabs) */}
+              {/* Mobile Start: Hamburger (Drawer/Hybrid) or Gold Scissors (Tabs) */}
               <div className="flex items-center gap-2 shrink-0">
                 {navLayout === 'drawer' || navLayout === 'hybrid' ? (
                   <button
@@ -1066,13 +1070,13 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
 
               {/* Mobile Center: Workshop Name + Ambient Sync Pill */}
               <div className="flex items-center justify-center min-w-0 px-1.5 flex-1 gap-1.5">
-                <span className="text-xs sm:text-sm font-semibold text-white truncate max-w-[125px] sm:max-w-[180px]">
+                <span className="text-xs sm:text-sm font-semibold text-foreground truncate max-w-[125px] sm:max-w-[180px]">
                   {shopName}
                 </span>
                 <ConnectionPill />
               </div>
 
-              {/* Mobile Right: Compact Touch Actions [🔍 Search], [☀️/🌙 Theme], and [🔔 Notification] */}
+              {/* Mobile End: Compact Touch Actions [🔍 Search], [🌐 Language], [☀️/🌙 Theme], and [🔔 Notification] */}
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
@@ -1083,6 +1087,26 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 >
                   <Search className="h-3.5 w-3.5" />
                 </button>
+
+                {/* 1-Tap Language Quick Switcher [اردو / EN] */}
+                <button
+                  type="button"
+                  onClick={toggleLanguage}
+                  className={cn(
+                    'flex h-8 px-2 items-center justify-center rounded-xl border transition-all cursor-pointer text-xs font-bold shrink-0',
+                    effectiveTheme === 'light'
+                      ? 'border-border bg-card text-foreground hover:border-gold/50 shadow-sm'
+                      : 'border-white/10 bg-white/5 text-gray-200 hover:border-gold/40 hover:text-gold'
+                  )}
+                  aria-label="Toggle language between Urdu and English"
+                  title={language === 'ur' ? 'Switch to English' : 'اردو میں تبدیل کریں'}
+                >
+                  <span className={cn('text-[11px] font-bold tracking-tight', language === 'ur' ? 'font-sans' : 'font-urdu-sans')}>
+                    {language === 'ur' ? 'EN' : 'اردو'}
+                  </span>
+                </button>
+
+                {/* Theme Switcher */}
                 <button
                   type="button"
                   onClick={() => setTheme(effectiveTheme === 'light' ? 'dark' : 'light')}
@@ -1096,6 +1120,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                     <Sun className="h-3.5 w-3.5 text-gold" />
                   )}
                 </button>
+
                 <a
                   href="/settings"
                   className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-gold transition-colors cursor-pointer"
@@ -1116,7 +1141,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
               <Input
                 ref={searchRef}
                 type="search"
-                placeholder="Search customer, order… ( / )"
+                placeholder={t.searchPlaceholder}
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 leftIcon={<Search className="h-4 w-4" />}
@@ -1127,6 +1152,24 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
 
             <div className="flex items-center gap-3">
               <ConnectionPill />
+
+              {/* Desktop Language Switcher */}
+              <button
+                type="button"
+                onClick={toggleLanguage}
+                className={cn(
+                  'flex h-9 px-3 items-center justify-center rounded-xl border transition-all cursor-pointer text-xs font-bold shrink-0',
+                  effectiveTheme === 'light'
+                    ? 'border-border bg-card text-foreground hover:border-gold/50 shadow-sm'
+                    : 'border-white/10 bg-white/5 text-gray-200 hover:border-gold/40 hover:text-gold'
+                )}
+                aria-label="Toggle language between Urdu and English"
+                title={language === 'ur' ? 'Switch to English' : 'اردو میں تبدیل کریں'}
+              >
+                <span className={cn('text-xs font-bold tracking-tight', language === 'ur' ? 'font-sans' : 'font-urdu-sans')}>
+                  {language === 'ur' ? 'English (EN)' : 'اردو (UR)'}
+                </span>
+              </button>
 
               <button
                 type="button"
@@ -1154,6 +1197,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
               </a>
             </div>
           </div>
+
         </header>
 
         {/* Scrollable Main Viewport */}

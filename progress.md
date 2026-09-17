@@ -3289,7 +3289,51 @@
   - `walkthrough.md` [MODIFIED]
 
 * **Next Immediate Task:**
-  - Phase 24: Production Mobile APK Packaging & Android Hardware Bar Verification.
+  - Phase 24: Atelier Light Theme Polish & BiDi Language Architecture (Completed).
+
+---
+
+## Phase 24: Atelier Light Theme Polish & BiDi Language Architecture (Completed)
+* **Date:** 2026-09-17
+* **Git Branch:** `feat/home-light-theme-bidi`
+* **Tasks Completed:**
+  - `24.1` Created `LanguageProvider` (`lib/language-provider.tsx`) and Dashboard Translation Dictionary (`lib/i18n/translations.ts`):
+    * Provided reactive hook `useLanguage()` managing `language: 'ur' | 'en'`, `dir: 'rtl' | 'ltr'`, and strongly-typed dictionary `t`.
+    * Stored preference in `localStorage.getItem('silaye_language')` with multi-tab storage listener.
+  - `24.2` Root Layout Integration & Zero-FOUC Pre-Hydration Script (`app/layout.tsx`):
+    * Synchronously reads `silaye_language` and applies `dir="rtl" | "ltr"` and `lang="ur" | "en"` in `<head>` before initial paint, eliminating layout flicker.
+    * Wrapped component tree with `<LanguageProvider>`.
+  - `24.3` BiDi Mobile Header with 1-Tap `[اردو | EN]` Switcher & Direction-Aware Layout (`components/layout/app-shell.tsx`):
+    * Added 1-tap `[اردو | EN]` language toggle pill in both mobile and desktop command headers.
+    * Dynamically localized `ConnectionPill` to single-language status (`آن لائن` / `Online`, `آف لائن` / `Offline`, `ہم آہنگ ہو رہا ہے...` / `Syncing...`).
+    * Localized search placeholders and shop headers.
+  - `24.4` Direction-Aware Mobile Bottom Navigation & Burnished Gold FAB (`components/layout/mobile-bottom-nav.tsx`):
+    * Dynamically localized all navigation tabs (`ہوم`, `آرڈرز`, `کھاتہ`, `سیٹنگز` / `Home`, `Orders`, `Khata`, `Settings`).
+    * Refined elevated FAB with lustrous burnished bullion gradient (`from-[#C59A3F] via-[#D4AF37] to-[#B38A34]`), high-contrast obsidian charcoal icon (`#18181B`), and localized sub-label (`نیا سوٹ` / `New Suit`).
+  - `24.5` Home Dashboard Overhaul: Truncation Elimination, Atelier Light Theme Palette, and Balanced CTAs (`app/dashboard/page.tsx`, `app/globals.css`):
+    * Overhauled Glance Strip (Block 1): Eliminated stacked dual-language text, completely solving the `0 Rea...` and `ورکشاپ جا...` truncation bugs across all mobile screen widths.
+    * Overhauled Quick Actions (Block 2): Replaced muddy flat mustard with lustrous bullion metallic gold gradient and balanced with crisp ghost search card.
+    * Overhauled Urgent Deliveries & Empty State (Block 3): Streamlined empty state card from 260px down to 130px, eliminating the massive empty void while adding direction-aware chevron rotation in RTL.
+    * Enhanced `.light .bg-gold` in `app/globals.css` with a radiant metallic gradient (`135deg, #D4AF37 0%, #C59A3F 50%, #B38A34 100%`).
+  - `24.6` Full Verification Suite:
+    * `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    * `scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+    * `npm run build`: 28/28 static export routes compiled cleanly into `out/`.
+
+* **Active File Changes:**
+  - `lib/i18n/translations.ts` [NEW]
+  - `lib/language-provider.tsx` [NEW]
+  - `app/layout.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `components/layout/mobile-bottom-nav.tsx` [MODIFIED]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `app/globals.css` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Next Immediate Task:**
+  - Review live mobile experience with user on `feat/home-light-theme-bidi`.
+
 
 
 

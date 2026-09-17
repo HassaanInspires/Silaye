@@ -328,7 +328,7 @@ body[data-theme="light"] {
 /* Preserve gold accents and colored badges */
 .light .bg-gold,
 .light .bg-primary {
-  background-color: #C59A3F;
+  background: linear-gradient(135deg, #D4AF37 0%, #C59A3F 50%, #B38A34 100%);
   color: #18181B;
 }
 
@@ -336,6 +336,7 @@ body[data-theme="light"] {
 .light .bg-primary * {
   color: inherit;
 }
+
 
 .light .bg-rose-500,
 .light .bg-destructive,
