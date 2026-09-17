@@ -10,33 +10,68 @@ export const DASHBOARD_I18N = {
     offline: 'آف لائن',
     syncing: 'ہم آہنگ ہو رہا ہے...',
     pendingSync: 'مقامی محفوظ',
+    workspaceNav: 'ورکشاپ مینو',
+    superAdmin: 'سپر ایڈمن',
+    adminPanel: 'ایڈمن پینل',
+    signOut: 'لاگ آؤٹ',
+    authenticatedWorkshop: 'تصدیق شدہ ورکشاپ',
+    masterCounter: 'ماسٹر کاؤنٹر',
 
     // Mobile & Desktop Stats (Block 1)
     readySuits: 'تیار سوٹ',
     readySub: 'ڈلیوری تیار',
-    workshopActive: 'ورکشاپ جاری',
+    workshopActive: 'ورکشاپ',
     workshopSub: 'سلائی و کٹائی',
     unsettledKhata: 'باقی ادھار',
     udhaarSub: 'وصولی باقی',
     activeQueue: 'زیر تکمیل',
+    ordersInFlow: 'جاری آرڈرز',
+    totalValue: 'کل مالیت',
+    cut: 'کٹائی',
+    stitch: 'سلائی',
     dueToday: 'آج کی ڈلیوری',
+    suitsScheduled: 'شیڈول سوٹ',
+    dueValue: 'آج کی رقم',
+    scheduleClearToday: 'شیڈول کلیئر ہے',
+    readyForPickup: 'ڈلیوری کے لیے تیار',
     overdueAlert: 'تاخیر شدہ',
+    delayed: 'تاخیر',
+    allOnSchedule: 'تمام شیڈول پر ہیں',
+    debtors: 'گاہک',
+    clients: 'گاہک',
+    viewKhata: 'کھاتہ دیکھیں',
 
-    // Quick Actions (Block 2)
+    // Quick Actions (Block 2 & Desktop)
     bookNewSuit: 'نیا سوٹ بک کریں',
     bookNewSuitSub: 'ناپ اور پرچی اندراج',
     searchParchi: 'گاہک و پرچی تلاش',
     searchParchiSub: 'آرڈر نمبر یا فون سے',
+    quickCounterActions: 'فوری کاؤنٹر ایکشنز',
+    quickActionsSub: 'ورکشاپ ریسپشن شارٹ کٹس',
+    findCustomer: 'گاہک تلاش کریں',
+    printCounter: 'پرنٹ کاؤنٹر',
 
-    // Urgent Deliveries Feed (Block 3)
+    // Urgent Deliveries Feed (Block 3 & Desktop Watchlist)
     urgentDeliveries: 'فوری ترسیلات',
+    urgentWatchlistTitle: 'فوری ترسیلات واچ لسٹ',
     urgentBadge: 'ارجنٹ آرڈرز',
+    dueTodayTomorrow: 'آج اور کل کی ڈلیوری',
+    urgentWatchlistSub: 'فوری توجہ کے حامل ترجیحی آرڈرز',
+    viewAllOrdersQueue: 'تمام آرڈرز کیو دیکھیں',
     allOrders: 'تمام آرڈرز',
     allCaughtUpTitle: 'تمام شیڈول کلیئر ہے',
     allCaughtUpDesc: 'آج کی تاریخ میں کوئی فوری سوٹ واجب الادا نہیں ہے۔ ورکشاپ شیڈول مکمل ہے۔',
     freshWorkshopTitle: 'ورکشاپ تیار ہے - پہلا سوٹ بک کریں',
     freshWorkshopDesc: 'پروڈکشن کیو خالی ہے۔ کسٹمر کا ناپ اور پرچی درج کر کے لائیو ورکشاپ ٹریکنگ شروع کریں۔',
     bookFirstSuit: 'پہلا سوٹ بک کریں',
+
+    // Table Columns
+    thOrderNum: 'آرڈر #',
+    thCustomer: 'گاہک کی تفصیلات',
+    thGarment: 'لباس اور کپڑا',
+    thStage: 'مرحلہ',
+    thBalanceDue: 'باقی رقم',
+    thActions: 'ایکشنز',
 
     // Order Feed Card items
     walkInCustomer: 'واک ان گاہک',
@@ -68,6 +103,12 @@ export const DASHBOARD_I18N = {
     offline: 'Offline',
     syncing: 'Syncing...',
     pendingSync: 'Saved locally',
+    workspaceNav: 'Workspace',
+    superAdmin: 'Super Admin',
+    adminPanel: 'Admin Panel',
+    signOut: 'Sign Out',
+    authenticatedWorkshop: 'Authenticated Workshop',
+    masterCounter: 'Master Counter',
 
     // Mobile & Desktop Stats (Block 1)
     readySuits: 'Ready Suits',
@@ -77,24 +118,53 @@ export const DASHBOARD_I18N = {
     unsettledKhata: 'Receivables',
     udhaarSub: 'Pending collection',
     activeQueue: 'Active Queue',
+    ordersInFlow: 'Orders in Flow',
+    totalValue: 'Total Value',
+    cut: 'Cut',
+    stitch: 'Stitch',
     dueToday: 'Due Today',
+    suitsScheduled: 'Suits Scheduled',
+    dueValue: 'Due Value',
+    scheduleClearToday: 'Schedule Clear Today',
+    readyForPickup: 'Ready for Final Pickup',
     overdueAlert: 'Overdue',
+    delayed: 'Delayed',
+    allOnSchedule: 'All On Schedule',
+    debtors: 'Debtors',
+    clients: 'Clients',
+    viewKhata: 'View Khata',
 
-    // Quick Actions (Block 2)
+    // Quick Actions (Block 2 & Desktop)
     bookNewSuit: 'Book New Suit',
     bookNewSuitSub: 'Intake & print slip',
     searchParchi: 'Search Parchi',
     searchParchiSub: 'Find by order # or phone',
+    quickCounterActions: 'Quick Counter Actions',
+    quickActionsSub: '1-Tap triggers for workshop reception',
+    findCustomer: 'Find Customer',
+    printCounter: 'Print Counter',
 
-    // Urgent Deliveries Feed (Block 3)
+    // Urgent Deliveries Feed (Block 3 & Desktop Watchlist)
     urgentDeliveries: 'Urgent Deliveries',
+    urgentWatchlistTitle: 'Urgent Deliveries Watchlist',
     urgentBadge: 'High Priority',
+    dueTodayTomorrow: 'Due Today & Tomorrow',
+    urgentWatchlistSub: 'Priority orders requiring immediate workshop attention',
+    viewAllOrdersQueue: 'View All Orders in Queue',
     allOrders: 'All Orders',
     allCaughtUpTitle: 'All Caught Up!',
     allCaughtUpDesc: 'No urgent suits due today. Workshop is completely on schedule.',
     freshWorkshopTitle: 'Workshop is Fresh & Ready',
     freshWorkshopDesc: 'Zero active production queue. Book your first bespoke suit to track cutting, stitching, and trial deadlines.',
     bookFirstSuit: 'Book First Suit',
+
+    // Table Columns
+    thOrderNum: 'Order #',
+    thCustomer: 'Customer Details',
+    thGarment: 'Garment & Fabric',
+    thStage: 'Production Stage',
+    thBalanceDue: 'Balance Due',
+    thActions: 'Quick Actions',
 
     // Order Feed Card items
     walkInCustomer: 'Walk-in Customer',
@@ -121,4 +191,3 @@ export const DASHBOARD_I18N = {
 
 export type TranslationKey = keyof typeof DASHBOARD_I18N.ur;
 export type DashboardTranslations = Record<TranslationKey, string>;
-

@@ -583,4 +583,10 @@
 - [x] 24.4 Direction-Aware Mobile Bottom Navigation & Burnished Gold FAB (`components/layout/mobile-bottom-nav.tsx`).
 - [x] 24.5 Home Dashboard Overhaul: Truncation Elimination, Atelier Light Theme Palette, and Balanced CTAs (`app/dashboard/page.tsx`, `app/globals.css`).
 - [x] 24.6 Full Verification Suite (`npx tsc --noEmit`, `scripts/verify_db.ts`, `npm run build`) and Walkthrough Artifact.
+- [x] 24.7 True 10/10 Polish & Desktop BiDi Unification:
+  * **Glance Strip Truncation Elimination (`app/dashboard/page.tsx`, `lib/i18n/translations.ts`)**: Scaled metric icons to `h-7 w-7` (`28px`), calibrated inner padding to `px-2.5 sm:px-4`, and streamlined Urdu/English tokens (`ورکشاپ` / `Workshop`, `تیار سوٹ` / `Ready Suits`, `باقی ادھار` / `Receivables`), achieving 100% zero-truncation across mobile devices down to 360px.
+  * **Desktop Sidebar Single-Language Refactor (`components/layout/app-shell.tsx`)**: Replaced dual-language stacked labels in `SidebarItem` with context-aware single-language rendering (`t.workspaceNav`, clean Urdu titles in RTL, English in LTR). Stripped dual stacking from Sign Out and Admin buttons.
+  * **Desktop KPI Ribbon & Watchlist Localized (`app/dashboard/page.tsx`)**: Unified desktop KPI cards (Active Queue, Due Today, Overdue, Receivables), Quick Counter Actions, Watchlist header, and table empty states into strongly-typed single-language dictionaries.
+  * **Verification & Live Screenshots**: 0 TypeScript errors (`npx tsc --noEmit`), 159/159 database assertions passing (`scripts/verify_db.ts`), 28/28 Next.js static pages exported (`npm run build`), and 5 high-resolution audit screenshots captured.
+
 

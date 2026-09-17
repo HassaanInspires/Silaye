@@ -3332,7 +3332,44 @@
   - `progress.md` [MODIFIED]
 
 * **Next Immediate Task:**
-  - Review live mobile experience with user on `feat/home-light-theme-bidi`.
+  - Milestone 24.7: True 10/10 Polish & Desktop BiDi Unification (Completed).
+
+---
+
+## Phase 24.7: True 10/10 Polish & Desktop BiDi Unification (Completed)
+* **Date:** 2026-09-17
+* **Git Branch:** `feat/home-light-theme-bidi`
+* **Tasks Completed:**
+  - `24.7` True 10/10 Polish & Desktop BiDi Unification:
+    * **Glance Strip Truncation Elimination (`app/dashboard/page.tsx`, `lib/i18n/translations.ts`)**:
+      - Scaled metric icon containers from `h-8 w-8` (32px) to `h-7 w-7` (28px), with inner icons at `h-3.5 w-3.5`.
+      - Calibrated inner container horizontal padding to `px-2.5 sm:px-4` and column spacing to `gap-1.5`.
+      - Streamlined translation tokens: Urdu `ورکشاپ` (was `ورکشاپ جاری` which clipped) and English `Workshop` (was `In Workshop` which clipped).
+      - Achieved 100% zero-truncation across mobile devices down to 360px viewport widths.
+    * **Desktop Sidebar Single-Language Refactor (`components/layout/app-shell.tsx`)**:
+      - Replaced legacy dual-language stacked labels in `SidebarItem` with dynamic single-language rendering based on active `useLanguage()` context.
+      - Stripped dual stacking from Workspace nav header (`t.workspaceNav`), Sign Out button (`t.signOut`), Super Admin link (`t.superAdmin`), and Workshop status subtitle.
+    * **Desktop KPI Ribbon & Watchlist Localized (`app/dashboard/page.tsx`)**:
+      - Localized all 4 desktop KPI cards (Active Queue, Due Today, Overdue, Receivables), value counters, and subtext.
+      - Localized Quick Counter Actions bar and buttons (`Book New Suit`, `Find Customer /`, `Print Counter`).
+      - Localized Urgent Deliveries Watchlist header, urgency badges, table column headers (`thOrderNum`, `thCustomer`, `thGarment`, `thStage`, `thBalanceDue`, `thActions`), and empty state card.
+    * **Full Verification Suite & Automated Playwright Audit**:
+      - `npx tsc --noEmit`: 0 TypeScript compiler errors across strict mode.
+      - `scripts/verify_db.ts`: 159/159 database assertions passed across all 17 test sections in 465s.
+      - `npm run build`: 28/28 Next.js static pages cleanly compiled into `out/`.
+      - Playwright headless audit captured 5 high-resolution mobile and desktop screenshots confirming visual perfection.
+
+* **Active File Changes:**
+  - `lib/i18n/translations.ts` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `scripts/capture_theme_bidi_audit.mjs` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Next Immediate Task:**
+  - Commit changes to `feat/home-light-theme-bidi`, push to GitHub remote (`origin/feat/home-light-theme-bidi`), and present final audit report to user.
+
 
 
 

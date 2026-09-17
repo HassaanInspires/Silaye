@@ -252,17 +252,17 @@ export default function DashboardPage() {
         {/* ================================================================ */}
         <div className="block md:hidden space-y-3">
           {/* Block 1: Glance Strip with Tactile Border & Tonal Indicators */}
-          <div className="h-16 rounded-2xl border border-border bg-card px-3 sm:px-4 flex items-center justify-between shadow-sm">
+          <div className="h-16 rounded-2xl border border-border bg-card px-2.5 sm:px-4 flex items-center justify-between shadow-sm">
             {/* Ready for Pickup */}
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
-                <CheckCircle2 className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <CheckCircle2 className="h-3.5 w-3.5" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className={cn('text-[11px] font-bold text-emerald-700 dark:text-emerald-300 leading-tight truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                <span className={cn('text-[10px] sm:text-[11px] font-bold text-emerald-700 dark:text-emerald-300 leading-tight truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
                   {t.readySuits}
                 </span>
-                <span className="font-mono text-base font-bold text-emerald-600 dark:text-emerald-400 truncate leading-none mt-0.5">
+                <span className="font-mono text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 truncate leading-none mt-0.5">
                   {readyOrders.length}
                 </span>
               </div>
@@ -271,15 +271,15 @@ export default function DashboardPage() {
             <div className="h-7 w-px bg-border/60 shrink-0 mx-1" />
 
             {/* Suits in Progress */}
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 shrink-0">
-                <Scissors className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 shrink-0">
+                <Scissors className="h-3.5 w-3.5" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className={cn('text-[11px] font-bold text-sky-700 dark:text-sky-300 leading-tight truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                <span className={cn('text-[10px] sm:text-[11px] font-bold text-sky-700 dark:text-sky-300 leading-tight truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
                   {t.workshopActive}
                 </span>
-                <span className="font-mono text-base font-bold text-sky-600 dark:text-sky-400 truncate leading-none mt-0.5">
+                <span className="font-mono text-sm sm:text-base font-bold text-sky-600 dark:text-sky-400 truncate leading-none mt-0.5">
                   {inProgressCount}
                 </span>
               </div>
@@ -288,15 +288,15 @@ export default function DashboardPage() {
             <div className="h-7 w-px bg-border/60 shrink-0 mx-1" />
 
             {/* Total Udhaar Collectible */}
-            <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
-                <Wallet className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-end">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
+                <Wallet className="h-3.5 w-3.5" />
               </div>
               <div className="flex flex-col items-end min-w-0">
-                <span className={cn('text-[11px] font-bold text-rose-700 dark:text-rose-300 leading-tight truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                <span className={cn('text-[10px] sm:text-[11px] font-bold text-rose-700 dark:text-rose-300 leading-tight truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
                   {t.unsettledKhata}
                 </span>
-                <span className="font-mono text-base font-bold text-rose-600 dark:text-rose-400 truncate max-w-[90px] leading-none mt-0.5">
+                <span className="font-mono text-sm sm:text-base font-bold text-rose-600 dark:text-rose-400 truncate max-w-[90px] leading-none mt-0.5">
                   Rs.{unsettledKhataTotal >= 10000 ? `${(unsettledKhataTotal / 1000).toFixed(1)}k` : unsettledKhataTotal.toLocaleString()}
                 </span>
               </div>
@@ -587,75 +587,73 @@ export default function DashboardPage() {
           {/* Card 1: Active Queue */}
           <div className="premium-glass-card p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 hover:border-white/10 group">
             <div className="flex items-center justify-between pb-2 sm:pb-3">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-gray-400">
-                  Active Queue
-                </span>
-                <span className="font-urdu-sans text-[11px] sm:text-xs text-gray-500 hidden xs:inline" dir="rtl">
-                  زیر تکمیل
-                </span>
-              </div>
+              <span className={cn('text-[11px] font-semibold tracking-wider uppercase text-muted-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                {t.activeQueue}
+              </span>
               <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,175,55,0.15)] shrink-0">
                 <Scissors className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
             </div>
             <div className="space-y-1 sm:space-y-1.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
-                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                   <bdi dir="ltr">{activeOrders.length}</bdi>
                 </span>
-                <span className="text-[11px] sm:text-xs font-medium text-gray-400">Orders in Flow</span>
+                <span className={cn('text-[11px] sm:text-xs font-medium text-muted-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.ordersInFlow}
+                </span>
               </div>
-              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
-                <span className="text-gray-400 truncate mr-1">Total Value</span>
+              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-border/50">
+                <span className={cn('text-muted-foreground truncate mr-1', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.totalValue}
+                </span>
                 <span className="font-semibold text-gold shrink-0">
                   <bdi dir="ltr">Rs. {activeOrdersValue.toLocaleString()}</bdi>
                 </span>
               </div>
             </div>
-            <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-gray-400 truncate">
+            <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-muted-foreground truncate">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
-              <span>{inCutCount} Cut</span>
-              <span className="text-gray-600">•</span>
+              <span>{inCutCount} {t.cut}</span>
+              <span className="text-muted-foreground/60">•</span>
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-              <span>{inStitchCount} Stitch</span>
+              <span>{inStitchCount} {t.stitch}</span>
             </div>
           </div>
 
           {/* Card 2: Due Today */}
           <div className="premium-glass-card p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 hover:border-amber-500/30 group border-amber-500/20 bg-gradient-to-br from-amber-500/[0.06] to-transparent">
             <div className="flex items-center justify-between pb-2 sm:pb-3">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-amber-300">
-                  Due Today
-                </span>
-                <span className="font-urdu-sans text-[11px] sm:text-xs text-amber-400/80 hidden xs:inline" dir="rtl">
-                  آج کی ڈلیوری
-                </span>
-              </div>
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/15 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)] shrink-0">
+              <span className={cn('text-[11px] font-semibold tracking-wider uppercase text-amber-600 dark:text-amber-300', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                {t.dueToday}
+              </span>
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/15 text-amber-500 dark:text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)] shrink-0">
                 <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-pulse" />
               </div>
             </div>
             <div className="space-y-1 sm:space-y-1.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
-                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-amber-300">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-amber-600 dark:text-amber-300">
                   <bdi dir="ltr">{dueTodayOrders.length}</bdi>
                 </span>
-                <span className="text-[11px] sm:text-xs font-semibold text-amber-400/90">Suits Scheduled</span>
+                <span className={cn('text-[11px] sm:text-xs font-semibold text-amber-600/90 dark:text-amber-400/90', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.suitsScheduled}
+                </span>
               </div>
-              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
-                <span className="text-gray-400 truncate mr-1">Due Value</span>
-                <span className="font-semibold text-amber-300 shrink-0">
+              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-border/50">
+                <span className={cn('text-muted-foreground truncate mr-1', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.dueValue}
+                </span>
+                <span className="font-semibold text-amber-600 dark:text-amber-300 shrink-0">
                   <bdi dir="ltr">Rs. {dueTodayValue.toLocaleString()}</bdi>
                 </span>
               </div>
             </div>
-            <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-amber-400/80 truncate">
+            <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-amber-600/80 dark:text-amber-400/80 truncate">
               {dueTodayOrders.length > 0 ? (
-                <span>Ready for Final Pickup</span>
+                <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.readyForPickup}</span>
               ) : (
-                <span className="text-gray-400">Schedule Clear Today</span>
+                <span className={cn('text-muted-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>{t.scheduleClearToday}</span>
               )}
             </div>
           </div>
@@ -663,44 +661,41 @@ export default function DashboardPage() {
           {/* Card 3: Overdue */}
           <div className="premium-glass-card p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 hover:border-rose-500/40 group border-rose-500/20 bg-gradient-to-br from-rose-500/[0.06] to-transparent">
             <div className="flex items-center justify-between pb-2 sm:pb-3">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-rose-300">
-                  Overdue
-                </span>
-                <span className="font-urdu-sans text-[11px] sm:text-xs text-rose-400/80 hidden xs:inline" dir="rtl">
-                  تاخیر شدہ
-                </span>
-              </div>
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/15 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.2)] shrink-0">
+              <span className={cn('text-[11px] font-semibold tracking-wider uppercase text-rose-600 dark:text-rose-300', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                {t.overdueAlert}
+              </span>
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/15 text-rose-500 dark:text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.2)] shrink-0">
                 <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
             </div>
             <div className="space-y-1 sm:space-y-1.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
-                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-rose-300">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-rose-600 dark:text-rose-300">
                   <bdi dir="ltr">{overdueOrders.length}</bdi>
                 </span>
-                <span className="text-[11px] sm:text-xs font-semibold text-rose-400">
-                  {overdueOrders.length > 0 ? 'Delayed ⚠️' : '0 Delayed'}
+                <span className={cn('text-[11px] sm:text-xs font-semibold text-rose-600 dark:text-rose-400', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {overdueOrders.length > 0 ? `${overdueOrders.length} ${t.delayed} ⚠️` : `0 ${t.delayed}`}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
-                <span className="text-gray-400 truncate mr-1">Delayed</span>
-                <span className="font-semibold text-rose-300 shrink-0">
+              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-border/50">
+                <span className={cn('text-muted-foreground truncate mr-1', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.delayed}
+                </span>
+                <span className="font-semibold text-rose-600 dark:text-rose-300 shrink-0">
                   <bdi dir="ltr">Rs. {overdueValue.toLocaleString()}</bdi>
                 </span>
               </div>
             </div>
-            <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-medium text-rose-400 truncate">
+            <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-medium text-rose-600 dark:text-rose-400 truncate">
               {overdueOrders.length > 0 ? (
                 <>
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
-                  <span>Immediate Action Required</span>
+                  <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{language === 'ur' ? 'فوری کارروائی درکار' : 'Immediate Action Required'}</span>
                 </>
               ) : (
-                <span className="text-emerald-400 flex items-center gap-1">
+                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                   <CheckCircle className="h-3 w-3" />
-                  <span>All On Schedule</span>
+                  <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.allOnSchedule}</span>
                 </span>
               )}
             </div>
@@ -709,28 +704,25 @@ export default function DashboardPage() {
           {/* Card 4: Unsettled Khata */}
           <div className="premium-glass-card p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 hover:border-white/10 group">
             <div className="flex items-center justify-between pb-2 sm:pb-3">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-gray-400">
-                  Unsettled Khata
-                </span>
-                <span className="font-urdu-sans text-[11px] sm:text-xs text-gray-500 hidden xs:inline" dir="rtl">
-                  واجب الادا
-                </span>
-              </div>
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.1)] shrink-0">
+              <span className={cn('text-[11px] font-semibold tracking-wider uppercase text-muted-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                {t.unsettledKhata}
+              </span>
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-500 dark:text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.1)] shrink-0">
                 <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
             </div>
             <div className="space-y-1 sm:space-y-1.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
-                <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-rose-300">
+                <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-rose-600 dark:text-rose-300">
                   <bdi dir="ltr">Rs. {unsettledKhataTotal.toLocaleString()}</bdi>
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-white/5">
-                <span className="text-gray-400 truncate mr-1">Debtors</span>
-                <span className="font-medium text-gray-300 shrink-0">
-                  <bdi dir="ltr">{debtorsCount}</bdi> Clients
+              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-border/50">
+                <span className={cn('text-muted-foreground truncate mr-1', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.debtors}
+                </span>
+                <span className={cn('font-medium text-foreground shrink-0', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  <bdi dir="ltr">{debtorsCount}</bdi> {t.clients}
                 </span>
               </div>
             </div>
@@ -739,12 +731,9 @@ export default function DashboardPage() {
                 href="/khata"
                 className="inline-flex items-center gap-1 text-gold hover:text-gold-hover transition-colors font-medium"
               >
-                <span>View Khata</span>
-                <ChevronRight className="h-3 w-3" />
+                <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.viewKhata}</span>
+                <ChevronRight className={cn('h-3 w-3', dir === 'rtl' ? 'rotate-180' : '')} />
               </a>
-              <span className="font-urdu-sans text-[11px] sm:text-xs text-gray-500 hidden xs:inline" dir="rtl">
-                کھاتہ
-              </span>
             </div>
           </div>
         </div>
@@ -758,11 +747,11 @@ export default function DashboardPage() {
               ⚡
             </span>
             <div className="flex flex-col">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-300">
-                Quick Counter Actions
+              <span className={cn('text-xs font-semibold uppercase tracking-wider text-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                {t.quickCounterActions}
               </span>
-              <span className="text-[11px] text-gray-500">
-                1-Tap triggers for workshop reception
+              <span className={cn('text-[11px] text-muted-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                {t.quickActionsSub}
               </span>
             </div>
           </div>
@@ -776,9 +765,8 @@ export default function DashboardPage() {
                 className="gap-2 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_25px_rgba(212,175,55,0.25)] transition-all hover:scale-[1.02]"
               >
                 <PlusCircle className="h-4 w-4" />
-                <span>Book New Suit</span>
-                <span className="font-urdu-sans text-xs font-normal opacity-80" dir="rtl">
-                  نیا سوٹ
+                <span className={language === 'ur' ? 'font-urdu-sans text-xs' : 'font-sans'}>
+                  {t.bookNewSuit}
                 </span>
               </Button>
             </a>
@@ -788,11 +776,13 @@ export default function DashboardPage() {
               variant="outline"
               size="md"
               onClick={handleFocusSearch}
-              className="gap-2 border-white/10 bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white backdrop-blur-md"
+              className="gap-2 border-border bg-card hover:bg-muted/50 text-foreground backdrop-blur-md"
             >
               <Search className="h-4 w-4 text-gold" />
-              <span>Find Customer</span>
-              <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-gray-400 font-mono">
+              <span className={language === 'ur' ? 'font-urdu-sans text-xs' : 'font-sans'}>
+                {t.findCustomer}
+              </span>
+              <span className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground font-mono">
                 /
               </span>
             </Button>
@@ -802,12 +792,11 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 size="md"
-                className="gap-2 border-white/15 bg-transparent hover:bg-white/5 text-gray-300 hover:text-white"
+                className="gap-2 border-border bg-card hover:bg-muted/50 text-foreground"
               >
-                <Printer className="h-4 w-4 text-gray-400" />
-                <span>Print Counter</span>
-                <span className="font-urdu-sans text-xs text-gray-400" dir="rtl">
-                  پرنٹنگ
+                <Printer className="h-4 w-4 text-muted-foreground" />
+                <span className={language === 'ur' ? 'font-urdu-sans text-xs' : 'font-sans'}>
+                  {t.printCounter}
                 </span>
               </Button>
             </a>
@@ -819,25 +808,22 @@ export default function DashboardPage() {
         {/* ------------------------------------------------------------------ */}
         <div className="premium-glass-card overflow-hidden">
           {/* Card Header Chrome */}
-          <div className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between border-b border-white/5">
+          <div className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between border-b border-border/50">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 dark:text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
                 <Clock className="h-4 w-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-semibold text-white">
-                    Urgent Deliveries Watchlist
+                  <h2 className={cn('text-base font-semibold text-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                    {t.urgentWatchlistTitle}
                   </h2>
-                  <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
-                    Due Today & Tomorrow
+                  <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-300">
+                    {t.dueTodayTomorrow}
                   </span>
                 </div>
-                <p className="text-xs text-gray-400 flex items-center gap-2">
-                  <span>Priority orders requiring immediate workshop attention</span>
-                  <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
-                    فوری ترسیلات - آج اور کل
-                  </span>
+                <p className={cn('text-xs text-muted-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.urgentWatchlistSub}
                 </p>
               </div>
             </div>
@@ -846,38 +832,38 @@ export default function DashboardPage() {
               href="/orders"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-gold hover:text-gold-hover transition-colors"
             >
-              <span>View All Orders in Queue</span>
-              <ChevronRight className="h-3.5 w-3.5" />
+              <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.viewAllOrdersQueue}</span>
+              <ChevronRight className={cn('h-3.5 w-3.5', dir === 'rtl' ? 'rotate-180' : '')} />
             </a>
           </div>
 
           {/* Table Container with required overflow-x-auto wrapper */}
           <div className="overflow-x-auto w-full touch-pan-x">
-            <table className="w-full text-left text-sm border-collapse min-w-[760px]">
+            <table className="w-full text-left rtl:text-right text-sm border-collapse min-w-[760px]">
               <thead>
-                <tr className="border-b border-white/5 bg-white/[0.01] text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                  <th className="py-3.5 px-5">Order #</th>
-                  <th className="py-3.5 px-4">Customer Details</th>
-                  <th className="py-3.5 px-4">Garment & Fabric</th>
-                  <th className="py-3.5 px-4">Production Stage</th>
-                  <th className="py-3.5 px-4 text-right">Balance Due</th>
-                  <th className="py-3.5 px-5 text-right">Quick Actions</th>
+                <tr className="border-b border-border/50 bg-muted/20 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th className="py-3.5 px-5">{t.thOrderNum}</th>
+                  <th className="py-3.5 px-4">{t.thCustomer}</th>
+                  <th className="py-3.5 px-4">{t.thGarment}</th>
+                  <th className="py-3.5 px-4">{t.thStage}</th>
+                  <th className="py-3.5 px-4 text-right rtl:text-left">{t.thBalanceDue}</th>
+                  <th className="py-3.5 px-5 text-right rtl:text-left">{t.thActions}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-border/50">
                 {urgentOrders.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 px-6 text-center">
                       <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-gold/80">
-                          <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="h-6 w-6" />
                         </div>
                         <div className="space-y-1">
-                          <h4 className="text-sm font-semibold text-gray-200">
-                            No Urgent Deliveries Pending
+                          <h4 className={cn('text-sm font-semibold text-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                            {t.allCaughtUpTitle}
                           </h4>
-                          <p className="text-xs text-gray-400 max-w-sm">
-                            Your workshop schedule is clear for today. Book new orders or inspect the production queue.
+                          <p className={cn('text-xs text-muted-foreground max-w-sm', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                            {t.allCaughtUpDesc}
                           </p>
                         </div>
                         <a href="/orders/new" className="mt-2">
@@ -887,7 +873,7 @@ export default function DashboardPage() {
                             className="gap-1.5 border-gold/30 bg-gold/10 text-gold hover:bg-gold/20 text-xs"
                           >
                             <PlusCircle className="h-3.5 w-3.5" />
-                            <span>Book New Suit</span>
+                            <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.bookNewSuit}</span>
                           </Button>
                         </a>
                       </div>

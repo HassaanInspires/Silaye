@@ -226,36 +226,30 @@ interface SidebarItemProps {
 }
 
 function SidebarItem({ item, isActive, onNavigate }: SidebarItemProps) {
+  const { language } = useLanguage();
   const Icon = item.icon;
+  const isUrdu = language === 'ur';
+
   return (
     <a
       href={item.route}
       onClick={onNavigate}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'group flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-150',
+        'group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-150',
         isActive
           ? 'border border-gold/20 bg-gold/10 text-gold shadow-[0_0_20px_rgba(212,175,55,0.08)]'
           : 'border border-transparent text-gray-400 hover:border-white/5 hover:bg-white/[0.04] hover:text-gray-100'
       )}
     >
-      <div className="flex items-center gap-3">
-        <Icon
-          className={cn(
-            'h-4 w-4 transition-colors',
-            isActive ? 'text-gold' : 'text-gray-400 group-hover:text-gray-200'
-          )}
-        />
-        <span>{item.label}</span>
-      </div>
-      <span
+      <Icon
         className={cn(
-          'font-urdu-sans text-xs opacity-70 transition-opacity group-hover:opacity-100',
-          isActive ? 'text-gold' : 'text-gray-500'
+          'h-4 w-4 shrink-0 transition-colors',
+          isActive ? 'text-gold' : 'text-gray-400 group-hover:text-gray-200'
         )}
-        dir="rtl"
-      >
-        {item.labelUrdu}
+      />
+      <span className={cn('truncate', isUrdu ? 'font-urdu-sans text-sm font-medium' : 'font-sans')}>
+        {isUrdu ? item.labelUrdu : item.label}
       </span>
     </a>
   );
@@ -785,7 +779,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           {/* Navigation Items */}
           <nav className="flex flex-col gap-1.5">
             <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
-              Workspace
+              {t.workspaceNav}
             </span>
             {NAV_ITEMS.map((item) => (
               <SidebarItem
@@ -798,29 +792,26 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
             {isSuperAdmin && (
               <div className="flex flex-col gap-1.5 pt-3 mt-1 border-t border-white/5">
                 <span className="px-3 text-[10px] font-semibold uppercase tracking-wider text-cyan-400">
-                  Platform Admin
+                  {language === 'ur' ? 'ایڈمن کنٹرول' : 'Platform Admin'}
                 </span>
                 <a
                   href="/admin"
                   aria-current={activeRoute === '/admin' ? 'page' : undefined}
                   className={cn(
-                    'group flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-150',
+                    'group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-150',
                     activeRoute === '/admin'
                       ? 'border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.15)]'
                       : 'border border-transparent text-gray-400 hover:border-cyan-500/20 hover:bg-cyan-500/[0.06] hover:text-cyan-200'
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <ShieldCheck
-                      className={cn(
-                        'h-4 w-4 transition-colors',
-                        activeRoute === '/admin' ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
-                      )}
-                    />
-                    <span>Super Admin</span>
-                  </div>
-                  <span className="font-urdu-sans text-xs text-cyan-400/80" dir="rtl">
-                    ایڈمن پینل
+                  <ShieldCheck
+                    className={cn(
+                      'h-4 w-4 shrink-0 transition-colors',
+                      activeRoute === '/admin' ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
+                    )}
+                  />
+                  <span className={cn('truncate', language === 'ur' ? 'font-urdu-sans text-sm' : 'font-sans text-sm')}>
+                    {t.superAdmin}
                   </span>
                 </a>
               </div>
@@ -840,7 +831,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   {currentUser?.email || 'Wah Cantt Main'}
                 </span>
                 <span className="text-[10px] text-gray-500 truncate">
-                  {currentUser ? 'Authenticated Workshop' : 'Master Counter'}
+                  {currentUser ? t.authenticatedWorkshop : t.masterCounter}
                 </span>
               </div>
             </div>
@@ -850,15 +841,12 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex items-center justify-between rounded-xl border border-transparent px-3 py-2 text-xs font-medium text-gray-400 hover:border-white/5 hover:bg-white/[0.04] hover:text-rose-400 transition-all group cursor-pointer"
-            title="Sign Out of Session"
+            className="flex items-center gap-2 rounded-xl border border-transparent px-3 py-2 text-xs font-medium text-gray-400 hover:border-white/5 hover:bg-white/[0.04] hover:text-rose-400 transition-all group cursor-pointer"
+            title={t.signOut}
           >
-            <div className="flex items-center gap-2">
-              <LogOut className="h-3.5 w-3.5 transition-colors group-hover:text-rose-400" />
-              <span>Sign Out</span>
-            </div>
-            <span className="font-urdu-sans text-[11px] opacity-70 group-hover:opacity-100 group-hover:text-rose-400" dir="rtl">
-              لاگ آؤٹ
+            <LogOut className="h-3.5 w-3.5 shrink-0 transition-colors group-hover:text-rose-400" />
+            <span className={cn('truncate', language === 'ur' ? 'font-urdu-sans text-xs' : 'font-sans text-xs')}>
+              {t.signOut}
             </span>
           </button>
         </div>
@@ -927,30 +915,27 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 {isSuperAdmin && (
                   <div className="flex flex-col gap-1.5 pt-3 mt-1 border-t border-white/5">
                     <span className="px-3 text-[10px] font-semibold uppercase tracking-wider text-cyan-400">
-                      Platform Admin
+                      {language === 'ur' ? 'ایڈمن کنٹرول' : 'Platform Admin'}
                     </span>
                     <a
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
                       aria-current={activeRoute === '/admin' ? 'page' : undefined}
                       className={cn(
-                        'group flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-150',
+                        'group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-150',
                         activeRoute === '/admin'
                           ? 'border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.15)]'
                           : 'border border-transparent text-gray-400 hover:border-cyan-500/20 hover:bg-cyan-500/[0.06] hover:text-cyan-200'
                       )}
                     >
-                      <div className="flex items-center gap-3">
-                        <ShieldCheck
-                          className={cn(
-                            'h-4 w-4 transition-colors',
-                            activeRoute === '/admin' ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
-                          )}
-                        />
-                        <span>Super Admin</span>
-                      </div>
-                      <span className="font-urdu-sans text-xs text-cyan-400/80" dir="rtl">
-                        ایڈمن پینل
+                      <ShieldCheck
+                        className={cn(
+                          'h-4 w-4 shrink-0 transition-colors',
+                          activeRoute === '/admin' ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
+                        )}
+                      />
+                      <span className={cn('truncate', language === 'ur' ? 'font-urdu-sans text-sm' : 'font-sans text-sm')}>
+                        {t.superAdmin}
                       </span>
                     </a>
                   </div>
@@ -1192,7 +1177,9 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   className="gap-1.5 whitespace-nowrap bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_20px_rgba(212,175,55,0.2)]"
                 >
                   <PlusCircle className="h-4 w-4" aria-hidden="true" />
-                  <span>New Booking</span>
+                  <span className={language === 'ur' ? 'font-urdu-sans text-xs' : 'font-sans text-xs'}>
+                    {language === 'ur' ? 'نیا سوٹ' : 'New Booking'}
+                  </span>
                 </Button>
               </a>
             </div>
