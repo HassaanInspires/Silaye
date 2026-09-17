@@ -576,6 +576,8 @@
 
 ---
 
+---
+
 ## Phase 24: Atelier Light Theme Polish & BiDi Language Architecture
 - [x] 24.1 Create `LanguageProvider` (`lib/language-provider.tsx`) and Dashboard Translation Dictionary (`lib/i18n/translations.ts`).
 - [x] 24.2 Root Layout Integration & Zero-FOUC Pre-Hydration Script (`app/layout.tsx`).
@@ -588,5 +590,19 @@
   * **Desktop Sidebar Single-Language Refactor (`components/layout/app-shell.tsx`)**: Replaced dual-language stacked labels in `SidebarItem` with context-aware single-language rendering (`t.workspaceNav`, clean Urdu titles in RTL, English in LTR). Stripped dual stacking from Sign Out and Admin buttons.
   * **Desktop KPI Ribbon & Watchlist Localized (`app/dashboard/page.tsx`)**: Unified desktop KPI cards (Active Queue, Due Today, Overdue, Receivables), Quick Counter Actions, Watchlist header, and table empty states into strongly-typed single-language dictionaries.
   * **Verification & Live Screenshots**: 0 TypeScript errors (`npx tsc --noEmit`), 159/159 database assertions passing (`scripts/verify_db.ts`), 28/28 Next.js static pages exported (`npm run build`), and 5 high-resolution audit screenshots captured.
+
+---
+
+## Phase 25: New Suit Booking (`/orders/new`) 10/10 Atelier Redesign & BiDi Architecture
+- [x] 25.1 Implement `NEW_ORDER_I18N` translation dictionary in `lib/i18n/translations.ts` with authentic Urdu and English strings.
+- [x] 25.2 Expose `newOrderT` in `lib/language-provider.tsx`.
+- [x] 25.3 Fix `components/ui/input.tsx` to use semantic theme-adaptive classes.
+- [x] 25.4 Redesign `components/tailor/fractional-pill-selector.tsx` with semantic tokens and eliminate dark slate relics.
+- [x] 25.5 Upgrade `components/tailor/garment-style-chips.tsx` with single-language rendering and high-contrast Bullion Gold active chips.
+- [x] 25.6 Localize `components/tailor/measurement-intake-form.tsx` and eliminate hardcoded dark styles from `MeasurementRow`.
+- [x] 25.7 Overhaul `app/orders/new/page.tsx` across Mobile 3-Step Wizard and Desktop Split-Pane with single-language BiDi architecture, slim sticky bar, and zero CTA collision.
+- [x] 25.8 Run automated typecheck (`npx tsc --noEmit`), build check (`npm run build`), and capture live browser screenshots for Light and Dark modes.
+
+
 
 

@@ -40,6 +40,7 @@ import { MeasurementIntakeForm } from '@/components/tailor/measurement-intake-fo
 import { VisualMannequinPad } from '@/components/tailor/visual-mannequin-pad';
 import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal';
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
+import { useLanguage } from '@/lib/language-provider';
 import confetti from 'canvas-confetti';
 import {
   mockShop,
@@ -143,27 +144,26 @@ const MOBILE_MEASUREMENT_FIELDS: Array<{
 
 interface SectionCardProps {
   title: string;
-  urTitle: string;
+  urTitle?: string;
   icon: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }
 
 function SectionCard({ title, urTitle, icon, children, className }: SectionCardProps) {
+  const { language } = useLanguage();
+  const isUrdu = language === 'ur';
+  const displayTitle = isUrdu && urTitle ? urTitle : title;
+
   return (
-    <Card className={cn('premium-glass-card flex flex-col gap-0 border-white/10 bg-[#121418]/90 backdrop-blur-xl shadow-2xl hover:border-gold/30 transition-all duration-300', className)}>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-white/5 pb-3.5 pt-4 bg-gradient-to-r from-gold/5 via-transparent to-transparent">
+    <Card className={cn('premium-glass-card flex flex-col gap-0 border border-border bg-card shadow-xs hover:border-primary/30 transition-all duration-300', className)}>
+      <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-border/60 pb-3 pt-3.5 bg-card-elevated/40">
         <div className="flex items-center gap-2.5">
-          <span className="text-gold p-1.5 rounded-lg bg-gold/10 border border-gold/20 shadow-[0_0_10px_rgba(212,175,55,0.15)]">{icon}</span>
-          <CardTitle className="text-sm font-semibold text-white tracking-tight">{title}</CardTitle>
+          <span className="text-primary p-1.5 rounded-lg bg-primary/10 border border-primary/20 shadow-xs">{icon}</span>
+          <CardTitle className={cn("text-sm font-semibold text-foreground tracking-tight", isUrdu && "font-urdu-serif text-base")}>
+            {displayTitle}
+          </CardTitle>
         </div>
-        <span
-          dir="rtl"
-          lang="ur"
-          className="font-urdu-serif text-sm leading-urdu-display text-gold font-medium"
-        >
-          {urTitle}
-        </span>
       </CardHeader>
       <CardContent className="pt-4 pb-5">{children}</CardContent>
     </Card>
@@ -176,7 +176,7 @@ function SectionCard({ title, urTitle, icon, children, className }: SectionCardP
 
 interface FinancialRowProps {
   label: string;
-  urLabel: string;
+  urLabel?: string;
   value: number;
   onChange?: (v: number) => void;
   readOnly?: boolean;
@@ -195,6 +195,10 @@ function FinancialRow({
   prefix = 'Rs.',
   isBold = false,
 }: FinancialRowProps) {
+  const { language } = useLanguage();
+  const isUrdu = language === 'ur';
+  const displayLabel = isUrdu && urLabel ? urLabel : label;
+
   const colorMap = {
     gold:  'text-primary',
     green: 'text-status-ready',
@@ -204,22 +208,16 @@ function FinancialRow({
 
   return (
     <div className="flex items-center justify-between gap-3 py-1.5">
-      {/* Labels */}
+      {/* Label */}
       <div className="flex flex-col gap-0">
         <span
           className={cn(
             'text-xs leading-tight',
+            isUrdu ? 'font-urdu-sans text-xs' : 'font-sans',
             isBold ? 'font-semibold text-foreground' : 'text-muted-foreground'
           )}
         >
-          {label}
-        </span>
-        <span
-          dir="rtl"
-          lang="ur"
-          className="font-urdu-sans text-[0.6rem] leading-urdu-data text-muted-foreground/80"
-        >
-          {urLabel}
+          {displayLabel}
         </span>
       </div>
 
@@ -228,7 +226,7 @@ function FinancialRow({
         <bdi
           dir="ltr"
           className={cn(
-            'font-mono text-sm tabular-nums',
+            'font-mono text-sm tabular-nums whitespace-nowrap',
             isBold ? 'font-bold text-base' : 'font-medium',
             highlight ? colorMap[highlight] : 'text-foreground'
           )}
@@ -276,6 +274,9 @@ const GARMENT_TYPE_OPTIONS: ReadonlyArray<{ value: GarmentType; en: string; ur: 
 // ---------------------------------------------------------------------------
 
 export default function NewOrderPage() {
+  const { language, dir, t: dashT, newOrderT: t } = useLanguage();
+  const isUrdu = language === 'ur';
+
   // ── Tab state: 3 Progressive Disclosure Steps ──────────────────────────
   const [activeTab, setActiveTab] = React.useState<string>('customer');
   const [mobileStep, setMobileStep] = React.useState<1 | 2 | 3>(1);
@@ -781,52 +782,45 @@ export default function NewOrderPage() {
   return (
     <AppShell activeRoute="/orders/new">
       <div className="max-w-7xl mx-auto">
-        {/* Floating Bilingual Booking Success Toast */}
+        {/* Floating Single-Language Booking Success Toast */}
         {orderBookedToast && (
           <div
             role="status"
             aria-live="polite"
-            className="fixed top-16 md:top-20 right-4 md:right-8 z-50 flex items-center gap-2.5 rounded-2xl border border-emerald-500/40 bg-[#0E1013]/95 backdrop-blur-xl px-4 py-3 text-xs text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.3)] animate-in fade-in slide-in-from-top-2"
+            className="fixed top-16 md:top-20 right-4 md:right-8 z-50 flex items-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-card/95 backdrop-blur-xl px-4 py-3 text-xs text-foreground shadow-lg animate-in fade-in slide-in-from-top-2"
           >
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <div className="flex flex-col">
-              <span className="font-urdu-serif font-bold text-sm leading-relaxed" dir="rtl">
-                سوٹ کامیابی سے بک ہو گیا (محفوظ)
+              <span className={cn("font-bold text-sm leading-relaxed", isUrdu ? "font-urdu-serif" : "font-sans")}>
+                {t.suitBookedSuccess}
               </span>
-              <span className="text-[10px] text-gray-300 font-sans">
-                Suit booked locally & queued for sync
+              <span className="text-[11px] text-muted-foreground">
+                {t.suitBookedSub}
               </span>
             </div>
           </div>
         )}
         
         {/* ── Page Header ─────────────────────────────────────────────── */}
-        <div className="hidden md:flex mb-6 flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">
+        <div className="hidden md:flex mb-6 flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">New Booking</h1>
-              <Badge variant="status-booked" className="text-xs">
-                Draft Mode
+              <h1 className={cn("text-2xl font-bold tracking-tight text-foreground", isUrdu ? "font-urdu-serif text-3xl" : "font-sans")}>
+                {t.pageTitle}
+              </h1>
+              <Badge variant="status-booked" className="text-xs font-medium">
+                {t.draftMode}
               </Badge>
               {draftSavedToast && (
                 <span className="flex items-center gap-1 text-xs text-status-ready font-medium animate-fade-in">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Draft saved locally
+                  {t.draftSaved}
                 </span>
               )}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Intake customer profile, fabric specifications, bespoke measurements, and workshop ledger
+              {t.pageSubtitle}
             </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span
-              dir="rtl"
-              lang="ur"
-              className="font-urdu-serif text-xl leading-urdu-display text-primary"
-            >
-              نئی بکنگ اور ناپ
-            </span>
           </div>
         </div>
 
@@ -835,11 +829,11 @@ export default function NewOrderPage() {
         {/* ================================================================ */}
         <div className="block md:hidden space-y-4 pb-44 pb-safe">
           {/* Step Progress Pills Header */}
-          <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#121418] rounded-xl border border-white/5 shadow-md">
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-card rounded-xl border border-border shadow-xs">
             {[
-              { step: 1, labelUrdu: 'گاہک اور سوٹ', labelEn: '1. Customer' },
-              { step: 2, labelUrdu: 'ڈیزائن و کٹ', labelEn: '2. Style' },
-              { step: 3, labelUrdu: 'ناپ میٹرکس', labelEn: '3. Matrix' },
+              { step: 1, label: t.stepCustomer },
+              { step: 2, label: t.stepStyle },
+              { step: 3, label: t.stepMatrix },
             ].map((s) => {
               const isCurrent = mobileStep === s.step;
               const isPast = mobileStep > s.step;
@@ -847,21 +841,25 @@ export default function NewOrderPage() {
                 <button
                   key={s.step}
                   type="button"
+                  data-testid={`mobile-step-${s.step}`}
                   onClick={() => setMobileStep(s.step as 1 | 2 | 3)}
                   className={cn(
-                    'flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all border',
+                    'flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg transition-all border',
                     isCurrent
-                      ? 'bg-gold/15 text-gold border-gold/40 shadow-[0_0_10px_rgba(212,175,55,0.15)] font-semibold'
+                      ? 'bg-primary/15 text-primary border-primary/40 shadow-xs font-semibold'
                       : isPast
-                      ? 'bg-white/5 text-emerald-400 border-transparent'
-                      : 'text-gray-400 border-transparent'
+                      ? 'bg-card-elevated text-emerald-600 dark:text-emerald-400 border-border/40'
+                      : 'text-muted-foreground border-transparent hover:text-foreground'
                   )}
                 >
-                  <span className="text-[11px] font-urdu-serif font-bold leading-relaxed py-1 truncate">
-                    {s.labelUrdu}
+                  <span className={cn(
+                    "inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-bold shrink-0",
+                    isCurrent ? "bg-primary text-primary-foreground" : isPast ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-muted text-muted-foreground"
+                  )}>
+                    <bdi>{s.step}</bdi>
                   </span>
-                  <span className={cn('text-[9px] font-medium truncate', isCurrent ? 'text-amber-200' : 'text-gray-300')}>
-                    {s.labelEn}
+                  <span className={cn('text-xs font-medium truncate', isUrdu ? 'font-urdu-sans text-[11px]' : 'font-sans')}>
+                    {s.label}
                   </span>
                 </button>
               );
@@ -874,42 +872,47 @@ export default function NewOrderPage() {
           {mobileStep === 1 && (
             <div className="space-y-4 pb-44 pb-safe">
               {/* Unified Single Surface Card */}
-              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+              <div className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-sm">
                 {/* 1. Customer Intake & Smart Collapsible Address */}
-                <div className="space-y-3 border-b border-white/5 pb-4">
+                <div className="space-y-3 border-b border-border/50 pb-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">
-                      Customer Intake • گاہک کا اندراج
+                    <span className={cn("text-xs font-bold text-foreground uppercase tracking-wider", isUrdu && "font-urdu-sans")}>
+                      {t.customerIntakeHeader}
                     </span>
                     {foundProfile && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                        پروفائل موجود ہے
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                        {t.matchedProfile}
                       </span>
                     )}
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs text-gray-300 font-medium">موبائل نمبر (Mobile Phone)</label>
+                    <label className={cn("text-xs text-foreground font-medium", isUrdu && "font-urdu-sans")}>
+                      {t.phoneLabel}
+                    </label>
                     <Input
                       type="tel"
                       inputMode="tel"
-                      placeholder="0300-1234567"
+                      dir="ltr"
+                      placeholder={t.phonePlaceholder}
                       value={phone}
                       onChange={(e) => setPhone(formatPakistaniPhone(e.target.value))}
-                      leftIcon={<Phone className="h-4 w-4 text-gold" />}
-                      className="h-10 text-sm font-mono bg-black/40 border-white/10"
+                      leftIcon={<Phone className="h-4 w-4 text-primary" />}
+                      className="h-10 text-sm font-mono"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs text-gray-300 font-medium">گاہک کا نام (Customer Name) *</label>
+                    <label className={cn("text-xs text-foreground font-medium", isUrdu && "font-urdu-sans")}>
+                      {t.customerNameLabel} *
+                    </label>
                     <Input
                       type="text"
-                      placeholder="e.g. محمد بلال"
+                      placeholder={t.customerNamePlaceholder}
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      leftIcon={<User className="h-4 w-4 text-gold" />}
-                      className="h-10 text-sm bg-black/40 border-white/10"
+                      leftIcon={<User className="h-4 w-4 text-primary" />}
+                      className="h-10 text-sm"
                     />
                   </div>
 
@@ -920,90 +923,88 @@ export default function NewOrderPage() {
                     className={cn(
                       'w-full min-h-[40px] px-3.5 py-2 rounded-xl border text-xs font-medium flex items-center justify-between transition-all active:scale-[0.99] cursor-pointer',
                       customerAddress.trim()
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                        : 'border-white/10 bg-white/5 hover:bg-white/10 text-gray-300'
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                        : 'border-border bg-card-elevated hover:bg-card text-foreground'
                     )}
                   >
-                    <div className="flex items-center gap-2 truncate pr-2">
-                      <MapPin className={cn('h-3.5 w-3.5 shrink-0', customerAddress.trim() ? 'text-emerald-400' : 'text-gold/70')} />
+                    <div className="flex items-center gap-2 truncate">
+                      <MapPin className={cn('h-3.5 w-3.5 shrink-0', customerAddress.trim() ? 'text-emerald-600 dark:text-emerald-400' : 'text-primary')} />
                       {customerAddress.trim() ? (
-                        <span className="font-urdu-serif leading-relaxed truncate text-[11px]">
-                          ✓ پتہ محفوظ ہے: <span className="font-sans font-normal text-white">{customerAddress}</span> - تبدیل کرنے کے لیے ٹیپ کریں
+                        <span className="truncate text-[11px]">
+                          ✓ {t.addressSaved} <span className="font-semibold text-foreground">{customerAddress}</span> - {t.tapToChange}
                         </span>
                       ) : (
-                        <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
-                          {showAddressNotes ? '− پتہ اور اضافی تفصیلات چھپائیں' : '+ پتہ اور اضافی تفصیلات درج کریں / Add Address & Notes'}
+                        <span className="truncate text-[11px]">
+                          {showAddressNotes ? t.hideAddressNotes : t.showAddressNotes}
                         </span>
                       )}
                     </div>
-                    <ChevronDown className={cn('h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200', showAddressNotes && 'rotate-180')} />
+                    <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200', showAddressNotes && 'rotate-180')} />
                   </button>
 
                   {/* Collapsible Address & Notes Fields */}
                   {showAddressNotes && (
                     <div className="space-y-2.5 pt-1 animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="space-y-1">
-                        <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">
-                          پتہ اور شہر (Address / City - اختیاری)
+                        <label className={cn("text-[11px] text-muted-foreground font-medium", isUrdu && "font-urdu-sans")}>
+                          {t.customerAddressLabel}
                         </label>
                         <Input
                           type="text"
-                          placeholder="e.g. کینٹ، واہ / Sector, Area, City"
+                          placeholder={t.customerAddressPlaceholder}
                           value={customerAddress}
                           onChange={(e) => setCustomerAddress(e.target.value)}
-                          leftIcon={<MapPin className="h-4 w-4 text-gray-500" />}
-                          className="h-10 text-xs bg-black/40 border-white/10"
+                          leftIcon={<MapPin className="h-4 w-4 text-muted-foreground" />}
+                          className="h-10 text-xs"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">
-                          اضافی ہدایات و نوٹ (Special Instructions / Notes)
+                        <label className={cn("text-[11px] text-muted-foreground font-medium", isUrdu && "font-urdu-sans")}>
+                          {t.specialNotesLabel}
                         </label>
                         <Input
                           type="text"
-                          placeholder="e.g. کالر پر کڑھائی، بٹن خصوصی لکڑی والے"
+                          placeholder={t.specialNotesPlaceholder}
                           value={specialNotes}
                           onChange={(e) => setSpecialNotes(e.target.value)}
-                          leftIcon={<FileText className="h-4 w-4 text-gray-500" />}
-                          className="h-10 text-xs bg-black/40 border-white/10"
+                          leftIcon={<FileText className="h-4 w-4 text-muted-foreground" />}
+                          className="h-10 text-xs"
                         />
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* 2. Sleek 3D Pop-up Garment Selection Chips & Quantity */}
-                <div className="space-y-3 border-b border-white/5 pb-4">
+                {/* 2. Sleek Garment Selection Chips & Quantity */}
+                <div className="space-y-3 border-b border-border/50 pb-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">
-                      Garment Type • لباس کی قسم
+                    <span className={cn("text-xs font-bold text-foreground uppercase tracking-wider", isUrdu && "font-urdu-sans")}>
+                      {t.garmentTypeLabel}
                     </span>
-                    <span className="text-[10px] text-gray-400 font-mono">
-                      {GARMENT_TYPE_OPTIONS.find((g) => g.value === garmentType)?.en}
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      {isUrdu ? selectedGarmentOption.ur : selectedGarmentOption.en}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     {GARMENT_TYPE_OPTIONS.map((g) => {
                       const isSelected = garmentType === g.value;
+                      const displayName = isUrdu ? g.ur : g.en;
                       return (
                         <button
                           key={g.value}
                           type="button"
                           onClick={() => handleGarmentTypeChange(g.value)}
                           className={cn(
-                            'h-auto min-h-11 px-3 rounded-xl border transition-all duration-200 flex flex-col items-center justify-center text-center py-1 cursor-pointer active:scale-98',
+                            'h-auto min-h-11 px-3 rounded-xl border transition-all duration-200 flex items-center justify-center text-center py-2 cursor-pointer active:scale-98',
                             isSelected
-                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02]'
-                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 hover:border-white/20'
+                              ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                              : 'bg-card-elevated border-border text-foreground hover:bg-card'
                           )}
                         >
-                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
-                            {isSelected && <span className="mr-1 text-gold">✓</span>}
-                            {g.ur}
-                          </span>
-                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
-                            {g.en}
+                          <span className={cn("text-xs font-semibold truncate", isUrdu ? "font-urdu-sans" : "font-sans")}>
+                            {isSelected && <span className="mr-1">✓</span>}
+                            {displayName}
                           </span>
                         </button>
                       );
@@ -1013,27 +1014,27 @@ export default function NewOrderPage() {
                   {/* Suit Quantity Stepper */}
                   <div className="flex items-center justify-between pt-1">
                     <div>
-                      <span className="text-xs font-semibold text-white block font-urdu-serif leading-relaxed py-0.5">
-                        سوٹ تعداد (Quantity)
+                      <span className={cn("text-xs font-semibold text-foreground block", isUrdu && "font-urdu-sans")}>
+                        {t.quantityLabel}
                       </span>
-                      <span className="text-[10px] text-gray-400">Total Suits</span>
+                      <span className="text-[10px] text-muted-foreground">{t.totalSuits}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-base flex items-center justify-center active:scale-95 transition-all"
+                        className="h-9 w-9 rounded-lg bg-card-elevated border border-border text-foreground font-bold text-base flex items-center justify-center active:scale-95 transition-all hover:bg-card"
                         aria-label="Decrease quantity"
                       >
                         −
                       </button>
-                      <span className="font-mono text-base font-bold text-gold w-7 text-center">
+                      <span className="font-mono text-base font-bold text-primary w-7 text-center">
                         {quantity}
                       </span>
                       <button
                         type="button"
                         onClick={() => setQuantity(quantity + 1)}
-                        className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-base flex items-center justify-center active:scale-95 transition-all"
+                        className="h-9 w-9 rounded-lg bg-card-elevated border border-border text-foreground font-bold text-base flex items-center justify-center active:scale-95 transition-all hover:bg-card"
                         aria-label="Increase quantity"
                       >
                         +
@@ -1043,26 +1044,26 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* 3. Turnaround Date & Fast-Track Side-by-Side Row */}
-                <div className="border-b border-white/5 pb-4">
+                <div className="border-b border-border/50 pb-4">
                   <div className="grid grid-cols-2 gap-2.5 items-end">
                     <div className="space-y-1.5">
-                      <label className="text-xs text-gray-300 font-medium block font-urdu-serif leading-relaxed py-0.5">
-                        تاریخ ترسیل (Delivery Date) *
+                      <label className={cn("text-xs text-foreground font-medium block", isUrdu && "font-urdu-sans")}>
+                        {t.deliveryDateLabel} *
                       </label>
                       <Input
                         type="date"
                         value={deliveryDate}
                         onChange={(e) => setDeliveryDate(e.target.value)}
-                        className="h-11 text-xs font-mono bg-black/40 border-white/10"
+                        className="h-11 text-xs font-mono"
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
-                        <label className="text-gray-300 font-medium font-urdu-serif leading-relaxed py-0.5">فوری ترسیل (Rush)</label>
+                        <label className={cn("text-foreground font-medium", isUrdu && "font-urdu-sans")}>{t.urgentRushOrder}</label>
                         {isUrgent && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                            فعال ✓
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                            {t.urgentActive}
                           </span>
                         )}
                       </div>
@@ -1072,13 +1073,13 @@ export default function NewOrderPage() {
                         className={cn(
                           'w-full h-11 px-3 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all duration-200 active:scale-98 cursor-pointer',
                           isUrgent
-                            ? 'border-amber-500/60 bg-amber-500/15 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
-                            : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                            ? 'border-amber-500/60 bg-amber-500/15 text-amber-700 dark:text-amber-300 shadow-xs'
+                            : 'border-border bg-card-elevated text-muted-foreground hover:text-foreground hover:bg-card'
                         )}
                       >
-                        <Zap className={cn('h-4 w-4', isUrgent ? 'text-amber-400 fill-amber-400' : 'text-gray-500')} />
-                        <span className="font-urdu-serif leading-relaxed py-0.5 truncate">
-                          {isUrgent ? 'فوری سوٹ (Urgent)' : '+ فاسٹ ٹریک'}
+                        <Zap className={cn('h-4 w-4', isUrgent ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground')} />
+                        <span className="truncate">
+                          {isUrgent ? t.urgentEnabledBtn : t.enableUrgent}
                         </span>
                       </button>
                     </div>
@@ -1088,11 +1089,11 @@ export default function NewOrderPage() {
                 {/* 4. Fabric Details & Source Segmented Toggle */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">
-                      Fabric Details • کپڑے کی تفصیلات
+                    <span className={cn("text-xs font-bold text-foreground uppercase tracking-wider", isUrdu && "font-urdu-sans")}>
+                      {t.fabricSectionTitle}
                     </span>
-                    <span className="text-[10px] text-gray-400 font-mono">
-                      {fabricSource === 'CUSTOMER' ? 'Customer Fabric' : 'Shop Fabric'}
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      {fabricSource === 'CUSTOMER' ? t.fabricSourceCustomer : t.fabricSourceShop}
                     </span>
                   </div>
 
@@ -1102,36 +1103,30 @@ export default function NewOrderPage() {
                       type="button"
                       onClick={() => setFabricSource('CUSTOMER')}
                       className={cn(
-                        'h-auto min-h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex flex-col items-center justify-center text-center py-1 active:scale-98 cursor-pointer',
+                        'h-auto min-h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center text-center py-2 active:scale-98 cursor-pointer',
                         fabricSource === 'CUSTOMER'
-                          ? 'bg-gold/15 border-gold text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)] font-semibold scale-[1.01]'
-                          : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200'
+                          ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                          : 'bg-card-elevated border-border text-foreground hover:bg-card'
                       )}
                     >
-                      <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
-                        {fabricSource === 'CUSTOMER' && <span className="mr-1 text-gold">✓</span>}
-                        گاہک کا کپڑا
-                      </span>
-                      <span className={cn('text-[10px] font-medium font-sans', fabricSource === 'CUSTOMER' ? 'text-amber-200' : 'text-gray-300')}>
-                        Customer Fabric
+                      <span className={cn("text-xs font-semibold truncate", isUrdu && "font-urdu-sans")}>
+                        {fabricSource === 'CUSTOMER' && <span className="mr-1">✓</span>}
+                        {t.fabricSourceCustomer}
                       </span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setFabricSource('SHOP')}
                       className={cn(
-                        'h-auto min-h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex flex-col items-center justify-center text-center py-1 active:scale-98 cursor-pointer',
+                        'h-auto min-h-11 px-3 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center text-center py-2 active:scale-98 cursor-pointer',
                         fabricSource === 'SHOP'
-                          ? 'bg-gold/15 border-gold text-gold shadow-[0_0_12px_rgba(212,175,55,0.2)] font-semibold scale-[1.01]'
-                          : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200'
+                          ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                          : 'bg-card-elevated border-border text-foreground hover:bg-card'
                       )}
                     >
-                      <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
-                        {fabricSource === 'SHOP' && <span className="mr-1 text-gold">✓</span>}
-                        دکان کا کپڑا
-                      </span>
-                      <span className={cn('text-[10px] font-medium font-sans', fabricSource === 'SHOP' ? 'text-amber-200' : 'text-gray-300')}>
-                        Shop Fabric
+                      <span className={cn("text-xs font-semibold truncate", isUrdu && "font-urdu-sans")}>
+                        {fabricSource === 'SHOP' && <span className="mr-1">✓</span>}
+                        {t.fabricSourceShop}
                       </span>
                     </button>
                   </div>
@@ -1139,23 +1134,23 @@ export default function NewOrderPage() {
                   {/* Color & Brand Inputs */}
                   <div className="grid grid-cols-2 gap-2.5">
                     <div className="space-y-1">
-                      <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">رنگ (Color)</label>
+                      <label className={cn("text-[11px] text-muted-foreground font-medium", isUrdu && "font-urdu-sans")}>{t.fabricColorLabel}</label>
                       <Input
                         type="text"
-                        placeholder="e.g. سفید / کریم"
+                        placeholder={t.fabricColorPlaceholder}
                         value={fabricColor}
                         onChange={(e) => setFabricColor(e.target.value)}
-                        className="h-10 text-xs bg-black/40 border-white/10"
+                        className="h-10 text-xs"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] text-gray-400 font-medium font-urdu-serif leading-relaxed py-0.5">برانڈ (Brand)</label>
+                      <label className={cn("text-[11px] text-muted-foreground font-medium", isUrdu && "font-urdu-sans")}>{t.fabricBrandLabel}</label>
                       <Input
                         type="text"
-                        placeholder="e.g. پاشا لٹھا"
+                        placeholder={t.fabricBrandPlaceholder}
                         value={fabricBrand}
                         onChange={(e) => setFabricBrand(e.target.value)}
-                        className="h-10 text-xs bg-black/40 border-white/10"
+                        className="h-10 text-xs"
                       />
                     </div>
                   </div>
@@ -1172,22 +1167,17 @@ export default function NewOrderPage() {
                   document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className={cn(
-                  'w-full h-12 font-bold text-sm flex items-center justify-center gap-2 rounded-xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.25)]',
+                  'w-full h-12 font-bold text-sm flex items-center justify-center gap-2 rounded-xl transition-all shadow-md',
                   !customerName.trim()
-                    ? 'bg-white/10 text-gray-400 border border-white/10 cursor-not-allowed'
-                    : 'bg-gold text-[#0B0C0E] hover:bg-gold-hover active:scale-[0.99]'
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.99]'
                 )}
               >
-                <span className="font-urdu-serif leading-relaxed py-0.5 text-sm">
-                  {!customerName.trim()
-                    ? 'گاہک کا نام درج کریں (Enter Customer Name)'
-                    : 'اگلا مرحلہ: ڈیزائن اور کٹ منتخب کریں'}
+                <span>
+                  {!customerName.trim() ? t.enterCustomerNameNotice : t.nextStyleStep}
                 </span>
                 {customerName.trim() && (
-                  <>
-                    <span className="text-xs font-sans opacity-80">(Next: Style & Cut)</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+                  dir === 'rtl' ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />
                 )}
               </Button>
 
@@ -1201,11 +1191,11 @@ export default function NewOrderPage() {
           {mobileStep === 2 && (
             <div className="space-y-4 pb-44 pb-safe">
               {/* Unified Single Surface Card */}
-              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+              <div className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-sm">
                 {/* 1. Collar Cut Selection */}
-                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                    Collar Cut • گلا اور بین کا سٹائل
+                <div className="space-y-2.5 border-b border-border/50 pb-3.5">
+                  <span className={cn("text-xs font-bold text-foreground uppercase tracking-wider block", isUrdu && "font-urdu-sans")}>
+                    {t.collarCutTitle}
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -1216,25 +1206,23 @@ export default function NewOrderPage() {
                       { id: 'SOFT_BAN', labelUrdu: 'سافٹ بین', label: 'Soft Ban' },
                     ].map((item, idx) => {
                       const isSelected = stylePreferences.collar_style === item.id;
+                      const displayLabel = isUrdu ? item.labelUrdu : item.label;
                       return (
                         <button
                           key={item.id}
                           type="button"
                           onClick={() => handleStyleChange('collar_style', item.id as any)}
                           className={cn(
-                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            'h-auto min-h-11 px-3 py-2 rounded-xl border flex items-center justify-center text-center cursor-pointer transition-all',
                             idx === 4 ? 'col-span-2' : '',
                             isSelected
-                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
-                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                              ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                              : 'bg-card-elevated border-border text-foreground hover:bg-card'
                           )}
                         >
-                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
-                            {isSelected && <span className="mr-1 text-gold">✓</span>}
-                            {item.labelUrdu}
-                          </span>
-                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
-                            {item.label}
+                          <span className={cn("text-xs font-semibold truncate", isUrdu ? "font-urdu-sans" : "font-sans")}>
+                            {isSelected && <span className="mr-1.5">✓</span>}
+                            {displayLabel}
                           </span>
                         </button>
                       );
@@ -1243,9 +1231,9 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* 2. Daman Cut Selection */}
-                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                    Daman Cut • دامن کا ڈیزائن
+                <div className="space-y-2.5 border-b border-border/50 pb-3.5">
+                  <span className={cn("text-xs font-bold text-foreground uppercase tracking-wider block", isUrdu && "font-urdu-sans")}>
+                    {t.damanCutTitle}
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -1253,24 +1241,22 @@ export default function NewOrderPage() {
                       { id: 'GOOL_DAMAN', labelUrdu: 'گول دامن', label: 'Round Daman' },
                     ].map((item) => {
                       const isSelected = stylePreferences.daman_style === item.id;
+                      const displayLabel = isUrdu ? item.labelUrdu : item.label;
                       return (
                         <button
                           key={item.id}
                           type="button"
                           onClick={() => handleStyleChange('daman_style', item.id as any)}
                           className={cn(
-                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            'h-auto min-h-11 px-3 py-2 rounded-xl border flex items-center justify-center text-center cursor-pointer transition-all',
                             isSelected
-                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
-                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                              ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                              : 'bg-card-elevated border-border text-foreground hover:bg-card'
                           )}
                         >
-                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
-                            {isSelected && <span className="mr-1 text-gold">✓</span>}
-                            {item.labelUrdu}
-                          </span>
-                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
-                            {item.label}
+                          <span className={cn("text-xs font-semibold truncate", isUrdu ? "font-urdu-sans" : "font-sans")}>
+                            {isSelected && <span className="mr-1.5">✓</span>}
+                            {displayLabel}
                           </span>
                         </button>
                       );
@@ -1279,9 +1265,9 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* 3. Pocket Configurations (Multi-Select) */}
-                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                    Pockets • جیبوں کی ترتیب
+                <div className="space-y-2.5 border-b border-border/50 pb-3.5">
+                  <span className={cn("text-xs font-bold text-foreground uppercase tracking-wider block", isUrdu && "font-urdu-sans")}>
+                    {t.pocketsTitle} {t.pocketsMultiSelect}
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -1291,6 +1277,7 @@ export default function NewOrderPage() {
                       { id: 'MOBILE_INSIDE', labelUrdu: 'اندرونی موبائل جیب', label: 'Mobile Pocket' },
                     ].map((item) => {
                       const isSelected = stylePreferences.pockets?.includes(item.id as any);
+                      const displayLabel = isUrdu ? item.labelUrdu : item.label;
                       return (
                         <button
                           key={item.id}
@@ -1303,18 +1290,15 @@ export default function NewOrderPage() {
                             handleStyleChange('pockets', next);
                           }}
                           className={cn(
-                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            'h-auto min-h-11 px-3 py-2 rounded-xl border flex items-center justify-center text-center cursor-pointer transition-all',
                             isSelected
-                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
-                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                              ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                              : 'bg-card-elevated border-border text-foreground hover:bg-card'
                           )}
                         >
-                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
-                            {isSelected && <span className="mr-1 text-gold">✓</span>}
-                            {item.labelUrdu}
-                          </span>
-                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
-                            {item.label}
+                          <span className={cn("text-xs font-semibold truncate", isUrdu ? "font-urdu-sans" : "font-sans")}>
+                            {isSelected && <span className="mr-1.5">✓</span>}
+                            {displayLabel}
                           </span>
                         </button>
                       );
@@ -1323,9 +1307,9 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* 4. Stitching Type Selection */}
-                <div className="space-y-2.5 border-b border-white/5 pb-3.5">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                    Stitching Type • سلائی کی قسم
+                <div className="space-y-2.5 border-b border-border/50 pb-3.5">
+                  <span className={cn("text-xs font-bold text-foreground uppercase tracking-wider block", isUrdu && "font-urdu-sans")}>
+                    {t.stitchingTypeTitle}
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -1333,24 +1317,22 @@ export default function NewOrderPage() {
                       { id: 'SINGLE_SILAI', labelUrdu: 'سنگل سلائی (کلاسک)', label: 'Single Stitch' },
                     ].map((item) => {
                       const isSelected = stylePreferences.stitch_type === item.id;
+                      const displayLabel = isUrdu ? item.labelUrdu : item.label;
                       return (
                         <button
                           key={item.id}
                           type="button"
                           onClick={() => handleStyleChange('stitch_type', item.id as any)}
                           className={cn(
-                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            'h-auto min-h-11 px-3 py-2 rounded-xl border flex items-center justify-center text-center cursor-pointer transition-all',
                             isSelected
-                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
-                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                              ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                              : 'bg-card-elevated border-border text-foreground hover:bg-card'
                           )}
                         >
-                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
-                            {isSelected && <span className="mr-1 text-gold">✓</span>}
-                            {item.labelUrdu}
-                          </span>
-                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
-                            {item.label}
+                          <span className={cn("text-xs font-semibold truncate", isUrdu ? "font-urdu-sans" : "font-sans")}>
+                            {isSelected && <span className="mr-1.5">✓</span>}
+                            {displayLabel}
                           </span>
                         </button>
                       );
@@ -1360,8 +1342,8 @@ export default function NewOrderPage() {
 
                 {/* 5. Front Patti Selection */}
                 <div className="space-y-2.5">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                    Front Patti • سامنے پٹی
+                  <span className={cn("text-xs font-bold text-foreground uppercase tracking-wider block", isUrdu && "font-urdu-sans")}>
+                    {t.frontPattiTitle}
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -1369,24 +1351,22 @@ export default function NewOrderPage() {
                       { id: 'OPEN_PATTI', labelUrdu: 'اوپن پٹی', label: 'Open Button' },
                     ].map((item) => {
                       const isSelected = stylePreferences.front_patti === item.id;
+                      const displayLabel = isUrdu ? item.labelUrdu : item.label;
                       return (
                         <button
                           key={item.id}
                           type="button"
                           onClick={() => handleStyleChange('front_patti', item.id as any)}
                           className={cn(
-                            'h-auto min-h-11 px-3 py-1 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all',
+                            'h-auto min-h-11 px-3 py-2 rounded-xl border flex items-center justify-center text-center cursor-pointer transition-all',
                             isSelected
-                              ? 'bg-gold/15 border-gold text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)] font-semibold scale-[1.02] active:scale-98'
-                              : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 active:scale-98'
+                              ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                              : 'bg-card-elevated border-border text-foreground hover:bg-card'
                           )}
                         >
-                          <span className="font-urdu-serif text-xs font-bold leading-relaxed py-0.5">
-                            {isSelected && <span className="mr-1 text-gold">✓</span>}
-                            {item.labelUrdu}
-                          </span>
-                          <span className={cn('text-[10px] font-medium font-sans', isSelected ? 'text-amber-200' : 'text-gray-300')}>
-                            {item.label}
+                          <span className={cn("text-xs font-semibold truncate", isUrdu ? "font-urdu-sans" : "font-sans")}>
+                            {isSelected && <span className="mr-1.5">✓</span>}
+                            {displayLabel}
                           </span>
                         </button>
                       );
@@ -1405,19 +1385,19 @@ export default function NewOrderPage() {
           {/* ============================================================== */}
           {mobileStep === 3 && (
             <div className="space-y-4 pb-44 pb-safe">
-              {/* Unified Obsidian Glass Measurement Matrix Surface */}
-              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-4 shadow-xl">
+              {/* Unified Measurement Matrix Surface */}
+              <div className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-sm">
                 {/* Surface Header */}
-                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <div className="flex items-center justify-between border-b border-border/50 pb-3">
                   <div>
-                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                      Measurement Matrix • ناپ کا میٹرکس
+                    <h3 className={cn("text-xs font-bold text-foreground uppercase tracking-wider", isUrdu && "font-urdu-sans")}>
+                      {t.matrixTitle}
                     </h3>
-                    <p className="text-[10px] text-gray-400 font-urdu-sans">
-                      پورے انچ درج کریں اور کواٹر انچ (0, ¼, ½, ¾) بٹن دبائیں
+                    <p className={cn("text-[10px] text-muted-foreground", isUrdu && "font-urdu-sans")}>
+                      {t.matrixSubtitle}
                     </p>
                   </div>
-                  <Ruler className="h-5 w-5 text-gold shrink-0" />
+                  <Ruler className="h-5 w-5 text-primary shrink-0" />
                 </div>
 
                 {/* Single-Surface Full-Width Measurement Rows */}
@@ -1426,28 +1406,24 @@ export default function NewOrderPage() {
                     const val = measurements[field.key] ?? field.defaultVal;
                     const base = Math.max(1, Math.floor(val));
                     const currentFrac = Math.round((val - Math.floor(val)) * 100) / 100;
+                    const displayFieldLabel = isUrdu ? field.ur : field.en;
 
                     return (
                       <div
                         key={field.key}
                         className={cn(
                           'space-y-2',
-                          idx < MOBILE_MEASUREMENT_FIELDS.length - 1 && 'border-b border-white/5 pb-3.5'
+                          idx < MOBILE_MEASUREMENT_FIELDS.length - 1 && 'border-b border-border/40 pb-3.5'
                         )}
                       >
-                        {/* Row Header: Bilingual title (Urdu right, English left) + live formatted badge */}
+                        {/* Row Header: Single-language label + formatted live badge */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-gray-300 uppercase tracking-wide">
-                              {field.en}
-                            </span>
-                            <bdi className="font-mono text-gold font-bold text-xs bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-lg">
-                              {formatMeasurementDisplay(val)}
-                            </bdi>
-                          </div>
-                          <span className="font-urdu-serif text-sm font-bold text-white leading-relaxed" dir="rtl">
-                            {field.ur}
+                          <span className={cn("text-xs font-semibold text-foreground uppercase tracking-wide", isUrdu && "font-urdu-sans")}>
+                            {displayFieldLabel}
                           </span>
+                          <bdi className="font-mono text-primary font-bold text-xs bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg">
+                            {formatMeasurementDisplay(val)}
+                          </bdi>
                         </div>
 
                         {/* Controls Bar layout (strictly sized for 360px viewports) */}
@@ -1461,8 +1437,8 @@ export default function NewOrderPage() {
                                 const newVal = Math.round((newBase + currentFrac) * 100) / 100;
                                 handleMeasurementChange(field.key, newVal);
                               }}
-                              className="h-11 w-9 text-sm font-bold bg-white/5 border border-white/10 rounded-xl active:scale-95 text-gray-300 hover:text-white flex items-center justify-center select-none cursor-pointer"
-                              aria-label={`Decrease ${field.en} by 1 inch`}
+                              className="h-11 w-9 text-sm font-bold bg-card-elevated border border-border rounded-xl active:scale-95 text-foreground hover:bg-card flex items-center justify-center select-none cursor-pointer"
+                              aria-label={`Decrease ${displayFieldLabel} by 1 inch`}
                             >
                               -1
                             </button>
@@ -1479,7 +1455,7 @@ export default function NewOrderPage() {
                                 handleMeasurementChange(field.key, newVal);
                               }}
                               placeholder="0"
-                              className="h-11 w-12 text-center font-mono font-bold text-gold bg-black/50 border border-white/10 rounded-xl focus:border-gold focus:outline-none"
+                              className="h-11 w-12 text-center font-mono font-bold text-primary bg-card border border-input rounded-xl focus:border-primary focus:outline-none"
                             />
                             <button
                               type="button"
@@ -1488,15 +1464,15 @@ export default function NewOrderPage() {
                                 const newVal = Math.round((newBase + currentFrac) * 100) / 100;
                                 handleMeasurementChange(field.key, newVal);
                               }}
-                              className="h-11 w-9 text-sm font-bold bg-white/5 border border-white/10 rounded-xl active:scale-95 text-gray-300 hover:text-white flex items-center justify-center select-none cursor-pointer"
-                              aria-label={`Increase ${field.en} by 1 inch`}
+                              className="h-11 w-9 text-sm font-bold bg-card-elevated border border-border rounded-xl active:scale-95 text-foreground hover:bg-card flex items-center justify-center select-none cursor-pointer"
+                              aria-label={`Increase ${displayFieldLabel} by 1 inch`}
                             >
                               +1
                             </button>
                           </div>
 
                           {/* Spacer divider */}
-                          <div className="w-px h-7 bg-white/10 mx-1 shrink-0" aria-hidden="true" />
+                          <div className="w-px h-7 bg-border mx-1 shrink-0" aria-hidden="true" />
 
                           {/* Fraction Pills (0, ¼, ½, ¾) */}
                           <div className="grid grid-cols-4 gap-1 flex-1 min-w-0">
@@ -1518,8 +1494,8 @@ export default function NewOrderPage() {
                                   className={cn(
                                     'h-11 rounded-xl font-mono font-bold text-xs flex items-center justify-center select-none transition-all cursor-pointer',
                                     isFracActive
-                                      ? 'bg-gold text-black shadow-[0_0_12px_rgba(212,175,55,0.3)]'
-                                      : 'bg-white/5 border border-white/10 text-gray-300 hover:text-white active:scale-95'
+                                      ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                                      : 'bg-card-elevated border border-border text-foreground hover:bg-card active:scale-95'
                                   )}
                                 >
                                   {frac.label}
@@ -1539,37 +1515,33 @@ export default function NewOrderPage() {
                 <button
                   type="button"
                   onClick={() => setShowMobileAdmin((prev) => !prev)}
-                  className="w-full py-3 px-4 rounded-xl border border-white/10 bg-[#121418]/60 backdrop-blur-md hover:bg-white/5 active:scale-[0.99] text-xs font-semibold text-gray-300 flex items-center justify-between transition-all cursor-pointer shadow-sm"
+                  className="w-full py-3 px-4 rounded-xl border border-border bg-card hover:bg-card-elevated active:scale-[0.99] text-xs font-semibold text-foreground flex items-center justify-between transition-all cursor-pointer shadow-xs"
                 >
-                  <span className="font-urdu-serif text-xs leading-relaxed py-0.5">
-                    {showMobileAdmin
-                      ? 'کاریگر تفویض اور خصوصی ہدایات چھپائیں'
-                      : '+ کاریگر تفویض اور خصوصی ہدایات درج کریں'}
+                  <span className={cn("text-xs font-semibold", isUrdu && "font-urdu-sans")}>
+                    {showMobileAdmin ? t.hideStaffNotes : t.showStaffNotes}
                   </span>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-gray-400 font-sans">
-                      {showMobileAdmin ? 'Hide Staff & Notes' : 'Staff Assignment & Notes'}
-                    </span>
                     {(assignedCutterId || assignedStitcherId || specialNotes.trim()) && (
-                      <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
+                      <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                     )}
+                    <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform duration-200', showMobileAdmin && 'rotate-180')} />
                   </div>
                 </button>
 
                 {showMobileAdmin && (
-                  <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-3 shadow-xl animate-fade-in">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                      Staff Assignment • کاریگر کا انتخاب
+                  <div className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-sm animate-fade-in">
+                    <span className={cn("text-xs font-bold text-foreground uppercase tracking-wider block", isUrdu && "font-urdu-sans")}>
+                      {t.staffSectionTitle}
                     </span>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <label className="text-[11px] text-gray-400">کٹنگ ماسٹر</label>
+                        <label className={cn("text-[11px] text-muted-foreground", isUrdu && "font-urdu-sans")}>{t.cutterLabel}</label>
                         <select
                           value={assignedCutterId}
                           onChange={(e) => setAssignedCutterId(e.target.value)}
-                          className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
+                          className="w-full h-9 rounded-lg border border-input bg-card-elevated px-2 text-xs text-foreground focus:border-primary"
                         >
-                          <option value="">کوئی نہیں (None)</option>
+                          <option value="">{t.none}</option>
                           {cuttingMasters.map((s) => (
                             <option key={s.id} value={s.id}>
                               {s.name}
@@ -1578,13 +1550,13 @@ export default function NewOrderPage() {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[11px] text-gray-400">سلائی کاریگر</label>
+                        <label className={cn("text-[11px] text-muted-foreground", isUrdu && "font-urdu-sans")}>{t.stitcherLabel}</label>
                         <select
                           value={assignedStitcherId}
                           onChange={(e) => setAssignedStitcherId(e.target.value)}
-                          className="w-full h-9 rounded-lg border border-white/10 bg-black/40 px-2 text-xs text-white focus:border-gold/50"
+                          className="w-full h-9 rounded-lg border border-input bg-card-elevated px-2 text-xs text-foreground focus:border-primary"
                         >
-                          <option value="">کوئی نہیں (None)</option>
+                          <option value="">{t.none}</option>
                           {stitchers.map((s) => (
                             <option key={s.id} value={s.id}>
                               {s.name}
@@ -1595,15 +1567,15 @@ export default function NewOrderPage() {
                     </div>
 
                     <div className="space-y-1 pt-1">
-                      <label className="text-xs font-bold text-white uppercase tracking-wider block">
-                        Special Notes • خصوصی ہدایات
+                      <label className={cn("text-xs font-bold text-foreground uppercase tracking-wider block", isUrdu && "font-urdu-sans")}>
+                        {t.productionNotesLabel}
                       </label>
                       <textarea
                         rows={2}
-                        placeholder="e.g. کالر پر کڑھائی، بٹن خصوصی لکڑی والے"
+                        placeholder={t.productionNotesPlaceholder}
                         value={specialNotes}
                         onChange={(e) => setSpecialNotes(e.target.value)}
-                        className="w-full rounded-lg border border-white/10 bg-black/40 p-2.5 text-xs text-white placeholder-gray-500 focus:border-gold/50 focus:outline-none"
+                        className="w-full rounded-lg border border-input bg-card-elevated p-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1617,10 +1589,10 @@ export default function NewOrderPage() {
                   setMobileStep(2);
                   document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="w-full h-11 rounded-xl border border-white/10 bg-white/5 text-gray-300 font-urdu-serif text-xs hover:bg-white/10 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full h-11 rounded-xl border border-border bg-card-elevated text-foreground text-xs hover:bg-card active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <ArrowLeft className="h-4 w-4" />
-                <span>← واپس ڈیزائن اور کٹ پر جائیں (Back to Style)</span>
+                {dir === 'rtl' ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
+                <span className={isUrdu ? "font-urdu-sans text-xs" : ""}>{t.backToStyle}</span>
               </button>
 
               {/* Physical Bottom Spacer to prevent docked bar overlap */}
@@ -1631,7 +1603,7 @@ export default function NewOrderPage() {
           {/* ============================================================== */}
           {/* MOBILE STICKY BOTTOM BOOKING BAR                               */}
           {/* ============================================================== */}
-          <div className="fixed bottom-0 left-0 right-0 z-30 pb-safe bg-[#0B0C0E]/95 backdrop-blur-xl border-t border-gold/30 p-3 shadow-[0_-4px_30px_rgba(0,0,0,0.8)] space-y-2">
+          <div className="fixed bottom-0 left-0 right-0 z-30 pb-safe bg-card/95 backdrop-blur-xl border-t border-border p-3 shadow-lg space-y-2">
             {mobileStep === 1 ? (
               <Button
                 type="button"
@@ -1642,22 +1614,17 @@ export default function NewOrderPage() {
                   document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className={cn(
-                  'w-full h-12 font-bold text-sm flex items-center justify-center gap-2 rounded-xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)]',
+                  'w-full h-12 font-bold text-sm flex items-center justify-center gap-2 rounded-xl transition-all shadow-md',
                   !customerName.trim()
-                    ? 'bg-white/10 text-gray-400 border border-white/10 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black hover:opacity-95 active:scale-[0.99]'
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.99]'
                 )}
               >
-                <span className="font-urdu-serif leading-relaxed py-0.5 text-sm">
-                  {!customerName.trim()
-                    ? 'گاہک کا نام درج کریں (Enter Customer Name)'
-                    : 'اگلا مرحلہ: ڈیزائن اور کٹ منتخب کریں'}
+                <span>
+                  {!customerName.trim() ? t.enterCustomerNameNotice : t.nextStyleStep}
                 </span>
                 {customerName.trim() && (
-                  <>
-                    <span className="text-xs font-sans opacity-80">(Next: Style & Cut)</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+                  dir === 'rtl' ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />
                 )}
               </Button>
             ) : mobileStep === 2 ? (
@@ -1668,9 +1635,9 @@ export default function NewOrderPage() {
                     setMobileStep(1);
                     document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="h-12 px-4 rounded-xl border border-white/15 bg-white/5 text-gray-300 font-urdu-serif text-xs hover:bg-white/10 active:scale-98"
+                  className="h-12 px-4 rounded-xl border border-border bg-card-elevated text-foreground hover:bg-card text-xs font-medium active:scale-98"
                 >
-                  ← واپس
+                  {t.back}
                 </Button>
                 <Button
                   type="button"
@@ -1678,28 +1645,26 @@ export default function NewOrderPage() {
                     setMobileStep(3);
                     document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="flex-1 h-12 min-h-[48px] px-2 rounded-xl bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center hover:opacity-95 active:scale-[0.99]"
+                  className="flex-1 h-12 min-h-[48px] px-3 rounded-xl bg-primary text-primary-foreground font-bold shadow-md flex items-center justify-center gap-1.5 hover:bg-primary/90 active:scale-[0.99]"
                 >
-                  <div className="flex flex-col items-center justify-center leading-none">
-                    <span className="font-urdu-serif text-xs font-bold leading-tight">اگلا مرحلہ: ناپ درج کریں</span>
-                    <span className="text-[10px] text-black/80 font-sans font-semibold mt-0.5">Next: Measurements Matrix →</span>
-                  </div>
+                  <span className="text-sm font-bold truncate">{t.nextMeasurementsStep}</span>
+                  {dir === 'rtl' ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
                 </Button>
               </div>
             ) : (
               <>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">
-                      Total PKR
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      {t.totalPKR}
                     </span>
-                    <span className="font-mono text-sm font-bold text-white">
+                    <bdi dir="ltr" className="font-mono text-sm font-bold text-foreground whitespace-nowrap">
                       Rs. {financials.total_amount.toLocaleString()}
-                    </span>
+                    </bdi>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-lg">
-                    <span className="text-[11px] text-gray-300">ایڈوانس:</span>
+                  <div className="flex items-center gap-1.5 bg-card-elevated border border-border px-2 py-1 rounded-lg">
+                    <span className="text-[11px] text-muted-foreground">{t.advanceShort}</span>
                     <input
                       type="number"
                       inputMode="numeric"
@@ -1707,17 +1672,17 @@ export default function NewOrderPage() {
                       value={advancePaid === 0 ? '' : advancePaid}
                       placeholder="0"
                       onChange={(e) => setAdvancePaid(Number(e.target.value) || 0)}
-                      className="h-9 w-24 text-center font-mono font-bold text-gold bg-black/60 border border-white/20 rounded-lg focus:outline-none focus:border-gold"
+                      className="h-8 w-20 text-center font-mono font-bold text-primary bg-card border border-input rounded-md focus:outline-none focus:border-primary"
                     />
                   </div>
 
                   <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">
-                      باقی بیلنس
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      {t.remainingBalance}
                     </span>
-                    <span className="font-mono text-sm font-bold text-rose-400">
+                    <bdi dir="ltr" className="font-mono text-sm font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
                       Rs. {financials.balance_due.toLocaleString()}
-                    </span>
+                    </bdi>
                   </div>
                 </div>
 
@@ -1726,15 +1691,15 @@ export default function NewOrderPage() {
                   disabled={!isFormValidToBook || isSubmitting}
                   isLoading={isSubmitting}
                   onClick={() => handleCreateOrder(false)}
-                  className="w-full h-13 min-h-[52px] rounded-xl bg-gradient-to-r from-gold via-amber-400 to-amber-500 text-black font-bold text-base shadow-[0_0_25px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2 hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer"
+                  className="w-full h-12 min-h-[48px] rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-md flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.99] transition-all cursor-pointer"
                 >
-                  <Sparkles className="h-4 w-4 shrink-0 text-black" />
-                  <span className="font-urdu-serif leading-relaxed py-0.5 text-sm font-bold">
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  <span className={cn("text-sm font-bold", isUrdu ? "font-urdu-serif text-base" : "font-sans")}>
                     {isSubmitting
-                      ? 'تصدیق جاری ہے...'
+                      ? t.verifyingQuota
                       : !customerName.trim()
-                      ? 'گاہک کا نام درج کریں'
-                      : '✨ سوٹ بکنگ مکمل کریں اور پرچی بنائیں • Confirm & Book Suit'}
+                      ? t.enterCustomerNameNotice
+                      : t.confirmAndBook}
                   </span>
                 </Button>
               </>
@@ -1757,44 +1722,47 @@ export default function NewOrderPage() {
               className="w-full overflow-hidden"
             >
               {/* Stepper Tab Navigation Headers */}
-              <TabsList className="grid w-full grid-cols-3 gap-1 sm:gap-2 bg-[#121418] p-1 sm:p-1.5 rounded-xl border border-white/5 h-auto mb-6">
+              <TabsList className="grid w-full grid-cols-3 gap-1 sm:gap-2 bg-card-elevated p-1 sm:p-1.5 rounded-xl border border-border h-auto mb-6 shadow-xs">
                 
                 {/* Tab 1 Trigger */}
                 <TabsTrigger
                   value="customer"
-                  className="flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 sm:px-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:border-gold/30 border border-transparent transition-all min-w-0"
+                  data-testid="desktop-tab-customer"
+                  className="flex items-center justify-center gap-2 py-2 sm:py-2.5 px-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xs border border-transparent transition-all min-w-0"
                 >
-                  <span className="text-[10px] sm:text-xs md:text-sm font-semibold tracking-tight sm:tracking-wide truncate max-w-full">
-                    1. Customer & Fabric
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-mono font-bold bg-primary/15 text-primary data-[state=active]:bg-black/20 data-[state=active]:text-primary-foreground shrink-0">
+                    <bdi>1</bdi>
                   </span>
-                  <span className="text-[9px] sm:text-[10px] text-gray-400 font-urdu-sans mt-0.5 truncate max-w-full">
-                    گاہک اور کپڑا
+                  <span className={cn("text-xs sm:text-sm font-semibold truncate", isUrdu && "font-urdu-sans text-xs")}>
+                    {t.tabCustomer}
                   </span>
                 </TabsTrigger>
 
                 {/* Tab 2 Trigger */}
                 <TabsTrigger
                   value="measurements"
-                  className="flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 sm:px-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:border-gold/30 border border-transparent transition-all min-w-0"
+                  data-testid="desktop-tab-measurements"
+                  className="flex items-center justify-center gap-2 py-2 sm:py-2.5 px-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xs border border-transparent transition-all min-w-0"
                 >
-                  <span className="text-[10px] sm:text-xs md:text-sm font-semibold tracking-tight sm:tracking-wide truncate max-w-full">
-                    2. Measurements
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-mono font-bold bg-primary/15 text-primary data-[state=active]:bg-black/20 data-[state=active]:text-primary-foreground shrink-0">
+                    <bdi>2</bdi>
                   </span>
-                  <span className="text-[9px] sm:text-[10px] text-gray-400 font-urdu-sans mt-0.5 truncate max-w-full">
-                    ناپ اور کٹ
+                  <span className={cn("text-xs sm:text-sm font-semibold truncate", isUrdu && "font-urdu-sans text-xs")}>
+                    {t.tabMeasurements}
                   </span>
                 </TabsTrigger>
 
                 {/* Tab 3 Trigger */}
                 <TabsTrigger
                   value="billing"
-                  className="flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 sm:px-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:border-gold/30 border border-transparent transition-all min-w-0"
+                  data-testid="desktop-tab-billing"
+                  className="flex items-center justify-center gap-2 py-2 sm:py-2.5 px-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xs border border-transparent transition-all min-w-0"
                 >
-                  <span className="text-[10px] sm:text-xs md:text-sm font-semibold tracking-tight sm:tracking-wide truncate max-w-full">
-                    3. Billing & Assign
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-mono font-bold bg-primary/15 text-primary data-[state=active]:bg-black/20 data-[state=active]:text-primary-foreground shrink-0">
+                    <bdi>3</bdi>
                   </span>
-                  <span className="text-[9px] sm:text-[10px] text-gray-400 font-urdu-sans mt-0.5 truncate max-w-full">
-                    بلنگ اور کاریگر
+                  <span className={cn("text-xs sm:text-sm font-semibold truncate", isUrdu && "font-urdu-sans text-xs")}>
+                    {t.tabBilling}
                   </span>
                 </TabsTrigger>
               </TabsList>
@@ -1806,8 +1774,7 @@ export default function NewOrderPage() {
                 
                 {/* Section 1: Customer Profile & Phone Lookup */}
                 <SectionCard
-                  title="Customer Profile & Lookup"
-                  urTitle="گاہک کی تفصیلات"
+                  title={t.customerSectionTitle}
                   icon={<User className="h-4 w-4" />}
                 >
                   <div className="flex flex-col gap-4">
@@ -1817,12 +1784,12 @@ export default function NewOrderPage() {
                         type="tel"
                         inputMode="tel"
                         dir="ltr"
-                        label="Mobile Number / موبائل نمبر"
-                        placeholder="03XX-XXXXXXX"
+                        label={t.phoneLabel}
+                        placeholder={t.phonePlaceholder}
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        leftIcon={<Phone className="h-4 w-4" />}
-                        hint="Enter 10–11 digit Pakistani number to auto-lookup customer records"
+                        leftIcon={<Phone className="h-4 w-4 text-primary" />}
+                        hint={t.phoneHint}
                       />
 
                       {/* Profile Matched Badge */}
@@ -1832,13 +1799,13 @@ export default function NewOrderPage() {
                             <BadgeCheck className="h-5 w-5 shrink-0 text-status-ready" />
                             <div className="flex flex-col gap-0.5">
                               <span className="text-xs font-bold text-status-ready">
-                                Existing Customer Profile Matched
+                                {t.matchedCustomerFull}
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 {foundCustomer.full_name} ·{' '}
                                 <bdi dir="ltr">{formatPakistaniPhone(foundCustomer.phone)}</bdi>
                                 {foundProfile && (
-                                  <> · Profile: <span className="font-semibold text-foreground">{foundProfile.profile_name}</span></>
+                                  <> · {t.profileLabel} <span className="font-semibold text-foreground">{foundProfile.profile_name}</span></>
                                 )}
                               </span>
                             </div>
@@ -1847,17 +1814,17 @@ export default function NewOrderPage() {
                           <div className="flex items-center gap-2">
                             {foundCustomer.current_khata_balance > 0 && (
                               <Badge variant="status-overdue" className="text-[0.65rem]">
-                                <bdi dir="ltr">Udhaar: Rs. {foundCustomer.current_khata_balance.toLocaleString()}</bdi>
+                                <bdi dir="ltr">{t.khataUdhaar} Rs. {foundCustomer.current_khata_balance.toLocaleString()}</bdi>
                               </Badge>
                             )}
                             {foundCustomer.current_khata_balance < 0 && (
                               <Badge variant="status-ready" className="text-[0.65rem]">
-                                <bdi dir="ltr">Credit: Rs. {Math.abs(foundCustomer.current_khata_balance).toLocaleString()}</bdi>
+                                <bdi dir="ltr">{t.khataCredit} Rs. {Math.abs(foundCustomer.current_khata_balance).toLocaleString()}</bdi>
                               </Badge>
                             )}
                             {foundCustomer.current_khata_balance === 0 && (
                               <Badge variant="default" className="text-[0.65rem]">
-                                Khata Settled
+                                {t.khataSettled}
                               </Badge>
                             )}
 
@@ -1869,7 +1836,7 @@ export default function NewOrderPage() {
                                 className="h-7 gap-1 text-[11px] text-muted-foreground hover:text-foreground"
                               >
                                 <RefreshCw className="h-3 w-3" />
-                                Unlock Measurements
+                                {t.unlockMeasurements}
                               </Button>
                             )}
                           </div>
@@ -1881,7 +1848,7 @@ export default function NewOrderPage() {
                         <div className="flex items-center gap-2 rounded-xl border border-border bg-card-elevated px-3.5 py-2.5">
                           <AlertCircle className="h-4 w-4 shrink-0 text-primary" />
                           <span className="text-xs text-muted-foreground">
-                            New customer number — entered details and measurements will save as a fresh profile.
+                            {t.newCustomerNote}
                           </span>
                         </div>
                       )}
@@ -1890,19 +1857,19 @@ export default function NewOrderPage() {
                     {/* Name & Address Inputs */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <Input
-                        label="Customer Name / نام"
-                        placeholder="e.g. Tariq Mehmood"
+                        label={`${t.customerNameLabel} *`}
+                        placeholder={t.customerNamePlaceholder}
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
-                        leftIcon={<User className="h-4 w-4" />}
+                        leftIcon={<User className="h-4 w-4 text-primary" />}
                         required
                       />
                       <Input
-                        label="Address / پتہ"
-                        placeholder="Street, Sector, Wah Cantt"
+                        label={t.customerAddressLabel}
+                        placeholder={t.customerAddressPlaceholder}
                         value={customerAddress}
                         onChange={(e) => setCustomerAddress(e.target.value)}
-                        leftIcon={<MapPin className="h-4 w-4" />}
+                        leftIcon={<MapPin className="h-4 w-4 text-muted-foreground" />}
                       />
                     </div>
                   </div>
@@ -1910,16 +1877,15 @@ export default function NewOrderPage() {
 
                 {/* Section 2: Garment & Fabric Specifications */}
                 <SectionCard
-                  title="Garment & Fabric Specifications"
-                  urTitle="لباس اور کپڑا"
+                  title={t.garmentSectionTitle}
                   icon={<Scissors className="h-4 w-4" />}
                 >
                   <div className="flex flex-col gap-5">
                     {/* Garment Type & Quantity */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                       <div className="sm:col-span-2">
-                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Garment Type / قسم
+                        <label className={cn("mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground", isUrdu && "font-urdu-sans")}>
+                          {t.garmentTypeLabel}
                         </label>
                         <div className="relative">
                           <select
@@ -1929,7 +1895,7 @@ export default function NewOrderPage() {
                           >
                             {GARMENT_TYPE_OPTIONS.map((opt) => (
                               <option key={opt.value} value={opt.value}>
-                                {opt.en} — {opt.ur}
+                                {isUrdu ? opt.ur : opt.en}
                               </option>
                             ))}
                           </select>
@@ -1939,8 +1905,8 @@ export default function NewOrderPage() {
 
                       {/* Quantity */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Qty / تعداد
+                        <label className={cn("mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground", isUrdu && "font-urdu-sans")}>
+                          {t.quantityLabel}
                         </label>
                         <bdi dir="ltr" className="inline-flex w-full">
                           <input
@@ -1961,21 +1927,23 @@ export default function NewOrderPage() {
                     <div className={cn(
                       'flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-3.5 transition-all',
                       isUrgent
-                        ? 'border-status-stitching/50 bg-status-stitching/10 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-status-stitching/30'
+                        ? 'border-status-stitching/50 bg-status-stitching/10 shadow-xs ring-1 ring-status-stitching/30'
                         : 'border-border/70 bg-card-elevated/60'
                     )}>
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-all',
                           isUrgent
-                            ? 'border-status-stitching/40 bg-status-stitching/20 text-status-stitching shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                            ? 'border-status-stitching/40 bg-status-stitching/20 text-status-stitching shadow-xs'
                             : 'border-border/60 bg-white/5 text-muted-foreground'
                         )}>
                           <Zap className={cn('h-4 w-4', isUrgent && 'animate-pulse')} />
                         </div>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-foreground">Urgent Rush Order / ارجنٹ سلائی</span>
+                            <span className={cn("text-xs font-bold text-foreground", isUrdu && "font-urdu-sans")}>
+                              {t.urgentRushOrder}
+                            </span>
                             {activeGarmentRate && (
                               <Badge
                                 variant="outline"
@@ -1992,9 +1960,9 @@ export default function NewOrderPage() {
                           </div>
                           <span className="text-[11px] text-muted-foreground">
                             {isUrgent && activeGarmentRate
-                              ? `Express turnaround in ${activeGarmentRate.urgent_delivery_days} days (Target: ${deliveryDate || 'N/A'})`
+                              ? `${t.urgentRushNotice} ${activeGarmentRate.urgent_delivery_days} ${t.days} (${t.targetDelivery} ${deliveryDate || 'N/A'})`
                               : activeGarmentRate
-                              ? `Standard turnaround: ${activeGarmentRate.standard_delivery_days} days`
+                              ? `${t.urgentStandardNotice} ${activeGarmentRate.standard_delivery_days} ${t.days}`
                               : 'Compress timeline and apply urgent surcharge'}
                           </span>
                         </div>
@@ -2006,12 +1974,12 @@ export default function NewOrderPage() {
                         className={cn(
                           'px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto shrink-0',
                           isUrgent
-                            ? 'border-status-stitching/50 bg-status-stitching text-background shadow-md'
+                            ? 'border-status-stitching/50 bg-status-stitching text-background shadow-xs'
                             : 'border-border/80 bg-card/80 text-muted-foreground hover:text-foreground hover:border-border'
                         )}
                       >
                         <Zap className="h-3.5 w-3.5" />
-                        <span>{isUrgent ? 'Urgent Rush Active' : 'Enable Urgent Rush'}</span>
+                        <span>{isUrgent ? t.urgentEnabledBtn : t.enableUrgent}</span>
                       </button>
                     </div>
 
@@ -2019,67 +1987,72 @@ export default function NewOrderPage() {
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <Input
                         type="date"
-                        label="Target Delivery Date / ڈیلیوری تاریخ"
+                        label={`${t.deliveryDateLabel} *`}
                         value={deliveryDate}
                         onChange={(e) => setDeliveryDate(e.target.value)}
-                        leftIcon={<CalendarDays className="h-4 w-4" />}
+                        leftIcon={<CalendarDays className="h-4 w-4 text-primary" />}
                         required
                       />
                       <Input
                         type="date"
-                        label="Trial Date (optional) / ٹرائل تاریخ"
+                        label={t.trialDateLabel}
                         value={trialDate}
                         onChange={(e) => setTrialDate(e.target.value)}
-                        leftIcon={<CalendarDays className="h-4 w-4" />}
+                        leftIcon={<CalendarDays className="h-4 w-4 text-muted-foreground" />}
                       />
                     </div>
 
                     {/* Fabric Source Toggle */}
                     <div className="flex flex-col gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Fabric Source / کپڑا کس کا ہے؟
+                      <span className={cn("text-xs font-semibold uppercase tracking-wider text-muted-foreground", isUrdu && "font-urdu-sans")}>
+                        {t.fabricSourceLabel}
                       </span>
                       <div className="grid grid-cols-2 gap-3">
-                        {(['CUSTOMER', 'SHOP'] as const).map((src) => (
-                          <button
-                            key={src}
-                            type="button"
-                            onClick={() => setFabricSource(src)}
-                            className={cn(
-                              'flex items-center justify-center gap-2 rounded-lg border p-3 text-xs font-semibold transition-all duration-150',
-                              fabricSource === src
-                                ? 'border-primary bg-primary/15 text-primary shadow-[0_0_12px_rgba(200,169,126,0.2)] ring-1 ring-primary/40'
-                                : 'border-border/60 bg-card/40 text-muted-foreground hover:border-border hover:text-foreground'
-                            )}
-                          >
-                            {src === 'CUSTOMER' ? (
-                              <>
-                                <span>Customer Supplied</span>
-                                <span dir="rtl" lang="ur" className="font-urdu-sans text-[0.65rem] opacity-80">(گاہک کا کپڑا)</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>Shop In-Stock</span>
-                                <span dir="rtl" lang="ur" className="font-urdu-sans text-[0.65rem] opacity-80">(دکان کا کپڑا)</span>
-                              </>
-                            )}
-                          </button>
-                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setFabricSource('CUSTOMER')}
+                          className={cn(
+                            'flex items-center justify-center gap-2 rounded-lg border p-3 text-xs font-semibold transition-all duration-150 cursor-pointer',
+                            fabricSource === 'CUSTOMER'
+                              ? 'border-primary bg-primary text-primary-foreground font-bold shadow-xs'
+                              : 'border-border/60 bg-card-elevated text-foreground hover:border-border hover:bg-card'
+                          )}
+                        >
+                          <span className={isUrdu ? "font-urdu-sans" : ""}>
+                            {fabricSource === 'CUSTOMER' && <span className="mr-1">✓</span>}
+                            {t.fabricSourceCustomer}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFabricSource('SHOP')}
+                          className={cn(
+                            'flex items-center justify-center gap-2 rounded-lg border p-3 text-xs font-semibold transition-all duration-150 cursor-pointer',
+                            fabricSource === 'SHOP'
+                              ? 'border-primary bg-primary text-primary-foreground font-bold shadow-xs'
+                              : 'border-border/60 bg-card-elevated text-foreground hover:border-border hover:bg-card'
+                          )}
+                        >
+                          <span className={isUrdu ? "font-urdu-sans" : ""}>
+                            {fabricSource === 'SHOP' && <span className="mr-1">✓</span>}
+                            {t.fabricSourceShop}
+                          </span>
+                        </button>
                       </div>
                     </div>
 
                     {/* Fabric Brand & Color */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <Input
-                        label="Fabric Brand / برانڈ"
-                        placeholder="Pasha, Al-Karam, Grace, Cotton…"
+                        label={t.fabricBrandLabel}
+                        placeholder={t.fabricBrandPlaceholder}
                         value={fabricBrand}
                         onChange={(e) => setFabricBrand(e.target.value)}
-                        leftIcon={<Package className="h-4 w-4" />}
+                        leftIcon={<Package className="h-4 w-4 text-muted-foreground" />}
                       />
                       <Input
-                        label="Fabric Color / رنگ"
-                        placeholder="Charcoal Grey, Off-White, Navy…"
+                        label={t.fabricColorLabel}
+                        placeholder={t.fabricColorPlaceholder}
                         value={fabricColor}
                         onChange={(e) => setFabricColor(e.target.value)}
                       />
@@ -2087,14 +2060,14 @@ export default function NewOrderPage() {
 
                     {/* Fabric Notes */}
                     <div>
-                      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Fabric Notes & Tag Instructions / کپڑے کے بارے میں نوٹ
+                      <label className={cn("mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground", isUrdu && "font-urdu-sans")}>
+                        {t.fabricNotesLabel}
                       </label>
                       <textarea
                         rows={2}
                         value={fabricNotes}
                         onChange={(e) => setFabricNotes(e.target.value)}
-                        placeholder="Customer supplied 4.5m unstitched wash & wear. Needs soft collar fusing…"
+                        placeholder={t.fabricNotesPlaceholder}
                         className="w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                       />
                     </div>
@@ -2102,18 +2075,15 @@ export default function NewOrderPage() {
                 </SectionCard>
 
                 {/* Tab 1 Navigation Action Bar */}
-                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card/60 p-4">
-                  <div className="text-xs text-muted-foreground">
-                    Next step: Enter client measurements & garment cut preferences.
-                  </div>
+                <div className="flex items-center justify-end rounded-xl border border-border/60 bg-card p-4 shadow-xs">
                   <Button
                     type="button"
                     onClick={() => setActiveTab('measurements')}
-                    className="gap-2 font-medium"
+                    className="gap-2 font-medium bg-primary text-primary-foreground hover:bg-primary/90"
                     size="sm"
                   >
-                    <span>Proceed to Measurements →</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    <span>{t.nextMeasurementsStep}</span>
+                    {dir === 'rtl' ? <ArrowLeft className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
                   </Button>
                 </div>
               </TabsContent>
@@ -2123,14 +2093,13 @@ export default function NewOrderPage() {
                   ================================================================ */}
               <TabsContent value="measurements" className="mt-0 flex flex-col gap-6">
                 <SectionCard
-                  title="Tailor Measurements & Garment Style"
-                  urTitle="پیمائش اور کٹ"
+                  title={t.matrixTitle}
                   icon={<Ruler className="h-4 w-4" />}
                 >
                   {/* Top toolbar */}
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-3">
-                    <p className="text-xs text-muted-foreground">
-                      Bilingual Kameez + Shalwar dense measurement grid with 1-tap fractional pills.
+                    <p className={cn("text-xs text-muted-foreground", isUrdu && "font-urdu-sans")}>
+                      {t.matrixSubtitle}
                     </p>
                     <Button
                       variant="ghost"
@@ -2141,12 +2110,12 @@ export default function NewOrderPage() {
                       {showMannequin ? (
                         <>
                           <EyeOff className="h-3.5 w-3.5 text-primary" />
-                          Hide Body Diagram
+                          <span>{t.bodyDiagramHide}</span>
                         </>
                       ) : (
                         <>
                           <Eye className="h-3.5 w-3.5 text-primary" />
-                          Show Body Diagram
+                          <span>{t.bodyDiagramShow}</span>
                         </>
                       )}
                     </Button>
@@ -2158,7 +2127,7 @@ export default function NewOrderPage() {
                       <div className="flex items-center gap-2.5">
                         <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
                         <span className="text-xs text-foreground">
-                          Autofilled from saved profile:{' '}
+                          {t.autofilledFromProfile}{' '}
                           <span className="font-bold text-primary">{foundProfile.profile_name}</span>
                         </span>
                       </div>
@@ -2169,14 +2138,14 @@ export default function NewOrderPage() {
                         className="h-7 text-xs border-primary/30 text-primary hover:bg-primary/10"
                       >
                         <RefreshCw className="mr-1.5 h-3 w-3" />
-                        Edit as Fresh Revision
+                        {t.editFreshRevision}
                       </Button>
                     </div>
                   )}
 
                   {/* Form & Optional Mannequin Display */}
                   <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-                    {/* Measurement Intake Form (Dense 3-column Grid) */}
+                    {/* Measurement Intake Form (Card-free 2-column Ledger) */}
                     <div className="flex-1 min-w-0">
                       <MeasurementIntakeForm
                         measurements={measurements}
@@ -2203,7 +2172,7 @@ export default function NewOrderPage() {
                 </SectionCard>
 
                 {/* Tab 2 Navigation Action Bar */}
-                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card/60 p-4">
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card p-4 shadow-xs">
                   <Button
                     type="button"
                     variant="outline"
@@ -2211,18 +2180,18 @@ export default function NewOrderPage() {
                     className="gap-2 text-xs"
                     size="sm"
                   >
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    <span>← Back to Customer</span>
+                    {dir === 'rtl' ? <ArrowRight className="h-3.5 w-3.5" /> : <ArrowLeft className="h-3.5 w-3.5" />}
+                    <span>{t.backToCustomer}</span>
                   </Button>
 
                   <Button
                     type="button"
                     onClick={() => setActiveTab('billing')}
-                    className="gap-2 font-medium"
+                    className="gap-2 font-medium bg-primary text-primary-foreground hover:bg-primary/90"
                     size="sm"
                   >
-                    <span>Proceed to Billing →</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    <span>{t.nextBillingStep}</span>
+                    {dir === 'rtl' ? <ArrowLeft className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
                   </Button>
                 </div>
               </TabsContent>
@@ -2234,7 +2203,7 @@ export default function NewOrderPage() {
                 
                 {/* Section 1: Itemized Pricing & Rate Modifiers */}
                 <SectionCard
-                  title="Pricing & Rate Modifiers"
+                  title={t.billingSectionTitle}
                   urTitle="مالی حساب اور ریٹس"
                   icon={<CreditCard className="h-4 w-4" />}
                 >
@@ -2243,11 +2212,11 @@ export default function NewOrderPage() {
                       <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-card-elevated/60 p-3">
                         <div className="flex items-center justify-between">
                           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            Stitching Rate (Per Suit) / سلائی ریٹ
+                            {t.stitchingRateLabel}
                           </label>
                           {activeGarmentRate && (
                             <span className="text-[10px] text-muted-foreground font-mono">
-                              Catalog: Rs. {activeGarmentRate.base_stitching_rate}
+                              {t.catalogRate} <bdi dir="ltr">Rs. {activeGarmentRate.base_stitching_rate}</bdi>
                             </span>
                           )}
                         </div>
@@ -2266,13 +2235,13 @@ export default function NewOrderPage() {
                           </bdi>
                         </div>
                         <span className="text-[11px] text-muted-foreground">
-                          Subtotal: <bdi dir="ltr">Rs. {(stitchingRate * quantity).toLocaleString('en-PK')}</bdi> ({quantity}x suit)
+                          {t.subtotal} <bdi dir="ltr">Rs. {(stitchingRate * quantity).toLocaleString('en-PK')}</bdi> ({quantity}x {isUrdu ? selectedGarmentOption.ur : selectedGarmentOption.en})
                         </span>
                       </div>
 
                       <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-card-elevated/60 p-3">
                         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Fabric Charges / کپڑے کے چارجز
+                          {t.fabricChargesLabel}
                         </label>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">PKR</span>
@@ -2289,13 +2258,13 @@ export default function NewOrderPage() {
                           </bdi>
                         </div>
                         <span className="text-[11px] text-muted-foreground">
-                          {fabricSource === 'SHOP' ? 'Shop in-stock fabric price' : 'Customer supplied (Rs. 0)'}
+                          {fabricSource === 'SHOP' ? t.fabricShopPrice : t.fabricCustomerZero}
                         </span>
                       </div>
 
                       <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-card-elevated/60 p-3">
                         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Custom Addons / اضافی کام
+                          {t.addonsChargesLabel}
                         </label>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">PKR</span>
@@ -2312,13 +2281,13 @@ export default function NewOrderPage() {
                           </bdi>
                         </div>
                         <span className="text-[11px] text-muted-foreground">
-                          Special embroidery, pocket piping, or fancy buttons
+                          {t.addonsSubtext}
                         </span>
                       </div>
 
                       <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-card-elevated/60 p-3">
                         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Discount Amount / رعایت
+                          {t.discountLabel}
                         </label>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">PKR</span>
@@ -2335,7 +2304,7 @@ export default function NewOrderPage() {
                           </bdi>
                         </div>
                         <span className="text-[11px] text-muted-foreground">
-                          Special discount or seasonal concession
+                          {t.discountSubtext}
                         </span>
                       </div>
                     </div>
@@ -2346,11 +2315,11 @@ export default function NewOrderPage() {
                         <div className="flex items-center gap-2">
                           <Zap className="h-4 w-4 shrink-0 animate-pulse" />
                           <span className="font-semibold">
-                            Urgent Rush Surcharge Applied: Rs. {activeGarmentRate.urgent_surcharge} × {quantity} = Rs. {urgentSurcharge.toLocaleString('en-PK')}
+                            {t.urgentSurchargeNotice} <bdi dir="ltr">Rs. {activeGarmentRate.urgent_surcharge} × {quantity} = Rs. {urgentSurcharge.toLocaleString('en-PK')}</bdi>
                           </span>
                         </div>
                         <span className="text-[11px] opacity-80">
-                          Timeline compressed to {activeGarmentRate.urgent_delivery_days} days
+                          {t.urgentRushNotice} <bdi dir="ltr">{activeGarmentRate.urgent_delivery_days} {t.days}</bdi>
                         </span>
                       </div>
                     )}
@@ -2359,10 +2328,10 @@ export default function NewOrderPage() {
                     <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                          Advance Deposit / بیعانہ
+                          {t.advanceDepositLabel}
                         </span>
                         <p className="text-xs text-muted-foreground">
-                          Enter advance cash or bank transfer received at booking
+                          {t.advanceSubtext}
                         </p>
                       </div>
 
@@ -2386,7 +2355,7 @@ export default function NewOrderPage() {
 
                 {/* Section 2: Workshop Staff Assignment */}
                 <SectionCard
-                  title="Workshop Staff Assignment"
+                  title={t.staffSectionTitle}
                   urTitle="ورکشاپ عملہ تفویض"
                   icon={<Scissors className="h-4 w-4" />}
                 >
@@ -2394,15 +2363,15 @@ export default function NewOrderPage() {
                     {/* Cutting Master */}
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Cutting Master / کٹر
+                        {t.cutterLabel}
                       </label>
                       <div className="relative">
                         <select
                           value={assignedCutterId}
                           onChange={(e) => setAssignedCutterId(e.target.value)}
-                          className="h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                          className="h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rtl:pr-3 rtl:pl-9"
                         >
-                          <option value="">— Unassigned —</option>
+                          <option value="">{t.unassigned}</option>
                           {cuttingMasters.map((s) => {
                             const displayName = s.name || s.email?.split('@')[0] || 'Craftsman';
                             const roleTag = s.role === 'OWNER' ? ' (Owner)' : s.role === 'MANAGER' ? ' (Manager)' : '';
@@ -2413,22 +2382,22 @@ export default function NewOrderPage() {
                             );
                           })}
                         </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground rtl:right-auto rtl:left-3" />
                       </div>
                     </div>
 
                     {/* Stitcher */}
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Stitcher / درزی
+                        {t.stitcherLabel}
                       </label>
                       <div className="relative">
                         <select
                           value={assignedStitcherId}
                           onChange={(e) => setAssignedStitcherId(e.target.value)}
-                          className="h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                          className="h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rtl:pr-3 rtl:pl-9"
                         >
-                          <option value="">— Unassigned —</option>
+                          <option value="">{t.unassigned}</option>
                           {stitchers.map((s) => {
                             const displayName = s.name || s.email?.split('@')[0] || 'Craftsman';
                             const roleTag = s.role === 'OWNER' ? ' (Owner)' : s.role === 'MANAGER' ? ' (Manager)' : '';
@@ -2439,7 +2408,7 @@ export default function NewOrderPage() {
                             );
                           })}
                         </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground rtl:right-auto rtl:left-3" />
                       </div>
                     </div>
                   </div>
@@ -2447,26 +2416,26 @@ export default function NewOrderPage() {
 
                 {/* Section 3: Special Workshop Instructions */}
                 <SectionCard
-                  title="Workshop Special Instructions"
+                  title={t.productionNotesLabel}
                   urTitle="خصوصی ہدایات"
                   icon={<FileText className="h-4 w-4" />}
                 >
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Production Notes / ورکشاپ کے لیے خصوصی ہدایات
+                      {t.productionNotesLabel}
                     </label>
                     <textarea
                       rows={3}
                       value={specialNotes}
                       onChange={(e) => setSpecialNotes(e.target.value)}
-                      placeholder="Special contrast stitching, urgent Eid priority, double turpai on borders, client prefers looser fit around chest…"
+                      placeholder={t.productionNotesPlaceholder}
                       className="w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                     />
                   </div>
                 </SectionCard>
 
                 {/* Tab 3 Navigation Action Bar */}
-                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card/60 p-4">
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card p-4 shadow-xs">
                   <Button
                     type="button"
                     variant="outline"
@@ -2474,11 +2443,11 @@ export default function NewOrderPage() {
                     className="gap-2 text-xs"
                     size="sm"
                   >
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    <span>← Back to Measurements</span>
+                    {dir === 'rtl' ? <ArrowRight className="h-3.5 w-3.5" /> : <ArrowLeft className="h-3.5 w-3.5" />}
+                    <span>{t.backToMeasurements}</span>
                   </Button>
                   <span className="text-xs text-muted-foreground hidden sm:inline">
-                    Review and finalize order in the Summary sidebar →
+                    {isUrdu ? 'آرڈر کی تصدیق کے لیے سائیڈ بار ملاحظہ کریں ←' : 'Review and finalize order in the Summary sidebar →'}
                   </span>
                 </div>
               </TabsContent>
@@ -2498,21 +2467,21 @@ export default function NewOrderPage() {
                 <div className="flex items-center justify-between border-b border-border/60 pb-3">
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Order Summary
+                      {t.orderSummary}
                     </span>
                     <h3 className="text-base font-bold text-foreground truncate max-w-[180px]">
-                      {customerName.trim() || 'New Customer'}
+                      {customerName.trim() || t.newCustomer}
                     </h3>
                   </div>
                   <div className="flex items-center gap-1.5">
                     {isUrgent && (
                       <Badge variant="status-stitching" className="text-[10px] gap-1 px-1.5 py-0.5">
                         <Zap className="h-3 w-3" />
-                        Urgent
+                        {isUrdu ? 'ارجنٹ' : 'Urgent'}
                       </Badge>
                     )}
                     <Badge variant="status-booked" className="text-[11px] font-mono font-semibold">
-                      {selectedGarmentOption.en} × {quantity}
+                      {isUrdu ? selectedGarmentOption.ur : selectedGarmentOption.en} × {quantity}
                     </Badge>
                   </div>
                 </div>
@@ -2521,17 +2490,17 @@ export default function NewOrderPage() {
                 <div className="flex items-center justify-between text-xs py-1 border-b border-border/40 pb-2.5">
                   <span className="flex items-center gap-1.5 text-muted-foreground">
                     <CalendarDays className="h-3.5 w-3.5 text-primary" />
-                    Target Delivery:
+                    {t.targetDelivery}
                   </span>
                   <div className="flex items-center gap-1.5 font-semibold text-foreground">
                     {deliveryDate ? (
                       <bdi dir="ltr">{deliveryDate}</bdi>
                     ) : (
-                      <span className="text-muted-foreground/60 italic">Not set</span>
+                      <span className="text-muted-foreground/60 italic">{t.notSet}</span>
                     )}
                     {isUrgent && activeGarmentRate && (
                       <span className="text-[10px] text-status-stitching font-bold">
-                        ({activeGarmentRate.urgent_delivery_days}d rush)
+                        ({activeGarmentRate.urgent_delivery_days}{isUrdu ? ' دن' : 'd rush'})
                       </span>
                     )}
                   </div>
@@ -2542,38 +2511,35 @@ export default function NewOrderPage() {
                   <div className="flex items-center justify-between pb-1">
                     <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
                       <CreditCard className="h-3.5 w-3.5" />
-                      Financial Ledger
-                    </span>
-                    <span dir="rtl" lang="ur" className="font-urdu-serif text-xs text-primary">
-                      مالی حساب
+                      {t.financialLedger}
                     </span>
                   </div>
 
                   <div className="flex flex-col divide-y divide-border/40">
                     <FinancialRow
-                      label={`Stitching (× ${quantity})`}
-                      urLabel="سلائی ریٹ"
+                      label={`${t.stitchingFee} (× ${quantity})`}
+                      urLabel={`${t.stitchingFee} (× ${quantity})`}
                       value={stitchingRate * quantity}
                       readOnly
                     />
                     <FinancialRow
-                      label="Fabric Charges"
-                      urLabel="کپڑے کے اخراجات"
+                      label={t.fabricFee}
+                      urLabel={t.fabricFee}
                       value={fabricCharges}
                       readOnly
                     />
                     {addonsCharges > 0 && (
                       <FinancialRow
-                        label="Custom Addons"
-                        urLabel="اضافی چارجز"
+                        label={t.addonFee}
+                        urLabel={t.addonFee}
                         value={addonsCharges}
                         readOnly
                       />
                     )}
                     {urgentSurcharge > 0 && (
                       <FinancialRow
-                        label="Urgent Rush Surcharge"
-                        urLabel="ارجنٹ سلائی چارجز"
+                        label={t.urgentFee}
+                        urLabel={t.urgentFee}
                         value={urgentSurcharge}
                         readOnly
                         highlight="amber"
@@ -2581,16 +2547,16 @@ export default function NewOrderPage() {
                     )}
                     {addonsCharges === 0 && urgentSurcharge === 0 && (
                       <FinancialRow
-                        label="Addon Charges"
-                        urLabel="اضافی چارجز"
+                        label={t.addonFee}
+                        urLabel={t.addonFee}
                         value={0}
                         readOnly
                       />
                     )}
                     {discountAmount > 0 && (
                       <FinancialRow
-                        label="Discount"
-                        urLabel="رعایت"
+                        label={t.discountFee}
+                        urLabel={t.discountFee}
                         value={discountAmount}
                         readOnly
                         highlight="green"
@@ -2601,21 +2567,18 @@ export default function NewOrderPage() {
                     <div className="py-2.5 flex items-center justify-between border-t border-border">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-                          Total Amount
-                        </span>
-                        <span dir="rtl" lang="ur" className="font-urdu-sans text-[0.6rem] text-muted-foreground">
-                          کل رقم
+                          {t.totalAmount}
                         </span>
                       </div>
-                      <bdi dir="ltr" className="font-mono text-lg font-black tabular-nums text-primary">
+                      <bdi dir="ltr" className="font-mono text-lg font-black tabular-nums text-primary whitespace-nowrap">
                         Rs. {financials.total_amount.toLocaleString('en-PK')}
                       </bdi>
                     </div>
 
                     {/* Advance Paid */}
                     <FinancialRow
-                      label="Advance Paid"
-                      urLabel="ایڈوانس ادائیگی"
+                      label={t.advancePaid}
+                      urLabel={t.advancePaid}
                       value={advancePaid}
                       readOnly
                     />
@@ -2625,35 +2588,32 @@ export default function NewOrderPage() {
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-foreground">
-                            {isOverpayment ? 'Credit Balance' : 'Balance Due'}
+                            {isOverpayment ? t.creditBalance : t.balanceDue}
                           </span>
                           {financials.payment_status === 'FULLY_PAID' && !isOverpayment ? (
                             <Badge variant="status-ready" className="text-[10px] px-1.5 py-0 h-4.5">
-                              Fully Paid
+                              {t.paid}
                             </Badge>
                           ) : isOverpayment ? (
                             <Badge variant="status-stitching" className="text-[10px] px-1.5 py-0 h-4.5">
-                              Credit
+                              {t.credit}
                             </Badge>
                           ) : financials.advance_paid > 0 ? (
                             <Badge variant="status-cutting" className="text-[10px] px-1.5 py-0 h-4.5">
-                              Partial
+                              {t.partial}
                             </Badge>
                           ) : (
                             <Badge variant="status-booked" className="text-[10px] px-1.5 py-0 h-4.5">
-                              Unpaid
+                              {t.unpaid}
                             </Badge>
                           )}
                         </div>
-                        <span dir="rtl" lang="ur" className="font-urdu-sans text-[0.6rem] text-muted-foreground mt-0.5">
-                          {isOverpayment ? 'گاہک کا کریڈٹ' : 'بقیہ رقم'}
-                        </span>
                       </div>
 
                       <bdi
                         dir="ltr"
                         className={cn(
-                          'font-mono text-lg font-black tabular-nums',
+                          'font-mono text-lg font-black tabular-nums whitespace-nowrap',
                           isOverpayment
                             ? 'text-status-stitching'
                             : financials.balance_due === 0
@@ -2672,7 +2632,7 @@ export default function NewOrderPage() {
                       <div className="mt-2 flex items-start gap-1.5 rounded-lg border border-status-stitching/30 bg-status-stitching/10 p-2.5 text-[11px] text-status-stitching">
                         <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
                         <span>
-                          Rs. {creditBalance.toLocaleString()} credit will be added to the customer&apos;s Khata account.
+                          <bdi dir="ltr">Rs. {creditBalance.toLocaleString()}</bdi> {t.overpaymentNote}
                         </span>
                       </div>
                     )}
@@ -2683,19 +2643,19 @@ export default function NewOrderPage() {
                 {(selectedCutter || selectedStitcher) && (
                   <div className="flex flex-col gap-1.5 border-t border-border/60 pt-3">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Assigned Operators
+                      {t.assignedOperators}
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {selectedCutter && (
-                        <div className="bg-white/5 border border-white/10 text-gray-200 px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5">
+                        <div className="bg-card-elevated border border-border text-foreground px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5">
                           <Scissors className="h-3 w-3 text-primary" />
-                          <span>Cutter: {selectedCutter.name || selectedCutter.email?.split('@')[0] || 'Assigned'}</span>
+                          <span>{t.cutter} {selectedCutter.name || selectedCutter.email?.split('@')[0] || t.cutterLabel}</span>
                         </div>
                       )}
                       {selectedStitcher && (
-                        <div className="bg-white/5 border border-white/10 text-gray-200 px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5">
+                        <div className="bg-card-elevated border border-border text-foreground px-2.5 py-1 rounded-md text-xs flex items-center gap-1.5">
                           <Layers className="h-3 w-3 text-status-stitching" />
-                          <span>Stitcher: {selectedStitcher.name || selectedStitcher.email?.split('@')[0] || 'Assigned'}</span>
+                          <span>{t.stitcher} {selectedStitcher.name || selectedStitcher.email?.split('@')[0] || t.stitcherLabel}</span>
                         </div>
                       )}
                     </div>
@@ -2719,12 +2679,12 @@ export default function NewOrderPage() {
                     )}
                   >
                     <Sparkles className="h-4 w-4" />
-                    <span>{isCheckingQuota ? 'Verifying Quota...' : '✨ Confirm & Book Suit'}</span>
+                    <span>{isCheckingQuota ? t.verifyingQuota : t.confirmAndBook}</span>
                   </Button>
 
                   {!isFormValidToBook && (
                     <p className="text-center text-[11px] text-muted-foreground">
-                      * Please enter customer name & delivery date to book.
+                      {t.bookRequirementsNotice}
                     </p>
                   )}
 
@@ -2736,7 +2696,7 @@ export default function NewOrderPage() {
                       className="flex-1 text-xs"
                       onClick={handleSaveDraft}
                     >
-                      Save Draft
+                      {t.saveDraft}
                     </Button>
                     <Button
                       type="button"
@@ -2746,7 +2706,7 @@ export default function NewOrderPage() {
                       className="text-xs text-muted-foreground hover:text-destructive gap-1"
                     >
                       <RotateCcw className="h-3 w-3" />
-                      Reset
+                      {t.resetForm}
                     </Button>
                   </div>
                 </div>
@@ -2777,103 +2737,111 @@ export default function NewOrderPage() {
           initialFormat={printerSettings.paper_width}
         />
 
-        {/* Monthly Quota Exceeded Luxury Obsidian Dark Dialog */}
+        {/* Monthly Quota Exceeded Luxury Theme-Adaptive Dialog */}
         {isQuotaModalOpen && quotaDetails && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="quota-dialog-title" aria-describedby="quota-dialog-desc">
-            <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-gold/40 bg-[#0F1115]/95 p-6 sm:p-8 shadow-[0_0_50px_rgba(212,175,55,0.2)]">
+            <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-primary/40 bg-card p-6 sm:p-8 shadow-2xl">
               {/* Decorative radial top glow */}
-              <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-gold/15 blur-3xl" />
+              <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
 
               {/* Header */}
-              <div className="relative z-10 flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+              <div className="relative z-10 flex items-start justify-between gap-4 border-b border-border pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-gold/40 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/40 bg-primary/10 text-primary shadow-xs">
                     <Crown className="h-6 w-6" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 id="quota-dialog-title" className="text-lg font-bold text-foreground">Monthly Quota Reached</h2>
-                      <Badge variant="outline" className="border-gold/50 bg-gold/10 text-gold text-[10px] uppercase tracking-wider font-semibold">
-                        {currentShop.subscription_status === 'TRIALING' ? 'Trial Expired' : 'Free Tier'}
+                      <h2 id="quota-dialog-title" className="text-lg font-bold text-foreground">
+                        {isUrdu ? 'ماہانہ کوٹہ مکمل' : 'Monthly Quota Reached'}
+                      </h2>
+                      <Badge variant="outline" className="border-primary/50 bg-primary/10 text-primary text-[10px] uppercase tracking-wider font-semibold">
+                        {currentShop.subscription_status === 'TRIALING' ? (isUrdu ? 'ٹرائل ختم' : 'Trial Expired') : (isUrdu ? 'فری پلان' : 'Free Tier')}
                       </Badge>
                     </div>
                     <p id="quota-dialog-desc" className="text-xs text-muted-foreground">
-                      Maximum monthly suit quota exhausted
+                      {isUrdu ? 'اس مہینے کے سوٹس کا کوٹہ مکمل ہو چکا ہے' : 'Maximum monthly suit quota exhausted'}
                     </p>
                   </div>
                 </div>
-                <span dir="rtl" lang="ur" className="font-urdu-serif text-lg leading-urdu-display text-gold">
-                  ماہانہ کوٹہ مکمل
+                <span dir="rtl" lang="ur" className="font-urdu-serif text-lg leading-urdu-display text-primary">
+                  {isUrdu ? 'کوٹہ حد' : 'ماہانہ کوٹہ'}
                 </span>
               </div>
 
               {/* Body */}
               <div className="relative z-10 space-y-5 py-5">
                 {/* Progress meter */}
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="rounded-xl border border-border bg-card-elevated/60 p-4">
                   <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-medium text-gray-300">Monthly Usage Consumption</span>
-                    <span className="font-mono font-bold text-gold">
-                      {quotaDetails.currentCount} / {quotaDetails.maxLimit} Suits ({Math.min(100, Math.round((quotaDetails.currentCount / quotaDetails.maxLimit) * 100))}%)
+                    <span className="font-medium text-foreground">
+                      {isUrdu ? 'ماہانہ استعمال کی شرح' : 'Monthly Usage Consumption'}
+                    </span>
+                    <span className="font-mono font-bold text-primary">
+                      <bdi dir="ltr">{quotaDetails.currentCount} / {quotaDetails.maxLimit}</bdi> {isUrdu ? 'سوٹس' : 'Suits'} (<bdi dir="ltr">{Math.min(100, Math.round((quotaDetails.currentCount / quotaDetails.maxLimit) * 100))}%</bdi>)
                     </span>
                   </div>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full bg-gradient-to-r from-amber-500 via-gold to-yellow-300 shadow-[0_0_12px_rgba(212,175,55,0.6)] transition-all duration-500"
+                      className="h-full bg-primary shadow-xs transition-all duration-500"
                       style={{ width: `${Math.min(100, (quotaDetails.currentCount / quotaDetails.maxLimit) * 100)}%` }}
                     />
                   </div>
                   <p className="mt-2 text-[11px] text-muted-foreground">
                     {currentShop.subscription_status === 'TRIALING'
-                      ? 'Your promotional trial has concluded. The workspace is currently limited to the Free tier ceiling of 50 suits/month.'
-                      : `Free tier accommodates up to 50 orders per calendar month. You have tailored ${quotaDetails.currentCount} suits this month.`}
+                      ? (isUrdu
+                        ? 'آپ کا ٹرائل ختم ہو چکا ہے۔ ورک اسپیس فری حد (50 سوٹ فی ماہ) پر محدود ہے۔'
+                        : 'Your promotional trial has concluded. The workspace is currently limited to the Free tier ceiling of 50 suits/month.')
+                      : (isUrdu
+                        ? `فری پلان میں ماہانہ 50 آرڈرز کی حد ہے۔ آپ اس مہینے ${quotaDetails.currentCount} سوٹ درج کر چکے ہیں۔`
+                        : `Free tier accommodates up to 50 orders per calendar month. You have tailored ${quotaDetails.currentCount} suits this month.`)}
                   </p>
                 </div>
 
                 {/* Feature comparison / upgrade value */}
-                <div className="space-y-2.5 rounded-xl border border-gold/20 bg-gold/[0.04] p-4 text-xs">
-                  <p className="font-semibold text-gold flex items-center gap-1.5">
+                <div className="space-y-2.5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs">
+                  <p className="font-semibold text-primary flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5" />
-                    Unlock Unlimited Growth with Pro Workshop:
+                    {isUrdu ? 'پرو ورکشاپ کے ساتھ لامحدود ترقی حاصل کریں:' : 'Unlock Unlimited Growth with Pro Workshop:'}
                   </p>
-                  <ul className="space-y-1.5 text-gray-300">
+                  <ul className="space-y-1.5 text-foreground">
                     <li className="flex items-center gap-2">
-                      <Check className="h-3.5 w-3.5 text-gold flex-shrink-0" />
-                      <span><strong>Unlimited Suits & Orders</strong> without monthly ceiling</span>
+                      <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span><strong>{isUrdu ? 'لامحدود سوٹ اور آرڈرز' : 'Unlimited Suits & Orders'}</strong> {isUrdu ? 'بغیر کسی ماہانہ حد کے' : 'without monthly ceiling'}</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="h-3.5 w-3.5 text-gold flex-shrink-0" />
-                      <span><strong>Multi-Staff & Role Assignment</strong> (Cutters, Stitchers, Pressers)</span>
+                      <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span><strong>{isUrdu ? 'مکمل عملہ انتظام' : 'Multi-Staff & Role Assignment'}</strong> {isUrdu ? '(کٹر، درزی، پریس ماسٹر)' : '(Cutters, Stitchers, Pressers)'}</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="h-3.5 w-3.5 text-gold flex-shrink-0" />
-                      <span><strong>Hardware Thermal ESC/POS</strong> direct receipt & tag printing</span>
+                      <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span><strong>{isUrdu ? 'تھرمل رسید اور ٹیگ پرنٹنگ' : 'Hardware Thermal ESC/POS'}</strong> {isUrdu ? 'براہ راست رسید پرنٹ' : 'direct receipt & tag printing'}</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="h-3.5 w-3.5 text-gold flex-shrink-0" />
-                      <span><strong>Custom WhatsApp & Slip Branding</strong> with Urdu typography</span>
+                      <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span><strong>{isUrdu ? 'کسٹم واٹس ایپ اور رسید برانڈنگ' : 'Custom WhatsApp & Slip Branding'}</strong> {isUrdu ? 'اردو فونٹس کے ساتھ' : 'with Urdu typography'}</span>
                     </li>
                   </ul>
                 </div>
               </div>
 
               {/* Footer CTAs */}
-              <div className="relative z-10 flex flex-col sm:flex-row items-center justify-end gap-2 border-t border-white/10 pt-4">
+              <div className="relative z-10 flex flex-col sm:flex-row items-center justify-end gap-2 border-t border-border pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsQuotaModalOpen(false)}
                   className="w-full sm:w-auto text-xs"
                 >
-                  Dismiss / سمجھ گیا
+                  {isUrdu ? 'سمجھ گیا' : 'Dismiss'}
                 </Button>
                 <Link href="/settings" className="w-full sm:w-auto">
                   <Button
                     type="button"
-                    className="w-full sm:w-auto bg-gradient-to-r from-gold to-amber-500 text-black font-bold text-xs hover:opacity-90 shadow-[0_0_20px_rgba(212,175,55,0.4)] gap-1.5"
+                    className="w-full sm:w-auto bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 shadow-md gap-1.5"
                   >
                     <Crown className="h-3.5 w-3.5" />
-                    <span>Upgrade to Pro Workshop →</span>
+                    <span>{isUrdu ? 'پرو ورکشاپ میں اپ گریڈ کریں ←' : 'Upgrade to Pro Workshop →'}</span>
                   </Button>
                 </Link>
               </div>

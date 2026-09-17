@@ -1,9 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { DASHBOARD_I18N, type Language, type DashboardTranslations } from './i18n/translations';
+import {
+  DASHBOARD_I18N,
+  NEW_ORDER_I18N,
+  type Language,
+  type DashboardTranslations,
+  type NewOrderTranslations,
+} from './i18n/translations';
 
-export type { Language, DashboardTranslations };
+export type { Language, DashboardTranslations, NewOrderTranslations };
 export const SILAYE_LANGUAGE_KEY = 'silaye_language';
 export const SILAYE_LANGUAGE_CHANGED_EVENT = 'silaye:language-changed';
 
@@ -14,6 +20,7 @@ interface LanguageContextType {
   dir: 'rtl' | 'ltr';
   isMounted: boolean;
   t: DashboardTranslations;
+  newOrderT: NewOrderTranslations;
 }
 
 
@@ -77,6 +84,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const dir: 'rtl' | 'ltr' = language === 'ur' ? 'rtl' : 'ltr';
   const t = DASHBOARD_I18N[language] || DASHBOARD_I18N.ur;
+  const newOrderT = NEW_ORDER_I18N[language] || NEW_ORDER_I18N.ur;
 
   return (
     <LanguageContext.Provider
@@ -87,6 +95,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         dir,
         isMounted,
         t,
+        newOrderT,
       }}
     >
       {children}

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/lib/language-provider';
 import type { CollarStyle, DamanStyle, FrontPatti, PocketConfig } from '@/types/tailor';
 
 // ---------------------------------------------------------------------------
@@ -101,6 +102,9 @@ export function GarmentStyleChips({
   onChange,
   className,
 }: GarmentStyleChipsProps) {
+  const { language, newOrderT: t } = useLanguage();
+  const isUrdu = language === 'ur';
+
   const handlePocketToggle = (pocketId: string) => {
     const current = pockets || [];
     const next = current.includes(pocketId)
@@ -115,10 +119,7 @@ export function GarmentStyleChips({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Collar / Neck
-          </span>
-          <span dir="rtl" lang="ur" className="font-urdu-sans text-xs text-primary/80">
-            گلا اور بین
+            {isUrdu ? t.collarCutTitle : 'Collar / Neck'}
           </span>
         </div>
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Collar / Neck selection">
@@ -135,16 +136,15 @@ export function GarmentStyleChips({
                   onChange('collarStyle', opt.id);
                 }}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer select-none',
+                  'px-3.5 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer select-none active:scale-98',
                   isSelected
-                    ? 'border-gold bg-gold/15 text-gold shadow-[0_0_12px_rgba(212,175,55,0.15)] font-semibold'
-                    : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-gray-200'
+                    ? 'border-primary bg-primary text-primary-foreground font-bold shadow-xs'
+                    : 'border-border bg-card-elevated text-muted-foreground hover:border-foreground/30 hover:text-foreground'
                 )}
               >
-                {isSelected && <Check className="h-3.5 w-3.5 text-gold shrink-0" />}
-                <span>{opt.en}</span>
-                <span dir="rtl" lang="ur" className="font-urdu-sans text-[10px] opacity-80">
-                  ({opt.ur})
+                {isSelected && <Check className="h-3.5 w-3.5 shrink-0" />}
+                <span className={cn(isUrdu ? 'font-urdu-serif leading-relaxed' : 'font-sans font-medium')}>
+                  {isUrdu ? opt.ur : opt.en}
                 </span>
               </button>
             );
@@ -156,10 +156,7 @@ export function GarmentStyleChips({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Daman Cut
-          </span>
-          <span dir="rtl" lang="ur" className="font-urdu-sans text-xs text-primary/80">
-            دامن کا کٹ
+            {isUrdu ? t.damanCutTitle : 'Daman Cut'}
           </span>
         </div>
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Daman Cut selection">
@@ -176,16 +173,15 @@ export function GarmentStyleChips({
                   onChange('damanStyle', opt.id);
                 }}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer select-none',
+                  'px-3.5 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer select-none active:scale-98',
                   isSelected
-                    ? 'border-gold bg-gold/15 text-gold shadow-[0_0_12px_rgba(212,175,55,0.15)] font-semibold'
-                    : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-gray-200'
+                    ? 'border-primary bg-primary text-primary-foreground font-bold shadow-xs'
+                    : 'border-border bg-card-elevated text-muted-foreground hover:border-foreground/30 hover:text-foreground'
                 )}
               >
-                {isSelected && <Check className="h-3.5 w-3.5 text-gold shrink-0" />}
-                <span>{opt.en}</span>
-                <span dir="rtl" lang="ur" className="font-urdu-sans text-[10px] opacity-80">
-                  ({opt.ur})
+                {isSelected && <Check className="h-3.5 w-3.5 shrink-0" />}
+                <span className={cn(isUrdu ? 'font-urdu-serif leading-relaxed' : 'font-sans font-medium')}>
+                  {isUrdu ? opt.ur : opt.en}
                 </span>
               </button>
             );
@@ -197,10 +193,7 @@ export function GarmentStyleChips({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Front Patti
-          </span>
-          <span dir="rtl" lang="ur" className="font-urdu-sans text-xs text-primary/80">
-            سامنے کی پٹی
+            {isUrdu ? t.frontPattiTitle : 'Front Placket'}
           </span>
         </div>
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Front Patti selection">
@@ -217,16 +210,15 @@ export function GarmentStyleChips({
                   onChange('frontPatti', opt.id);
                 }}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer select-none',
+                  'px-3.5 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer select-none active:scale-98',
                   isSelected
-                    ? 'border-gold bg-gold/15 text-gold shadow-[0_0_12px_rgba(212,175,55,0.15)] font-semibold'
-                    : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-gray-200'
+                    ? 'border-primary bg-primary text-primary-foreground font-bold shadow-xs'
+                    : 'border-border bg-card-elevated text-muted-foreground hover:border-foreground/30 hover:text-foreground'
                 )}
               >
-                {isSelected && <Check className="h-3.5 w-3.5 text-gold shrink-0" />}
-                <span>{opt.en}</span>
-                <span dir="rtl" lang="ur" className="font-urdu-sans text-[10px] opacity-80">
-                  ({opt.ur})
+                {isSelected && <Check className="h-3.5 w-3.5 shrink-0" />}
+                <span className={cn(isUrdu ? 'font-urdu-serif leading-relaxed' : 'font-sans font-medium')}>
+                  {isUrdu ? opt.ur : opt.en}
                 </span>
               </button>
             );
@@ -238,10 +230,7 @@ export function GarmentStyleChips({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-            Pockets <span className="text-[10px] text-gold font-normal lowercase">(Multi-Select)</span>
-          </span>
-          <span dir="rtl" lang="ur" className="font-urdu-sans text-xs text-primary/80">
-            جیب کی ترتیبات
+            {isUrdu ? `${t.pocketsTitle} ${t.pocketsMultiSelect}` : 'Pockets (Multi-Select)'}
           </span>
         </div>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Pocket choices multi-selection">
@@ -255,16 +244,15 @@ export function GarmentStyleChips({
                 aria-checked={isSelected}
                 onClick={() => handlePocketToggle(opt.id)}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer select-none',
+                  'px-3.5 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer select-none active:scale-98',
                   isSelected
-                    ? 'border-gold bg-gold/15 text-gold shadow-[0_0_12px_rgba(212,175,55,0.15)] font-semibold'
-                    : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-gray-200'
+                    ? 'border-primary bg-primary text-primary-foreground font-bold shadow-xs'
+                    : 'border-border bg-card-elevated text-muted-foreground hover:border-foreground/30 hover:text-foreground'
                 )}
               >
-                {isSelected && <Check className="h-3.5 w-3.5 text-gold shrink-0" />}
-                <span>{opt.en}</span>
-                <span dir="rtl" lang="ur" className="font-urdu-sans text-[10px] opacity-80">
-                  ({opt.ur})
+                {isSelected && <Check className="h-3.5 w-3.5 shrink-0" />}
+                <span className={cn(isUrdu ? 'font-urdu-serif leading-relaxed' : 'font-sans font-medium')}>
+                  {isUrdu ? opt.ur : opt.en}
                 </span>
               </button>
             );

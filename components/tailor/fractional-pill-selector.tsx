@@ -40,7 +40,7 @@ export function FractionalPillSelector({
   return (
     <div
       className={cn(
-        'flex h-9 items-center rounded-lg bg-black/60 p-1 border border-white/10 w-full',
+        'flex h-9 items-center rounded-lg bg-card-elevated p-1 border border-border w-full',
         className
       )}
       role="group"
@@ -61,10 +61,10 @@ export function FractionalPillSelector({
             aria-pressed={isActive}
             aria-label={`Set fraction to ${frac.label}`}
             className={cn(
-              'flex-1 h-full text-xs font-semibold rounded-md transition-all flex items-center justify-center select-none focus:outline-none',
+              'flex-1 h-full text-xs font-semibold rounded-md transition-all flex items-center justify-center select-none focus:outline-none cursor-pointer',
               isActive
-                ? 'bg-gold text-[#0B0C0E] font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-card/60'
             )}
           >
             {frac.label}

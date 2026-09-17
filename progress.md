@@ -3368,7 +3368,45 @@
   - `progress.md` [MODIFIED]
 
 * **Next Immediate Task:**
-  - Commit changes to `feat/home-light-theme-bidi`, push to GitHub remote (`origin/feat/home-light-theme-bidi`), and present final audit report to user.
+  - Phase 25: New Suit Booking (`/orders/new`) 10/10 Atelier Redesign & BiDi Architecture (Completed).
+
+---
+
+## Phase 25: New Suit Booking (`/orders/new`) 10/10 Atelier Redesign & BiDi Architecture (Completed)
+* **Date:** 2026-09-18
+* **Git Branch:** `feat/home-light-theme-bidi`
+* **Tasks Completed:**
+  - `25.1` Implemented `NEW_ORDER_I18N` translation dictionary in `lib/i18n/translations.ts` with authentic, single-language Urdu and English strings covering all tabs, customer intake, garment options, style chips, measurement matrix, billing modifiers, and summary ledger.
+  - `25.2` Exposed `newOrderT` in `LanguageContextType` and `LanguageProvider` (`lib/language-provider.tsx`).
+  - `25.3` Refactored `components/ui/input.tsx` to use semantic theme-adaptive classes (`bg-card`, `border-border`, `text-foreground`, `placeholder:text-muted-foreground/60`).
+  - `25.4` Redesigned `components/tailor/fractional-pill-selector.tsx` with semantic tokens and uncrushable bullion gold active state (`bg-primary text-primary-foreground`).
+  - `25.5` Upgraded `components/tailor/garment-style-chips.tsx` with single-language rendering and high-contrast Bullion Gold active chips.
+  - `25.6` Localized `components/tailor/measurement-intake-form.tsx` with single-language anatomical labels and theme-adaptive `MeasurementRow`.
+  - `25.7` Overhauled `app/orders/new/page.tsx` across Mobile 3-Step Wizard and Desktop Split-Pane:
+    * Replaced dual-language text stacking with single-language BiDi architecture (authentic Urdu in RTL, English in LTR).
+    * Fixed mobile CTA text collision bug on Step 2 with clear, responsive advance button.
+    * Isolated stepper tab numbers `<span className="..."><bdi>{step}</bdi></span>` preventing browser BiDi inversion in Urdu RTL.
+    * Redesigned desktop Tab 3 (Billing & Staff) and Right Sticky Sidebar (Order Summary & Financial Ledger) with semantic classes, bullion gold total, and direction-aware layout.
+    * Upgraded Quota Exceeded dialog with theme-adaptive styling.
+  - `25.8` Verification Suite:
+    * `npx tsc --noEmit`: 0 errors.
+    * `npm run build`: 28/28 static export routes compiled cleanly into `out/`.
+    * Playwright Visual Audit: Captured 10 high-resolution audit screenshots confirming flawless visual perfection across Mobile (Steps 1, 2, 3), Desktop Urdu (Tabs 1, 2, 3), Desktop English (Tabs 1, 2, 3), and Obsidian Dark Mode regression check.
+
+* **Active File Changes:**
+  - `lib/i18n/translations.ts` [MODIFIED]
+  - `lib/language-provider.tsx` [MODIFIED]
+  - `components/ui/input.tsx` [MODIFIED]
+  - `components/tailor/fractional-pill-selector.tsx` [MODIFIED]
+  - `components/tailor/garment-style-chips.tsx` [MODIFIED]
+  - `components/tailor/measurement-intake-form.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `scripts/capture_orders_new_audit.mjs` [NEW]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Next Immediate Task:**
+  - Present results and visual screenshots to user, commit and push changes on branch `feat/home-light-theme-bidi`.
 
 
 

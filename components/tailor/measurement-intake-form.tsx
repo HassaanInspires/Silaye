@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/lib/language-provider';
 import type { ShalwarKameezMeasurements, StylePreferences } from '@/types/tailor';
 import { FractionalPillSelector } from '@/components/tailor/fractional-pill-selector';
 import { GarmentStyleChips } from '@/components/tailor/garment-style-chips';
@@ -102,6 +103,7 @@ interface MeasurementRowProps {
   field: FieldDefinition;
   value: number;
   isActive: boolean;
+  isUrdu: boolean;
   inputRef: React.RefObject<HTMLInputElement | null>;
   onChange: (value: number) => void;
   onFocus: () => void;
@@ -113,6 +115,7 @@ function MeasurementRow({
   field,
   value,
   isActive,
+  isUrdu,
   inputRef,
   onChange,
   onFocus,
@@ -184,36 +187,40 @@ function MeasurementRow({
   return (
     <div
       className={cn(
-        'flex flex-col gap-1.5 py-2.5 border-b border-white/5 transition-colors',
-        isActive && 'bg-white/[0.02]'
+        'flex flex-col gap-1.5 py-2.5 border-b border-border/40 transition-colors',
+        isActive && 'bg-primary/[0.04]'
       )}
     >
-      {/* Tier 1: Bilingual Labels & Live Gold Preview */}
+      {/* Tier 1: Localized Label & Live Gold Preview */}
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-2">
-          <span
-            className={cn(
-              'text-xs font-bold uppercase tracking-wider transition-colors',
-              isActive ? 'text-gold' : 'text-gray-200'
-            )}
-          >
-            {field.enLabel}
-            {!field.required && (
-              <span className="ml-1 text-[10px] font-normal lowercase text-gray-500">(opt)</span>
-            )}
-          </span>
-          <span
-            dir="rtl"
-            lang="ur"
-            className={cn(
-              'text-[11px] font-urdu-sans transition-colors',
-              isActive ? 'text-gold/90' : 'text-gray-400'
-            )}
-          >
-            {field.urLabel}
-          </span>
+          {isUrdu ? (
+            <span
+              className={cn(
+                'text-xs font-urdu-serif font-bold transition-colors',
+                isActive ? 'text-primary' : 'text-foreground'
+              )}
+            >
+              {field.urLabel}
+              {!field.required && (
+                <span className="mr-1 text-[10px] font-normal text-muted-foreground">(اختیاری)</span>
+              )}
+            </span>
+          ) : (
+            <span
+              className={cn(
+                'text-xs font-bold uppercase tracking-wider transition-colors',
+                isActive ? 'text-primary' : 'text-foreground'
+              )}
+            >
+              {field.enLabel}
+              {!field.required && (
+                <span className="ml-1 text-[10px] font-normal lowercase text-muted-foreground">(opt)</span>
+              )}
+            </span>
+          )}
         </div>
-        <span className="font-mono text-xs font-bold text-gold">
+        <span className="font-mono text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg shadow-2xs">
           <bdi dir="ltr">{formatDisplayValue(value)}</bdi>
         </span>
       </div>
@@ -235,10 +242,10 @@ function MeasurementRow({
           onKeyDown={onKeyDown}
           placeholder="0"
           className={cn(
-            'h-9 w-20 text-center font-mono text-sm font-semibold bg-[#0B0C0E] border border-white/15 rounded-lg text-white placeholder:text-gray-600 focus:border-gold focus:ring-1 focus:ring-gold transition-all outline-none shrink-0',
-            isActive && 'border-gold ring-1 ring-gold shadow-[0_0_8px_rgba(212,175,55,0.2)]'
+            'h-9 w-20 text-center font-mono text-sm font-semibold bg-card border border-input rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shrink-0',
+            isActive && 'border-primary ring-1 ring-primary shadow-xs'
           )}
-          aria-label={`${field.enLabel} / ${field.urLabel}`}
+          aria-label={isUrdu ? field.urLabel : field.enLabel}
         />
         <div className="flex-1 h-9 min-w-0">
           <FractionalPillSelector
@@ -259,21 +266,21 @@ function MeasurementRow({
 interface SectionHeadingProps {
   en: string;
   ur: string;
+  isUrdu?: boolean;
 }
 
-function SectionHeading({ en, ur }: SectionHeadingProps) {
+function SectionHeading({ en, ur, isUrdu = false }: SectionHeadingProps) {
   return (
-    <div className="flex items-baseline justify-between border-b border-white/10 pb-2">
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-        {en}
-      </h3>
-      <span
-        dir="rtl"
-        lang="ur"
-        className="font-urdu-serif text-sm leading-urdu-display text-gold"
+    <div className="flex items-baseline justify-between border-b border-border/60 pb-2">
+      <h3
+        className={cn(
+          isUrdu
+            ? 'font-urdu-serif text-sm font-bold text-primary'
+            : 'text-xs font-semibold uppercase tracking-widest text-muted-foreground'
+        )}
       >
-        {ur}
-      </span>
+        {isUrdu ? ur : en}
+      </h3>
     </div>
   );
 }
@@ -291,6 +298,9 @@ export function MeasurementIntakeForm({
   onFieldFocus,
   className,
 }: MeasurementIntakeFormProps) {
+  const { language, newOrderT: t } = useLanguage();
+  const isUrdu = language === 'ur';
+
   // Build a stable map of refs keyed by measurement field name
   const inputRefs = React.useRef<Map<keyof ShalwarKameezMeasurements, React.RefObject<HTMLInputElement | null>>>(
     new Map()
@@ -332,6 +342,7 @@ export function MeasurementIntakeForm({
         field={field}
         value={value}
         isActive={isActive}
+        isUrdu={isUrdu}
         inputRef={getRef(field.key)}
         onChange={(v) => onMeasurementChange(field.key, v)}
         onFocus={() => onFieldFocus?.(field.key)}
@@ -347,7 +358,7 @@ export function MeasurementIntakeForm({
           KAMEEZ / قمیض SECTION (Card-Free 2-Column Ledger)
           ================================================================ */}
       <section aria-label="Kameez Measurements" className="flex flex-col gap-4">
-        <SectionHeading en="Kameez / Kurta" ur="قمیض / کرتہ" />
+        <SectionHeading en="Kameez / Kurta" ur={t.kameezHeading || 'قمیض / کرتہ'} isUrdu={isUrdu} />
 
         {/* Primary required fields — 2-column ledger */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
@@ -356,13 +367,12 @@ export function MeasurementIntakeForm({
 
         {/* Optional fields — collapsed by default, 2-column ledger */}
         <details className="group mt-2">
-          <summary className="mb-3 flex cursor-pointer select-none list-none items-center gap-2 text-xs font-medium text-gray-400 transition-colors hover:text-white">
-            <span className="flex h-4 w-4 items-center justify-center rounded border border-white/10 text-[0.6rem] group-open:rotate-90 transition-transform">
+          <summary className="mb-3 flex cursor-pointer select-none list-none items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+            <span className="flex h-4 w-4 items-center justify-center rounded border border-border text-[0.6rem] group-open:rotate-90 transition-transform">
               ▶
             </span>
-            Optional Kameez Fields
-            <span dir="rtl" lang="ur" className="font-urdu-sans text-[0.65rem] text-gray-500">
-              اضافی پیمائش
+            <span className={cn(isUrdu ? 'font-urdu-serif' : 'font-sans')}>
+              {isUrdu ? 'اضافی قمیض ناپ (اختیاری)' : 'Optional Kameez Fields'}
             </span>
           </summary>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
@@ -375,7 +385,7 @@ export function MeasurementIntakeForm({
           GARMENT STYLE CHIPS
           ================================================================ */}
       <section aria-label="Style Preferences" className="flex flex-col gap-4">
-        <SectionHeading en="Style Preferences" ur="کٹ اور سٹائل" />
+        <SectionHeading en="Style Preferences" ur={t.styleSectionTitle || 'کٹ اور سٹائل'} isUrdu={isUrdu} />
         <GarmentStyleChips
           collarStyle={stylePreferences.collar_style}
           damanStyle={stylePreferences.daman_style}
@@ -402,7 +412,7 @@ export function MeasurementIntakeForm({
           SHALWAR / شلوار SECTION (Card-Free 2-Column Ledger)
           ================================================================ */}
       <section aria-label="Shalwar Measurements" className="flex flex-col gap-4">
-        <SectionHeading en="Shalwar / Trouser" ur="شلوار / پاجامہ" />
+        <SectionHeading en="Shalwar / Trouser" ur={t.shalwarHeading || 'شلوار / پاجامہ'} isUrdu={isUrdu} />
 
         {/* Primary shalwar fields — 2-column ledger */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
@@ -411,13 +421,12 @@ export function MeasurementIntakeForm({
 
         {/* Optional shalwar fields — 2-column ledger */}
         <details className="group mt-2">
-          <summary className="mb-3 flex cursor-pointer select-none list-none items-center gap-2 text-xs font-medium text-gray-400 transition-colors hover:text-white">
-            <span className="flex h-4 w-4 items-center justify-center rounded border border-white/10 text-[0.6rem] group-open:rotate-90 transition-transform">
+          <summary className="mb-3 flex cursor-pointer select-none list-none items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+            <span className="flex h-4 w-4 items-center justify-center rounded border border-border text-[0.6rem] group-open:rotate-90 transition-transform">
               ▶
             </span>
-            Optional Shalwar Fields
-            <span dir="rtl" lang="ur" className="font-urdu-sans text-[0.65rem] text-gray-500">
-              اضافی پیمائش
+            <span className={cn(isUrdu ? 'font-urdu-serif' : 'font-sans')}>
+              {isUrdu ? 'اضافی شلوار ناپ (اختیاری)' : 'Optional Shalwar Fields'}
             </span>
           </summary>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
