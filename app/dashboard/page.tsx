@@ -16,6 +16,7 @@ import {
   Calendar,
   CheckCircle2,
   CheckCircle,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppShell } from '@/components/layout/app-shell';
@@ -341,6 +342,34 @@ export default function DashboardPage() {
               </button>
             </a>
           </div>
+
+          {/* Block 2.5: Digital Naap Register & Saved Sizing Quick Access Card */}
+          <a href="/customers" className="block mt-2.5" data-testid="dashboard-customers-register-card">
+            <div className="rounded-2xl border border-gold/30 bg-card p-3 shadow-xs hover:border-gold/50 active:scale-[0.99] transition-all flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15 border border-gold/30 text-gold shrink-0">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn('text-xs font-bold text-foreground truncate', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                      {t.naapRegisterTitle}
+                    </span>
+                    <span className="rounded-full bg-gold/15 text-gold border border-gold/30 px-1.5 py-0.2 text-[9px] font-bold shrink-0">
+                      <bdi dir="ltr">{customers.length}</bdi>
+                    </span>
+                  </div>
+                  <span className={cn('text-[10px] text-muted-foreground truncate leading-tight mt-0.5', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                    {t.naapRegisterSub}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-gold font-bold text-xs shrink-0 font-urdu-sans">
+                <span>{t.openRegister}</span>
+                <ChevronRight className={cn('h-4 w-4 transition-transform', dir === 'rtl' ? 'rotate-180' : '')} />
+              </div>
+            </div>
+          </a>
 
           {/* Block 3: Vertical Urgent Deliveries Feed */}
           <div className="space-y-3 mt-4">
@@ -767,6 +796,20 @@ export default function DashboardPage() {
                 <PlusCircle className="h-4 w-4" />
                 <span className={language === 'ur' ? 'font-urdu-sans text-xs' : 'font-sans'}>
                   {t.bookNewSuit}
+                </span>
+              </Button>
+            </a>
+
+            {/* Button 1.5: Digital Naap Register */}
+            <a href="/customers" data-testid="desktop-dashboard-customers-register-btn">
+              <Button
+                variant="outline"
+                size="md"
+                className="gap-2 border-gold/30 bg-gold/5 hover:bg-gold/15 text-foreground hover:border-gold/50"
+              >
+                <Users className="h-4 w-4 text-gold" />
+                <span className={language === 'ur' ? 'font-urdu-sans text-xs' : 'font-sans'}>
+                  {t.naapRegisterBtn}
                 </span>
               </Button>
             </a>

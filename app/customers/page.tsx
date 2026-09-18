@@ -359,9 +359,14 @@ export default function CustomersPage() {
                               {c.full_name.charAt(0)}
                             </div>
                             <div className="min-w-0">
-                              <p className="font-bold text-foreground text-sm font-urdu-sans leading-tight">
-                                {c.full_name}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-bold text-foreground text-sm font-urdu-sans leading-tight">
+                                  {c.full_name}
+                                </p>
+                                <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground border border-border/60" title={customersT.customerNumber}>
+                                  <bdi dir="ltr">{`#CUST-${(c.phone.replace(/\D/g, '') || c.id.replace(/-/g, '')).slice(-4)}`}</bdi>
+                                </span>
+                              </div>
                               {c.notes && (
                                 <p className="text-[11px] text-muted-foreground truncate max-w-[200px] font-urdu-sans mt-0.5">
                                   {c.notes}
@@ -472,9 +477,14 @@ export default function CustomersPage() {
                         {c.full_name.charAt(0)}
                       </div>
                       <div>
-                        <h3 className="font-bold text-sm text-foreground font-urdu-sans leading-tight">
-                          {c.full_name}
-                        </h3>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="font-bold text-sm text-foreground font-urdu-sans leading-tight">
+                            {c.full_name}
+                          </h3>
+                          <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground border border-border/60" title={customersT.customerNumber}>
+                            <bdi dir="ltr">{`#CUST-${(c.phone.replace(/\D/g, '') || c.id.replace(/-/g, '')).slice(-4)}`}</bdi>
+                          </span>
+                        </div>
                         <p className="text-xs text-muted-foreground font-urdu-sans mt-0.5">
                           {c.city || 'Wah Cantt'}
                         </p>

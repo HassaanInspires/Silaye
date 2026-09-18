@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CheckCircle2,
   Repeat,
@@ -9,6 +10,7 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
+  Home,
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -23,6 +25,7 @@ export interface PostBookingSuccessModalProps {
   onBookAnotherSameCustomer: () => void;
   onBookForNewCustomer: () => void;
   onViewQueue: () => void;
+  onGoToDashboard?: () => void;
 }
 
 export function PostBookingSuccessModal({
@@ -33,7 +36,9 @@ export function PostBookingSuccessModal({
   onBookAnotherSameCustomer,
   onBookForNewCustomer,
   onViewQueue,
+  onGoToDashboard,
 }: PostBookingSuccessModalProps) {
+  const router = useRouter();
   const { postBookingT, dir } = useLanguage();
   const isRtl = dir === 'rtl';
 
@@ -198,15 +203,25 @@ export function PostBookingSuccessModal({
             </div>
           </div>
 
-          {/* Close button */}
-          <div className="pt-2 flex justify-end">
+          {/* Safe Exit: Return to Home / Dashboard */}
+          <div className="pt-2 border-t border-border/40">
             <Button
+              type="button"
               variant="outline"
               size="sm"
-              onClick={() => onOpenChange(false)}
-              className="text-xs font-urdu-sans"
+              onClick={() => {
+                onOpenChange(false);
+                if (onGoToDashboard) {
+                  onGoToDashboard();
+                } else {
+                  router.push('/dashboard');
+                }
+              }}
+              className="w-full h-11 rounded-xl bg-background hover:bg-accent border-border text-foreground font-bold text-xs sm:text-sm font-urdu-sans flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] transition-all cursor-pointer"
+              data-testid="post-booking-go-home-btn"
             >
-              {postBookingT.close}
+              <Home className="h-4 w-4 text-primary" />
+              <span>{postBookingT.goToDashboard}</span>
             </Button>
           </div>
         </div>

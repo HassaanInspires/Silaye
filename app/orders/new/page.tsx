@@ -3121,6 +3121,10 @@ export default function NewOrderPage() {
           onBookAnotherSameCustomer={handleBookAnotherSameCustomer}
           onBookForNewCustomer={handleBookForNewCustomer}
           onViewQueue={handleNavigateToQueue}
+          onGoToDashboard={() => {
+            handleResetForm();
+            router.push('/dashboard');
+          }}
         />
 
         {/* Monthly Quota Exceeded Luxury Theme-Adaptive Dialog */}

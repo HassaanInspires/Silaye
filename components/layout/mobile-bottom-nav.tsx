@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Home, Scissors, BookOpen, Settings, Plus } from 'lucide-react';
+import { Home, Scissors, BookOpen, Users, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   getNavLayoutPreference,
@@ -29,8 +29,8 @@ const MOBILE_TABS_LEFT: ReadonlyArray<MobileTabItem> = [
 ];
 
 const MOBILE_TABS_RIGHT: ReadonlyArray<MobileTabItem> = [
+  { icon: Users, label: 'Customers', labelUrdu: 'گاہک', route: '/customers' },
   { icon: BookOpen, label: 'Khata', labelUrdu: 'کھاتہ', route: '/khata' },
-  { icon: Settings, label: 'Settings', labelUrdu: 'سیٹنگز', route: '/settings' },
 ];
 
 /**
@@ -46,6 +46,9 @@ function isTabActive(tabRoute: string, currentPath: string): boolean {
   }
   if (target === '/orders') {
     return normalized === '/orders' || (normalized.startsWith('/orders/') && normalized !== '/orders/new');
+  }
+  if (target === '/customers') {
+    return normalized === '/customers' || normalized.startsWith('/customers/');
   }
   if (target === '/khata') {
     return normalized === '/khata' || normalized.startsWith('/khata/');
@@ -107,6 +110,7 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
             <Link
               key={tab.route}
               href={tab.route}
+              data-testid={`mobile-bottom-tab-${tab.route.replace(/^\//, '')}`}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'flex flex-col items-center justify-center min-w-[54px] min-h-[48px] px-1 py-1 rounded-xl transition-all duration-200 group',
@@ -177,6 +181,7 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
             <Link
               key={tab.route}
               href={tab.route}
+              data-testid={`mobile-bottom-tab-${tab.route.replace(/^\//, '')}`}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'flex flex-col items-center justify-center min-w-[54px] min-h-[48px] px-1 py-1 rounded-xl transition-all duration-200 group',

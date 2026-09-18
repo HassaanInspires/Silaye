@@ -717,7 +717,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   }
 
   // 2. Strict Auth Wall: Block rendering and show loading skeleton strictly on protected routes while auth is unresolved or unauthenticated
-  if (!isPublic && isSupabaseConfigured() && (!isAuthResolved || !canAccess)) {
+  if (!isPublic && isSupabaseConfigured() && (!isMounted || !isAuthResolved || !canAccess)) {
     return (
       <div className="min-h-screen bg-ambient-dark flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -944,24 +944,42 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
               </nav>
             </div>
 
-            <div className="border-t border-white/5 pt-4 space-y-3">
+            <div className="border-t border-border/50 pt-4 space-y-2.5">
+              {/* Quick Language Switcher in Mobile Drawer */}
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-card border border-border text-xs">
+                <span className="text-foreground font-medium font-urdu-sans">
+                  {language === 'ur' ? 'زبان (Language)' : 'Language'}
+                </span>
+                <button
+                  type="button"
+                  onClick={toggleLanguage}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 font-bold transition-all cursor-pointer text-xs"
+                  data-testid="drawer-language-toggle-btn"
+                >
+                  <span>{language === 'ur' ? 'English (EN)' : 'اردو (Urdu)'}</span>
+                </button>
+              </div>
+
               {/* Quick Theme Switcher in Mobile Drawer */}
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs">
-                <span className="text-gray-300 font-medium">Theme (ظاہری شکل)</span>
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-card border border-border text-xs">
+                <span className="text-foreground font-medium font-urdu-sans">
+                  {language === 'ur' ? 'ظاہری شکل (Theme)' : 'Theme'}
+                </span>
                 <button
                   type="button"
                   onClick={() => setTheme(effectiveTheme === 'light' ? 'dark' : 'light')}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 font-semibold transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 font-semibold transition-all cursor-pointer text-xs"
+                  data-testid="drawer-theme-toggle-btn"
                 >
                   {effectiveTheme === 'light' ? (
                     <>
                       <Moon className="h-3.5 w-3.5 text-foreground" />
-                      <span>Dark Mode / رات کا موڈ</span>
+                      <span>{language === 'ur' ? 'رات کا موڈ' : 'Dark Mode'}</span>
                     </>
                   ) : (
                     <>
-                      <Sun className="h-3.5 w-3.5 text-gold" />
-                      <span>Light Mode / دن کا موڈ</span>
+                      <Sun className="h-3.5 w-3.5 text-primary" />
+                      <span>{language === 'ur' ? 'دن کا موڈ' : 'Light Mode'}</span>
                     </>
                   )}
                 </button>
@@ -1033,87 +1051,55 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
               </button>
             </div>
           ) : (
-            <div className="flex md:hidden items-center justify-between w-full h-14 min-h-14 px-3.5">
-              {/* Mobile Start: Hamburger (Drawer/Hybrid) or Gold Scissors (Tabs) */}
+            <div className="flex md:hidden items-center justify-between w-full h-14 min-h-14 px-2">
+              {/* Mobile Start: Hamburger Menu + Brand Logo (Silaye) */}
               <div className="flex items-center gap-2 shrink-0">
-                {navLayout === 'drawer' || navLayout === 'hybrid' ? (
-                  <button
-                    type="button"
-                    onClick={() => setMobileMenuOpen(true)}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 cursor-pointer"
-                    aria-label="Open navigation menu"
-                  >
-                    <Menu className="h-4 w-4" />
-                  </button>
-                ) : (
-                  <a href="/dashboard" className="flex items-center" aria-label="Go to Dashboard">
-                    <div className="relative h-8 w-8 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_10px_rgba(212,175,55,0.2)]">
-                      <Scissors className="h-4 w-4 object-contain aspect-square" />
-                    </div>
-                  </a>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card text-foreground hover:bg-accent hover:text-primary transition-all cursor-pointer shadow-xs"
+                  aria-label="Open navigation menu"
+                  data-testid="mobile-hamburger-btn"
+                >
+                  <Menu className="h-4 w-4" />
+                </button>
+
+                <a href="/dashboard" className="flex items-center gap-1.5" aria-label="Silaye Dashboard">
+                  <div className="relative h-7 w-7 shrink-0 flex items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary shadow-xs">
+                    <Scissors className="h-3.5 w-3.5 object-contain aspect-square" />
+                  </div>
+                  <span className="font-bold text-base tracking-tight text-foreground font-sans">
+                    Silaye
+                  </span>
+                </a>
               </div>
 
-              {/* Mobile Center: Workshop Name + Ambient Sync Pill */}
-              <div className="flex items-center justify-center min-w-0 px-1.5 flex-1 gap-1.5">
-                <span className="text-xs sm:text-sm font-semibold text-foreground truncate max-w-[125px] sm:max-w-[180px]">
-                  {shopName}
-                </span>
+              {/* Mobile Center: Ambient Sync Status Pill */}
+              <div className="flex items-center justify-center min-w-0 px-1">
                 <ConnectionPill />
               </div>
 
-              {/* Mobile End: Compact Touch Actions [🔍 Search], [🌐 Language], [☀️/🌙 Theme], and [🔔 Notification] */}
+              {/* Mobile End: Search + Settings Gear Icon */}
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsMobileSearchOpen(true)}
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-gold transition-colors cursor-pointer"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer shadow-xs"
                   aria-label="Open search"
                   title="Search"
+                  data-testid="mobile-header-search-btn"
                 >
-                  <Search className="h-3.5 w-3.5" />
-                </button>
-
-                {/* 1-Tap Language Quick Switcher [اردو / EN] */}
-                <button
-                  type="button"
-                  onClick={toggleLanguage}
-                  className={cn(
-                    'flex h-8 px-2 items-center justify-center rounded-xl border transition-all cursor-pointer text-xs font-bold shrink-0',
-                    effectiveTheme === 'light'
-                      ? 'border-border bg-card text-foreground hover:border-gold/50 shadow-sm'
-                      : 'border-white/10 bg-white/5 text-gray-200 hover:border-gold/40 hover:text-gold'
-                  )}
-                  aria-label="Toggle language between Urdu and English"
-                  title={language === 'ur' ? 'Switch to English' : 'اردو میں تبدیل کریں'}
-                >
-                  <span className={cn('text-[11px] font-bold tracking-tight', language === 'ur' ? 'font-sans' : 'font-urdu-sans')}>
-                    {language === 'ur' ? 'EN' : 'اردو'}
-                  </span>
-                </button>
-
-                {/* Theme Switcher */}
-                <button
-                  type="button"
-                  onClick={() => setTheme(effectiveTheme === 'light' ? 'dark' : 'light')}
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-gold transition-colors cursor-pointer"
-                  aria-label="Toggle theme"
-                  title={effectiveTheme === 'light' ? 'Switch to Dark Mode (رات کا موڈ)' : 'Switch to Light Mode (دن کا موڈ)'}
-                >
-                  {effectiveTheme === 'light' ? (
-                    <Moon className="h-3.5 w-3.5 text-foreground" />
-                  ) : (
-                    <Sun className="h-3.5 w-3.5 text-gold" />
-                  )}
+                  <Search className="h-4 w-4" />
                 </button>
 
                 <a
                   href="/settings"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-gold transition-colors cursor-pointer"
-                  aria-label="Notifications and Settings"
-                  title="Notifications"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-primary hover:bg-accent transition-colors cursor-pointer shadow-xs"
+                  aria-label="Settings"
+                  title={language === 'ur' ? 'ترتیبات (سیٹنگز)' : 'Settings'}
+                  data-testid="mobile-header-settings-btn"
                 >
-                  <Bell className="h-3.5 w-3.5" />
+                  <Settings className="h-4 w-4" />
                 </a>
               </div>
             </div>

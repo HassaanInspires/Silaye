@@ -654,3 +654,15 @@
 - [x] 27.5 Mobile Customer Directory Touch Ergonomics & Clearance (`app/customers/page.tsx`): Convert phone numbers into clickable `tel:` dialer links, expand WhatsApp touch hit target to >=44px, add `pb-28` to avoid `MobileBottomNav` overlap, and add 1-tap clear search button on empty results.
 - [x] 27.6 Comprehensive Playwright Mobile Scenario Audit (`scripts/brutal_mobile_scenario_audit.mjs`): Execute automated stress test on `360×740` mobile screen covering all 6 brutal real-life scenarios (missing fields, back-and-forth wizard switching, standalone intake without order, search empty state, post-booking reset, offline mode).
 - [x] 27.7 Automated Verification Suite & Walkthrough: Run `npx tsc --noEmit`, `scripts/verify_db.ts`, `npm run build`, and document results in `progress.md`.
+
+---
+
+## Phase 28: Mobile Navigation Architecture & Brand Polish (Post-Booking Home Exit, Top Header Brand & Settings Gear, Bottom Nav Customers Tab, and Customer Number Badging)
+- [x] 28.1 Post-Booking Success Modal Safe Exit (`components/tailor/post-booking-success-modal.tsx`): Replace `بند کریں` ("Close") with `ہوم اسکرین پر جائیں` ("Go to Dashboard / Home") with `Home` icon, and ensure closing safely resets form state.
+- [x] 28.2 Mobile Top Command Bar Decluttering & Brand Re-anchoring (`components/layout/app-shell.tsx`): Replace truncated shop name with crisp platform brand `Silaye` with scissor emblem. Remove crowded Language and Theme buttons from the mobile top bar. Place a sleek `[⚙️]` Settings gear icon in the top right.
+- [x] 28.3 Mobile Bottom Navigation Bar Update (`components/layout/mobile-bottom-nav.tsx`): Swap `Settings` out of the 5th bottom tab and put `Customers` (`گاہک اور ناپ` / `/customers`) in its place.
+- [x] 28.4 Dashboard Quick Sizing Discovery Card (`app/dashboard/page.tsx`): Add a prominent "ڈیجیٹل ناپ رجسٹر اور گاہک" quick access card on `/dashboard` routing to `/customers`.
+- [x] 28.5 Human Customer Number Badge & Translations (`lib/i18n/translations.ts`, `app/customers/page.tsx`, `components/tailor/customer-profile-edit-modal.tsx`): Display clean `#CUST-XXXX` / `کھاتہ نمبر` badge on customer cards and profile modals.
+- [x] 28.6 Hydration Safety Guard (`app/layout.tsx`, `lib/language-provider.tsx`): Ensure clean client-side hydration without minified React #418 error.
+- [x] 28.7 Brutal Verification Suite: Run `npx tsc --noEmit`, `scripts/verify_db.ts`, `npm run build`, and Playwright test suite capturing screenshots.
+

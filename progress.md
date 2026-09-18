@@ -3570,5 +3570,56 @@
   - `node scripts/brutal_mobile_scenario_audit.mjs`: 12/12 mobile scenario assertions passed.
 
 * **Next Immediate Task:**
-  - Conclude Phase 27, commit changes, and present comprehensive mobile stress-test walkthrough to user.
+  - Phase 28: Mobile Navigation Architecture & Brand Polish (Completed)
+
+---
+
+## Phase 28: Mobile Navigation Architecture, Brand Polish & Customer Discovery (Completed)
+* **Date:** 2026-09-18
+* **Tasks Completed:**
+  - `28.1` Post-Booking Success Modal Safe Exit (`components/tailor/post-booking-success-modal.tsx`, `app/orders/new/page.tsx`, `lib/i18n/translations.ts`):
+    * Replaced the ambiguous `بند کریں` ("Close") button with a clear, full-width safe exit button `[Home] ہوم اسکرین پر جائیں` (`postBookingT.goToDashboard`, `data-testid="post-booking-go-home-btn"`).
+    * Integrated safe exit handler `handleResetForm()` to cleanly wipe customer state, fabric selections, and measurement matrices upon navigating to `/dashboard`, preventing duplicate order submissions or accidental data edits.
+  - `28.2` Mobile Top Command Bar Decluttering & Brand Re-anchoring (`components/layout/app-shell.tsx`):
+    * Replaced shop name ellipsis truncation on narrow mobile screens with the clean platform brand `Silaye` featuring the golden scissors emblem.
+    * Moved crowded Language and Theme toggles out of the mobile top bar and into the mobile drawer footer for fast, organized access.
+    * Added dedicated 1-tap `[⚙️]` Settings gear icon (`data-testid="mobile-header-settings-btn"`) and `[🔍]` Search icon to the top-right header, routing directly to `/settings` and triggering the command search dialog.
+  - `28.3` Mobile Bottom Navigation Bar Update (`components/layout/mobile-bottom-nav.tsx`):
+    * Swapped `Settings` out of the 5th tab of `MobileBottomNav` and placed **`Customers` (`گاہک اور ناپ` / `/customers`)** in its place with `data-testid="mobile-bottom-tab-customers"`.
+    * Gives master tailors 1-tap thumb access to their customer directory and digital sizing register from any screen.
+  - `28.4` Dashboard Quick Sizing Discovery Card (`app/dashboard/page.tsx`, `lib/i18n/translations.ts`):
+    * Added prominent Block 2.5 on `/dashboard` for mobile: **`ڈیجیٹل ناپ رجسٹر اور گاہک` (Digital Naap Register & Saved Sizing)** (`data-testid="dashboard-customers-register-card"`).
+    * Added desktop quick action button `[ڈیجیٹل ناپ رجسٹر]` (`data-testid="desktop-dashboard-customers-register-btn"`).
+  - `28.5` Human-Readable Customer Number Badges (`app/customers/page.tsx`, `components/tailor/customer-profile-edit-modal.tsx`, `lib/i18n/translations.ts`):
+    * Displayed clean `#CUST-XXXX` / `کھاتہ نمبر` badge on customer cards and the customer profile edit modal header.
+  - `28.6` React Hydration Safety Guard (`components/layout/app-shell.tsx`):
+    * Added `!isMounted ||` check to the authentication resolution guard, preventing client hydration mismatch (minified React error #418) caused by pre-rendered Next.js static export.
+  - `28.7` Brutal Automated Playwright Verification Suite (`scripts/audit_phase28_mobile_nav_and_branding.mjs`):
+    * Ran automated 7-scenario mobile stress test on `360×740` screen.
+    * Verified mobile header brand, settings gear routing, drawer toggles, bottom nav 1-tap customer lookup, dashboard register card, post-booking safe home exit, and customer badges.
+    * 0 TypeScript compiler errors (`npx tsc --noEmit`).
+    * 159/159 database assertions passed (`scripts/verify_db.ts`).
+    * 29/29 Next.js static pages exported into `out/` (`npm run build`).
+
+* **Active File Changes:**
+  - `components/tailor/post-booking-success-modal.tsx` [MODIFIED]
+  - `lib/i18n/translations.ts` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `components/layout/mobile-bottom-nav.tsx` [MODIFIED]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `app/customers/page.tsx` [MODIFIED]
+  - `components/tailor/customer-profile-edit-modal.tsx` [MODIFIED]
+  - `scripts/audit_phase28_mobile_nav_and_branding.mjs` [NEW]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  - `npx tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `npm run build`: 29/29 static routes compiled into `out/`.
+  - `node scripts/audit_phase28_mobile_nav_and_branding.mjs`: 7/7 scenarios passed (code 0), 0 React #418 errors.
+
+* **Next Immediate Task:**
+  - Review live mobile feedback with user and await subsequent phase instructions.
 

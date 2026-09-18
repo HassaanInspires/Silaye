@@ -48,6 +48,10 @@ export const DASHBOARD_I18N = {
     searchParchiSub: 'آرڈر نمبر یا فون سے',
     quickCounterActions: 'فوری کاؤنٹر ایکشنز',
     quickActionsSub: 'ورکشاپ ریسپشن شارٹ کٹس',
+    naapRegisterTitle: 'ڈیجیٹل ناپ رجسٹر اور گاہک',
+    naapRegisterSub: 'بغیر آرڈر ناپ محفوظ کریں یا پرانا ریکارڈ دیکھیں',
+    openRegister: 'کھولیں',
+    naapRegisterBtn: 'ناپ رجسٹر اور گاہک',
     findCustomer: 'گاہک تلاش کریں',
     printCounter: 'پرنٹ کاؤنٹر',
 
@@ -141,6 +145,10 @@ export const DASHBOARD_I18N = {
     searchParchiSub: 'Find by order # or phone',
     quickCounterActions: 'Quick Counter Actions',
     quickActionsSub: '1-Tap triggers for workshop reception',
+    naapRegisterTitle: 'Digital Naap Register & Customers',
+    naapRegisterSub: 'Save sizing without order or lookup existing customer profiles',
+    openRegister: 'Open',
+    naapRegisterBtn: 'Naap Register',
     findCustomer: 'Find Customer',
     printCounter: 'Print Counter',
 
@@ -704,6 +712,7 @@ export const POST_BOOKING_I18N = {
     viewQueue: 'ورکشاپ پروڈکشن کیو دیکھیں',
     viewQueueSub: 'ورکشاپ کے تمام جاری اور زیر کار آرڈرز کا جائزہ لیں',
     close: 'بند کریں',
+    goToDashboard: 'ہوم اسکرین پر جائیں',
   },
   en: {
     title: 'Suit Booked Successfully!',
@@ -720,6 +729,7 @@ export const POST_BOOKING_I18N = {
     viewQueue: 'View in Workshop Production Queue',
     viewQueueSub: 'Navigate to live workshop workflow & orders list',
     close: 'Close',
+    goToDashboard: 'Return to Home / Dashboard',
   },
 } as const;
 
@@ -759,6 +769,8 @@ export const CUSTOMERS_I18N = {
     tabContact: 'رابطہ و تفصیلات',
     tabMeasurements: 'ناپ میٹرکس',
     tabStyles: 'ڈیزائن اور ترجیحات',
+    customerNumber: 'کھاتہ نمبر',
+    khataSerial: 'کھاتہ #',
   },
   en: {
     pageTitle: 'Customer & Sizing Directory',
@@ -792,6 +804,8 @@ export const CUSTOMERS_I18N = {
     tabContact: 'Contact & Details',
     tabMeasurements: 'Measurement Matrix',
     tabStyles: 'Style Preferences',
+    customerNumber: 'Customer ID',
+    khataSerial: 'Khata #',
   },
 } as const;
 

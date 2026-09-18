@@ -238,10 +238,17 @@ export function CustomerProfileEditModal({
               <User className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-foreground font-urdu-sans leading-tight">
-                {customer ? customersT.editCustomerTitle : customersT.addCustomerBtn}
-              </h2>
-              <p className="text-xs text-muted-foreground font-urdu-sans">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground font-urdu-sans leading-tight">
+                  {customer ? customersT.editCustomerTitle : customersT.addCustomerBtn}
+                </h2>
+                {customer && (
+                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground border border-border/60">
+                    <bdi dir="ltr">{`#CUST-${(customer.phone.replace(/\D/g, '') || customer.id.replace(/-/g, '')).slice(-4)}`}</bdi>
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground font-urdu-sans mt-0.5">
                 {customer ? customer.full_name : customersT.saveProfileOnlySub}
               </p>
             </div>
