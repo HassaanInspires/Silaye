@@ -666,3 +666,14 @@
 - [x] 28.6 Hydration Safety Guard (`app/layout.tsx`, `lib/language-provider.tsx`): Ensure clean client-side hydration without minified React #418 error.
 - [x] 28.7 Brutal Verification Suite: Run `npx tsc --noEmit`, `scripts/verify_db.ts`, `npm run build`, and Playwright test suite capturing screenshots.
 
+---
+
+## Phase 29: Mobile Navigation Modes in Settings & Dynamic App Shell
+- [x] 29.1 Create `components/tailor/navigation-layout-card.tsx`: Reusable, theme-adaptive 3-option navigation layout selector with full keyboard navigation, test IDs, and bilingual typography.
+- [x] 29.2 Mobile Settings Hub & Sub-View Integration (`app/settings/page.tsx`): Expose `نیویگیشن اسٹائل` row in Mobile Settings Hub, add dedicated `#navigation` sub-view, and replace desktop duplicate with `<NavigationLayoutCard />`.
+- [x] 29.3 Dynamic Mobile Header in AppShell (`components/layout/app-shell.tsx`): Conditionally show/hide the hamburger button based on `navLayout === 'drawer' || navLayout === 'hybrid'`.
+- [x] 29.4 Playwright Mobile Scenario Audit (`scripts/audit_phase29_mobile_nav_modes.mjs`): Automated stress test on `360×740` mobile screen verifying all 3 navigation modes in Light and Dark mode with screenshots.
+- [x] 29.5 Full Verification Suite: Run `npx tsc --noEmit`, `scripts/verify_db.ts`, and `npm run build`.
+- [x] 29.6 Documentation & Git Push: Update `tasks.md`, `progress.md`, commit and push changes, and generate walkthrough artifact.
+
+

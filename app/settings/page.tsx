@@ -103,6 +103,7 @@ import { getCurrentUser, isSupabaseConfigured, updateCachedShop } from '@/lib/su
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
 import { BarcodeRenderer } from '@/components/tailor/barcode-renderer';
 import { AppearanceCard } from '@/components/tailor/appearance-card';
+import { NavigationLayoutCard } from '@/components/tailor/navigation-layout-card';
 import {
   formatCurrency,
   formatInch,
@@ -317,6 +318,7 @@ const SECTION_TITLES: Record<string, { ur: string; en: string }> = {
   rates: { ur: 'سلائی ریٹ لسٹ', en: 'Stitching Rates' },
   printer: { ur: 'تھرمل پرنٹر', en: 'Thermal Printer' },
   alerts: { ur: 'آواز اور الرٹس', en: 'Sound & Alerts' },
+  navigation: { ur: 'نیویگیشن اسٹائل', en: 'Navigation Layout' },
   reset: { ur: 'ڈیٹا اور کیشے', en: 'Data & Cache' },
   account: { ur: 'اکاؤنٹ اور پلان', en: 'Account & Plan' },
 };
@@ -1383,6 +1385,34 @@ export default function SettingsPage() {
                   <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
                 </button>
 
+                {/* 📱 Navigation Layout */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('navigation')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                  data-testid="mobile-settings-nav-layout-row"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                      <Sliders className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                          نیویگیشن اسٹائل
+                        </span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-gold/15 text-gold border border-gold/30">
+                          {navLayout === 'tabs' ? 'Tabs' : navLayout === 'drawer' ? 'Drawer' : 'Hybrid'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-sans block">
+                        Mobile Navigation Mode (Tabs / Drawer / Hybrid)
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
+                </button>
+
                 {/* ⚠️ Workshop Data & Reset */}
                 <button
                   type="button"
@@ -2354,6 +2384,20 @@ export default function SettingsPage() {
             <div className="h-36 w-full shrink-0" aria-hidden="true" />
           </div>
         )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* SUB-VIEW 8: NAVIGATION LAYOUT (mobileSection === 'navigation')    */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === 'navigation' && (
+          <div className="space-y-4">
+            <NavigationLayoutCard
+              value={navLayout}
+              onChange={handleNavLayoutChange}
+              compact
+            />
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
       </div>
 
       {/* ================================================================= */}
@@ -2727,178 +2771,10 @@ export default function SettingsPage() {
               </Card>
 
               {/* Section 4: Navigation Layout Preference */}
-              <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">
-                <CardHeader>
-                  <CardTitle className="text-base text-white flex items-center gap-2">
-                    <Sliders className="h-4 w-4 text-gold" />
-                    <span>Navigation Layout</span>
-                    <span className="font-urdu-serif text-xs text-gold/80 -mt-0.5" dir="rtl">
-                      نیویگیشن اسٹائل
-                    </span>
-                  </CardTitle>
-                  <CardDescription className="text-xs text-gray-400">
-                    Choose your preferred mobile navigation interface. Changes apply immediately and persist across sessions.
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="space-y-3">
-                  {/* Option 1: Modern Tabs */}
-                  <div
-                    onClick={() => handleNavLayoutChange('tabs')}
-                    className={cn(
-                      'p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start justify-between gap-3',
-                      navLayout === 'tabs'
-                        ? 'border-gold/60 bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.15)] ring-1 ring-gold/40'
-                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
-                    )}
-                    role="radio"
-                    aria-checked={navLayout === 'tabs'}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === ' ' || e.key === 'Enter') {
-                        e.preventDefault();
-                        handleNavLayoutChange('tabs');
-                      }
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          'h-5 w-5 rounded-full border flex items-center justify-center mt-0.5 shrink-0 transition-colors',
-                          navLayout === 'tabs'
-                            ? 'border-gold bg-gold text-[#0B0C0E]'
-                            : 'border-white/30 bg-black/40'
-                        )}
-                      >
-                        {navLayout === 'tabs' && <Check className="h-3 w-3 stroke-[3]" />}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-semibold text-white">
-                            Modern Tabs + Action Button
-                          </span>
-                          <span className="font-urdu-serif text-xs text-gold leading-relaxed py-1" dir="rtl">
-                            ماڈرن باٹم ٹیبز
-                          </span>
-                          <Badge variant="outline" className="text-[10px] text-gold border-gold/30 bg-gold/5 py-0 px-1.5">
-                            Recommended / تجویز کردہ
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                          4 Tabs + Center Gold FAB for 1-thumb use. Clean minimal top header without menu clutter.
-                        </p>
-                        <p className="font-urdu-serif text-[11px] text-gray-400 leading-relaxed py-1" dir="rtl">
-                          4 باٹم ٹیبز اور درمیان میں گولڈ نیا سوٹ بٹن — ایک ہاتھ اور انگوٹھے سے تیز رفتار استعمال کے لیے۔
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Option 2: Classic Drawer Only */}
-                  <div
-                    onClick={() => handleNavLayoutChange('drawer')}
-                    className={cn(
-                      'p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start justify-between gap-3',
-                      navLayout === 'drawer'
-                        ? 'border-gold/60 bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.15)] ring-1 ring-gold/40'
-                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
-                    )}
-                    role="radio"
-                    aria-checked={navLayout === 'drawer'}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === ' ' || e.key === 'Enter') {
-                        e.preventDefault();
-                        handleNavLayoutChange('drawer');
-                      }
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          'h-5 w-5 rounded-full border flex items-center justify-center mt-0.5 shrink-0 transition-colors',
-                          navLayout === 'drawer'
-                            ? 'border-gold bg-gold text-[#0B0C0E]'
-                            : 'border-white/30 bg-black/40'
-                        )}
-                      >
-                        {navLayout === 'drawer' && <Check className="h-3 w-3 stroke-[3]" />}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-semibold text-white">
-                            Classic Drawer Only
-                          </span>
-                          <span className="font-urdu-serif text-xs text-gold leading-relaxed py-1" dir="rtl">
-                            کلاسک ڈراور
-                          </span>
-                          <Badge variant="outline" className="text-[10px] text-cyan-300 border-cyan-500/30 bg-cyan-500/5 py-0 px-1.5">
-                            Max Screen Space / بڑی سکرین
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                          Fullscreen view with top hamburger menu. Hides the bottom bar to maximize vertical space.
-                        </p>
-                        <p className="font-urdu-serif text-[11px] text-gray-400 leading-relaxed py-1" dir="rtl">
-                          مکمل فل سکرین ویو اور اوپر ہیمبرگر مینو — باٹم بار چھپا کر ڈیٹا کے لیے زیادہ جگہ فراہم کرتا ہے۔
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Option 3: Hybrid Master */}
-                  <div
-                    onClick={() => handleNavLayoutChange('hybrid')}
-                    className={cn(
-                      'p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start justify-between gap-3',
-                      navLayout === 'hybrid'
-                        ? 'border-gold/60 bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.15)] ring-1 ring-gold/40'
-                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
-                    )}
-                    role="radio"
-                    aria-checked={navLayout === 'hybrid'}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === ' ' || e.key === 'Enter') {
-                        e.preventDefault();
-                        handleNavLayoutChange('hybrid');
-                      }
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          'h-5 w-5 rounded-full border flex items-center justify-center mt-0.5 shrink-0 transition-colors',
-                          navLayout === 'hybrid'
-                            ? 'border-gold bg-gold text-[#0B0C0E]'
-                            : 'border-white/30 bg-black/40'
-                        )}
-                      >
-                        {navLayout === 'hybrid' && <Check className="h-3 w-3 stroke-[3]" />}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-semibold text-white">
-                            Hybrid Master
-                          </span>
-                          <span className="font-urdu-serif text-xs text-gold leading-relaxed py-1" dir="rtl">
-                            ہائبرڈ ماسٹر
-                          </span>
-                          <Badge variant="outline" className="text-[10px] text-amber-300 border-amber-500/30 bg-amber-500/5 py-0 px-1.5">
-                            Power User / ہمہ گیر
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                          Bottom tabs + Top hamburger drawer. Access quick counter shortcuts and full slide-out sidebar simultaneously.
-                        </p>
-                        <p className="font-urdu-serif text-[11px] text-gray-400 leading-relaxed py-1" dir="rtl">
-                          باٹم ٹیبز اور اوپر ہیمبرگر ڈراور دونوں بیک وقت فعال — فوری بکنگ اور مکمل مینو دونوں دستیاب۔
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <NavigationLayoutCard
+                value={navLayout}
+                onChange={handleNavLayoutChange}
+              />
 
               {/* Section 5: Notifications & Due Alerts */}
               <Card className="border-white/5 bg-[#0B0C0E]/70 backdrop-blur-xl">

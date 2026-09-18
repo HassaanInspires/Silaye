@@ -3621,5 +3621,56 @@
   - `node scripts/audit_phase28_mobile_nav_and_branding.mjs`: 7/7 scenarios passed (code 0), 0 React #418 errors.
 
 * **Next Immediate Task:**
-  - Review live mobile feedback with user and await subsequent phase instructions.
+  - Phase 29: Mobile Navigation Modes in Settings & Dynamic App Shell (Completed)
+
+---
+
+## Phase 29: Mobile Navigation Modes in Settings & Dynamic App Shell (Completed)
+* **Date:** 2026-09-18
+* **Tasks Completed:**
+  - `29.1` Created Reusable, Theme-Adaptive `NavigationLayoutCard` (`components/tailor/navigation-layout-card.tsx`):
+    * Built fully typed, direction-aware 3-option navigation layout selector (`tabs`, `drawer`, `hybrid`).
+    * Full keyboard navigation (`Enter` / `Space`), touch feedback (`active:scale-[0.99]`), and test IDs (`nav-layout-option-tabs`, `nav-layout-option-drawer`, `nav-layout-option-hybrid`).
+    * Semantic Tailwind classes with authentic bilingual typography: Urdu titles and descriptions first in RTL with clean LTR baseline isolation (`<bdi dir="ltr">`) for English captions, preventing punctuation flipping.
+  - `29.2` Mobile Settings Hub & Sub-View Integration (`app/settings/page.tsx`):
+    * Registered `navigation: { ur: 'نیویگیشن اسٹائل', en: 'Navigation Layout' }` in `SECTION_TITLES`.
+    * Mounted a dedicated `[Sliders] نیویگیشن اسٹائل` row in Mobile Settings Hub under *Hardware & Preferences* with a dynamic mode badge (`Tabs` / `Drawer` / `Hybrid`) and `data-testid="mobile-settings-nav-layout-row"`.
+    * Wired `#navigation` mobile sub-view rendering `<NavigationLayoutCard compact />` with back-to-hub header.
+    * Replaced legacy ~170-line dark card in Desktop View with unified `<NavigationLayoutCard />`.
+  - `29.3` Dynamic Mobile Header in AppShell (`components/layout/app-shell.tsx`):
+    * Wrapped mobile header hamburger menu button with `{(navLayout === 'drawer' || navLayout === 'hybrid') && (`.
+    * When `tabs`: Hamburger is hidden; header stays minimal with Brand, Connection Pill, Search, and Settings Gear. Bottom bar handles navigation.
+    * When `drawer`: Hamburger is visible in header; Bottom navigation bar is hidden to maximize vertical space (`pb-8`).
+    * When `hybrid`: Both hamburger menu in header AND bottom navigation bar are visible simultaneously.
+  - `29.4` Playwright Mobile Scenario Audit (`scripts/audit_phase29_mobile_nav_modes.mjs`):
+    * Tested on simulated Android `360×740` mobile screen across 6 comprehensive scenarios:
+      1. Mobile Settings Hub contains `نیویگیشن اسٹائل` row with live mode badge.
+      2. Tapping row navigates to `#navigation` and renders all 3 layout cards.
+      3. Selecting `drawer`: Header displays hamburger button `[☰]`, bottom nav is hidden. Tapping hamburger opens slide-out drawer.
+      4. Selecting `hybrid`: Both hamburger button `[☰]` and bottom nav bar are visible.
+      5. Selecting `tabs`: Hamburger button is hidden from header; bottom nav bar is visible.
+      6. Atelier Light Mode: High-contrast parchment styling, crisp borders, legible Urdu, and zero dark bleeds.
+    * Captured 6 high-resolution mobile screenshots in `screenshots/phase29_mobile_nav_modes/`.
+  - `29.5` Full Verification Suite:
+    * `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    * `npx tsx scripts/verify_db.ts`: 159/159 database assertions passed across all 17 test suites in 427.96s.
+    * `npm run build`: 29/29 Next.js static pages exported into `out/` in 27.4s.
+    * `node scripts/audit_phase29_mobile_nav_modes.mjs`: 6/6 mobile scenarios passed (code 0).
+
+* **Active File Changes:**
+  - `components/tailor/navigation-layout-card.tsx` [NEW]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `scripts/audit_phase29_mobile_nav_modes.mjs` [NEW]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  - `npx tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `npm run build`: 29/29 static routes compiled into `out/`.
+  - `node scripts/audit_phase29_mobile_nav_modes.mjs`: 6/6 mobile scenario assertions passed.
+
+* **Next Immediate Task:**
+  - Review Phase 29 walkthrough with user and await subsequent instructions.
 

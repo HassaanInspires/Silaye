@@ -1052,17 +1052,19 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
             </div>
           ) : (
             <div className="flex md:hidden items-center justify-between w-full h-14 min-h-14 px-2">
-              {/* Mobile Start: Hamburger Menu + Brand Logo (Silaye) */}
+              {/* Mobile Start: Hamburger Menu (for drawer/hybrid) + Brand Logo (Silaye) */}
               <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setMobileMenuOpen(true)}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card text-foreground hover:bg-accent hover:text-primary transition-all cursor-pointer shadow-xs"
-                  aria-label="Open navigation menu"
-                  data-testid="mobile-hamburger-btn"
-                >
-                  <Menu className="h-4 w-4" />
-                </button>
+                {(navLayout === 'drawer' || navLayout === 'hybrid') && (
+                  <button
+                    type="button"
+                    onClick={() => setMobileMenuOpen(true)}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card text-foreground hover:bg-accent hover:text-primary transition-all cursor-pointer shadow-xs"
+                    aria-label="Open navigation menu"
+                    data-testid="mobile-hamburger-btn"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </button>
+                )}
 
                 <a href="/dashboard" className="flex items-center gap-1.5" aria-label="Silaye Dashboard">
                   <div className="relative h-7 w-7 shrink-0 flex items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary shadow-xs">
