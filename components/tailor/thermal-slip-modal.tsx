@@ -25,6 +25,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarcodeRenderer } from '@/components/tailor/barcode-renderer';
 import { printerDb } from '@/lib/db';
+import { useLanguage } from '@/lib/language-provider';
+import { THERMAL_MODAL_I18N } from '@/lib/i18n/translations';
 import {
   mapOrderToSlipData,
   generateFabricTagSlipText,
@@ -59,6 +61,10 @@ export function ThermalSlipModal({
   initialFormat,
   settings,
 }: ThermalSlipModalProps) {
+  const { language, dir } = useLanguage();
+  const isUrdu = language === 'ur';
+  const t = THERMAL_MODAL_I18N[language] || THERMAL_MODAL_I18N.ur;
+
   const [format, setFormat] = React.useState<PrinterPaperWidth>(initialFormat || '80mm');
   const [isCopied, setIsCopied] = React.useState(false);
   const [isPrinting, setIsPrinting] = React.useState(false);
@@ -147,11 +153,11 @@ export function ThermalSlipModal({
                 <Printer className="h-5 w-5" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-bold text-foreground">
-                  Thermal Slip & Fabric Tag
+                <DialogTitle className={cn("text-lg font-bold text-foreground", isUrdu && "font-urdu-sans")}>
+                  {t.dialogTitle}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground">
-                  Order <span className="font-mono text-primary font-bold">{slipData.orderNumber}</span> • {slipData.customerName}
+                  {t.dialogSubtitle} <span className="font-mono text-primary font-bold"><bdi dir="ltr">{slipData.orderNumber}</bdi></span> • {slipData.customerName}
                 </DialogDescription>
               </div>
             </div>
@@ -169,7 +175,7 @@ export function ThermalSlipModal({
                 )}
               >
                 <Tag className="h-3.5 w-3.5" />
-                <span>58mm Fabric Tag</span>
+                <span className={isUrdu ? "font-urdu-sans" : ""}>{t.tag58mm}</span>
               </button>
               <button
                 type="button"
@@ -182,7 +188,7 @@ export function ThermalSlipModal({
                 )}
               >
                 <Receipt className="h-3.5 w-3.5" />
-                <span>80mm Invoice</span>
+                <span className={isUrdu ? "font-urdu-sans" : ""}>{t.slip80mm}</span>
               </button>
             </div>
           </div>
@@ -192,14 +198,14 @@ export function ThermalSlipModal({
         <div className="flex items-center justify-between rounded-lg border border-border/70 bg-secondary/40 px-3.5 py-2 text-xs">
           <div className="flex items-center gap-2 text-muted-foreground">
             <span className="font-semibold text-foreground">
-              {is58 ? '58 mm (2-inch roll • 32 Chars)' : '80 mm (3-inch roll • 48 Chars)'}
+              {is58 ? t.tag58Info : t.slip80Info}
             </span>
             <span>•</span>
-            <span>{is58 ? 'Workshop Cut Tag (Cloth Staple)' : 'Customer Booking Receipt'}</span>
+            <span className={isUrdu ? "font-urdu-sans" : ""}>{is58 ? t.tag58Sub : t.slip80Sub}</span>
           </div>
           {slipData.isUrgent && (
             <Badge variant="status-overdue" className="text-[10px] px-1.5 py-0">
-              Urgent Delivery
+              {t.urgentTag}
             </Badge>
           )}
         </div>
@@ -469,12 +475,12 @@ export function ThermalSlipModal({
               {isCopied ? (
                 <>
                   <Check className="h-3.5 w-3.5 text-status-ready" />
-                  <span>Copied Text!</span>
+                  <span className={isUrdu ? "font-urdu-sans" : ""}>{t.copiedText}</span>
                 </>
               ) : (
                 <>
                   <Copy className="h-3.5 w-3.5" />
-                  <span>Copy Text</span>
+                  <span className={isUrdu ? "font-urdu-sans" : ""}>{t.copyText}</span>
                 </>
               )}
             </Button>
@@ -484,10 +490,10 @@ export function ThermalSlipModal({
               size="sm"
               onClick={handleDownloadBin}
               className="flex-1 sm:flex-none gap-1.5 text-xs"
-              title="Download raw binary stream for POS hardware"
+              title={t.downloadTitle}
             >
               <Download className="h-3.5 w-3.5" />
-              <span>ESC/POS (.bin)</span>
+              <span>{t.downloadBin}</span>
             </Button>
           </div>
 
@@ -496,19 +502,19 @@ export function ThermalSlipModal({
               variant="ghost"
               size="sm"
               onClick={() => onOpenChange(false)}
-              className="flex-1 sm:flex-none text-muted-foreground"
+              className={cn("flex-1 sm:flex-none text-muted-foreground", isUrdu && "font-urdu-sans")}
             >
-              Close
+              {t.close}
             </Button>
             <Button
               variant="default"
               size="sm"
               onClick={handlePrint}
               disabled={isPrinting}
-              className="flex-1 sm:flex-none gap-1.5 font-bold shadow-md"
+              className={cn("flex-1 sm:flex-none gap-1.5 font-bold shadow-md", isUrdu && "font-urdu-sans")}
             >
               <Printer className="h-4 w-4" />
-              <span>Print {is58 ? '58mm Tag' : '80mm Slip'}</span>
+              <span>{is58 ? t.printBtn58 : t.printBtn80}</span>
             </Button>
           </div>
         </DialogFooter>

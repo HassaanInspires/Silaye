@@ -602,7 +602,13 @@
 - [x] 25.6 Localize `components/tailor/measurement-intake-form.tsx` and eliminate hardcoded dark styles from `MeasurementRow`.
 - [x] 25.7 Overhaul `app/orders/new/page.tsx` across Mobile 3-Step Wizard and Desktop Split-Pane with single-language BiDi architecture, slim sticky bar, and zero CTA collision.
 - [x] 25.8 Run automated typecheck (`npx tsc --noEmit`), build check (`npm run build`), and capture live browser screenshots for Light and Dark modes.
-
-
-
-
+- [x] 25.9 Milestone 9: New Booking Flow 10/10 Brutal Polish, Full-Width Matrix & Modal BiDi Architecture:
+  * **Mannequin Pad Deliberate Removal**: Eliminated decorative mannequin pad and toggle button, expanding Measurement Matrix to 100% full container width for distraction-free, lightning-fast intake.
+  * **WhatsApp Receipt Modal Localization & BiDi Polish (`components/tailor/whatsapp-receipt-modal.tsx`)**: Full localization with `WHATSAPP_MODAL_I18N`, `<bdi dir="ltr">` phone and currency protection, authentic WhatsApp light paper preview (`#EFEAE2` with `#DCF8C6` bubble) and dark mode preview (`#0B141A` with `#005C4B` bubble).
+  * **Thermal Slip Modal Overhaul (`components/tailor/thermal-slip-modal.tsx`)**: Full localization with `THERMAL_MODAL_I18N`, format selector pills (`80mm` / `58mm`), and high-contrast print action buttons.
+  * **Scoped Input Attributes & Decimal Mode (`app/orders/new/page.tsx`)**: Scoped test IDs (`customer-phone-desktop`, `customer-name-desktop`, `customer-address-desktop`, `delivery-date-desktop`, `desktop-confirm-book-btn`, `customer-phone-mobile`, `customer-name-mobile`, `customer-address-mobile`, `delivery-date-mobile`, `mobile-confirm-book-btn`) and `inputMode="decimal"` on all financial fields.
+  * **Brutal Automated Verification Suite**:
+    - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    - `npm run build`: 28/28 static Next.js pages successfully exported into `out/`.
+    - `scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+    - Playwright end-to-end interactive audit: Captured 15 high-res audit screenshots across mobile and desktop in Light and Dark modes.

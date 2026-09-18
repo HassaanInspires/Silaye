@@ -41,6 +41,8 @@ import {
   openWhatsAppLink,
 } from '@/lib/whatsapp';
 import { mockShop } from '@/lib/mock-data';
+import { useLanguage } from '@/lib/language-provider';
+import { WHATSAPP_MODAL_I18N } from '@/lib/i18n/translations';
 import type { GarmentOrder, Customer, Shop } from '@/types/tailor';
 
 export type WhatsAppTemplateType = 'booking' | 'ready' | 'khata';
@@ -62,6 +64,10 @@ export function WhatsAppReceiptModal({
   shop = mockShop,
   initialTemplate = 'booking',
 }: WhatsAppReceiptModalProps) {
+  const { language, dir } = useLanguage();
+  const isUrdu = language === 'ur';
+  const t = WHATSAPP_MODAL_I18N[language] || WHATSAPP_MODAL_I18N.ur;
+
   const [activeTab, setActiveTab] = React.useState<WhatsAppTemplateType>(initialTemplate);
   const [isEditing, setIsEditing] = React.useState<boolean>(false);
   const [customMessage, setCustomMessage] = React.useState<string>('');
@@ -239,18 +245,18 @@ export function WhatsAppReceiptModal({
         <div className="border-b border-border/80 bg-muted/30 px-6 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 shadow-inner">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shadow-inner">
                 <MessageSquare className="h-5 w-5" />
               </div>
               <div>
-                <DialogTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <span>WhatsApp Receipt & Alert Engine</span>
-                  <Badge variant="outline" className="text-[10px] text-emerald-500 border-emerald-500/30 bg-emerald-500/5">
+                <DialogTitle className={cn("text-base font-semibold text-foreground flex items-center gap-2", isUrdu && "font-urdu-sans")}>
+                  <span>{t.engineTitle}</span>
+                  <Badge variant="outline" className="text-[10px] text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5">
                     wa.me
                   </Badge>
                 </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                  1-Click zero-cost digital receipt, pickup alert & Khata ledger reminder
+                <DialogDescription className={cn("text-xs text-muted-foreground mt-0.5", isUrdu && "font-urdu-sans")}>
+                  {t.engineSub}
                 </DialogDescription>
               </div>
             </div>
@@ -261,10 +267,10 @@ export function WhatsAppReceiptModal({
                 lang="ur"
                 className="font-urdu-serif text-sm leading-urdu-display text-primary block"
               >
-                واٹس ایپ رسید و اطلاع
+                {t.orderParchiUr}
               </span>
               <span className="text-[11px] text-muted-foreground font-mono">
-                #{effectiveOrder.order_number}
+                <bdi dir="ltr">#{effectiveOrder.order_number}</bdi>
               </span>
             </div>
           </div>
@@ -278,28 +284,29 @@ export function WhatsAppReceiptModal({
 
             <div className="flex items-center gap-2">
               <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="font-mono text-foreground font-medium">{formattedPhone}</span>
+              <bdi dir="ltr" className="font-mono text-foreground font-medium">{formattedPhone}</bdi>
               {isPhoneValid ? (
                 <Badge variant="status-ready" className="text-[10px] py-0 px-1.5 h-4 font-normal">
-                  Valid PK
+                  {t.validPkBadge}
                 </Badge>
               ) : (
                 <Badge variant="status-overdue" className="text-[10px] py-0 px-1.5 h-4 font-normal">
-                  Invalid Phone
+                  {t.invalidPhoneBadge}
                 </Badge>
               )}
             </div>
 
             <div className="flex items-center gap-2 text-[11px]">
-              <span className="text-muted-foreground">Bal Due:</span>
-              <span
+              <span className={cn("text-muted-foreground", isUrdu && "font-urdu-sans")}>{t.balDueLabel}</span>
+              <bdi
+                dir="ltr"
                 className={cn(
                   'font-mono font-semibold',
-                  effectiveOrder.balance_due > 0 ? 'text-amber-400' : 'text-emerald-400'
+                  effectiveOrder.balance_due > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
                 )}
               >
                 Rs. {effectiveOrder.balance_due.toLocaleString()}
-              </span>
+              </bdi>
             </div>
           </div>
         </div>
@@ -319,22 +326,19 @@ export function WhatsAppReceiptModal({
                 value="booking"
                 className="text-xs data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm gap-1.5"
               >
-                <span>📋 Booking</span>
-                <span className="hidden sm:inline font-urdu-sans text-[10px]">(بکنگ)</span>
+                <span className={isUrdu ? "font-urdu-sans" : ""}>{t.tabBooking}</span>
               </TabsTrigger>
               <TabsTrigger
                 value="ready"
                 className="text-xs data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm gap-1.5"
               >
-                <span>🔔 Ready Alert</span>
-                <span className="hidden sm:inline font-urdu-sans text-[10px]">(تیار)</span>
+                <span className={isUrdu ? "font-urdu-sans" : ""}>{t.tabReady}</span>
               </TabsTrigger>
               <TabsTrigger
                 value="khata"
                 className="text-xs data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm gap-1.5"
               >
-                <span>💰 Khata Balance</span>
-                <span className="hidden sm:inline font-urdu-sans text-[10px]">(کھاتہ)</span>
+                <span className={isUrdu ? "font-urdu-sans" : ""}>{t.tabKhata}</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -346,11 +350,11 @@ export function WhatsAppReceiptModal({
         <div className="px-6 py-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Live Message Preview
+              <span className={cn("text-xs font-semibold text-muted-foreground uppercase tracking-wider", isUrdu && "font-urdu-sans")}>
+                {t.livePreview}
               </span>
               <span className="text-[10px] text-muted-foreground/70 font-mono">
-                ({activeMessage.length} chars)
+                <bdi dir="ltr">({activeMessage.length} {t.chars})</bdi>
               </span>
             </div>
 
@@ -369,22 +373,22 @@ export function WhatsAppReceiptModal({
               {isEditing ? (
                 <>
                   <Eye className="h-3.5 w-3.5" />
-                  <span>Preview</span>
+                  <span className={isUrdu ? "font-urdu-sans" : ""}>{t.preview}</span>
                 </>
               ) : (
                 <>
                   <Edit3 className="h-3.5 w-3.5" />
-                  <span>Customize</span>
+                  <span className={isUrdu ? "font-urdu-sans" : ""}>{t.customize}</span>
                 </>
               )}
             </Button>
           </div>
 
           {/* Chat Container */}
-          <div className="relative rounded-xl border border-emerald-900/40 bg-[#0c1317] p-4 shadow-inner max-h-[300px] overflow-y-auto custom-scrollbar">
+          <div className="relative rounded-xl border border-border bg-[#EFEAE2] dark:bg-[#0B141A] dark:border-emerald-900/40 p-4 shadow-inner max-h-[300px] overflow-y-auto custom-scrollbar">
             {/* Background subtle doodle pattern */}
             <div
-              className="pointer-events-none absolute inset-0 opacity-[0.03]"
+              className="pointer-events-none absolute inset-0 opacity-[0.04]"
               style={{
                 backgroundImage: `radial-gradient(#25D366 1px, transparent 1px)`,
                 backgroundSize: '16px 16px',
@@ -397,22 +401,22 @@ export function WhatsAppReceiptModal({
                 onChange={(e) => setCustomMessage(e.target.value)}
                 rows={9}
                 dir="rtl"
-                className="w-full rounded-lg border border-emerald-500/30 bg-[#005c4b]/20 p-3 font-urdu-sans text-xs leading-relaxed text-emerald-100 placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                placeholder="پیغام یہاں ترمیم کریں..."
+                className="w-full rounded-lg border border-emerald-500/30 bg-card p-3 font-urdu-sans text-xs leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                placeholder={t.customPlaceholder}
               />
             ) : (
-              <div className="relative ml-auto max-w-[92%] rounded-2xl rounded-tr-none bg-[#005c4b] border border-emerald-500/20 p-3.5 text-emerald-50 shadow-md">
+              <div className="relative ml-auto max-w-[92%] rounded-2xl rounded-tr-none bg-[#DCF8C6] dark:bg-[#005C4B] border border-emerald-400/40 dark:border-emerald-500/20 p-3.5 shadow-md">
                 <div
                   dir="rtl"
                   lang="ur"
-                  className="font-urdu-sans text-xs leading-urdu-data whitespace-pre-wrap select-text selection:bg-emerald-700 text-emerald-50"
+                  className="font-urdu-sans text-xs leading-urdu-data whitespace-pre-wrap select-text text-emerald-950 dark:text-emerald-50"
                 >
                   {activeMessage}
                 </div>
 
                 {/* WhatsApp Chat Bubble Tail & Meta info */}
-                <div className="mt-2.5 flex items-center justify-end gap-1.5 text-[10px] text-emerald-200/70 select-none">
-                  <span>{currentTimeStr}</span>
+                <div className="mt-2.5 flex items-center justify-end gap-1.5 text-[10px] text-emerald-900/70 dark:text-emerald-200/70 select-none">
+                  <bdi dir="ltr">{currentTimeStr}</bdi>
                   <CheckCheck className="h-3.5 w-3.5 text-[#53bdeb]" />
                 </div>
               </div>
@@ -425,13 +429,14 @@ export function WhatsAppReceiptModal({
             ================================================================ */}
         {!isPhoneValid && (
           <div className="px-6 py-1">
-            <div className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-300">
+            <div className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-700 dark:text-rose-300">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <div className="flex-1">
-                <span>Enter valid Pakistani mobile number to enable direct WhatsApp dispatch:</span>
+                <span className={isUrdu ? "font-urdu-sans" : ""}>{t.invalidPhoneWarning}</span>
               </div>
               <input
                 type="text"
+                dir="ltr"
                 value={customPhone}
                 onChange={(e) => setCustomPhone(e.target.value)}
                 placeholder="03001234567"
@@ -454,13 +459,15 @@ export function WhatsAppReceiptModal({
           >
             {copied ? (
               <>
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
-                <span className="text-emerald-500">Copied to Clipboard!</span>
+                <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className={cn("text-emerald-600 dark:text-emerald-400 font-semibold", isUrdu && "font-urdu-sans")}>
+                  {t.copiedToast}
+                </span>
               </>
             ) : (
               <>
                 <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>Copy Message</span>
+                <span className={isUrdu ? "font-urdu-sans" : ""}>{t.copyMessage}</span>
               </>
             )}
           </Button>
@@ -471,9 +478,9 @@ export function WhatsAppReceiptModal({
               variant="ghost"
               size="sm"
               onClick={() => onOpenChange(false)}
-              className="text-xs text-muted-foreground w-full sm:w-auto"
+              className={cn("text-xs text-muted-foreground w-full sm:w-auto", isUrdu && "font-urdu-sans")}
             >
-              Close
+              {t.close}
             </Button>
 
             <Button
@@ -490,12 +497,12 @@ export function WhatsAppReceiptModal({
               {isDispatching ? (
                 <>
                   <Sparkles className="h-3.5 w-3.5 animate-spin" />
-                  <span>Opening WhatsApp...</span>
+                  <span className={isUrdu ? "font-urdu-sans" : ""}>{t.openingWhatsApp}</span>
                 </>
               ) : (
                 <>
                   <Send className="h-3.5 w-3.5" />
-                  <span>Send on WhatsApp</span>
+                  <span className={isUrdu ? "font-urdu-sans" : ""}>{t.sendWhatsApp}</span>
                 </>
               )}
             </Button>

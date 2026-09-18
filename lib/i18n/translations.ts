@@ -595,3 +595,96 @@ export const NEW_ORDER_I18N = {
 
 export type NewOrderTranslationKey = keyof typeof NEW_ORDER_I18N.ur;
 export type NewOrderTranslations = Record<NewOrderTranslationKey, string>;
+
+export const WHATSAPP_MODAL_I18N = {
+  ur: {
+    engineTitle: 'واٹس ایپ رسید اور کسٹمر الرٹ',
+    engineSub: '1-کلک مفت ڈیجیٹل رسید، سوٹ تیار الرٹ اور کھاتہ یاد دہانی',
+    orderParchiUr: 'واٹس ایپ رسید و اطلاع',
+    validPkBadge: 'درست نمبر',
+    invalidPhoneBadge: 'غیر درست فون',
+    balDueLabel: 'بقیہ رقم:',
+    tabBooking: '📋 بکنگ رسید',
+    tabReady: '🔔 سوٹ تیار الرٹ',
+    tabKhata: '💰 بقایا کھاتہ',
+    livePreview: 'میسج کا پیشگی منظر',
+    chars: 'حروف',
+    customize: 'ترمیم کریں',
+    preview: 'پیشگی منظر',
+    customPlaceholder: 'پیغام یہاں ترمیم کریں...',
+    invalidPhoneWarning: 'براہ کرم واٹس ایپ بھیجنے کے لیے درست پاکستانی موبائل نمبر درج کریں:',
+    copyMessage: 'میسج کاپی کریں',
+    copiedToast: 'کاپی ہو گیا!',
+    close: 'بند کریں',
+    sendWhatsApp: 'واٹس ایپ پر بھیجیں',
+    openingWhatsApp: 'واٹس ایپ کھل رہا ہے...',
+  },
+  en: {
+    engineTitle: 'WhatsApp Receipt & Alert Engine',
+    engineSub: '1-Click zero-cost digital receipt, pickup alert & Khata ledger reminder',
+    orderParchiUr: 'WhatsApp Receipt',
+    validPkBadge: 'Valid PK',
+    invalidPhoneBadge: 'Invalid Phone',
+    balDueLabel: 'Bal Due:',
+    tabBooking: '📋 Booking Receipt',
+    tabReady: '🔔 Ready Alert',
+    tabKhata: '💰 Khata Balance',
+    livePreview: 'Live Message Preview',
+    chars: 'chars',
+    customize: 'Customize',
+    preview: 'Preview',
+    customPlaceholder: 'Edit WhatsApp message here...',
+    invalidPhoneWarning: 'Enter valid Pakistani mobile number to enable direct WhatsApp dispatch:',
+    copyMessage: 'Copy Message',
+    copiedToast: 'Copied to Clipboard!',
+    close: 'Close',
+    sendWhatsApp: 'Send on WhatsApp',
+    openingWhatsApp: 'Opening WhatsApp...',
+  },
+} as const;
+
+export type WhatsAppModalTranslationKey = keyof typeof WHATSAPP_MODAL_I18N.ur;
+export type WhatsAppModalTranslations = Record<WhatsAppModalTranslationKey, string>;
+
+export const THERMAL_MODAL_I18N = {
+  ur: {
+    dialogTitle: 'تھرمل پرنٹر رسید و فیبرک ٹیگ',
+    dialogSubtitle: 'آرڈر',
+    tag58mm: '58mm فیبرک ٹیگ',
+    slip80mm: '80mm کسٹمر رسید',
+    tag58Sub: 'ورکشاپ کپڑا ٹیگ (سوٹ پر سٹیپل کریں)',
+    slip80Sub: 'کسٹمر بکنگ پرچی و رسید',
+    tag58Info: '58 mm (2 انچ رول • 32 حروف)',
+    slip80Info: '80 mm (3 انچ رول • 48 حروف)',
+    urgentTag: 'فوری ترسیل (ارجنٹ)',
+    copyText: 'کاپی ٹیکسٹ',
+    copiedText: 'کاپی ہو گیا!',
+    downloadBin: 'ڈاؤن لوڈ .bin',
+    downloadTitle: 'تھرمل پرنٹر ہارڈ ویئر کے لیے بائنری فائل ڈاؤن لوڈ کریں',
+    close: 'بند کریں',
+    printBtn58: '58mm ٹیگ پرنٹ کریں',
+    printBtn80: '80mm رسید پرنٹ کریں',
+  },
+  en: {
+    dialogTitle: 'Thermal Slip & Fabric Tag',
+    dialogSubtitle: 'Order',
+    tag58mm: '58mm Fabric Tag',
+    slip80mm: '80mm Invoice',
+    tag58Sub: 'Workshop Cut Tag (Cloth Staple)',
+    slip80Sub: 'Customer Booking Receipt',
+    tag58Info: '58 mm (2-inch roll • 32 Chars)',
+    slip80Info: '80 mm (3-inch roll • 48 Chars)',
+    urgentTag: 'Urgent Delivery',
+    copyText: 'Copy Text',
+    copiedText: 'Copied Text!',
+    downloadBin: 'ESC/POS (.bin)',
+    downloadTitle: 'Download raw binary stream for POS hardware',
+    close: 'Close',
+    printBtn58: 'Print 58mm Tag',
+    printBtn80: 'Print 80mm Slip',
+  },
+} as const;
+
+export type ThermalModalTranslationKey = keyof typeof THERMAL_MODAL_I18N.ur;
+export type ThermalModalTranslations = Record<ThermalModalTranslationKey, string>;
+

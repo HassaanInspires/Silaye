@@ -37,7 +37,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MeasurementIntakeForm } from '@/components/tailor/measurement-intake-form';
-import { VisualMannequinPad } from '@/components/tailor/visual-mannequin-pad';
 import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal';
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
 import { useLanguage } from '@/lib/language-provider';
@@ -310,8 +309,7 @@ export default function NewOrderPage() {
   const [measurements, setMeasurements] = React.useState<ShalwarKameezMeasurements>(DEFAULT_MEASUREMENTS);
   const [stylePreferences, setStylePreferences] = React.useState<StylePreferences>(DEFAULT_STYLES);
 
-  // ── Mannequin visibility & focus ──────────────────────────────────────
-  const [showMannequin, setShowMannequin] = React.useState<boolean>(false);
+  // ── Active field focus tracking ────────────────────────────────────────
   const [activeField, setActiveField] = React.useState<keyof ShalwarKameezMeasurements | null>(null);
 
   // ── Financials ─────────────────────────────────────────────────────────
@@ -899,6 +897,7 @@ export default function NewOrderPage() {
                       onChange={(e) => setPhone(formatPakistaniPhone(e.target.value))}
                       leftIcon={<Phone className="h-4 w-4 text-primary" />}
                       className="h-10 text-sm font-mono"
+                      data-testid="customer-phone-mobile"
                     />
                   </div>
 
@@ -913,6 +912,7 @@ export default function NewOrderPage() {
                       onChange={(e) => setCustomerName(e.target.value)}
                       leftIcon={<User className="h-4 w-4 text-primary" />}
                       className="h-10 text-sm"
+                      data-testid="customer-name-mobile"
                     />
                   </div>
 
@@ -956,6 +956,7 @@ export default function NewOrderPage() {
                           onChange={(e) => setCustomerAddress(e.target.value)}
                           leftIcon={<MapPin className="h-4 w-4 text-muted-foreground" />}
                           className="h-10 text-xs"
+                          data-testid="customer-address-mobile"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1055,6 +1056,7 @@ export default function NewOrderPage() {
                         value={deliveryDate}
                         onChange={(e) => setDeliveryDate(e.target.value)}
                         className="h-11 text-xs font-mono"
+                        data-testid="delivery-date-mobile"
                       />
                     </div>
 
@@ -1667,7 +1669,7 @@ export default function NewOrderPage() {
                     <span className="text-[11px] text-muted-foreground">{t.advanceShort}</span>
                     <input
                       type="number"
-                      inputMode="numeric"
+                      inputMode="decimal"
                       min={0}
                       value={advancePaid === 0 ? '' : advancePaid}
                       placeholder="0"
@@ -1688,6 +1690,7 @@ export default function NewOrderPage() {
 
                 <Button
                   type="button"
+                  data-testid="mobile-confirm-book-btn"
                   disabled={!isFormValidToBook || isSubmitting}
                   isLoading={isSubmitting}
                   onClick={() => handleCreateOrder(false)}
@@ -1790,6 +1793,7 @@ export default function NewOrderPage() {
                         onChange={(e) => setPhone(e.target.value)}
                         leftIcon={<Phone className="h-4 w-4 text-primary" />}
                         hint={t.phoneHint}
+                        data-testid="customer-phone-desktop"
                       />
 
                       {/* Profile Matched Badge */}
@@ -1863,6 +1867,7 @@ export default function NewOrderPage() {
                         onChange={(e) => setCustomerName(e.target.value)}
                         leftIcon={<User className="h-4 w-4 text-primary" />}
                         required
+                        data-testid="customer-name-desktop"
                       />
                       <Input
                         label={t.customerAddressLabel}
@@ -1870,6 +1875,7 @@ export default function NewOrderPage() {
                         value={customerAddress}
                         onChange={(e) => setCustomerAddress(e.target.value)}
                         leftIcon={<MapPin className="h-4 w-4 text-muted-foreground" />}
+                        data-testid="customer-address-desktop"
                       />
                     </div>
                   </div>
@@ -1992,6 +1998,7 @@ export default function NewOrderPage() {
                         onChange={(e) => setDeliveryDate(e.target.value)}
                         leftIcon={<CalendarDays className="h-4 w-4 text-primary" />}
                         required
+                        data-testid="delivery-date-desktop"
                       />
                       <Input
                         type="date"
@@ -2097,28 +2104,10 @@ export default function NewOrderPage() {
                   icon={<Ruler className="h-4 w-4" />}
                 >
                   {/* Top toolbar */}
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-3">
+                  <div className="mb-4 border-b border-border/50 pb-3">
                     <p className={cn("text-xs text-muted-foreground", isUrdu && "font-urdu-sans")}>
                       {t.matrixSubtitle}
                     </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowMannequin((prev) => !prev)}
-                      className="h-8 gap-2 text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      {showMannequin ? (
-                        <>
-                          <EyeOff className="h-3.5 w-3.5 text-primary" />
-                          <span>{t.bodyDiagramHide}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="h-3.5 w-3.5 text-primary" />
-                          <span>{t.bodyDiagramShow}</span>
-                        </>
-                      )}
-                    </Button>
                   </div>
 
                   {/* Profile lock banner */}
@@ -2143,31 +2132,16 @@ export default function NewOrderPage() {
                     </div>
                   )}
 
-                  {/* Form & Optional Mannequin Display */}
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-                    {/* Measurement Intake Form (Card-free 2-column Ledger) */}
-                    <div className="flex-1 min-w-0">
-                      <MeasurementIntakeForm
-                        measurements={measurements}
-                        stylePreferences={stylePreferences}
-                        onMeasurementChange={handleMeasurementChange}
-                        onStyleChange={handleStyleChange}
-                        activeMeasurementField={activeField}
-                        onFieldFocus={setActiveField}
-                      />
-                    </div>
-
-                    {/* Collapsible Visual Mannequin Pad */}
-                    {showMannequin && (
-                      <div className="w-full shrink-0 lg:w-52">
-                        <div className="sticky top-24 flex flex-col items-center rounded-xl border border-border/80 bg-card/90 p-3 shadow-md backdrop-blur-xs">
-                          <span className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Body Mapping Pad
-                          </span>
-                          <VisualMannequinPad activeField={activeField} />
-                        </div>
-                      </div>
-                    )}
+                  {/* Measurement Intake Form (Full-width clean Ledger) */}
+                  <div className="w-full">
+                    <MeasurementIntakeForm
+                      measurements={measurements}
+                      stylePreferences={stylePreferences}
+                      onMeasurementChange={handleMeasurementChange}
+                      onStyleChange={handleStyleChange}
+                      activeMeasurementField={activeField}
+                      onFieldFocus={setActiveField}
+                    />
                   </div>
                 </SectionCard>
 
@@ -2226,7 +2200,7 @@ export default function NewOrderPage() {
                             <input
                               type="number"
                               dir="ltr"
-                              inputMode="numeric"
+                              inputMode="decimal"
                               min={0}
                               value={stitchingRate}
                               onChange={(e) => setStitchingRate(Math.max(0, parseFloat(e.target.value) || 0))}
@@ -2249,7 +2223,7 @@ export default function NewOrderPage() {
                             <input
                               type="number"
                               dir="ltr"
-                              inputMode="numeric"
+                              inputMode="decimal"
                               min={0}
                               value={fabricCharges}
                               onChange={(e) => setFabricCharges(Math.max(0, parseFloat(e.target.value) || 0))}
@@ -2272,7 +2246,7 @@ export default function NewOrderPage() {
                             <input
                               type="number"
                               dir="ltr"
-                              inputMode="numeric"
+                              inputMode="decimal"
                               min={0}
                               value={addonsCharges}
                               onChange={(e) => setAddonsCharges(Math.max(0, parseFloat(e.target.value) || 0))}
@@ -2295,7 +2269,7 @@ export default function NewOrderPage() {
                             <input
                               type="number"
                               dir="ltr"
-                              inputMode="numeric"
+                              inputMode="decimal"
                               min={0}
                               value={discountAmount}
                               onChange={(e) => setDiscountAmount(Math.max(0, parseFloat(e.target.value) || 0))}
@@ -2341,7 +2315,7 @@ export default function NewOrderPage() {
                           <input
                             type="number"
                             dir="ltr"
-                            inputMode="numeric"
+                            inputMode="decimal"
                             min={0}
                             value={advancePaid}
                             onChange={(e) => setAdvancePaid(Math.max(0, parseFloat(e.target.value) || 0))}
@@ -2668,6 +2642,7 @@ export default function NewOrderPage() {
                     type="button"
                     variant="default"
                     size="lg"
+                    data-testid="desktop-confirm-book-btn"
                     disabled={!isFormValidToBook || isCheckingQuota}
                     isLoading={isCheckingQuota}
                     onClick={handleBookOrder}

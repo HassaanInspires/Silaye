@@ -3406,7 +3406,54 @@
   - `progress.md` [MODIFIED]
 
 * **Next Immediate Task:**
-  - Present results and visual screenshots to user, commit and push changes on branch `feat/home-light-theme-bidi`.
+  - Milestone 25.9: New Booking Flow 10/10 Brutal Polish, Full-Width Matrix & Modal BiDi Architecture (Completed).
+
+---
+
+## Phase 25: Milestone 25.9 — New Booking Flow 10/10 Brutal Polish & Post-Booking Modal BiDi Architecture (Completed)
+* **Date:** 2026-09-18
+* **Git Branch:** `feat/home-light-theme-bidi`
+* **Tasks Completed:**
+  - `25.9` Completed comprehensive 10/10 overhaul of `/orders/new` and post-booking flows:
+    * **Visual Mannequin Pad Removal & Full-Width Matrix Expansion**:
+      - Deliberately eliminated decorative mannequin pad and toggle button from Tab 2 in `app/orders/new/page.tsx`.
+      - Expanded the bilingual Measurement Matrix (`MeasurementIntakeForm`) to 100% full container width, providing generous breathing room for whole-number inputs, quarter-inch fraction pills (`0`, `¼`, `½`, `¾`), and live formatted badges.
+    * **WhatsApp Receipt Modal Localization & BiDi Polish (`components/tailor/whatsapp-receipt-modal.tsx`)**:
+      - Wired `useLanguage()` and `WHATSAPP_MODAL_I18N`.
+      - Localized header (`واٹس ایپ رسید اور کسٹمر الرٹ` / `WhatsApp Receipt & Alert Engine`) and subtitle.
+      - Fixed BiDi phone inversion by wrapping in `<bdi dir="ltr">`, ensuring Pakistani numbers format naturally without reversed country codes.
+      - Protected currency displays with `<bdi dir="ltr">Rs. {balance}</bdi>` and translated balance badge to `بقیہ رقم:`.
+      - Streamlined template tabs to context-aware single-language triggers: `📋 بکنگ رسید` (Booking), `🔔 سوٹ تیار الرٹ` (Ready Alert), `💰 بقایا کھاتہ` (Khata Balance).
+      - Added authentic WhatsApp chat simulation: Light parchment background (`#EFEAE2`) with classic light-green message bubble (`#DCF8C6`) in light mode, and dark titanium (`#0B141A`) with emerald bubble (`#005C4B`) in dark mode.
+      - Localized action buttons: `واٹس ایپ پر بھیجیں` (Send on WhatsApp), `بند کریں` (Close), `میسج کاپی کریں` (Copy Message).
+    * **Thermal Slip Modal Overhaul (`components/tailor/thermal-slip-modal.tsx`)**:
+      - Wired `useLanguage()` and `THERMAL_MODAL_I18N`.
+      - Localized dialog header, order number badge, and paper format selector pills (`58mm فیبرک ٹیگ` / `80mm کسٹمر رسید`).
+      - Localized paper format info ribbon and action buttons (`پرنٹ تھرمل سلپ`, `کاپی ٹیکسٹ`, `ڈاؤن لوڈ .bin`, `بند کریں`).
+    * **Direction-Aware Inputs & Scoped Identifiers (`components/ui/input.tsx`, `app/orders/new/page.tsx`)**:
+      - Added direction-aware RTL padding (`rtl:pr-10 rtl:pl-4`) and icon positioning (`rtl:left-auto rtl:right-3.5`) in `components/ui/input.tsx`.
+      - Added scoped `data-testid` attributes on all customer and booking elements (`customer-phone-desktop`, `customer-name-desktop`, `customer-address-desktop`, `delivery-date-desktop`, `desktop-confirm-book-btn`, `customer-phone-mobile`, `customer-name-mobile`, `customer-address-mobile`, `delivery-date-mobile`, `mobile-confirm-book-btn`).
+      - Set `inputMode="decimal"` on all rate and financial inputs (Stitching Rate, Fabric Charges, Addon Charges, Discount, Advance Deposit).
+    * **Brutal Verification & Testing Suite**:
+      - `npx tsc --noEmit`: 0 TypeScript compiler errors in strict mode.
+      - `npm run build`: 28/28 Next.js static pages compiled and exported into `out/`.
+      - `scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites in 415.5s.
+      - Playwright end-to-end interactive audit: Captured 15 high-res audit screenshots across mobile and desktop in Light and Dark modes.
+      - Telemetry: Initial load sub-400ms (`firstPaint`: 340ms, `domContentLoaded`: 85ms).
+
+* **Active File Changes:**
+  - `components/ui/input.tsx` [MODIFIED]
+  - `lib/i18n/translations.ts` [MODIFIED]
+  - `components/tailor/whatsapp-receipt-modal.tsx` [MODIFIED]
+  - `components/tailor/thermal-slip-modal.tsx` [MODIFIED]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `scripts/deep_inspect_orders_new.mjs` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Next Immediate Task:**
+  - Commit and push to `origin/feat/home-light-theme-bidi`. Present final walkthrough artifact and visual evidence to user.
+
 
 
 

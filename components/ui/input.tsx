@@ -42,7 +42,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative flex items-center">
           {leftIcon && (
-            <span className="pointer-events-none absolute left-3.5 flex items-center text-muted-foreground">
+            <span className="pointer-events-none absolute left-3.5 flex items-center text-muted-foreground rtl:left-auto rtl:right-3.5">
               {leftIcon}
             </span>
           )}
@@ -52,15 +52,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             className={cn(
               'flex h-11 w-full rounded-xl border border-input bg-card-elevated px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:bg-card focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50',
-              leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
+              leftIcon && 'pl-10 rtl:pl-4 rtl:pr-10',
+              rightIcon && 'pr-10 rtl:pr-4 rtl:pl-10',
               error && 'border-destructive focus:border-destructive focus:ring-destructive',
               className
             )}
             {...props}
           />
           {rightIcon && (
-            <span className="pointer-events-none absolute right-3.5 flex items-center text-muted-foreground">
+            <span className="pointer-events-none absolute right-3.5 flex items-center text-muted-foreground rtl:right-auto rtl:left-3.5">
               {rightIcon}
             </span>
           )}
