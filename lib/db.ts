@@ -606,10 +606,20 @@ export const customersDb = {
         if (local && (!shopId || local.shop_id === shopId)) {
           return local;
         }
+        // Normalize digits to handle formatting differences (e.g., 0312-9876543 vs 03129876543)
+        const cleanDigits = cleanPhone.replace(/\D/g, '');
+        const allLocal = await db.customers.toArray();
+        const digitMatch = allLocal.find((c) => {
+          const cDigits = (c.phone || '').replace(/\D/g, '');
+          return cDigits.endsWith(cleanDigits) || cleanDigits.endsWith(cDigits);
+        });
+        if (digitMatch) {
+          return digitMatch;
+        }
       }
       const { getLocalCustomerByPhone } = await import('@/lib/offline-db');
       const fallback = await getLocalCustomerByPhone(cleanPhone);
-      if (fallback && (!shopId || fallback.shop_id === shopId)) {
+      if (fallback) {
         return fallback;
       }
     } catch {

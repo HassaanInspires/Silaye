@@ -123,7 +123,7 @@ export default function CustomersPage() {
 
   return (
     <AppShell activeRoute="/customers">
-      <div className="flex-1 space-y-6 p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+      <div className="flex-1 space-y-6 p-4 pb-28 sm:p-6 sm:pb-8 md:p-8 max-w-7xl mx-auto">
         {/* Toast Alert */}
         {toastMessage && (
           <div
@@ -299,14 +299,29 @@ export default function CustomersPage() {
                   : customersT.emptyStateSub}
               </p>
             </div>
-            <Button
-              type="button"
-              onClick={handleOpenCreateModal}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs font-urdu-sans"
-            >
-              <PlusCircle className="h-4 w-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
-              <span>{customersT.addCustomerBtn}</span>
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+              {searchQuery && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSearchQuery('')}
+                  className="text-xs font-urdu-sans h-9 px-3"
+                  data-testid="clear-search-btn"
+                >
+                  <X className="h-3.5 w-3.5 mr-1 rtl:ml-1 rtl:mr-0" />
+                  <span>{dir === 'rtl' ? 'تلاش ختم کریں' : 'Clear Search'}</span>
+                </Button>
+              )}
+              <Button
+                type="button"
+                onClick={handleOpenCreateModal}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs font-urdu-sans h-9 px-3 shadow-xs"
+                data-testid="empty-add-customer-btn"
+              >
+                <PlusCircle className="h-4 w-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
+                <span>{customersT.addCustomerBtn}</span>
+              </Button>
+            </div>
           </div>
         )}
 
@@ -483,20 +498,28 @@ export default function CustomersPage() {
 
                   {/* Phone and Orders */}
                   <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs">
-                    <div className="flex items-center gap-2 font-mono">
-                      <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                    <a
+                      href={`tel:${c.phone}`}
+                      className="flex items-center gap-2 font-mono text-foreground hover:text-primary active:underline p-1 -m-1 cursor-pointer"
+                      title={dir === 'rtl' ? 'فون ملائیں' : 'Call Customer'}
+                      data-testid={`call-customer-${c.id}`}
+                    >
+                      <Phone className="h-3.5 w-3.5 text-primary" />
                       <bdi dir="ltr">{c.phone}</bdi>
-                    </div>
+                    </a>
 
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => handleOpenWhatsApp(c)}
-                        className="p-1 rounded-md text-emerald-600 hover:bg-emerald-500/10 transition-colors"
+                        className="h-10 w-10 flex items-center justify-center rounded-lg text-emerald-600 hover:bg-emerald-500/10 active:bg-emerald-500/20 transition-colors cursor-pointer"
+                        title="WhatsApp"
+                        aria-label="WhatsApp"
+                        data-testid={`whatsapp-customer-${c.id}`}
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare className="h-5 w-5" />
                       </button>
-                      <span className="text-muted-foreground font-mono">
+                      <span className="text-muted-foreground font-mono text-xs">
                         <bdi dir="ltr">{c.total_orders_count || 0}</bdi> {customersT.suitsCount}
                       </span>
                     </div>

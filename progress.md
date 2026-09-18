@@ -3506,14 +3506,69 @@
   - `tasks.md` [MODIFIED]
   - `progress.md` [MODIFIED]
 
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  - `npx tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `npm run build`: 29/29 static routes compiled into `out/`.
+  - `node scripts/audit_customers_and_post_booking.mjs`: 13/13 tests passed.
+
 * **Next Immediate Task:**
-  - Git commit and push to `origin/feat/home-light-theme-bidi`. Present final walkthrough artifact to user.
+  - Phase 27: Mobile UX Hardening, Wrong-Step Fault Tolerance & Brutal Real-Life Workshop Scenarios (Completed)
 
+---
 
+## Phase 27: Mobile UX Hardening, Wrong-Step Fault Tolerance & Brutal Real-Life Workshop Scenarios (Completed)
+* **Date:** 2026-09-18
+* **Tasks Completed:**
+  - `27.1` Zero `alert()` Popups & Form Validation Toast Engine (`app/orders/new/page.tsx`):
+    * Eradicated native browser `alert()` popups across the new booking wizard and standalone profile intake.
+    * Implemented theme-adaptive `formValidationError` state with floating Urdu/English validation toast card (`data-testid="form-validation-toast"`).
+    * Automatically navigates user to Step 1 / Customer tab when contact details are missing and auto-dismisses after 4 seconds.
+  - `27.2` Mobile Step 3 Delivery Date Recovery Card & Dynamic Guidance (`app/orders/new/page.tsx`):
+    * Mounted inline `step3-delivery-date-recovery` card on Mobile Step 3 when delivery date was left unselected on Step 1.
+    * Added 1-tap quick turnaround shortcut buttons: `+3 دن (ارجنٹ)`, `+7 دن (عام معمول)`, `+14 دن (آرام دہ)`, and custom native date picker.
+    * Dynamic CTA button label: displays `ڈلیوری تاریخ منتخب کریں` instead of a silent disabled button when date is missing. Tapping any turnaround button instantly sets `deliveryDate`, collapses the recovery card, and glows the booking button (`✨ سوٹ بکنگ مکمل کریں`).
+  - `27.3` Mobile Step 1 Standalone Sizing Intake Shortcut (`app/orders/new/page.tsx`):
+    * Mounted direct secondary button `[💾 صرف ناپ و گاہک محفوظ کریں]` (`data-testid="mobile-step1-save-profile-btn"`) right beneath customer intake on Step 1.
+    * Enables master tailors to record walk-in customer sizing in 1 tap without navigating through Steps 2 and 3.
+  - `27.4` Compact Mobile Modal Viewport Hardening (`components/tailor/post-booking-success-modal.tsx`):
+    * Scoped modal dialog to `max-h-[92vh] flex flex-col` with inner `overflow-y-auto pr-1` container.
+    * Added tactile touch-feedback classes (`active:scale-[0.98] cursor-pointer`) across all 3 action cards to prevent clipping on 360px compact Android phones.
+  - `27.5` Mobile Customer Directory Touch Ergonomics & Clearance (`app/customers/page.tsx`):
+    * Converted plain text phone numbers on mobile cards into clickable `tel:` dialer links (`data-testid="call-customer-..."`).
+    * Enlarged WhatsApp button touch target to `h-10 w-10` (`40×40px`, compliant with mobile touch standards).
+    * Added `pb-28 sm:pb-8` to ensure safe clearance above `MobileBottomNav`.
+    * Added 1-tap `[تلاش ختم کریں]` (`clear-search-btn`) when searches yield zero results.
+  - `27.6` Comprehensive Playwright Mobile Scenario Audit (`scripts/brutal_mobile_scenario_audit.mjs`):
+    * Executed automated Playwright stress test on simulated Android `360×740` mobile screen covering 6 brutal scenarios:
+      1. Missing customer name & phone validation (0 native alerts).
+      2. Step 3 missing delivery date inline recovery card and 1-tap turnaround selection.
+      3. Rapid wizard back-and-forth switching (3 -> 2 -> 1 -> 2 -> 3) with 100% input and financial state preservation.
+      4. Standalone Digital Naap Register intake with 0 fake orders and 0 quota deducted.
+      5. Customer directory search, empty state clear button, and `tel:` dialer links.
+      6. Post-booking success action card responsiveness and 1-tap suit reset for the same customer.
+    * Captured 12 high-resolution audit screenshots in `screenshots/brutal_mobile_audit/`.
+  - `27.7` Full Verification Suite:
+    * `npx tsc --noEmit`: 0 errors in strict mode.
+    * `scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites in 476.48s.
+    * `npm run build`: 29/29 Next.js static routes cleanly exported into `out/`.
+    * `scripts/brutal_mobile_scenario_audit.mjs`: 12/12 test assertions passed; `alertTriggered: false`.
 
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `app/customers/page.tsx` [MODIFIED]
+  - `components/tailor/post-booking-success-modal.tsx` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `scripts/brutal_mobile_scenario_audit.mjs` [NEW]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
 
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  - `npx tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `npm run build`: 29/29 static routes compiled into `out/`.
+  - `node scripts/brutal_mobile_scenario_audit.mjs`: 12/12 mobile scenario assertions passed.
 
-
-
-
+* **Next Immediate Task:**
+  - Conclude Phase 27, commit changes, and present comprehensive mobile stress-test walkthrough to user.
 

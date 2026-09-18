@@ -50,13 +50,13 @@ export function PostBookingSuccessModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         data-testid="post-booking-success-modal"
-        className="w-[95vw] max-w-lg border border-primary/30 bg-card p-5 sm:p-7 shadow-2xl rounded-2xl overflow-hidden"
+        className="w-[95vw] max-w-lg max-h-[92vh] flex flex-col border border-primary/30 bg-card p-4 sm:p-6 shadow-2xl rounded-2xl overflow-hidden"
         hideCloseButton={false}
       >
         {/* Subtle Ambient Radial Glow */}
         <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-36 w-72 rounded-full bg-primary/15 blur-3xl" />
 
-        <div className="relative z-10 space-y-5">
+        <div className="relative z-10 space-y-4 overflow-y-auto pr-1">
           {/* Header Banner */}
           <div className="flex flex-col items-center text-center space-y-2">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 border border-primary/40 text-primary shadow-xs animate-bounce">
@@ -120,7 +120,7 @@ export function PostBookingSuccessModal({
                 type="button"
                 data-testid="post-booking-another-same-btn"
                 onClick={() => handleAction(onBookAnotherSameCustomer)}
-                className="w-full text-start group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/15 transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
+                className="w-full text-start group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/15 active:scale-[0.98] transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs cursor-pointer"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs mt-0.5">
                   <Repeat className="h-5 w-5" />
@@ -147,7 +147,7 @@ export function PostBookingSuccessModal({
                 type="button"
                 data-testid="post-booking-new-customer-btn"
                 onClick={() => handleAction(onBookForNewCustomer)}
-                className="w-full text-start group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-xl border border-border bg-card hover:bg-accent/40 hover:border-primary/30 transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
+                className="w-full text-start group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-xl border border-border bg-card hover:bg-accent/40 hover:border-primary/30 active:scale-[0.98] transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs cursor-pointer"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-foreground shadow-xs mt-0.5">
                   <UserPlus className="h-5 w-5" />
@@ -174,7 +174,7 @@ export function PostBookingSuccessModal({
                 type="button"
                 data-testid="post-booking-view-queue-btn"
                 onClick={() => handleAction(onViewQueue)}
-                className="w-full text-start group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-xl border border-border bg-card hover:bg-accent/40 hover:border-primary/30 transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
+                className="w-full text-start group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-xl border border-border bg-card hover:bg-accent/40 hover:border-primary/30 active:scale-[0.98] transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs cursor-pointer"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground shadow-xs mt-0.5">
                   <ClipboardList className="h-5 w-5" />

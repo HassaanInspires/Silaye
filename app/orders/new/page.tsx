@@ -355,6 +355,7 @@ export default function NewOrderPage() {
   const [newBookedCustomer, setNewBookedCustomer] = React.useState<Customer | null>(null);
   const [draftSavedToast, setDraftSavedToast] = React.useState<boolean>(false);
   const [orderBookedToast, setOrderBookedToast] = React.useState<boolean>(false);
+  const [formValidationError, setFormValidationError] = React.useState<string | null>(null);
   const [showMobileAdmin, setShowMobileAdmin] = React.useState<boolean>(false);
 
   // ── Query parameter customer pre-load ──────────────────────────────────
@@ -605,7 +606,18 @@ export default function NewOrderPage() {
   };
 
   const handleBookOrder = async () => {
-    if (!customerName.trim() || !deliveryDate) return;
+    if (!customerName.trim()) {
+      setFormValidationError(isUrdu ? 'براہ کرم گاہک کا نام درج کریں' : 'Please enter customer name');
+      setTimeout(() => setFormValidationError(null), 4000);
+      setMobileStep(1);
+      setActiveTab('customer');
+      return;
+    }
+    if (!deliveryDate) {
+      setFormValidationError(isUrdu ? 'براہ کرم ڈلیوری تاریخ منتخب کریں' : 'Please select delivery date');
+      setTimeout(() => setFormValidationError(null), 4000);
+      return;
+    }
 
     // ── Pre-flight Subscription Quota Check ─────────────────────────────────
     setIsCheckingQuota(true);
@@ -830,11 +842,17 @@ export default function NewOrderPage() {
 
   const handleSaveProfileOnly = async () => {
     if (!customerName.trim()) {
-      alert(language === 'ur' ? 'براہ کرم گاہک کا نام درج کریں' : 'Please enter customer name');
+      setFormValidationError(isUrdu ? 'براہ کرم گاہک کا نام درج کریں' : 'Please enter customer name');
+      setTimeout(() => setFormValidationError(null), 4000);
+      setMobileStep(1);
+      setActiveTab('customer');
       return;
     }
     if (!phone.trim()) {
-      alert(language === 'ur' ? 'براہ کرم موبائل نمبر درج کریں' : 'Please enter mobile number');
+      setFormValidationError(isUrdu ? 'براہ کرم موبائل نمبر درج کریں' : 'Please enter mobile number');
+      setTimeout(() => setFormValidationError(null), 4000);
+      setMobileStep(1);
+      setActiveTab('customer');
       return;
     }
 
@@ -962,6 +980,32 @@ export default function NewOrderPage() {
             <button
               onClick={() => setProfileSavedToast(false)}
               className="p-1 rounded-md text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Floating Single-Language Validation Warning Toast */}
+        {formValidationError && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            data-testid="form-validation-toast"
+            className="fixed top-16 md:top-20 right-4 md:right-8 z-50 flex items-center gap-2.5 rounded-2xl border border-rose-500/40 bg-card/95 backdrop-blur-xl px-4 py-3 text-xs text-foreground shadow-xl animate-in fade-in slide-in-from-top-2"
+          >
+            <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
+            <div className="flex flex-col">
+              <span className={cn("font-bold text-sm leading-relaxed text-rose-600 dark:text-rose-400", isUrdu ? "font-urdu-serif" : "font-sans")}>
+                {isUrdu ? 'توجہ فرمائیں' : 'Attention Required'}
+              </span>
+              <span className="text-[11px] text-muted-foreground font-urdu-sans">
+                {formValidationError}
+              </span>
+            </div>
+            <button
+              onClick={() => setFormValidationError(null)}
+              className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1168,6 +1212,22 @@ export default function NewOrderPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Standalone Sizing Intake ("Digital Naap Register") Shortcut */}
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveProfileOnly}
+                      isLoading={isSavingProfileOnly}
+                      className="w-full h-10 rounded-xl border-primary/40 text-primary hover:bg-primary/10 font-semibold text-xs font-urdu-sans shadow-2xs flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer"
+                      data-testid="mobile-step1-save-profile-btn"
+                    >
+                      <Ruler className="h-3.5 w-3.5 text-primary" />
+                      <span>{customersT.saveProfileOnly}</span>
+                    </Button>
+                  </div>
                 </div>
 
                 {/* 2. Sleek Garment Selection Chips & Quantity */}
@@ -1778,9 +1838,85 @@ export default function NewOrderPage() {
                 )}
               </div>
 
+              {/* Delivery Date Recovery Prompt if left unselected on Step 1 */}
+              {!deliveryDate && (
+                <div
+                  data-testid="step3-delivery-date-recovery"
+                  className="rounded-2xl border-2 border-amber-500/40 bg-amber-500/10 p-4 space-y-3 shadow-md animate-in fade-in slide-in-from-bottom-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold font-urdu-sans text-xs sm:text-sm">
+                      <CalendarDays className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                      <span>{isUrdu ? 'ڈلیوری کی تاریخ درکار ہے' : 'Delivery Date Required'}</span>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 font-mono">
+                      {isUrdu ? 'لازمی' : 'Required'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground font-urdu-sans">
+                    {isUrdu
+                      ? 'آرڈر بک کرنے کے لیے ڈلیوری کے دن کا فوری انتخاب فرمائیں:'
+                      : 'Select turnaround days to enable order booking:'}
+                  </p>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      data-testid="recovery-date-3d"
+                      onClick={() => setDeliveryDate(getFutureDateString(3))}
+                      className="h-11 rounded-xl border border-amber-500/40 bg-card hover:bg-amber-500/15 text-xs font-bold text-foreground active:scale-95 transition-all flex flex-col items-center justify-center p-1 cursor-pointer shadow-2xs"
+                    >
+                      <span className="font-urdu-sans text-[11px] leading-tight text-foreground">{isUrdu ? '+3 دن' : '+3 Days'}</span>
+                      <span className="text-[9px] text-amber-600 dark:text-amber-400 font-mono font-bold">
+                        {isUrdu ? 'ارجنٹ' : 'Urgent'}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      data-testid="recovery-date-7d"
+                      onClick={() => setDeliveryDate(getFutureDateString(7))}
+                      className="h-11 rounded-xl border-2 border-primary bg-primary/10 hover:bg-primary/20 text-xs font-bold text-primary active:scale-95 transition-all flex flex-col items-center justify-center p-1 cursor-pointer shadow-xs"
+                    >
+                      <span className="font-urdu-sans text-[11px] leading-tight text-primary font-bold">{isUrdu ? '+7 دن' : '+7 Days'}</span>
+                      <span className="text-[9px] text-muted-foreground font-mono font-medium">
+                        {isUrdu ? 'عام معمول' : 'Standard'}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      data-testid="recovery-date-14d"
+                      onClick={() => setDeliveryDate(getFutureDateString(14))}
+                      className="h-11 rounded-xl border border-border bg-card hover:bg-card-elevated text-xs font-bold text-foreground active:scale-95 transition-all flex flex-col items-center justify-center p-1 cursor-pointer shadow-2xs"
+                    >
+                      <span className="font-urdu-sans text-[11px] leading-tight text-foreground">{isUrdu ? '+14 دن' : '+14 Days'}</span>
+                      <span className="text-[9px] text-muted-foreground font-mono font-medium">
+                        {isUrdu ? 'آرام دہ' : 'Relaxed'}
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1 border-t border-amber-500/20">
+                    <span className="text-[11px] text-muted-foreground font-urdu-sans shrink-0">
+                      {isUrdu ? 'یا مخصوص تاریخ:' : 'Or custom date:'}
+                    </span>
+                    <Input
+                      type="date"
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
+                      className="h-9 text-xs font-mono bg-card"
+                      data-testid="recovery-date-custom"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Inline back button to Step 2 */}
               <button
                 type="button"
+                data-testid="mobile-step3-back-btn"
                 onClick={() => {
                   setMobileStep(2);
                   document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1803,6 +1939,7 @@ export default function NewOrderPage() {
             {mobileStep === 1 ? (
               <Button
                 type="button"
+                data-testid="mobile-step1-next-btn"
                 disabled={!customerName.trim()}
                 onClick={() => {
                   if (!customerName.trim()) return;
@@ -1827,6 +1964,7 @@ export default function NewOrderPage() {
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
+                  data-testid="mobile-step2-back-btn"
                   onClick={() => {
                     setMobileStep(1);
                     document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1837,6 +1975,7 @@ export default function NewOrderPage() {
                 </Button>
                 <Button
                   type="button"
+                  data-testid="mobile-step2-next-btn"
                   onClick={() => {
                     setMobileStep(3);
                     document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1872,7 +2011,7 @@ export default function NewOrderPage() {
                     />
                   </div>
 
-                  <div className="flex flex-col items-end">
+                  <div className="flex items-end flex-col">
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                       {t.remainingBalance}
                     </span>
@@ -1896,6 +2035,8 @@ export default function NewOrderPage() {
                       ? t.verifyingQuota
                       : !customerName.trim()
                       ? t.enterCustomerNameNotice
+                      : !deliveryDate
+                      ? (isUrdu ? 'ڈلیوری تاریخ منتخب کریں' : 'Select Delivery Date')
                       : t.confirmAndBook}
                   </span>
                 </Button>

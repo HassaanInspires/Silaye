@@ -641,6 +641,16 @@
 - [x] 26.6 Deep Verification & Audit Suite:
   * Strict type checking: `npx tsc --noEmit` passed with 0 errors.
   * Database test assertions: `scripts/verify_db.ts` passed 159/159 assertions across all 17 test suites.
-  * Production static export: `npm run build` compiled all 29 routes cleanly into `out/` with zero warnings.
+  * Production static export: `npm run build` compiled all 29 routes cleanly into `out/` with `/customers` at 7 kB.
   * Playwright interactive end-to-end audit: Executed `scripts/audit_customers_and_post_booking.mjs` with 13/13 tests passing, capturing high-res screenshots for desktop/mobile in light/dark modes.
 
+---
+
+## Phase 27: Mobile UX Hardening, Wrong-Step Fault Tolerance & Brutal Real-Life Workshop Scenarios
+- [x] 27.1 Zero `alert()` Popups & Inline Validation Toast Engine (`app/orders/new/page.tsx`): Replace browser alerts in `handleSaveProfileOnly` with animated, theme-aware validation toast and automatic focus/redirection.
+- [x] 27.2 Mobile Step 3 Delivery Date Recovery Card & Dynamic Guidance (`app/orders/new/page.tsx`): Add inline turnaround quick-picker (`+3 دن ارجنٹ`, `+7 دن معمول`, `+14 دن آرام دہ`) when delivery date was left unselected on Step 1, and update CTA button label to indicate exact missing requirement.
+- [x] 27.3 Mobile Step 1 Standalone Sizing Intake Shortcut (`app/orders/new/page.tsx`): Add direct `[💾 صرف ناپ و گاہک محفوظ کریں]` button on Step 1 for instant digital register logging without forcing tailors through Steps 2 and 3.
+- [x] 27.4 Small Viewport Modal Hardening (`components/tailor/post-booking-success-modal.tsx`): Configure `max-h-[92vh]`, inner scrollable container, and active touch feedback (`active:scale-[0.98]`) for 360px compact Android phones.
+- [x] 27.5 Mobile Customer Directory Touch Ergonomics & Clearance (`app/customers/page.tsx`): Convert phone numbers into clickable `tel:` dialer links, expand WhatsApp touch hit target to >=44px, add `pb-28` to avoid `MobileBottomNav` overlap, and add 1-tap clear search button on empty results.
+- [x] 27.6 Comprehensive Playwright Mobile Scenario Audit (`scripts/brutal_mobile_scenario_audit.mjs`): Execute automated stress test on `360×740` mobile screen covering all 6 brutal real-life scenarios (missing fields, back-and-forth wizard switching, standalone intake without order, search empty state, post-booking reset, offline mode).
+- [x] 27.7 Automated Verification Suite & Walkthrough: Run `npx tsc --noEmit`, `scripts/verify_db.ts`, `npm run build`, and document results in `progress.md`.
