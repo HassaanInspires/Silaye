@@ -676,4 +676,36 @@
 - [x] 29.5 Full Verification Suite: Run `npx tsc --noEmit`, `scripts/verify_db.ts`, and `npm run build`.
 - [x] 29.6 Documentation & Git Push: Update `tasks.md`, `progress.md`, commit and push changes, and generate walkthrough artifact.
 
+---
+
+## Phase 30: Production Orders Queue (`/orders`), Slide-Out Inspector Drawer & Customer Tracker 10/10 Atelier Overhaul
+- [x] 30.1 Dedicated BiDi Translation Dictionary (`lib/i18n/translations.ts`, `lib/language-provider.tsx`):
+  * Add `ORDERS_QUEUE_I18N` with comprehensive Urdu and English strings (page titles, KPI ribbons, stage filters, action buttons, table columns, drawer sections, and 3×3 measurement matrix labels).
+  * Expose `ordersQueueT` in `LanguageContextType` and `useLanguage()`.
+- [x] 30.2 Orders Queue Page Modernization & Theme Adaptability (`app/orders/page.tsx`):
+  * Eliminate all hardcoded `#121418`, `#0B0C0E`, and `border-white/*` relics; replace with semantic tokens (`bg-card`, `border-border`, `text-foreground`, `text-muted-foreground`, `bg-background`).
+  * Connect `useLanguage()` and `ordersQueueT` for authentic single-language BiDi rendering (no dual-language stacking).
+  * Polish Mobile Cards: Dense, tactile cards with 1-tap stage advance, WhatsApp receipt button, thermal print trigger, and clickable `tel:` links with `<bdi dir="ltr">`.
+  * Mobile clearance: Ensure `pb-40` clearance above `MobileBottomNav`.
+  * Polish Desktop Table: High-density silk card with crisp headers, hover states, and clear balance indicators.
+- [x] 30.3 Slide-Out Inspector Drawer Overhaul (`components/tailor/order-inspector-drawer.tsx`):
+  * Re-style container with `bg-card/95 border-border shadow-2xl backdrop-blur-2xl text-foreground`.
+  * Stage advancement stepper with visual progression highlighting current stage.
+  * 3×3 Measurement Matrix display in high-contrast tiles with fractional formatting in `<bdi dir="ltr">`.
+  * Style preferences breakdown chips and financial settlement balance card.
+  * WhatsApp receipt trigger, thermal print trigger, and live tracking link.
+- [x] 30.4 Real-Data Customer Order Tracking Fix (`components/track/order-tracking-view.tsx`, `components/track/order-progress-stepper.tsx`):
+  * Connect `ordersDb.getByShopId()` and local Dexie fallback so real booked orders load without "Order Not Found".
+  * Display real shop identity from `shopsDb.getCurrentShop()`.
+  * Modernize tracker and stepper styling to full theme-adaptability (`bg-card`, `border-border`, `bg-emerald-600` WhatsApp CTA) with 0 hardcoded hex tokens.
+- [x] 30.5 Automated Verification Suite:
+  * Run `npx tsc --noEmit` (strict typecheck passed with 0 errors).
+  * Run `npx tsx scripts/verify_db.ts` (159/159 database assertions passed).
+  * Run `npm run build` (production static export compiled cleanly for all 29 routes).
+  * Execute Playwright test script (`scripts/audit_phase30_orders_queue.mjs`) on `360×740` mobile and desktop capturing light/dark screenshots (9/9 passed).
+- [x] 30.6 Documentation, Walkthrough & Git Push:
+  * Update `tasks.md` and `progress.md`.
+  * Commit changes and push to `origin/feat/home-light-theme-bidi`.
+  * Generate walkthrough artifact with visual proofs.
+
 

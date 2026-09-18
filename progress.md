@@ -3672,5 +3672,71 @@
   - `node scripts/audit_phase29_mobile_nav_modes.mjs`: 6/6 mobile scenario assertions passed.
 
 * **Next Immediate Task:**
-  - Review Phase 29 walkthrough with user and await subsequent instructions.
+  - Phase 30: Production Orders Queue, Slide-Out Inspector Drawer & Customer Tracker 10/10 Atelier Overhaul (Completed).
+
+---
+
+## Phase 30: Production Orders Queue (`/orders`), Slide-Out Inspector Drawer & Customer Tracker 10/10 Atelier Overhaul (Completed)
+* **Date:** 2026-09-18
+* **Git Branch:** `feat/home-light-theme-bidi`
+* **Tasks Completed:**
+  - `30.1` Dedicated BiDi Translation Dictionary (`lib/i18n/translations.ts`, `lib/language-provider.tsx`):
+    * Added comprehensive `ORDERS_QUEUE_I18N` dictionary for `ur` and `en` covering KPI titles, stage filter pills, stage advance/rollback labels, 3×3 measurement matrix labels, fabric/finishing chips, and financial settlement breakdown.
+    * Exported `OrdersQueueTranslationKey` and `OrdersQueueTranslations`.
+    * Exposed `ordersQueueT` in `LanguageContextType` and `useLanguage()` hook.
+  - `30.2` Orders Queue Page Modernization & Theme Adaptability (`app/orders/page.tsx`):
+    * Eliminated over 25 hardcoded Obsidian dark tokens (`#121418`, `#0B0C0E`, `border-white/*`); fully refactored with semantic tokens (`bg-card`, `border-border`, `text-foreground`, `text-muted-foreground`, `bg-background`, `bg-muted/40`).
+    * Implemented single-language BiDi typography (`font-urdu-serif` when `language === 'ur'`) eliminating dual-language text stacking.
+    * Polished Mobile Cards: Dense tactile cards with 1-tap stage advance (`min-h-[44px]`), WhatsApp receipt trigger (`data-testid="mobile-whatsapp-btn"`), thermal print trigger (`data-testid="mobile-print-btn"`), and clickable phone dialer links wrapped in `<bdi dir="ltr">`.
+    * Added generous `pb-40` bottom padding ensuring zero overlap above `MobileBottomNav`.
+    * Polished Desktop Table: High-density silk cards with crisp headers, hover states, clear balance indicators (`مکمل ادا` vs `Rs. X,XXX`), and seamless toggle between Spreadsheet List and Kanban Pipeline views.
+    * Added demo seed fallback when target shop is default mock shop (`shp-demo-001`, `SEED_SHOP`) so testers and automated audits can preview the live workshop pipeline immediately.
+  - `30.3` Slide-Out Inspector Drawer Overhaul (`components/tailor/order-inspector-drawer.tsx`):
+    * Re-styled container with `bg-card/95 border-border shadow-2xl backdrop-blur-2xl text-foreground` with 0 hardcoded hex colors.
+    * BiDi drawer orientation: Slides in from left in RTL (`border-r`), right in LTR (`border-l`).
+    * Interactive Stage Advancement Stepper with current stage visual highlight, 1-tap advance, and 1-tap rollback.
+    * High-contrast 3×3 Measurement Matrix display in dedicated tiles with `<bdi dir="ltr">` fractional inch formatting (`42.5" لمبائی`, `40.25" چھاتی`, etc.).
+    * Garment style preferences chips, fabric specifications, and financial settlement balance card.
+  - `30.4` Real-Data Customer Order Tracking Fix (`components/track/order-tracking-view.tsx`, `components/track/order-progress-stepper.tsx`):
+    * Connected `ordersDb.getByShopId()` and local Dexie fallback with `SEED_ORDERS` fallback for static export slugs so real and preview orders load without "Order Not Found".
+    * Connected live shop identity from `shopsDb.getCurrentShop()`.
+    * Fully modernized tracker and timeline stepper styling with semantic tokens (`bg-card`, `border-border`, `text-foreground`, `bg-emerald-600` WhatsApp CTA), eradicating hardcoded `#0B0C0E`, `#F4F1EA`, and `#25D366`.
+  - `30.5` Automated Verification Suite:
+    * `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    * `npx tsx scripts/verify_db.ts`: 159/159 database assertions passed across all 17 test suites in 447.80s.
+    * `npm run build`: 29/29 Next.js static pages exported cleanly into `out/` in 26.1s.
+    * `node scripts/audit_phase30_orders_queue.mjs`: 9/9 visual audit tests passed (code 0) across mobile and desktop in Light and Dark modes.
+  - `30.6` Documentation, Walkthrough & Git Push:
+    * Updated `tasks.md` and `progress.md`.
+    * Generated walkthrough artifact with embedded visual proofs.
+
+* **Active File Changes:**
+  - `lib/i18n/translations.ts` [MODIFIED]
+  - `lib/language-provider.tsx` [MODIFIED]
+  - `app/orders/page.tsx` [MODIFIED]
+  - `components/tailor/order-inspector-drawer.tsx` [MODIFIED]
+  - `components/track/order-tracking-view.tsx` [MODIFIED]
+  - `components/track/order-progress-stepper.tsx` [MODIFIED]
+  - `scripts/audit_phase30_orders_queue.mjs` [NEW]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  - `npx tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `npm run build`: 29/29 static routes compiled into `out/`.
+  - `node scripts/audit_phase30_orders_queue.mjs`: 9/9 scenarios passed:
+    * `01_mobile_orders_queue_light_ur.png`: PASS
+    * `02_mobile_cutting_filter_light.png`: PASS
+    * `03_mobile_order_inspector_drawer_light.png`: PASS
+    * `04_mobile_whatsapp_modal.png`: PASS
+    * `05_mobile_orders_queue_dark.png`: PASS
+    * `06_desktop_orders_table_light.png`: PASS
+    * `07_desktop_inspector_drawer_light.png`: PASS
+    * `08_desktop_kanban_board_light.png`: PASS
+    * `09_customer_order_tracking_portal.png`: PASS
+
+* **Next Immediate Task:**
+  - Review Phase 30 walkthrough with user and await subsequent instructions.
+
 

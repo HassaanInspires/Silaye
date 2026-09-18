@@ -11,23 +11,18 @@ import {
   Check,
   Scissors,
   User,
-  Clock,
-  Shirt,
-  Sparkles,
-  ExternalLink,
-  Calendar,
-  Layers,
   Phone,
-  MapPin,
-  Tag,
+  Calendar,
+  ExternalLink,
   CheckCircle2,
-  AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PIPELINE_COLUMNS } from '@/components/tailor/pipeline-board';
 import { getDeliveryUrgency } from '@/components/tailor/order-card';
+import { useLanguage } from '@/lib/language-provider';
 import type {
   GarmentOrder,
   Customer,
@@ -59,7 +54,10 @@ const GARMENT_DISPLAY_NAMES: Record<string, { en: string; ur: string }> = {
   WOMEN_SUIT: { en: 'Ladies Suit', ur: 'زنانہ سوٹ' },
 };
 
-const STAGE_LABELS: Record<OrderStatus, { en: string; ur: string; variant: 'status-booked' | 'status-cutting' | 'status-stitching' | 'status-ready' | 'status-overdue' }> = {
+const STAGE_LABELS: Record<
+  OrderStatus,
+  { en: string; ur: string; variant: 'status-booked' | 'status-cutting' | 'status-stitching' | 'status-ready' | 'status-overdue' }
+> = {
   BOOKED: { en: 'Booked', ur: 'بک شدہ', variant: 'status-booked' },
   FABRIC_RECEIVED: { en: 'Fabric Received', ur: 'کپڑا موصول', variant: 'status-booked' },
   IN_CUTTING: { en: 'In Cutting', ur: 'کٹائی جاری', variant: 'status-cutting' },
@@ -72,49 +70,49 @@ const STAGE_LABELS: Record<OrderStatus, { en: string; ur: string; variant: 'stat
   CANCELLED: { en: 'Cancelled', ur: 'منسوخ شدہ', variant: 'status-overdue' },
 };
 
-const STYLE_LABELS: Record<string, string> = {
+const STYLE_LABELS: Record<string, { en: string; ur: string }> = {
   // Collar
-  FULL_BAN: 'Full Ban (مکمل بین)',
-  HALF_BAN: 'Half Ban (ہاف بین)',
-  SHERWANI_CUT: 'Sherwani Collar (شیروانی کٹ)',
-  SHIRT_COLLAR: 'Shirt Collar (شرٹ کالر)',
-  GOL_GALA: 'Gol Gala (گول گلا)',
+  FULL_BAN: { en: 'Full Ban', ur: 'مکمل بین' },
+  HALF_BAN: { en: 'Half Ban', ur: 'ہاف بین' },
+  SHERWANI_CUT: { en: 'Sherwani Collar', ur: 'شیروانی کٹ' },
+  SHIRT_COLLAR: { en: 'Shirt Collar', ur: 'شرٹ کالر' },
+  GOL_GALA: { en: 'Gol Gala', ur: 'گول گلا' },
   // Daman
-  GOL_DAMAN: 'Gol Daman (گول دامن)',
-  CHORAS_DAMAN: 'Choras Daman (چورس دامن)',
+  GOL_DAMAN: { en: 'Gol Daman', ur: 'گول دامن' },
+  CHORAS_DAMAN: { en: 'Choras Daman', ur: 'چورس دامن' },
   // Pockets
-  FRONT_CHEST: 'Front Chest Pocket (سامنے جیب)',
-  LEFT_SIDE: 'Left Side Pocket (بائیں جیب)',
-  RIGHT_SIDE: 'Right Side Pocket (دائیں جیب)',
-  SECRET_ZIP: 'Secret Mobile Zip (موبائل زپ)',
-  FRONT_ONLY: 'Front Pocket Only (صرف سامنے جیب)',
-  FRONT_ONE_SIDE: 'Front + 1 Side Pocket (ایک طرف جیب)',
-  FRONT_TWO_SIDES: 'Front + 2 Side Pockets (دونوں طرف جیب)',
-  TWO_SIDES_NO_FRONT: '2 Side Pockets (سائیڈ جیبیں)',
-  SECRET_ZIPPER_POCKET: 'Secret Zipper Pocket (موبائل زپ)',
+  FRONT_CHEST: { en: 'Front Chest Pocket', ur: 'سامنے جیب' },
+  LEFT_SIDE: { en: 'Left Side Pocket', ur: 'بائیں جیب' },
+  RIGHT_SIDE: { en: 'Right Side Pocket', ur: 'دائیں جیب' },
+  SECRET_ZIP: { en: 'Secret Mobile Zip', ur: 'موبائل زپ' },
+  FRONT_ONLY: { en: 'Front Pocket Only', ur: 'صرف سامنے جیب' },
+  FRONT_ONE_SIDE: { en: 'Front + 1 Side Pocket', ur: 'ایک طرف جیب' },
+  FRONT_TWO_SIDES: { en: 'Front + 2 Side Pockets', ur: 'دونوں طرف جیب' },
+  TWO_SIDES_NO_FRONT: { en: '2 Side Pockets', ur: 'سائیڈ جیبیں' },
+  SECRET_ZIPPER_POCKET: { en: 'Secret Zipper Pocket', ur: 'موبائل زپ' },
   // Patti
-  GUM_PATTI: 'Gum Patti (گم پٹی)',
-  CHORI_PATTI: 'Chori Patti (چوڑی پٹی)',
-  BAREEK_PATTI: 'Bareek Patti (باریک پٹی)',
-  DOUBLE_STITCH: 'Double Stitch Patti',
+  GUM_PATTI: { en: 'Gum Patti', ur: 'گم پٹی' },
+  CHORI_PATTI: { en: 'Chori Patti', ur: 'چوڑی پٹی' },
+  BAREEK_PATTI: { en: 'Bareek Patti', ur: 'باریک پٹی' },
+  DOUBLE_STITCH: { en: 'Double Stitch Patti', ur: 'ڈبل سلائی پٹی' },
   // Bottom
-  SHALWAR_TRADITIONAL: 'Traditional Shalwar (روایتی شلوار)',
-  SHALWAR_POCKET: 'Shalwar with Pocket (جیب والی)',
-  TROUSER_PANT_CUT: 'Trouser Pant Cut (پینٹ کٹ)',
-  CHURIDAR: 'Churidar (چوڑی دار)',
+  SHALWAR_TRADITIONAL: { en: 'Traditional Shalwar', ur: 'روایتی شلوار' },
+  SHALWAR_POCKET: { en: 'Shalwar with Pocket', ur: 'جیب والی شلوار' },
+  TROUSER_PANT_CUT: { en: 'Trouser Pant Cut', ur: 'پینٹ کٹ' },
+  CHURIDAR: { en: 'Churidar', ur: 'چوڑی دار' },
   // Stitch
-  SINGLE_KANDHA: 'Single Kandha (سنگل کندھا)',
-  DOUBLE_SILAI: 'Double Silai (ڈبل سلائی)',
-  OVERLOCK_FINISH: 'Overlock Finish',
-  HAND_TAILORED_TURPAI: 'Hand Turpai (ہاتھ کی ترپائی)',
+  SINGLE_KANDHA: { en: 'Single Kandha', ur: 'سنگل کندھا' },
+  DOUBLE_SILAI: { en: 'Double Silai', ur: 'ڈبل سلائی' },
+  OVERLOCK_FINISH: { en: 'Overlock Finish', ur: 'اوور لاک' },
+  HAND_TAILORED_TURPAI: { en: 'Hand Turpai', ur: 'ہاتھ کی ترپائی' },
   // Cuff
-  GOL_CUFF: 'Gol Cuff (گول کف)',
-  CHORAS_CUFF: 'Choras Cuff (چورس کف)',
-  OPEN_CUFF: 'Open Cuff (کھلا کف)',
+  GOL_CUFF: { en: 'Gol Cuff', ur: 'گول کف' },
+  CHORAS_CUFF: { en: 'Choras Cuff', ur: 'چورس کف' },
+  OPEN_CUFF: { en: 'Open Cuff', ur: 'کھلا کف' },
 };
 
 function formatMeasurement(val?: number): string {
-  if (val === undefined || val === null) return '—';
+  if (val === undefined || val === null || val === 0) return '—';
   return `${val}"`;
 }
 
@@ -130,6 +128,7 @@ export function OrderInspectorDrawer({
   onOpenWhatsApp,
   onOpenPrint,
 }: OrderInspectorDrawerProps) {
+  const { language, dir, ordersQueueT } = useLanguage();
   const [copiedToken, setCopiedToken] = React.useState(false);
 
   // Close on Escape key press
@@ -147,11 +146,11 @@ export function OrderInspectorDrawer({
 
   const garment = GARMENT_DISPLAY_NAMES[order.garment_type] || {
     en: order.garment_type,
-    ur: '',
+    ur: order.garment_type,
   };
   const stage = STAGE_LABELS[order.status] || {
     en: order.status,
-    ur: '',
+    ur: order.status,
     variant: 'status-booked',
   };
   const urgency = getDeliveryUrgency(order.delivery_date);
@@ -188,57 +187,72 @@ export function OrderInspectorDrawer({
     <>
       {/* 1. Backdrop Overlay */}
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* 2. Right-Hand Slide-Out Drawer */}
       <div
-        className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-[#0F1115]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl p-6 overflow-y-auto flex flex-col justify-between transition-transform duration-300 ease-out animate-in slide-in-from-right"
+        className={cn(
+          "fixed inset-y-0 z-50 w-full max-w-md bg-card/95 backdrop-blur-2xl border-border shadow-2xl p-5 sm:p-6 overflow-y-auto flex flex-col justify-between transition-transform duration-300 ease-out animate-in text-foreground",
+          dir === 'rtl'
+            ? 'left-0 border-r slide-in-from-left'
+            : 'right-0 border-l slide-in-from-right'
+        )}
         role="dialog"
         aria-modal="true"
         aria-label={`Order Details for #${order.order_number}`}
       >
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* =============================================================== */}
           {/* SECTION 1: HEADER & ORDER IDENTIFIERS                           */}
           {/* =============================================================== */}
-          <div className="flex items-start justify-between border-b border-white/10 pb-4">
+          <div className="flex items-start justify-between border-b border-border pb-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleCopyToken}
-                  className="flex items-center gap-1.5 rounded-lg border border-gold/30 bg-gold/10 px-2.5 py-1 text-xs font-mono font-bold text-gold hover:bg-gold/20 transition-colors"
-                  title="Copy Order Token"
+                  className="flex items-center gap-1.5 rounded-lg border border-gold/30 bg-gold/10 px-2.5 py-1 text-xs font-mono font-bold text-gold hover:bg-gold/20 transition-colors cursor-pointer"
+                  title={ordersQueueT.copyOrderToken}
                 >
-                  <span>#{order.order_number}</span>
+                  <bdi dir="ltr">#{order.order_number}</bdi>
                   {copiedToken ? (
-                    <Check className="h-3 w-3 text-emerald-400" />
+                    <Check className="h-3 w-3 text-emerald-500" />
                   ) : (
                     <Copy className="h-3 w-3 opacity-70" />
                   )}
                 </button>
 
                 {isEidRush && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
                     <Sparkles className="h-2.5 w-2.5" />
-                    Eid Rush
+                    {ordersQueueT.eidRush}
                   </span>
                 )}
               </div>
 
-              <h2 className="text-lg font-bold text-white tracking-tight">
-                {customer?.full_name || 'Walk-in Customer'}
+              <h2 className={cn("text-lg font-bold text-foreground tracking-tight", language === 'ur' ? 'font-urdu-serif' : '')}>
+                {customer?.full_name || ordersQueueT.walkInCustomer}
               </h2>
-              <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
-                <Phone className="h-3 w-3 text-gray-500" />
-                <span>{customer?.phone || 'No phone'}</span>
+
+              <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+                {customer?.phone ? (
+                  <a
+                    href={`tel:${customer.phone}`}
+                    className="inline-flex items-center gap-1 hover:text-gold hover:underline"
+                  >
+                    <Phone className="h-3 w-3 text-muted-foreground/70" />
+                    <bdi dir="ltr">{customer.phone}</bdi>
+                  </a>
+                ) : (
+                  <span>{ordersQueueT.noPhone}</span>
+                )}
                 {customer?.city && (
                   <>
                     <span>•</span>
-                    <span className="text-gray-400">{customer.city}</span>
+                    <span className="text-muted-foreground">{customer.city}</span>
                   </>
                 )}
               </div>
@@ -250,7 +264,7 @@ export function OrderInspectorDrawer({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-8 w-8 p-0 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
+              className="h-8 w-8 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40"
               aria-label="Close Inspector Drawer"
             >
               <X className="h-4 w-4" />
@@ -260,19 +274,14 @@ export function OrderInspectorDrawer({
           {/* =============================================================== */}
           {/* SECTION 2: STAGE ADVANCE CONTROLLER                             */}
           {/* =============================================================== */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                Production Stage
+              <span className={cn("text-[11px] font-semibold uppercase tracking-wider text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                {ordersQueueT.productionStage}
               </span>
-              <div className="flex items-center gap-1.5">
-                <Badge variant={stage.variant} className="text-xs px-2.5 py-0.5">
-                  {stage.en}
-                </Badge>
-                <span className="font-urdu-sans text-xs text-gray-400" dir="rtl">
-                  {stage.ur}
-                </span>
-              </div>
+              <Badge variant={stage.variant} className="text-xs px-2.5 py-0.5">
+                {language === 'ur' ? stage.ur : stage.en}
+              </Badge>
             </div>
 
             {/* Stage Advance / Rollback Buttons */}
@@ -283,10 +292,10 @@ export function OrderInspectorDrawer({
                 size="sm"
                 disabled={isTerminalBooked || !onRollbackStage}
                 onClick={() => onRollbackStage?.(order.id)}
-                className="gap-1 border-white/10 bg-white/5 hover:bg-white/10 text-xs font-medium text-gray-300 disabled:opacity-40"
+                className="gap-1 border-border bg-card hover:bg-muted/40 text-xs font-medium text-foreground disabled:opacity-40"
               >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                <span>Previous Stage</span>
+                <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
+                <span className={cn(language === 'ur' ? 'font-urdu-serif' : '')}>{ordersQueueT.previousStage}</span>
               </Button>
 
               <Button
@@ -295,28 +304,28 @@ export function OrderInspectorDrawer({
                 size="sm"
                 disabled={isTerminalCompleted || !onAdvanceStage}
                 onClick={() => onAdvanceStage?.(order.id)}
-                className="gap-1 bg-gold text-[#0B0C0E] hover:bg-gold-hover text-xs font-semibold shadow-[0_0_15px_rgba(212,175,55,0.2)] disabled:opacity-40"
+                className="gap-1 bg-gold text-neutral-950 hover:bg-gold-hover text-xs font-semibold shadow-xs disabled:opacity-40"
               >
-                <span>Advance Stage</span>
-                <ChevronRight className="h-3.5 w-3.5" />
+                <span className={cn(language === 'ur' ? 'font-urdu-serif' : '')}>{ordersQueueT.advanceStage}</span>
+                <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
               </Button>
             </div>
 
             {/* Delivery Urgency Strip */}
-            <div className="flex items-center justify-between text-xs pt-2 border-t border-white/5 text-gray-400">
+            <div className="flex items-center justify-between text-xs pt-2 border-t border-border/50 text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5 text-gold" />
-                <span>Target: {order.delivery_date}</span>
+                <span>{ordersQueueT.targetDelivery} <bdi dir="ltr">{order.delivery_date}</bdi></span>
               </span>
               <span
                 className={cn(
                   'font-medium text-[11px] px-2 py-0.5 rounded-full border',
                   urgency.urgency === 'critical' &&
-                    'border-rose-500/40 bg-rose-500/10 text-rose-300 animate-pulse',
+                    'border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-300 animate-pulse',
                   urgency.urgency === 'warning' &&
-                    'border-amber-500/40 bg-amber-500/10 text-amber-300',
+                    'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
                   urgency.urgency === 'safe' &&
-                    'border-white/10 bg-white/5 text-gray-300'
+                    'border-border bg-card text-muted-foreground'
                 )}
               >
                 {urgency.label}
@@ -330,25 +339,19 @@ export function OrderInspectorDrawer({
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-300">
-                  3×3 Measurement Matrix
+                <span className={cn("text-xs font-bold uppercase tracking-wider text-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.measurementMatrixTitle}
                 </span>
-                <span className="text-[10px] text-gold font-mono">(Inches)</span>
+                <span className="text-[10px] text-gold font-mono">{ordersQueueT.inches}</span>
               </div>
-              <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
-                پیمائش کا نقشہ
-              </span>
             </div>
 
             {/* 3x3 Dense Grid */}
             <div className="grid grid-cols-3 gap-2">
               {/* 1. Kameez Length */}
-              <div className="rounded-xl border border-white/10 bg-[#141619] p-2.5 text-center shadow-xs">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  Length
-                </span>
-                <span className="font-urdu-sans text-[10px] text-gray-500 block leading-tight" dir="rtl">
-                  لمبائی
+              <div className="rounded-xl border border-border bg-card p-2.5 text-center shadow-2xs hover:border-gold/30 transition-colors">
+                <span className={cn("block text-[10px] font-semibold text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.length}
                 </span>
                 <span className="font-mono text-sm font-bold text-gold mt-1 block">
                   <bdi dir="ltr">{formatMeasurement(measurements.kameez_length)}</bdi>
@@ -356,12 +359,9 @@ export function OrderInspectorDrawer({
               </div>
 
               {/* 2. Chest */}
-              <div className="rounded-xl border border-white/10 bg-[#141619] p-2.5 text-center shadow-xs">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  Chest
-                </span>
-                <span className="font-urdu-sans text-[10px] text-gray-500 block leading-tight" dir="rtl">
-                  چھاتی
+              <div className="rounded-xl border border-border bg-card p-2.5 text-center shadow-2xs hover:border-gold/30 transition-colors">
+                <span className={cn("block text-[10px] font-semibold text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.chest}
                 </span>
                 <span className="font-mono text-sm font-bold text-gold mt-1 block">
                   <bdi dir="ltr">{formatMeasurement(measurements.chest)}</bdi>
@@ -369,12 +369,9 @@ export function OrderInspectorDrawer({
               </div>
 
               {/* 3. Waist */}
-              <div className="rounded-xl border border-white/10 bg-[#141619] p-2.5 text-center shadow-xs">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  Waist
-                </span>
-                <span className="font-urdu-sans text-[10px] text-gray-500 block leading-tight" dir="rtl">
-                  کمر
+              <div className="rounded-xl border border-border bg-card p-2.5 text-center shadow-2xs hover:border-gold/30 transition-colors">
+                <span className={cn("block text-[10px] font-semibold text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.waist}
                 </span>
                 <span className="font-mono text-sm font-bold text-gold mt-1 block">
                   <bdi dir="ltr">{formatMeasurement(measurements.waist)}</bdi>
@@ -382,12 +379,9 @@ export function OrderInspectorDrawer({
               </div>
 
               {/* 4. Shoulder (Teera) */}
-              <div className="rounded-xl border border-white/10 bg-[#141619] p-2.5 text-center shadow-xs">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  Shoulder
-                </span>
-                <span className="font-urdu-sans text-[10px] text-gray-500 block leading-tight" dir="rtl">
-                  تیرا
+              <div className="rounded-xl border border-border bg-card p-2.5 text-center shadow-2xs hover:border-gold/30 transition-colors">
+                <span className={cn("block text-[10px] font-semibold text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.shoulder}
                 </span>
                 <span className="font-mono text-sm font-bold text-gold mt-1 block">
                   <bdi dir="ltr">{formatMeasurement(measurements.shoulder_teera)}</bdi>
@@ -395,12 +389,9 @@ export function OrderInspectorDrawer({
               </div>
 
               {/* 5. Sleeve */}
-              <div className="rounded-xl border border-white/10 bg-[#141619] p-2.5 text-center shadow-xs">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  Sleeve
-                </span>
-                <span className="font-urdu-sans text-[10px] text-gray-500 block leading-tight" dir="rtl">
-                  بازو
+              <div className="rounded-xl border border-border bg-card p-2.5 text-center shadow-2xs hover:border-gold/30 transition-colors">
+                <span className={cn("block text-[10px] font-semibold text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.sleeve}
                 </span>
                 <span className="font-mono text-sm font-bold text-gold mt-1 block">
                   <bdi dir="ltr">{formatMeasurement(measurements.sleeve_length)}</bdi>
@@ -408,12 +399,9 @@ export function OrderInspectorDrawer({
               </div>
 
               {/* 6. Neck (Gala) */}
-              <div className="rounded-xl border border-white/10 bg-[#141619] p-2.5 text-center shadow-xs">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  Neck
-                </span>
-                <span className="font-urdu-sans text-[10px] text-gray-500 block leading-tight" dir="rtl">
-                  گلا
+              <div className="rounded-xl border border-border bg-card p-2.5 text-center shadow-2xs hover:border-gold/30 transition-colors">
+                <span className={cn("block text-[10px] font-semibold text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.neck}
                 </span>
                 <span className="font-mono text-sm font-bold text-gold mt-1 block">
                   <bdi dir="ltr">{formatMeasurement(measurements.neck_gala)}</bdi>
@@ -421,12 +409,9 @@ export function OrderInspectorDrawer({
               </div>
 
               {/* 7. Daman */}
-              <div className="rounded-xl border border-white/10 bg-[#141619] p-2.5 text-center shadow-xs">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  Daman
-                </span>
-                <span className="font-urdu-sans text-[10px] text-gray-500 block leading-tight" dir="rtl">
-                  دامن
+              <div className="rounded-xl border border-border bg-card p-2.5 text-center shadow-2xs hover:border-gold/30 transition-colors">
+                <span className={cn("block text-[10px] font-semibold text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.daman}
                 </span>
                 <span className="font-mono text-sm font-bold text-gold mt-1 block">
                   <bdi dir="ltr">{formatMeasurement(measurements.daman_width)}</bdi>
@@ -434,12 +419,9 @@ export function OrderInspectorDrawer({
               </div>
 
               {/* 8. Shalwar Length */}
-              <div className="rounded-xl border border-white/10 bg-[#141619] p-2.5 text-center shadow-xs">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  Shalwar L.
-                </span>
-                <span className="font-urdu-sans text-[10px] text-gray-500 block leading-tight" dir="rtl">
-                  شلوار
+              <div className="rounded-xl border border-border bg-card p-2.5 text-center shadow-2xs hover:border-gold/30 transition-colors">
+                <span className={cn("block text-[10px] font-semibold text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.shalwarLength}
                 </span>
                 <span className="font-mono text-sm font-bold text-gold mt-1 block">
                   <bdi dir="ltr">{formatMeasurement(measurements.shalwar_length)}</bdi>
@@ -447,12 +429,9 @@ export function OrderInspectorDrawer({
               </div>
 
               {/* 9. Paincha */}
-              <div className="rounded-xl border border-white/10 bg-[#141619] p-2.5 text-center shadow-xs">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  Paincha
-                </span>
-                <span className="font-urdu-sans text-[10px] text-gray-500 block leading-tight" dir="rtl">
-                  پائینچہ
+              <div className="rounded-xl border border-border bg-card p-2.5 text-center shadow-2xs hover:border-gold/30 transition-colors">
+                <span className={cn("block text-[10px] font-semibold text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                  {ordersQueueT.paincha}
                 </span>
                 <span className="font-mono text-sm font-bold text-gold mt-1 block">
                   <bdi dir="ltr">{formatMeasurement(measurements.paincha)}</bdi>
@@ -462,15 +441,15 @@ export function OrderInspectorDrawer({
 
             {/* Extra measurement specs row if available */}
             {(measurements.aasan || measurements.armhole_moodha) && (
-              <div className="flex items-center justify-between text-[11px] text-gray-400 bg-white/[0.02] p-2 rounded-xl border border-white/5">
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground bg-card p-2.5 rounded-xl border border-border">
                 {measurements.aasan && (
                   <span>
-                    Aasan (آسن): <bdi dir="ltr" className="font-mono text-gray-200">{formatMeasurement(measurements.aasan)}</bdi>
+                    {ordersQueueT.aasan}: <bdi dir="ltr" className="font-mono text-foreground font-semibold">{formatMeasurement(measurements.aasan)}</bdi>
                   </span>
                 )}
                 {measurements.armhole_moodha && (
                   <span>
-                    Moodha (موڈھا): <bdi dir="ltr" className="font-mono text-gray-200">{formatMeasurement(measurements.armhole_moodha)}</bdi>
+                    {ordersQueueT.moodha}: <bdi dir="ltr" className="font-mono text-foreground font-semibold">{formatMeasurement(measurements.armhole_moodha)}</bdi>
                   </span>
                 )}
               </div>
@@ -480,77 +459,77 @@ export function OrderInspectorDrawer({
           {/* =============================================================== */}
           {/* SECTION 4: FABRIC & GARMENT SPECS                               */}
           {/* =============================================================== */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                Garment & Style Specs
+              <span className={cn("text-[11px] font-semibold uppercase tracking-wider text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                {ordersQueueT.garmentSpecs}
               </span>
-              <span className="text-xs font-semibold text-gray-200">
-                <bdi dir="ltr">{order.quantity}x</bdi> {garment.en}
+              <span className="text-xs font-semibold text-foreground">
+                <bdi dir="ltr">{order.quantity}×</bdi> {garment[language]}
               </span>
             </div>
 
             {/* Fabric Details */}
             <div className="space-y-1.5 text-xs">
-              <div className="flex items-center justify-between text-gray-300">
-                <span className="text-gray-400">Fabric Brand & Color:</span>
-                <span className="font-medium text-white">
+              <div className="flex items-center justify-between text-foreground">
+                <span className="text-muted-foreground">{ordersQueueT.fabricBrandColor}</span>
+                <span className="font-medium">
                   {order.fabric_brand ? `${order.fabric_brand} • ` : ''}
-                  {order.fabric_color || 'Standard Fabric'}
+                  {order.fabric_color || ordersQueueT.standardFabric}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-gray-300">
-                <span className="text-gray-400">Fabric Source:</span>
+              <div className="flex items-center justify-between text-foreground">
+                <span className="text-muted-foreground">{ordersQueueT.fabricSource}</span>
                 <span className="font-medium text-gold">
                   {order.fabric_provided_by === 'CUSTOMER'
-                    ? 'Customer Supplied (گاہک کا اپنا)'
-                    : 'Shop In-Stock (دکان کا مال)'}
+                    ? ordersQueueT.customerSupplied
+                    : ordersQueueT.shopSupplied}
                 </span>
               </div>
             </div>
 
             {/* Style Choices Chips */}
-            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
+            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border/50">
               {styles.collar_style && (
-                <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-gray-300">
-                  {STYLE_LABELS[styles.collar_style] || styles.collar_style}
+                <span className="rounded-lg border border-border bg-card px-2.5 py-1 text-[11px] text-foreground font-medium">
+                  {STYLE_LABELS[styles.collar_style]?.[language] || styles.collar_style}
                 </span>
               )}
               {styles.daman_style && (
-                <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-gray-300">
-                  {STYLE_LABELS[styles.daman_style] || styles.daman_style}
+                <span className="rounded-lg border border-border bg-card px-2.5 py-1 text-[11px] text-foreground font-medium">
+                  {STYLE_LABELS[styles.daman_style]?.[language] || styles.daman_style}
                 </span>
               )}
               {styles.pockets && styles.pockets.length > 0 ? (
                 styles.pockets.map((p) => (
                   <span
                     key={p}
-                    className="rounded-lg border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold"
+                    className="rounded-lg border border-gold/30 bg-gold/10 px-2.5 py-1 text-[11px] text-gold font-medium"
                   >
-                    {STYLE_LABELS[p] || p}
+                    {STYLE_LABELS[p]?.[language] || p}
                   </span>
                 ))
               ) : styles.pocket_config ? (
-                <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-gray-300">
-                  {STYLE_LABELS[styles.pocket_config] || styles.pocket_config}
+                <span className="rounded-lg border border-border bg-card px-2.5 py-1 text-[11px] text-foreground font-medium">
+                  {STYLE_LABELS[styles.pocket_config]?.[language] || styles.pocket_config}
                 </span>
               ) : null}
               {styles.front_patti && (
-                <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-gray-300">
-                  {STYLE_LABELS[styles.front_patti] || styles.front_patti}
+                <span className="rounded-lg border border-border bg-card px-2.5 py-1 text-[11px] text-foreground font-medium">
+                  {STYLE_LABELS[styles.front_patti]?.[language] || styles.front_patti}
                 </span>
               )}
             </div>
 
             {/* Workshop Personnel Assignment */}
-            <div className="flex items-center justify-between text-[11px] text-gray-400 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border/50">
               <div className="flex items-center gap-1.5">
-                <Scissors className="h-3 w-3 text-status-cutting" />
-                <span>Cutter: {assignedCutter?.name || 'Unassigned'}</span>
+                <Scissors className="h-3 w-3 text-gold" />
+                <span>{ordersQueueT.cutter} {assignedCutter?.name || ordersQueueT.unassigned}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <User className="h-3 w-3 text-status-stitching" />
-                <span>Stitcher: {assignedStitcher?.name || 'Unassigned'}</span>
+                <User className="h-3 w-3 text-gold" />
+                <span>{ordersQueueT.stitcher} {assignedStitcher?.name || ordersQueueT.unassigned}</span>
               </div>
             </div>
           </div>
@@ -558,26 +537,23 @@ export function OrderInspectorDrawer({
           {/* =============================================================== */}
           {/* SECTION 5: FINANCIALS & BILLING LEDGER                          */}
           {/* =============================================================== */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-2.5">
+          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                Financial Settlement
-              </span>
-              <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
-                بل و حساب کتاب
+              <span className={cn("text-[11px] font-semibold uppercase tracking-wider text-muted-foreground", language === 'ur' ? 'font-urdu-serif' : '')}>
+                {ordersQueueT.billingSettlement}
               </span>
             </div>
 
-            <div className="space-y-1.5 text-xs border-b border-white/5 pb-2.5">
-              <div className="flex items-center justify-between text-gray-400">
-                <span>Stitching & Charges:</span>
-                <span className="font-mono text-gray-200">
+            <div className="space-y-1.5 text-xs border-b border-border/50 pb-2.5">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>{ordersQueueT.stitchingCharges}</span>
+                <span className="font-mono text-foreground font-semibold">
                   <bdi dir="ltr">Rs. {order.total_amount.toLocaleString()}</bdi>
                 </span>
               </div>
-              <div className="flex items-center justify-between text-gray-400">
-                <span>Advance Deposit Paid:</span>
-                <span className="font-mono text-emerald-400">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>{ordersQueueT.advanceDeposit}</span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
                   <bdi dir="ltr">- Rs. {order.advance_paid.toLocaleString()}</bdi>
                 </span>
               </div>
@@ -585,14 +561,14 @@ export function OrderInspectorDrawer({
 
             {/* Net Balance Due */}
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs font-semibold text-gray-300">Balance Due:</span>
+              <span className="text-xs font-semibold text-foreground">{ordersQueueT.netBalanceDue}</span>
               {order.balance_due === 0 ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-400">
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="h-3 w-3" />
-                  <span>Fully Paid (<bdi dir="ltr">Rs. 0</bdi>)</span>
+                  <span>{ordersQueueT.paid} (<bdi dir="ltr">Rs. 0</bdi>)</span>
                 </span>
               ) : (
-                <span className="font-mono text-sm font-bold text-rose-400">
+                <span className="font-mono text-sm font-bold text-rose-600 dark:text-rose-400">
                   <bdi dir="ltr">Rs. {order.balance_due.toLocaleString()}</bdi>
                 </span>
               )}
@@ -603,7 +579,7 @@ export function OrderInspectorDrawer({
         {/* ================================================================= */}
         {/* FOOTER ACTIONS (WhatsApp + Thermal Print + Tracking Link)          */}
         {/* ================================================================= */}
-        <div className="pt-6 border-t border-white/10 space-y-2.5 mt-6">
+        <div className="pt-5 border-t border-border space-y-2.5 mt-5">
           <div className="grid grid-cols-2 gap-2.5">
             {/* WhatsApp Trigger */}
             <Button
@@ -611,10 +587,10 @@ export function OrderInspectorDrawer({
               variant="default"
               size="md"
               onClick={() => onOpenWhatsApp?.(order)}
-              className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-[0_0_15px_rgba(16,185,129,0.2)] text-xs"
+              className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-xs text-xs"
             >
               <MessageSquare className="h-4 w-4" />
-              <span>WhatsApp</span>
+              <span className={cn(language === 'ur' ? 'font-urdu-serif' : '')}>{ordersQueueT.whatsappInquiry}</span>
             </Button>
 
             {/* Print Thermal Slip Trigger */}
@@ -623,10 +599,10 @@ export function OrderInspectorDrawer({
               variant="outline"
               size="md"
               onClick={() => onOpenPrint?.(order)}
-              className="gap-2 border-white/15 bg-white/5 hover:bg-white/10 text-gray-200 font-semibold text-xs"
+              className="gap-2 border-border bg-card hover:bg-muted/40 text-foreground font-semibold text-xs"
             >
               <Printer className="h-4 w-4 text-gold" />
-              <span>Print Slip</span>
+              <span className={cn(language === 'ur' ? 'font-urdu-serif' : '')}>{ordersQueueT.printSlip}</span>
             </Button>
           </div>
 
@@ -637,7 +613,7 @@ export function OrderInspectorDrawer({
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-1.5 text-center text-xs text-gold hover:text-gold-hover pt-1 transition-colors"
           >
-            <span>Open Public Customer Tracker</span>
+            <span className={cn(language === 'ur' ? 'font-urdu-serif' : '')}>{ordersQueueT.openPublicTracker}</span>
             <ExternalLink className="h-3 w-3" />
           </a>
         </div>

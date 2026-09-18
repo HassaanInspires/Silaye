@@ -6,11 +6,13 @@ import {
   NEW_ORDER_I18N,
   POST_BOOKING_I18N,
   CUSTOMERS_I18N,
+  ORDERS_QUEUE_I18N,
   type Language,
   type DashboardTranslations,
   type NewOrderTranslations,
   type PostBookingTranslations,
   type CustomersTranslations,
+  type OrdersQueueTranslations,
 } from './i18n/translations';
 
 export type {
@@ -19,6 +21,7 @@ export type {
   NewOrderTranslations,
   PostBookingTranslations,
   CustomersTranslations,
+  OrdersQueueTranslations,
 };
 export const SILAYE_LANGUAGE_KEY = 'silaye_language';
 export const SILAYE_LANGUAGE_CHANGED_EVENT = 'silaye:language-changed';
@@ -33,6 +36,7 @@ interface LanguageContextType {
   newOrderT: NewOrderTranslations;
   postBookingT: PostBookingTranslations;
   customersT: CustomersTranslations;
+  ordersQueueT: OrdersQueueTranslations;
 }
 
 
@@ -99,6 +103,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const newOrderT = NEW_ORDER_I18N[language] || NEW_ORDER_I18N.ur;
   const postBookingT = POST_BOOKING_I18N[language] || POST_BOOKING_I18N.ur;
   const customersT = CUSTOMERS_I18N[language] || CUSTOMERS_I18N.ur;
+  const ordersQueueT = ORDERS_QUEUE_I18N[language] || ORDERS_QUEUE_I18N.ur;
 
   return (
     <LanguageContext.Provider
@@ -112,6 +117,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         newOrderT,
         postBookingT,
         customersT,
+        ordersQueueT,
       }}
     >
       {children}

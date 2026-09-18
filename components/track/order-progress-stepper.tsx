@@ -134,7 +134,7 @@ export function OrderProgressStepper({
               {/* Step Marker */}
               <div className="relative z-10 flex items-center justify-center">
                 {isPast && (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gold text-[#0B0C0E] shadow-sm">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gold text-background shadow-sm">
                     <Check className="h-4 w-4 stroke-[2.5]" />
                   </div>
                 )}
@@ -142,15 +142,15 @@ export function OrderProgressStepper({
                 {isActive && (
                   <div className="relative flex h-7 w-7 items-center justify-center">
                     <span className="absolute inset-0 rounded-full bg-gold/30 animate-ping" />
-                    <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-gold text-[#0B0C0E] ring-2 ring-gold/50 animate-pulse shadow-md">
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#0B0C0E]" />
+                    <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-gold text-background ring-2 ring-gold/50 animate-pulse shadow-md">
+                      <span className="h-2.5 w-2.5 rounded-full bg-background" />
                     </div>
                   </div>
                 )}
 
                 {isFuture && (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-neutral-300 bg-neutral-100 text-neutral-400">
-                    <Circle className="h-2.5 w-2.5 fill-neutral-300 stroke-none" />
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-border bg-muted/40 text-muted-foreground">
+                    <Circle className="h-2.5 w-2.5 fill-muted-foreground/40 stroke-none" />
                   </div>
                 )}
               </div>
@@ -162,8 +162,8 @@ export function OrderProgressStepper({
                     isPast
                       ? 'bg-gold'
                       : isFuture
-                      ? 'border-l-2 border-dashed border-neutral-300'
-                      : 'border-l-2 border-dashed border-neutral-300'
+                      ? 'border-l-2 border-dashed border-border'
+                      : 'border-l-2 border-dashed border-border'
                   }`}
                 />
               )}
@@ -175,10 +175,10 @@ export function OrderProgressStepper({
                 <p
                   className={`text-sm font-semibold transition-colors ${
                     isActive
-                      ? 'text-neutral-900 font-bold'
+                      ? 'text-foreground font-bold'
                       : isPast
-                      ? 'text-neutral-800'
-                      : 'text-neutral-400'
+                      ? 'text-foreground/90'
+                      : 'text-muted-foreground/60'
                   }`}
                 >
                   {stage.label}
@@ -186,10 +186,10 @@ export function OrderProgressStepper({
                 <span
                   className={`urdu-data-text text-xs ${
                     isActive
-                      ? 'text-gold-muted font-bold'
+                      ? 'text-gold font-bold'
                       : isPast
-                      ? 'text-neutral-600'
-                      : 'text-neutral-400'
+                      ? 'text-muted-foreground'
+                      : 'text-muted-foreground/50'
                   }`}
                   dir="rtl"
                 >
@@ -200,10 +200,10 @@ export function OrderProgressStepper({
               <p
                 className={`mt-0.5 text-xs ${
                   isActive
-                    ? 'text-neutral-700 font-medium'
+                    ? 'text-foreground/80 font-medium'
                     : isPast
-                    ? 'text-neutral-500'
-                    : 'text-neutral-400'
+                    ? 'text-muted-foreground'
+                    : 'text-muted-foreground/60'
                 }`}
               >
                 {stage.description}
@@ -212,8 +212,8 @@ export function OrderProgressStepper({
               {/* Active Step Badge */}
               {isActive && (
                 <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 shadow-sm">
-                  <Clock className="h-3.5 w-3.5 text-gold-muted animate-pulse" />
-                  <span className="text-xs font-semibold text-neutral-900">{countdown}</span>
+                  <Clock className="h-3.5 w-3.5 text-gold animate-pulse" />
+                  <span className="text-xs font-semibold text-foreground">{countdown}</span>
                 </div>
               )}
             </div>
