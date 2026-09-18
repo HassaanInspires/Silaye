@@ -612,3 +612,35 @@
     - `npm run build`: 28/28 static Next.js pages successfully exported into `out/`.
     - `scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
     - Playwright end-to-end interactive audit: Captured 15 high-res audit screenshots across mobile and desktop in Light and Dark modes.
+
+---
+
+## Phase 26: Customer Lifecycle, Standalone Sizing Intake ("Digital Naap Register") & Post-Booking Flow (Completed)
+- [x] 26.1 Post-Booking Success Action Modal (`components/tailor/post-booking-success-modal.tsx`) & Booking Reset Engine in `app/orders/new/page.tsx`:
+  * 1-Tap "Book Another Suit for Same Customer" (retains customer profile, measurements, style preferences; resets fabric, quantity, dates, advance, notes).
+  * 1-Tap "Book for New Customer / Fresh Form" (clears all form fields, resets tab to Step 1).
+  * 1-Tap "View in Production Queue" (navigates to `/orders`).
+- [x] 26.2 Standalone Sizing Intake ("Digital Naap Register" / Save Profile Without Order) on `/orders/new`:
+  * Dedicated `handleSaveProfileOnly()` function saving customer and measurement profile atomically to Dexie & Supabase.
+  * 0 fake orders created, 0 SaaS quota deducted, validation strictly requiring name + phone + measurements.
+  * Secondary buttons in Desktop Header, Tab 1, Tab 2, Mobile Wizard Step 3, and Desktop Sticky Sidebar: `[💾 صرف ناپ و گاہک محفوظ کریں]`.
+  * Generates profile saved confirmation with direct WhatsApp dispatch (`generateProfileSavedMessage`).
+- [x] 26.3 Dedicated Customers Directory Page (`app/customers/page.tsx`):
+  * Top KPI summary ribbon (Total Customers, Saved Sizing Profiles, Active Khata Debtors).
+  * Instant real-time search by Name, Phone (`<bdi dir="ltr">`), and City with filter pills (`All`, `With Sizing`, `Pending Khata`).
+  * Responsive Mobile Customer Cards and Desktop High-Density Table.
+  * 1-Tap `[+ نیا سوٹ]` routing directly to `/orders/new?phone=...` preloading their profile and measurement matrix instantly.
+- [x] 26.4 Customer Profile & Measurement Editor Modal (`components/tailor/customer-profile-edit-modal.tsx`):
+  * 3 tabs: Contact details, 17-field Measurement Matrix (`MeasurementIntakeForm`), and Style Preferences (`GarmentStyleChips`).
+  * Full bilingual measurement intake matrix with ¼" fractional pills to update sizing over time.
+  * Atomic synchronization with Dexie (`db.customers`, `db.measurements`) and Supabase via `customersDb` and `measurementsDb`.
+- [x] 26.5 Navigation Integration & BiDi Translations:
+  * Added `Customers` (`/customers` - `گاہک اور ناپ`) to `NAV_ITEMS` in `components/layout/app-shell.tsx`.
+  * Added `CUSTOMERS_I18N` and `POST_BOOKING_I18N` to `lib/i18n/translations.ts` with Urdu and English dictionaries.
+  * Exposed `customersT` and `postBookingT` in `lib/language-provider.tsx`.
+- [x] 26.6 Deep Verification & Audit Suite:
+  * Strict type checking: `npx tsc --noEmit` passed with 0 errors.
+  * Database test assertions: `scripts/verify_db.ts` passed 159/159 assertions across all 17 test suites.
+  * Production static export: `npm run build` compiled all 29 routes cleanly into `out/` with zero warnings.
+  * Playwright interactive end-to-end audit: Executed `scripts/audit_customers_and_post_booking.mjs` with 13/13 tests passing, capturing high-res screenshots for desktop/mobile in light/dark modes.
+

@@ -83,6 +83,7 @@ interface NavItem {
 const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { icon: Home, label: 'Dashboard', labelUrdu: 'ڈیش بورڈ', route: '/dashboard' },
   { icon: ClipboardList, label: 'Production Queue', labelUrdu: 'ورکشاپ کیو', route: '/orders' },
+  { icon: Users, label: 'Customers', labelUrdu: 'گاہک اور ناپ', route: '/customers' },
   { icon: PlusCircle, label: 'New Booking', labelUrdu: 'نیا آرڈر', route: '/orders/new' },
   { icon: Wallet, label: 'Khata Ledger', labelUrdu: 'کھاتہ رجسٹر', route: '/khata' },
   { icon: Tag, label: 'Print Station', labelUrdu: 'پرنٹنگ کاؤنٹر', route: '/print' },

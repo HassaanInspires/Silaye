@@ -479,6 +479,7 @@ export function WhatsAppReceiptModal({
               size="sm"
               onClick={() => onOpenChange(false)}
               className={cn("text-xs text-muted-foreground w-full sm:w-auto", isUrdu && "font-urdu-sans")}
+              data-testid="whatsapp-modal-close-btn"
             >
               {t.close}
             </Button>

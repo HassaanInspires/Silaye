@@ -504,6 +504,20 @@ export function mapManualPaymentRequestRow(row: ManualPaymentRequestRow): Manual
 
 export const customersDb = {
   async getByShopId(shopId: string): Promise<Customer[]> {
+    let localCustomers: Customer[] = [];
+    try {
+      if (typeof window !== 'undefined' && db && db.customers) {
+        localCustomers = await db.customers.where('shop_id').equals(shopId).toArray();
+      }
+      if (localCustomers.length === 0) {
+        const { getLocalCustomers } = await import('@/lib/offline-db');
+        const fallback = await getLocalCustomers();
+        localCustomers = fallback.filter((c) => !shopId || c.shop_id === shopId);
+      }
+    } catch {
+      localCustomers = [];
+    }
+
     if (isDatabaseConfigured()) {
       try {
         const liveCustomers = await this.getAll(shopId);
@@ -512,18 +526,16 @@ export const customersDb = {
             liveCustomers.forEach((c) => saveLocalCustomer(c).catch(() => {}));
           }).catch(() => {});
         }
-        return liveCustomers;
+        // Merge: local offline mutations + live cloud customers
+        const map = new Map<string, Customer>();
+        localCustomers.forEach((c) => map.set(c.id, c));
+        liveCustomers.forEach((c) => map.set(c.id, c));
+        return Array.from(map.values());
       } catch (err) {
         console.warn('customersDb.getByShopId live query failed, falling back to local cache:', err);
       }
     }
-    try {
-      const { getLocalCustomers } = await import('@/lib/offline-db');
-      const localCustomers = await getLocalCustomers();
-      return localCustomers.filter((c) => !shopId || c.shop_id === shopId);
-    } catch {
-      return [];
-    }
+    return localCustomers;
   },
 
   async getAll(shopId?: string): Promise<Customer[]> {
@@ -540,32 +552,70 @@ export const customersDb = {
   },
 
   async getById(id: string): Promise<Customer | null> {
-    if (!isDatabaseConfigured()) return null;
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-    if (error) {
-      throw new Error(`Failed to fetch customer by ID: ${error.message}`);
+    if (isDatabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        if (!error && data) {
+          return mapCustomerRow(data as CustomerRow);
+        }
+      } catch {
+        // Fallback to local
+      }
     }
-    return data ? mapCustomerRow(data as CustomerRow) : null;
+    try {
+      if (typeof window !== 'undefined' && db && db.customers) {
+        const local = await db.customers.get(id);
+        if (local) return local;
+      }
+      const { getLocalCustomerById } = await import('@/lib/offline-db');
+      const fallback = await getLocalCustomerById(id);
+      return fallback || null;
+    } catch {
+      return null;
+    }
   },
 
   async getByPhone(phone: string, shopId?: string): Promise<Customer | null> {
-    if (!isDatabaseConfigured()) return null;
-    let query = supabase
-      .from('customers')
-      .select('*')
-      .or(`phone.eq.${phone},secondary_phone.eq.${phone}`);
-    if (shopId) {
-      query = query.eq('shop_id', shopId);
+    const cleanPhone = phone.trim();
+    if (isDatabaseConfigured()) {
+      try {
+        let query = supabase
+          .from('customers')
+          .select('*')
+          .or(`phone.eq.${cleanPhone},secondary_phone.eq.${cleanPhone}`);
+        if (shopId) {
+          query = query.eq('shop_id', shopId);
+        }
+        const { data, error } = await query.maybeSingle();
+        if (!error && data) {
+          return mapCustomerRow(data as CustomerRow);
+        }
+      } catch (err) {
+        console.warn('customersDb.getByPhone live query failed, falling back to local cache:', err);
+      }
     }
-    const { data, error } = await query.maybeSingle();
-    if (error) {
-      throw new Error(`Failed to fetch customer by phone: ${error.message}`);
+
+    // Dexie / local-first fallback
+    try {
+      if (typeof window !== 'undefined' && db && db.customers) {
+        const local = await db.customers.where('phone').equals(cleanPhone).first();
+        if (local && (!shopId || local.shop_id === shopId)) {
+          return local;
+        }
+      }
+      const { getLocalCustomerByPhone } = await import('@/lib/offline-db');
+      const fallback = await getLocalCustomerByPhone(cleanPhone);
+      if (fallback && (!shopId || fallback.shop_id === shopId)) {
+        return fallback;
+      }
+    } catch {
+      // ignore
     }
-    return data ? mapCustomerRow(data as CustomerRow) : null;
+    return null;
   },
 
   async create(
@@ -633,30 +683,64 @@ export const customersDb = {
 
 export const measurementsDb = {
   async getByCustomerId(customerId: string): Promise<MeasurementProfile[]> {
-    if (!isDatabaseConfigured()) return [];
-    const { data, error } = await supabase
-      .from('measurement_profiles')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('is_default', { ascending: false })
-      .order('created_at', { ascending: false });
-    if (error) {
-      throw new Error(`Failed to fetch measurement profiles: ${error.message}`);
+    if (isDatabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('measurement_profiles')
+          .select('*')
+          .eq('customer_id', customerId)
+          .order('is_default', { ascending: false })
+          .order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          return (data as MeasurementProfileRow[]).map(mapMeasurementProfileRow);
+        }
+      } catch (err) {
+        console.warn('measurementsDb.getByCustomerId live query failed, falling back to local cache:', err);
+      }
     }
-    return (data as MeasurementProfileRow[]).map(mapMeasurementProfileRow);
+
+    // Dexie / offline fallback
+    try {
+      if (typeof window !== 'undefined' && db && db.measurements) {
+        const local = await db.measurements.where('customer_id').equals(customerId).toArray();
+        if (local && local.length > 0) {
+          return local;
+        }
+      }
+      const { getLocalMeasurementProfilesByCustomerId } = await import('@/lib/offline-db');
+      return await getLocalMeasurementProfilesByCustomerId(customerId);
+    } catch {
+      return [];
+    }
   },
 
   async getById(id: string): Promise<MeasurementProfile | null> {
-    if (!isDatabaseConfigured()) return null;
-    const { data, error } = await supabase
-      .from('measurement_profiles')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-    if (error) {
-      throw new Error(`Failed to fetch measurement profile by ID: ${error.message}`);
+    if (isDatabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('measurement_profiles')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        if (!error && data) {
+          return mapMeasurementProfileRow(data as MeasurementProfileRow);
+        }
+      } catch (err) {
+        console.warn('measurementsDb.getById live query failed, falling back to local cache:', err);
+      }
     }
-    return data ? mapMeasurementProfileRow(data as MeasurementProfileRow) : null;
+
+    try {
+      if (typeof window !== 'undefined' && db && db.measurements) {
+        const local = await db.measurements.get(id);
+        if (local) return local;
+      }
+      const { getLocalMeasurementProfileById } = await import('@/lib/offline-db');
+      const fallback = await getLocalMeasurementProfileById(id);
+      return fallback || null;
+    } catch {
+      return null;
+    }
   },
 
   async create(

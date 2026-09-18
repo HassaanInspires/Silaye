@@ -215,6 +215,30 @@ export function generateKhataReminderMessage(
   return lines.filter(Boolean).join('\n');
 }
 
+/**
+ * Generates a WhatsApp confirmation message when a customer's sizing/profile is recorded without an order.
+ */
+export function generateProfileSavedMessage(
+  customerName: string,
+  shopName: string,
+  shopPhone?: string
+): string {
+  const lines: string[] = [
+    `السلام علیکم *${customerName}* صاحب،`,
+    `امید ہے آپ خیریت سے ہوں گے۔ آپ کا جسمانی ناپ اور سلائی پروفائل *${shopName}* کے ڈیجیٹل رجسٹر میں کامیابی سے محفوظ کر لیا گیا ہے۔`,
+    ``,
+    `✂️ *آئندہ آرڈر کے لیے سہولت:*`,
+    `جب بھی آپ نیا کپڑا لائیں گے، آپ کو دوبارہ ناپ دینے کی ضرورت نہیں ہوگی۔ صرف اپنا موبائل نمبر بتائیں اور سوٹ بک کروائیں۔`,
+    ``,
+    shopPhone ? `📞 رابطہ نمبر: ${shopPhone}` : '',
+    ``,
+    `شکریہ!`,
+    `*${shopName}*`,
+  ];
+
+  return lines.filter(Boolean).join('\n');
+}
+
 // ============================================================================
 // 5. Payload Transformer Helpers
 // ============================================================================

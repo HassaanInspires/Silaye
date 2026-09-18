@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   User,
   Phone,
@@ -28,6 +29,7 @@ import {
   Zap,
   Crown,
   Check,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppShell } from '@/components/layout/app-shell';
@@ -39,6 +41,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MeasurementIntakeForm } from '@/components/tailor/measurement-intake-form';
 import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal';
 import { ThermalSlipModal } from '@/components/tailor/thermal-slip-modal';
+import { PostBookingSuccessModal } from '@/components/tailor/post-booking-success-modal';
 import { useLanguage } from '@/lib/language-provider';
 import confetti from 'canvas-confetti';
 import {
@@ -273,7 +276,8 @@ const GARMENT_TYPE_OPTIONS: ReadonlyArray<{ value: GarmentType; en: string; ur: 
 // ---------------------------------------------------------------------------
 
 export default function NewOrderPage() {
-  const { language, dir, t: dashT, newOrderT: t } = useLanguage();
+  const router = useRouter();
+  const { language, dir, t: dashT, newOrderT: t, customersT } = useLanguage();
   const isUrdu = language === 'ur';
 
   // ── Tab state: 3 Progressive Disclosure Steps ──────────────────────────
@@ -330,6 +334,9 @@ export default function NewOrderPage() {
   // ── Modals & Draft status ─────────────────────────────────────────────
   const [isReceiptModalOpen, setIsReceiptModalOpen] = React.useState<boolean>(false);
   const [isThermalModalOpen, setIsThermalModalOpen] = React.useState<boolean>(false);
+  const [isPostBookingModalOpen, setIsPostBookingModalOpen] = React.useState<boolean>(false);
+  const [isSavingProfileOnly, setIsSavingProfileOnly] = React.useState<boolean>(false);
+  const [profileSavedToast, setProfileSavedToast] = React.useState<boolean>(false);
   const [isQuotaModalOpen, setIsQuotaModalOpen] = React.useState<boolean>(false);
   const [quotaDetails, setQuotaDetails] = React.useState<{
     currentCount: number;
@@ -349,6 +356,17 @@ export default function NewOrderPage() {
   const [draftSavedToast, setDraftSavedToast] = React.useState<boolean>(false);
   const [orderBookedToast, setOrderBookedToast] = React.useState<boolean>(false);
   const [showMobileAdmin, setShowMobileAdmin] = React.useState<boolean>(false);
+
+  // ── Query parameter customer pre-load ──────────────────────────────────
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const phoneParam = params.get('phone');
+      if (phoneParam) {
+        setPhone(phoneParam);
+      }
+    }
+  }, []);
 
   // --------------------------------------------------------------------------
   // Load workshop staff, catalog rates & printer settings dynamically
@@ -773,6 +791,131 @@ export default function NewOrderPage() {
     handleBookOrder();
   };
 
+  const handleBookAnotherSameCustomer = () => {
+    setFabricColor('');
+    setFabricBrand('');
+    setFabricNotes('');
+    setQuantity(1);
+    setIsUrgent(false);
+    setFabricCharges(0);
+    setAddonsCharges(0);
+    setDiscountAmount(0);
+    setAdvancePaid(0);
+    setSpecialNotes('');
+    setNewBookedOrder(null);
+    const defaultRate = garmentRates.find((r) => r.garment_type === garmentType);
+    if (defaultRate) {
+      setStitchingRate(defaultRate.base_stitching_rate);
+      setDeliveryDate(getFutureDateString(defaultRate.standard_delivery_days));
+    } else {
+      setDeliveryDate(getFutureDateString(7));
+    }
+    setTrialDate('');
+    setActiveTab('customer');
+    setMobileStep(1);
+    setOrderBookedToast(false);
+  };
+
+  const handleBookForNewCustomer = () => {
+    handleResetForm();
+    setNewBookedOrder(null);
+    setNewBookedCustomer(null);
+    setMobileStep(1);
+    setOrderBookedToast(false);
+  };
+
+  const handleNavigateToQueue = () => {
+    router.push('/orders');
+  };
+
+  const handleSaveProfileOnly = async () => {
+    if (!customerName.trim()) {
+      alert(language === 'ur' ? 'براہ کرم گاہک کا نام درج کریں' : 'Please enter customer name');
+      return;
+    }
+    if (!phone.trim()) {
+      alert(language === 'ur' ? 'براہ کرم موبائل نمبر درج کریں' : 'Please enter mobile number');
+      return;
+    }
+
+    setIsSavingProfileOnly(true);
+    try {
+      const customerId = foundCustomer?.id || crypto.randomUUID();
+      const profileId = foundProfile?.id || crypto.randomUUID();
+
+      const effectiveCust: Customer = foundCustomer
+        ? {
+            ...foundCustomer,
+            full_name: customerName.trim(),
+            phone: phone.trim(),
+            address: customerAddress.trim() || foundCustomer.address,
+            notes: specialNotes || foundCustomer.notes,
+            updated_at: new Date().toISOString(),
+          }
+        : {
+            id: customerId,
+            shop_id: currentShop.id,
+            full_name: customerName.trim(),
+            phone: phone.trim(),
+            alternate_phone: null,
+            address: customerAddress.trim() || null,
+            city: 'Wah Cantt',
+            notes: specialNotes || null,
+            total_orders_count: 0,
+            total_spent: 0,
+            current_khata_balance: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+      const measurementProfile: MeasurementProfile = {
+        id: profileId,
+        shop_id: currentShop.id,
+        customer_id: effectiveCust.id,
+        profile_name: `${customerName.trim()} - Standard Fit`,
+        garment_type: garmentType,
+        measurements,
+        style_preferences: stylePreferences,
+        is_default: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      await db.transaction('rw', [db.customers, db.measurements], async () => {
+        await db.customers.put({
+          ...effectiveCust,
+          sync_status: 'pending',
+          sync_retry_count: 0,
+          last_sync_error: null,
+          updated_at: new Date().toISOString(),
+        });
+
+        await db.measurements.put({
+          ...measurementProfile,
+          sync_status: 'pending',
+          sync_retry_count: 0,
+          last_sync_error: null,
+          updated_at: new Date().toISOString(),
+        });
+      });
+
+      setFoundCustomer(effectiveCust);
+      setFoundProfile(measurementProfile);
+      setIsProfileLocked(true);
+
+      syncEngine.processQueue().catch(console.error);
+
+      setProfileSavedToast(true);
+      setTimeout(() => {
+        setProfileSavedToast(false);
+      }, 4000);
+    } catch (err) {
+      console.error('Failed to save profile only:', err);
+    } finally {
+      setIsSavingProfileOnly(false);
+    }
+  };
+
   // --------------------------------------------------------------------------
   // Render
   // --------------------------------------------------------------------------
@@ -798,6 +941,32 @@ export default function NewOrderPage() {
             </div>
           </div>
         )}
+
+        {/* Floating Single-Language Profile Only Saved Toast */}
+        {profileSavedToast && (
+          <div
+            role="status"
+            aria-live="polite"
+            data-testid="profile-saved-toast"
+            className="fixed top-16 md:top-20 right-4 md:right-8 z-50 flex items-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-card/95 backdrop-blur-xl px-4 py-3 text-xs text-foreground shadow-lg animate-in fade-in slide-in-from-top-2"
+          >
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex flex-col">
+              <span className={cn("font-bold text-sm leading-relaxed", isUrdu ? "font-urdu-serif" : "font-sans")}>
+                {customersT.profileSavedSuccess}
+              </span>
+              <span className="text-[11px] text-muted-foreground font-urdu-sans">
+                {customersT.profileSavedToastSub}
+              </span>
+            </div>
+            <button
+              onClick={() => setProfileSavedToast(false)}
+              className="p-1 rounded-md text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
         
         {/* ── Page Header ─────────────────────────────────────────────── */}
         <div className="hidden md:flex mb-6 flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-4">
@@ -819,6 +988,31 @@ export default function NewOrderPage() {
             <p className="mt-1 text-xs text-muted-foreground">
               {t.pageSubtitle}
             </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSaveProfileOnly}
+              isLoading={isSavingProfileOnly}
+              className="border-primary/40 text-primary hover:bg-primary/10 text-xs font-semibold font-urdu-sans shadow-xs"
+              data-testid="desktop-save-profile-only-header-btn"
+            >
+              <Ruler className="h-3.5 w-3.5 mr-1.5 rtl:ml-1.5 rtl:mr-0 text-primary" />
+              <span>{customersT.saveProfileOnly}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleResetForm}
+              className="text-xs text-muted-foreground hover:text-foreground font-urdu-sans"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1 rtl:ml-1 rtl:mr-0" />
+              <span>{t.resetForm}</span>
+            </Button>
           </div>
         </div>
 
@@ -1705,6 +1899,19 @@ export default function NewOrderPage() {
                       : t.confirmAndBook}
                   </span>
                 </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveProfileOnly}
+                  isLoading={isSavingProfileOnly}
+                  className="w-full h-10 rounded-xl border-primary/40 text-primary hover:bg-primary/10 font-semibold text-xs font-urdu-sans mt-1.5 shadow-2xs"
+                  data-testid="mobile-save-profile-only-btn"
+                >
+                  <Ruler className="h-3.5 w-3.5 mr-1.5 rtl:ml-1.5 rtl:mr-0 text-primary" />
+                  <span>{customersT.saveProfileOnly}</span>
+                </Button>
               </>
             )}
           </div>
@@ -1877,6 +2084,22 @@ export default function NewOrderPage() {
                         leftIcon={<MapPin className="h-4 w-4 text-muted-foreground" />}
                         data-testid="customer-address-desktop"
                       />
+                    </div>
+
+                    {/* Quick Standalone Profile Save Trigger */}
+                    <div className="flex justify-end pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSaveProfileOnly}
+                        isLoading={isSavingProfileOnly}
+                        className="border-primary/40 text-primary hover:bg-primary/10 text-xs font-semibold font-urdu-sans shadow-xs"
+                        data-testid="tab1-save-profile-only-btn"
+                      >
+                        <Ruler className="h-3.5 w-3.5 mr-1.5 rtl:ml-1.5 rtl:mr-0 text-primary" />
+                        <span>{customersT.saveProfileOnly}</span>
+                      </Button>
                     </div>
                   </div>
                 </SectionCard>
@@ -2146,12 +2369,12 @@ export default function NewOrderPage() {
                 </SectionCard>
 
                 {/* Tab 2 Navigation Action Bar */}
-                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card p-4 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 bg-card p-4 shadow-xs">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setActiveTab('customer')}
-                    className="gap-2 text-xs"
+                    className="gap-2 text-xs font-urdu-sans"
                     size="sm"
                   >
                     {dir === 'rtl' ? <ArrowRight className="h-3.5 w-3.5" /> : <ArrowLeft className="h-3.5 w-3.5" />}
@@ -2160,8 +2383,21 @@ export default function NewOrderPage() {
 
                   <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSaveProfileOnly}
+                    isLoading={isSavingProfileOnly}
+                    className="border-primary/40 text-primary hover:bg-primary/10 text-xs font-semibold font-urdu-sans shadow-xs"
+                    data-testid="tab2-save-profile-only-btn"
+                  >
+                    <Ruler className="h-3.5 w-3.5 mr-1.5 rtl:ml-1.5 rtl:mr-0 text-primary" />
+                    <span>{customersT.saveProfileOnly}</span>
+                  </Button>
+
+                  <Button
+                    type="button"
                     onClick={() => setActiveTab('billing')}
-                    className="gap-2 font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="gap-2 font-medium bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-urdu-sans"
                     size="sm"
                   >
                     <span>{t.nextBillingStep}</span>
@@ -2684,6 +2920,19 @@ export default function NewOrderPage() {
                       {t.resetForm}
                     </Button>
                   </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSaveProfileOnly}
+                    isLoading={isSavingProfileOnly}
+                    className="w-full text-xs border-primary/40 text-primary hover:bg-primary/10 font-semibold font-urdu-sans mt-2"
+                    data-testid="desktop-sidebar-save-profile-btn"
+                  >
+                    <Ruler className="h-3.5 w-3.5 mr-1 rtl:ml-1 rtl:mr-0 text-primary" />
+                    <span>{customersT.saveProfileOnly}</span>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -2694,7 +2943,12 @@ export default function NewOrderPage() {
         {/* WhatsApp Booking Receipt Modal */}
         <WhatsAppReceiptModal
           open={isReceiptModalOpen}
-          onOpenChange={setIsReceiptModalOpen}
+          onOpenChange={(open) => {
+            setIsReceiptModalOpen(open);
+            if (!open && newBookedOrder) {
+              setIsPostBookingModalOpen(true);
+            }
+          }}
           order={newBookedOrder}
           customer={newBookedCustomer}
           shop={currentShop}
@@ -2704,12 +2958,28 @@ export default function NewOrderPage() {
         {/* Thermal Slip & Fabric Tag Modal */}
         <ThermalSlipModal
           open={isThermalModalOpen}
-          onOpenChange={setIsThermalModalOpen}
+          onOpenChange={(open) => {
+            setIsThermalModalOpen(open);
+            if (!open && newBookedOrder) {
+              setIsPostBookingModalOpen(true);
+            }
+          }}
           order={newBookedOrder}
           customer={newBookedCustomer}
           shop={currentShop}
           settings={printerSettings}
           initialFormat={printerSettings.paper_width}
+        />
+
+        {/* Post-Booking Success Action Modal */}
+        <PostBookingSuccessModal
+          open={isPostBookingModalOpen}
+          onOpenChange={setIsPostBookingModalOpen}
+          order={newBookedOrder}
+          customer={newBookedCustomer}
+          onBookAnotherSameCustomer={handleBookAnotherSameCustomer}
+          onBookForNewCustomer={handleBookForNewCustomer}
+          onViewQueue={handleNavigateToQueue}
         />
 
         {/* Monthly Quota Exceeded Luxury Theme-Adaptive Dialog */}

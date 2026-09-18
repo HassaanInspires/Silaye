@@ -4,12 +4,22 @@ import * as React from 'react';
 import {
   DASHBOARD_I18N,
   NEW_ORDER_I18N,
+  POST_BOOKING_I18N,
+  CUSTOMERS_I18N,
   type Language,
   type DashboardTranslations,
   type NewOrderTranslations,
+  type PostBookingTranslations,
+  type CustomersTranslations,
 } from './i18n/translations';
 
-export type { Language, DashboardTranslations, NewOrderTranslations };
+export type {
+  Language,
+  DashboardTranslations,
+  NewOrderTranslations,
+  PostBookingTranslations,
+  CustomersTranslations,
+};
 export const SILAYE_LANGUAGE_KEY = 'silaye_language';
 export const SILAYE_LANGUAGE_CHANGED_EVENT = 'silaye:language-changed';
 
@@ -21,6 +31,8 @@ interface LanguageContextType {
   isMounted: boolean;
   t: DashboardTranslations;
   newOrderT: NewOrderTranslations;
+  postBookingT: PostBookingTranslations;
+  customersT: CustomersTranslations;
 }
 
 
@@ -85,6 +97,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const dir: 'rtl' | 'ltr' = language === 'ur' ? 'rtl' : 'ltr';
   const t = DASHBOARD_I18N[language] || DASHBOARD_I18N.ur;
   const newOrderT = NEW_ORDER_I18N[language] || NEW_ORDER_I18N.ur;
+  const postBookingT = POST_BOOKING_I18N[language] || POST_BOOKING_I18N.ur;
+  const customersT = CUSTOMERS_I18N[language] || CUSTOMERS_I18N.ur;
 
   return (
     <LanguageContext.Provider
@@ -96,6 +110,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         isMounted,
         t,
         newOrderT,
+        postBookingT,
+        customersT,
       }}
     >
       {children}

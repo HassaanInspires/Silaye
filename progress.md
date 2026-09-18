@@ -3452,7 +3452,63 @@
   - `progress.md` [MODIFIED]
 
 * **Next Immediate Task:**
-  - Commit and push to `origin/feat/home-light-theme-bidi`. Present final walkthrough artifact and visual evidence to user.
+  - Phase 26: Customer Lifecycle, Standalone Sizing Intake ("Digital Naap Register") & Post-Booking Flow (Completed).
+
+---
+
+## Phase 26: Customer Lifecycle, Standalone Sizing Intake ("Digital Naap Register") & Post-Booking Flow (Completed)
+* **Date:** 2026-09-18
+* **Git Branch:** `feat/home-light-theme-bidi`
+* **Tasks Completed:**
+  - `26.1` Implemented `PostBookingSuccessModal` (`components/tailor/post-booking-success-modal.tsx`) and Booking Reset Engine in `app/orders/new/page.tsx`:
+    * Triggered automatically upon closing `WhatsAppReceiptModal` or `ThermalSlipModal`.
+    * Confetti celebration motif with order summary ticket (Order Number, Customer Name, Advance Deposit, Balance Due).
+    * 3 one-tap actions:
+      1. `[+] اسی گاہک کے لیے دوسرا سوٹ بک کریں`: Retains customer contact details, phone, address, and 17-field measurement matrix, while clearing fabric type, suit count, delivery date, advance, and notes. Enables master tailors to book multi-suit batches for families or repeat clients without repetitive data entry.
+      2. `[+] نئے گاہک کے لیے نیا فارم`: Clean slate reset clearing all customer fields, measurements, and billing back to Step 1.
+      3. `[📋] ورکشاپ پروڈکشن کیو دیکھیں`: Routes directly to `/orders`.
+  - `26.2` Implemented Standalone Sizing Intake ("Digital Naap Register" / Save Profile Without Order) in `app/orders/new/page.tsx`:
+    * Dedicated `handleSaveProfileOnly()` function saving customer and measurement profile atomically to Dexie (`db.customers`, `db.measurements`) and Supabase.
+    * Consumes 0 SaaS quota, creates 0 dummy orders, strictly validates customer name + phone + measurements.
+    * Added secondary CTA buttons `[💾 صرف ناپ و گاہک محفوظ کریں]` in Desktop Header, Desktop Tab 1, Desktop Tab 2, Mobile Wizard Step 3, and Desktop Sticky Sidebar.
+    * Added `generateProfileSavedMessage(customerName, shopName, shopPhone)` in `lib/whatsapp.ts` for sending WhatsApp confirmation to customers without placing an order.
+  - `26.3` Implemented Dedicated Customers Directory Page (`app/customers/page.tsx`):
+    * Top KPI metric ribbon: Total Customers, Saved Sizing Profiles, and Active Khata Debtors with Urdu digits and currency.
+    * Real-time search by Name, Phone (`<bdi dir="ltr">`), and City with filter pills (`تمام گاہک`, `محفوظ ناپ والے`, `بقایا ادھار والے`).
+    * Desktop high-density table (`hidden md:block`) with customer avatar, phone, city, suit counts, khata balance badges (`کھاتہ صاف ✓` / `ادھار Rs. X`), direct WhatsApp dispatch, and 1-tap `[+ نیا سوٹ]` booking CTA.
+    * Mobile responsive card list (`md:hidden`) with touch-friendly actions.
+    * Integrated into `AppShell` with active route `/customers` and icon in sidebar/bottom navigation.
+  - `26.4` Implemented Customer Profile & Measurement Editor Modal (`components/tailor/customer-profile-edit-modal.tsx`):
+    * 3 organized tabs: Contact details, 17-field Measurement Matrix (`MeasurementIntakeForm`), and Style Preferences (`GarmentStyleChips`).
+    * Supports both editing existing customer measurements and creating new standalone profiles directly from `/customers`.
+    * Synchronizes changes to local Dexie and triggers asynchronous sync to Supabase.
+  - `26.5` Enhanced Database Layer & BiDi Architecture:
+    * Enhanced `customersDb.getByShopId`, `customersDb.getByPhone`, and `measurementsDb.getByCustomerId` in `lib/db.ts` with local-first Dexie fallback, ensuring newly saved offline customers and sizing profiles are instantly available for lookup and booking even before cloud sync.
+    * Added `CUSTOMERS_I18N` and `POST_BOOKING_I18N` to `lib/i18n/translations.ts` and exposed them in `LanguageProvider`.
+  - `26.6` Brutal Verification & Audit Suite:
+    * `npx tsc --noEmit`: 0 errors in strict mode.
+    * `scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites in 448.65s.
+    * `npm run build`: 29/29 Next.js static routes cleanly compiled and exported into `out/` with `/customers` at 7 kB.
+    * Playwright automated browser test (`scripts/audit_customers_and_post_booking.mjs`): 13/13 tests passing, capturing high-resolution screenshots for desktop light/dark and mobile viewports.
+
+* **Active File Changes:**
+  - `components/tailor/post-booking-success-modal.tsx` [NEW]
+  - `components/tailor/customer-profile-edit-modal.tsx` [NEW]
+  - `app/customers/page.tsx` [NEW]
+  - `scripts/audit_customers_and_post_booking.mjs` [NEW]
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `components/tailor/whatsapp-receipt-modal.tsx` [MODIFIED]
+  - `lib/db.ts` [MODIFIED]
+  - `lib/i18n/translations.ts` [MODIFIED]
+  - `lib/language-provider.tsx` [MODIFIED]
+  - `lib/whatsapp.ts` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Next Immediate Task:**
+  - Git commit and push to `origin/feat/home-light-theme-bidi`. Present final walkthrough artifact to user.
+
 
 
 
