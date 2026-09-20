@@ -766,6 +766,41 @@
   * Staged and committed Option B changes exclusively to `feat/home-light-theme-bidi`.
   * Pushed to `origin/feat/home-light-theme-bidi`.
 
+---
+
+## Phase 33: Option C: Orders Queue (`/orders`) 10/10 Atelier Light Theme Overhaul (Completed)
+- [x] 33.1 Localization & Single-Language BiDi Architecture:
+  * Expanded `ORDERS_QUEUE_I18N` in `lib/i18n/translations.ts` with `totalLabel`, `balanceShort`, `fullyPaid`, `advanceAction`, `rollbackAction`, `noOrdersInStage`, `unassignedCraftsman`, `dueTomorrow`, `daysOverdue`, `dateUnassigned` in both Urdu (`ur`) and English (`en`).
+  * Connected `useLanguage()` and `ordersQueueT` across `PipelineBoard`, `OrderCard`, and `OrdersQueuePage`.
+- [x] 33.2 Mobile Order Card 2-Tier Header & RTL Truncation Bug Fix (`app/orders/page.tsx`):
+  * Restructured mobile order card with clean 2-tier header: Line 1 (Full Customer Name + Stage Badge), Line 2 (Order Number + Phone Link + Urgency Due Date Pill).
+  * Solved mobile RTL customer name truncation bug permanently; names like `Chaudhry Aslam` and `Muhammad Usman` render with zero leading `...` ellipsis.
+  * Added `dir="ltr"` to fabric name spans so LTR brand/color names truncate cleanly from the right (`Charcoal Grey Egyptian Co...`) instead of cutting off the start.
+  * Fixed BiDi double colon issue in balance display (`باقی: Rs. 2,500` / `باقی: مکمل ادا`).
+  * Aligned forward motion chevron on next-stage button with `ChevronLeft` and `rtl:rotate-0 ltr:rotate-180`.
+- [x] 33.3 Desktop Table View & Kanban Board Overhaul (`app/orders/page.tsx`, `components/tailor/pipeline-board.tsx`, `components/tailor/order-card.tsx`):
+  * Modernized desktop spreadsheet table with logical properties `text-start` and `text-end`, `<bdi dir="ltr">` phone/fabric wrappers, and smooth hover styling.
+  * Overhauled Kanban board columns with single-language titles (showing only Urdu in Urdu mode and English in English mode), dynamic localized metrics (`ordersQueueT.totalValue`), and single-language empty stage placeholders.
+  * Fortified order cards with high-contrast light theme semantic tokens (`text-amber-700 dark:text-amber-300`, `text-rose-600 dark:text-rose-400`, `bg-rose-500/10 border-rose-500/30`), eliminating all hardcoded dark styling.
+  * Fortified `loadOrdersData()` with `Promise.allSettled` and expanded `shouldUseSeed` to guarantee zero-latency queue preview for test/mock workshop IDs.
+- [x] 33.4 Automated Verification Suite & Playwright Light Mode Visual Audit:
+  * `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  * `npm run build`: 29/29 Next.js static pages exported cleanly into `out/`.
+  * `npx tsx scripts/verify_db.ts`: 159/159 database assertions passed across all 17 test suites in 653.60s.
+  * Playwright Visual Audit (`scripts/audit_phase32_orders.mjs`): 8/8 screenshots captured with 0 uncaught client errors:
+    - `01_orders_mobile_light_ur.png`: Mobile 360x740 Urdu light theme with 2-tier header, full customer names, clean stage badge, and `<bdi dir="ltr">` phone/balance.
+    - `02_orders_mobile_filter_cutting.png`: Mobile status filter pill switching to "کٹائی" (Cutting).
+    - `03_orders_mobile_inspector_drawer.png`: Mobile slide-out inspector drawer with 3x3 measurement grid, garment specs, and settlement.
+    - `04_orders_mobile_whatsapp_modal.png`: Mobile WhatsApp receipt modal in light theme.
+    - `05_orders_desktop_table_ur.png`: Desktop 1280x850 Urdu table view with logical text-start/text-end alignment, clean headers, and balance columns.
+    - `06_orders_desktop_table_en.png`: Desktop English toggle (LTR) showing instantaneous language & direction flip.
+    - `07_orders_desktop_inspector_drawer.png`: Desktop slide-out inspector drawer with 3x3 measurement grid.
+    - `08_orders_desktop_kanban_pipeline.png`: Desktop switch to Kanban board view showing 7 single-language columns with zero text stacking.
+- [x] 33.5 Git Commit & Branch Synchronization:
+  * Staged and committed Option C changes exclusively to `feat/home-light-theme-bidi`.
+  * Pushed to `origin/feat/home-light-theme-bidi`.
+
+
 
 
 

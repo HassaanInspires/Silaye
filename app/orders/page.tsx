@@ -14,6 +14,8 @@ import {
   MessageSquare,
   Printer,
   ChevronRight,
+  ChevronLeft,
+  User,
   Scissors,
   PlusCircle,
   Phone,
@@ -110,11 +112,15 @@ export default function OrdersQueuePage() {
         setShop(currentShop || defaultMockShop);
 
         const targetShopId = currentShop?.id || defaultMockShop.id;
-        const [loadedOrders, loadedCustomers, loadedStaff] = await Promise.all([
+        const results = await Promise.allSettled([
           ordersDb.getByShopId(targetShopId),
           customersDb.getByShopId(targetShopId),
           staffDb.getByShopId(targetShopId),
         ]);
+
+        const loadedOrders = results[0].status === 'fulfilled' ? results[0].value : [];
+        const loadedCustomers = results[1].status === 'fulfilled' ? results[1].value : [];
+        const loadedStaff = results[2].status === 'fulfilled' ? results[2].value : [];
 
         if (isMounted) {
           // If in demo/test mode or if using the default mock shop and database is empty,
@@ -123,6 +129,8 @@ export default function OrdersQueuePage() {
             loadedOrders.length === 0 &&
             (targetShopId === defaultMockShop.id ||
               targetShopId === 'shp-demo-001' ||
+              targetShopId === '00000000-0000-0000-0000-000000000001' ||
+              targetShopId.startsWith('a0000000') ||
               isDemoMode() ||
               !isDatabaseConfigured());
 
@@ -347,9 +355,9 @@ export default function OrdersQueuePage() {
       return null;
     }
     const nextCol = PIPELINE_COLUMNS.find((col) => col.statuses.includes(currentCol.nextStatus));
-    if (!nextCol) return { label: ordersQueueT.advanceBtn };
+    if (!nextCol) return { label: ordersQueueT.advanceAction };
     return {
-      label: language === 'ur' ? `اگلا: ${nextCol.labelUrdu} ←` : `Next: ${nextCol.label} →`,
+      label: language === 'ur' ? `${ordersQueueT.advanceAction}: ${nextCol.labelUrdu}` : `${ordersQueueT.advanceAction}: ${nextCol.label}`,
     };
   };
 
@@ -487,31 +495,35 @@ export default function OrdersQueuePage() {
                     onClick={() => handleInspectOrder(order)}
                     className="rounded-2xl border border-border bg-card p-3.5 hover:border-gold/40 active:scale-[0.99] transition-all space-y-3 shadow-xs cursor-pointer"
                   >
-                    {/* Header Row */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-0.5 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-foreground truncate">
-                            {customer?.full_name || ordersQueueT.walkInCustomer}
-                          </span>
-                          <span className="font-mono text-xs font-bold text-gold shrink-0">
-                            <bdi dir="ltr">#{order.order_number}</bdi>
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground font-mono">
-                          {customer?.phone ? (
-                            <a
-                              href={`tel:${customer.phone}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 hover:text-gold hover:underline"
-                            >
-                              <Phone className="h-3 w-3 text-muted-foreground/70" />
-                              <bdi dir="ltr">{customer.phone}</bdi>
-                            </a>
-                          ) : (
-                            <span>{ordersQueueT.noPhone}</span>
-                          )}
-                        </div>
+                    {/* Header Line 1: Full Customer Name + Stage Badge */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-sm text-foreground truncate block">
+                        <bdi dir="ltr">{customer?.full_name || ordersQueueT.walkInCustomer}</bdi>
+                      </span>
+                      <Badge variant={stageConfig.variant} className="text-[10px] px-2 py-0.5 shrink-0">
+                        {language === 'ur' ? stageConfig.labelUr : stageConfig.labelEn}
+                      </Badge>
+                    </div>
+
+                    {/* Header Line 2: Order Number + Phone + Due Date Badge */}
+                    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-mono text-xs font-bold text-gold shrink-0">
+                          <bdi dir="ltr">#{order.order_number}</bdi>
+                        </span>
+                        <span className="text-muted-foreground/50 shrink-0">•</span>
+                        {customer?.phone ? (
+                          <a
+                            href={`tel:${customer.phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 font-mono hover:text-gold hover:underline truncate"
+                          >
+                            <Phone className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+                            <bdi dir="ltr">{customer.phone}</bdi>
+                          </a>
+                        ) : (
+                          <span className="truncate">{ordersQueueT.noPhone}</span>
+                        )}
                       </div>
 
                       {/* Urgency Due Date Badge */}
@@ -526,7 +538,7 @@ export default function OrdersQueuePage() {
                             'border-border bg-muted/40 text-muted-foreground'
                         )}
                       >
-                        <bdi dir="ltr">{order.delivery_date}</bdi>
+                        <bdi dir="ltr">{order.delivery_date || ordersQueueT.dateUnassigned}</bdi>
                       </span>
                     </div>
 
@@ -535,17 +547,18 @@ export default function OrdersQueuePage() {
                       <span className="text-foreground font-medium truncate">
                         <bdi dir="ltr">{order.quantity}×</bdi> {garmentName}
                       </span>
-                      <span className="text-muted-foreground text-[11px] truncate max-w-[140px]">
+                      <span className="text-muted-foreground text-[11px] truncate max-w-[140px]" dir="ltr">
                         {order.fabric_color || order.fabric_brand || ordersQueueT.standardFabric}
                       </span>
                     </div>
 
-                    {/* Stage & Balance Status Row */}
+                    {/* Craftsman & Balance Status Row */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <Badge variant={stageConfig.variant} className="text-[10px] px-2 py-0.5">
-                          {language === 'ur' ? stageConfig.labelUr : stageConfig.labelEn}
-                        </Badge>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <User className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
+                        <span className="truncate max-w-[130px]">
+                          {order.assigned_stitcher_id ? (staffMap.get(order.assigned_stitcher_id)?.name || ordersQueueT.unassignedCraftsman) : ordersQueueT.unassignedCraftsman}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-1 text-xs">
@@ -606,6 +619,7 @@ export default function OrdersQueuePage() {
                           className="h-11 min-h-[44px] flex-1 rounded-xl border border-gold/40 bg-gold/15 text-gold hover:bg-gold/25 flex items-center justify-center gap-1.5 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
                         >
                           <span className={cn(language === 'ur' ? 'font-urdu-serif' : '')}>{nextInfo.label}</span>
+                          <ChevronLeft className="h-4 w-4 rtl:rotate-0 ltr:rotate-180 shrink-0" />
                         </button>
                       ) : (
                         <div className="h-11 min-h-[44px] flex-1 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1 text-xs font-semibold">
@@ -848,16 +862,16 @@ export default function OrdersQueuePage() {
 
                 {filteredOrders.length > 0 ? (
                   <div className="overflow-x-auto w-full rounded-2xl border border-border bg-card shadow-xs">
-                    <table className="w-full text-left text-xs border-collapse min-w-[760px]">
+                    <table className="w-full text-start text-xs border-collapse min-w-[760px]">
                       <thead>
                         <tr className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          <th className="py-3 px-4">{ordersQueueT.thOrderNumber}</th>
-                          <th className="py-3 px-4">{ordersQueueT.thCustomer}</th>
-                          <th className="py-3 px-4">{ordersQueueT.thGarment}</th>
-                          <th className="py-3 px-4">{ordersQueueT.thStage}</th>
-                          <th className="py-3 px-4">{ordersQueueT.thDue}</th>
-                          <th className="py-3 px-4 text-right">{ordersQueueT.thBalance}</th>
-                          <th className="py-3 px-4 text-right">{ordersQueueT.thActions}</th>
+                          <th className="py-3 px-4 text-start">{ordersQueueT.thOrderNumber}</th>
+                          <th className="py-3 px-4 text-start">{ordersQueueT.thCustomer}</th>
+                          <th className="py-3 px-4 text-start">{ordersQueueT.thGarment}</th>
+                          <th className="py-3 px-4 text-start">{ordersQueueT.thStage}</th>
+                          <th className="py-3 px-4 text-start">{ordersQueueT.thDue}</th>
+                          <th className="py-3 px-4 text-end">{ordersQueueT.thBalance}</th>
+                          <th className="py-3 px-4 text-end">{ordersQueueT.thActions}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/60">
@@ -880,7 +894,7 @@ export default function OrdersQueuePage() {
                               className="group transition-colors hover:bg-muted/30 cursor-pointer border-b border-border/50"
                             >
                               {/* 1. Order Number */}
-                              <td className="py-3 px-4 whitespace-nowrap">
+                              <td className="py-3 px-4 whitespace-nowrap text-start">
                                 <div className="flex flex-col">
                                   <span className="font-mono text-xs font-bold text-gold group-hover:text-gold-hover transition-colors">
                                     <bdi dir="ltr">#{order.order_number}</bdi>
@@ -892,10 +906,10 @@ export default function OrdersQueuePage() {
                               </td>
 
                               {/* 2. Customer Name & Phone */}
-                              <td className="py-3 px-4">
+                              <td className="py-3 px-4 text-start">
                                 <div className="flex flex-col leading-tight">
                                   <span className="font-semibold text-foreground">
-                                    {customer?.full_name || ordersQueueT.walkInCustomer}
+                                    <bdi dir="ltr">{customer?.full_name || ordersQueueT.walkInCustomer}</bdi>
                                   </span>
                                   <span className="text-[11px] text-muted-foreground font-mono">
                                     {customer?.phone ? (
@@ -914,26 +928,26 @@ export default function OrdersQueuePage() {
                               </td>
 
                               {/* 3. Garment & Fabric */}
-                              <td className="py-3 px-4">
+                              <td className="py-3 px-4 text-start">
                                 <div className="flex flex-col leading-tight">
                                   <span className="text-xs font-medium text-foreground">
                                     <bdi dir="ltr">{order.quantity}×</bdi> {garmentName}
                                   </span>
-                                  <span className="text-[11px] text-muted-foreground truncate max-w-[140px]">
+                                  <span className="text-[11px] text-muted-foreground truncate max-w-[160px] block" dir="ltr">
                                     {order.fabric_color || order.fabric_brand || ordersQueueT.standardFabric}
                                   </span>
                                 </div>
                               </td>
 
                               {/* 4. Production Stage Badge */}
-                              <td className="py-3 px-4 whitespace-nowrap">
+                              <td className="py-3 px-4 whitespace-nowrap text-start">
                                 <Badge variant={stageConfig.variant} className="text-[10px]">
                                   {language === 'ur' ? stageConfig.labelUr : stageConfig.labelEn}
                                 </Badge>
                               </td>
 
                               {/* 5. Schedule (Due Date) */}
-                              <td className="py-3 px-4 whitespace-nowrap">
+                              <td className="py-3 px-4 whitespace-nowrap text-start">
                                 <div className="flex items-center gap-1.5">
                                   <span
                                     className={cn(
@@ -952,7 +966,7 @@ export default function OrdersQueuePage() {
                               </td>
 
                               {/* 6. Balance Due */}
-                              <td className="py-3 px-4 whitespace-nowrap text-right">
+                              <td className="py-3 px-4 whitespace-nowrap text-end">
                                 {order.balance_due === 0 ? (
                                   <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                                     <CheckCircle2 className="h-3.5 w-3.5" />
@@ -966,7 +980,7 @@ export default function OrdersQueuePage() {
                               </td>
 
                               {/* 7. Action Icons */}
-                              <td className="py-3 px-4 whitespace-nowrap text-right">
+                              <td className="py-3 px-4 whitespace-nowrap text-end">
                                 <div className="flex items-center justify-end gap-1.5">
                                   <button
                                     type="button"
@@ -1007,7 +1021,7 @@ export default function OrdersQueuePage() {
                                     className="flex h-8 w-8 items-center justify-center rounded-lg border border-gold/30 bg-gold/10 text-gold transition-all hover:bg-gold/20 cursor-pointer"
                                     aria-label={`Inspect details for order ${order.order_number}`}
                                   >
-                                    <ChevronRight className="h-4 w-4" />
+                                    <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                                   </button>
                                 </div>
                               </td>

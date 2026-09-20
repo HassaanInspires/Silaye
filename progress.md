@@ -3838,7 +3838,63 @@
   - `node scripts/audit_phase32_khata.mjs`: Visual audit completed with 0 uncaught client exceptions (7/7 screenshots verified).
 
 * **Next Immediate Task:**
-  - Present Option B (Khata Ledger) results and visual walkthrough to user, then await approval to proceed to Option C: Orders Queue (`/orders`) Atelier Light Theme Overhaul.
+  - Phase 33: Option C: Orders Queue (`/orders`) 10/10 Atelier Light Theme Overhaul (Completed).
+
+---
+
+## Phase 33: Option C: Orders Queue (`/orders`) 10/10 Atelier Light Theme Overhaul (Completed)
+* **Date:** 2026-09-20
+* **Git Branch:** `feat/home-light-theme-bidi`
+* **Tasks Completed:**
+  - `33.1` Localization & Single-Language BiDi Architecture:
+    * Expanded `ORDERS_QUEUE_I18N` in `lib/i18n/translations.ts` with `totalLabel`, `balanceShort`, `fullyPaid`, `advanceAction`, `rollbackAction`, `noOrdersInStage`, `unassignedCraftsman`, `dueTomorrow`, `daysOverdue`, `dateUnassigned` in both Urdu (`ur`) and English (`en`).
+    * Connected `useLanguage()` and `ordersQueueT` across `PipelineBoard`, `OrderCard`, and `OrdersQueuePage`.
+  - `33.2` Mobile Order Card 2-Tier Header & RTL Truncation Bug Fix (`app/orders/page.tsx`):
+    * Restructured mobile order card with clean 2-tier header: Line 1 (Full Customer Name + Stage Badge), Line 2 (Order Number + Phone Link + Urgency Due Date Pill).
+    * Solved mobile RTL customer name truncation bug permanently; names like `Chaudhry Aslam` and `Muhammad Usman` render with zero leading `...` ellipsis.
+    * Added `dir="ltr"` to fabric name spans so LTR brand/color names truncate cleanly from the right (`Charcoal Grey Egyptian Co...`) instead of cutting off the start.
+    * Fixed BiDi double colon issue in balance display (`باقی: Rs. 2,500` / `باقی: مکمل ادا`).
+    * Aligned forward motion chevron on next-stage button with `ChevronLeft` and `rtl:rotate-0 ltr:rotate-180`.
+  - `33.3` Desktop Table View & Kanban Board Overhaul (`app/orders/page.tsx`, `components/tailor/pipeline-board.tsx`, `components/tailor/order-card.tsx`):
+    * Modernized desktop spreadsheet table with logical properties `text-start` and `text-end`, `<bdi dir="ltr">` phone/fabric wrappers, and smooth hover styling.
+    * Overhauled Kanban board columns with single-language titles (showing only Urdu in Urdu mode and English in English mode), dynamic localized metrics (`ordersQueueT.totalValue`), and single-language empty stage placeholders.
+    * Fortified order cards with high-contrast light theme semantic tokens (`text-amber-700 dark:text-amber-300`, `text-rose-600 dark:text-rose-400`, `bg-rose-500/10 border-rose-500/30`), eliminating all hardcoded dark styling.
+    * Fortified `loadOrdersData()` with `Promise.allSettled` and expanded `shouldUseSeed` to guarantee zero-latency queue preview for test/mock workshop IDs.
+  - `33.4` Automated Verification Suite & Playwright Light Mode Visual Audit:
+    * `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    * `npm run build`: 29/29 Next.js static pages exported cleanly into `out/`.
+    * `npx tsx scripts/verify_db.ts`: 159/159 database assertions passed across all 17 test suites in 653.60s.
+    * Playwright Visual Audit (`scripts/audit_phase32_orders.mjs`): 8/8 screenshots captured with 0 uncaught client errors:
+      - `01_orders_mobile_light_ur.png`: PASS (Mobile 360x740 Urdu light theme with 2-tier header, full customer names, clean stage badge, and `<bdi dir="ltr">` phone/balance)
+      - `02_orders_mobile_filter_cutting.png`: PASS (Mobile status filter pill switching to "کٹائی" Cutting)
+      - `03_orders_mobile_inspector_drawer.png`: PASS (Mobile slide-out inspector drawer with 3x3 measurement grid, garment specs, and settlement)
+      - `04_orders_mobile_whatsapp_modal.png`: PASS (Mobile WhatsApp receipt modal in light theme)
+      - `05_orders_desktop_table_ur.png`: PASS (Desktop 1280x850 Urdu table view with logical text-start/text-end alignment, clean headers, and balance columns)
+      - `06_orders_desktop_table_en.png`: PASS (Desktop English toggle LTR showing instantaneous language & direction flip)
+      - `07_orders_desktop_inspector_drawer.png`: PASS (Desktop slide-out inspector drawer with 3x3 measurement grid)
+      - `08_orders_desktop_kanban_pipeline.png`: PASS (Desktop switch to Kanban board view showing 7 single-language columns with zero text stacking)
+  - `33.5` Git Commit & Branch Synchronization:
+    * Staged and committed Option C changes exclusively to `feat/home-light-theme-bidi`.
+    * Pushed to `origin/feat/home-light-theme-bidi`.
+
+* **Active File Changes:**
+  - `lib/i18n/translations.ts` [MODIFIED]
+  - `components/tailor/order-card.tsx` [MODIFIED]
+  - `components/tailor/pipeline-board.tsx` [MODIFIED]
+  - `app/orders/page.tsx` [MODIFIED]
+  - `scripts/audit_phase32_orders.mjs` [NEW]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  - `npm run build`: 29/29 static routes compiled into `out/`.
+  - `npx tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites in 653.60s.
+  - `node scripts/audit_phase32_orders.mjs`: Visual audit completed with 0 uncaught client exceptions (8/8 screenshots verified).
+
+* **Next Immediate Task:**
+  - Present Option C (Orders Queue) visual proofs and results to user, then await approval to proceed to Option D: New Booking (`/orders/new`) 10/10 Atelier Light Theme Overhaul.
+
 
 
 

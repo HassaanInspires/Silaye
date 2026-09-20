@@ -16,6 +16,7 @@ import {
   Printer,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/lib/language-provider';
 import type { GarmentOrder, Customer, Staff, OrderStatus } from '@/types/tailor';
 import { Button } from '@/components/ui/button';
 
@@ -42,23 +43,23 @@ const GARMENT_LABELS: Record<string, { en: string; ur: string }> = {
   WOMEN_SUIT: { en: 'Ladies Suit', ur: 'زنانہ سوٹ' },
 };
 
-const STAGE_LABELS: Record<OrderStatus, string> = {
-  BOOKED: 'Booked',
-  FABRIC_RECEIVED: 'Fabric Received',
-  IN_CUTTING: 'In Cutting',
-  IN_STITCHING: 'In Stitching',
-  KAJ_BUTTON: 'Kaj & Button',
-  PRESSING: 'Pressing',
-  READY_FOR_TRIAL: 'Ready for Trial',
-  READY_FOR_DELIVERY: 'Ready for Delivery',
-  COMPLETED: 'Completed',
-  CANCELLED: 'Cancelled',
+const STAGE_LABELS: Record<OrderStatus, { en: string; ur: string }> = {
+  BOOKED: { en: 'Booked', ur: 'بک شدہ' },
+  FABRIC_RECEIVED: { en: 'Fabric Received', ur: 'کپڑا موصول' },
+  IN_CUTTING: { en: 'In Cutting', ur: 'کٹائی جاری' },
+  IN_STITCHING: { en: 'In Stitching', ur: 'سلائی جاری' },
+  KAJ_BUTTON: { en: 'Kaj & Button', ur: 'کاج و بٹن' },
+  PRESSING: { en: 'Pressing', ur: 'استری و پیکنگ' },
+  READY_FOR_TRIAL: { en: 'Ready for Trial', ur: 'ٹرائل تیار' },
+  READY_FOR_DELIVERY: { en: 'Ready for Delivery', ur: 'ڈلیوری تیار' },
+  COMPLETED: { en: 'Completed', ur: 'مکمل شدہ' },
+  CANCELLED: { en: 'Cancelled', ur: 'منسوخ شدہ' },
 };
 
 /**
  * Calculates delivery urgency based on target delivery date vs current time.
  */
-export function getDeliveryUrgency(deliveryDateStr: string): {
+export function getDeliveryUrgency(deliveryDateStr: string, language: 'ur' | 'en' = 'en'): {
   urgency: 'safe' | 'warning' | 'critical';
   label: string;
   daysDiff: number;
@@ -66,7 +67,7 @@ export function getDeliveryUrgency(deliveryDateStr: string): {
   if (!deliveryDateStr || isNaN(new Date(deliveryDateStr).getTime())) {
     return {
       urgency: 'safe',
-      label: 'Date unassigned',
+      label: language === 'ur' ? 'تاریخ نامعلوم' : 'Date unassigned',
       daysDiff: 999,
     };
   }
@@ -82,34 +83,36 @@ export function getDeliveryUrgency(deliveryDateStr: string): {
   if (diffDays < 0) {
     return {
       urgency: 'critical',
-      label: `${Math.abs(diffDays)}d overdue`,
+      label: language === 'ur' ? `${Math.abs(diffDays)} دن تاخیر` : `${Math.abs(diffDays)}d overdue`,
       daysDiff: diffDays,
     };
   }
   if (diffDays === 0) {
     return {
       urgency: 'critical',
-      label: 'Due Today',
+      label: language === 'ur' ? 'آج ڈلیوری' : 'Due Today',
       daysDiff: 0,
     };
   }
   if (diffDays === 1) {
     return {
       urgency: 'warning',
-      label: 'Due Tomorrow',
+      label: language === 'ur' ? 'کل ڈلیوری' : 'Due Tomorrow',
       daysDiff: 1,
     };
   }
   if (diffDays === 2) {
     return {
       urgency: 'warning',
-      label: 'Due in 2 days',
+      label: language === 'ur' ? '2 دن میں ڈلیوری' : 'Due in 2 days',
       daysDiff: 2,
     };
   }
   return {
     urgency: 'safe',
-    label: `Due ${delivery.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`,
+    label: language === 'ur'
+      ? `ہدف ${delivery.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+      : `Due ${delivery.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`,
     daysDiff: diffDays,
   };
 }
@@ -125,45 +128,46 @@ export function OrderCard({
   onOpenPrint,
   isAdvancing = false,
   className,
-  compact = false,
 }: OrderCardProps) {
-  const urgencyInfo = getDeliveryUrgency(order.delivery_date);
-  const garment = GARMENT_LABELS[order.garment_type] || { en: order.garment_type, ur: '' };
+  const { language, ordersQueueT } = useLanguage();
+  const urgencyInfo = getDeliveryUrgency(order.delivery_date, language);
+  const garment = GARMENT_LABELS[order.garment_type] || { en: order.garment_type, ur: order.garment_type };
+  const garmentName = language === 'ur' ? garment.ur : garment.en;
 
   const isTerminalCompleted = order.status === 'COMPLETED';
   const isTerminalBooked = order.status === 'BOOKED';
 
   // Fabric swatch color guessing or default
-  const fabricColorName = order.fabric_color || 'Standard Fabric';
+  const fabricColorName = order.fabric_color || ordersQueueT.standardFabric;
   const isEidRush = order.fabric_notes?.toLowerCase().includes('eid') || order.fabric_notes?.toLowerCase().includes('urgent');
 
   return (
     <div
       className={cn(
         'group relative flex flex-col justify-between rounded-xl border border-border/80 bg-card p-4 transition-all duration-200 hover:border-gold-primary/50 hover:shadow-md',
-        urgencyInfo.urgency === 'critical' && !isTerminalCompleted && 'border-rose-500/40 bg-rose-950/10',
+        urgencyInfo.urgency === 'critical' && !isTerminalCompleted && 'border-rose-500/40 bg-rose-500/10',
         className
       )}
     >
       {/* 1. Header: Order Number, Garment Qty, Delivery Deadline Badge */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="font-mono text-xs font-semibold tracking-wider text-primary">
-              #{order.order_number}
+              <bdi dir="ltr">#{order.order_number}</bdi>
             </span>
             {isEidRush && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-medium text-amber-300 border border-amber-500/30">
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-medium text-amber-700 dark:text-amber-300 border border-amber-500/30">
                 <Sparkles className="h-2.5 w-2.5" />
-                Eid Rush
+                <span className={language === 'ur' ? "font-urdu-serif" : ""}>{ordersQueueT.eidRush}</span>
               </span>
             )}
           </div>
-          <h4 className="mt-0.5 text-sm font-semibold text-foreground">
-            {customer?.full_name || 'Walk-in Customer'}
+          <h4 className={cn("mt-0.5 text-sm font-semibold text-foreground truncate", language === 'ur' ? "font-urdu-serif" : "")}>
+            <bdi dir="ltr">{customer?.full_name || ordersQueueT.walkInCustomer}</bdi>
           </h4>
-          <span className="text-xs text-muted-foreground">
-            {customer?.phone || 'No phone'}
+          <span className="text-xs text-muted-foreground font-mono">
+            {customer?.phone ? <bdi dir="ltr">{customer.phone}</bdi> : ordersQueueT.noPhone}
           </span>
         </div>
 
@@ -171,11 +175,11 @@ export function OrderCard({
         {!isTerminalCompleted ? (
           <div
             className={cn(
-              'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap',
+              'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap shrink-0',
               urgencyInfo.urgency === 'critical' &&
-                'border-rose-500/50 bg-rose-500/10 text-rose-400 animate-pulse',
+                'border-rose-500/50 bg-rose-500/15 text-rose-600 dark:text-rose-300 animate-pulse',
               urgencyInfo.urgency === 'warning' &&
-                'border-amber-500/40 bg-amber-500/10 text-amber-400',
+                'border-amber-500/40 bg-amber-500/15 text-amber-700 dark:text-amber-300',
               urgencyInfo.urgency === 'safe' &&
                 'border-border/80 bg-muted/30 text-muted-foreground'
             )}
@@ -187,12 +191,12 @@ export function OrderCard({
             ) : (
               <Clock className="h-3 w-3" />
             )}
-            <span>{urgencyInfo.label}</span>
+            <span className={language === 'ur' ? "font-urdu-serif" : ""}>{urgencyInfo.label}</span>
           </div>
         ) : (
-          <div className="inline-flex items-center gap-1 rounded-full border border-status-ready/30 bg-status-ready/10 px-2 py-0.5 text-[11px] font-medium text-status-ready">
+          <div className="inline-flex items-center gap-1 rounded-full border border-status-ready/30 bg-status-ready/10 px-2 py-0.5 text-[11px] font-medium text-status-ready shrink-0">
             <CheckCircle2 className="h-3 w-3" />
-            <span>Delivered</span>
+            <span className={language === 'ur' ? "font-urdu-serif" : ""}>{STAGE_LABELS.COMPLETED[language]}</span>
           </div>
         )}
       </div>
@@ -200,19 +204,16 @@ export function OrderCard({
       {/* 2. Garment Details & Fabric */}
       <div className="mt-3 space-y-1.5 border-t border-border/40 pt-2.5">
         <div className="flex items-center justify-between text-xs">
-          <span className="flex items-center gap-1 font-medium text-foreground">
+          <span className={cn("flex items-center gap-1 font-medium text-foreground", language === 'ur' ? "font-urdu-serif" : "")}>
             <Shirt className="h-3.5 w-3.5 text-muted-foreground" />
-            {order.quantity}× {garment.en}
-          </span>
-          <span className="font-urdu-sans text-xs text-muted-foreground" dir="rtl">
-            {garment.ur}
+            <bdi dir="ltr">{order.quantity}×</bdi> {garmentName}
           </span>
         </div>
 
         {/* Fabric thumbnail & color tag */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-gold-primary/70 ring-1 ring-gold-primary/30" />
-          <span className="truncate max-w-[200px]" title={fabricColorName}>
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-gold-primary/70 ring-1 ring-gold-primary/30 shrink-0" />
+          <span className="truncate max-w-[220px]" title={fabricColorName} dir="ltr">
             {order.fabric_brand ? `${order.fabric_brand} • ` : ''}
             {fabricColorName}
           </span>
@@ -222,16 +223,16 @@ export function OrderCard({
       {/* 3. Assigned Personnel */}
       <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground bg-muted/20 p-2 rounded-lg border border-border/40">
         <div className="flex items-center gap-1" title="Master Cutter">
-          <Scissors className="h-3 w-3 text-status-cutting" />
-          <span className="truncate max-w-[90px]">
-            {assignedCutter?.name || 'Unassigned'}
+          <Scissors className="h-3 w-3 text-status-cutting shrink-0" />
+          <span className="truncate max-w-[100px]">
+            {assignedCutter?.name || ordersQueueT.unassignedCraftsman}
           </span>
         </div>
         <span className="text-border">•</span>
         <div className="flex items-center gap-1" title="Stitcher">
-          <User className="h-3 w-3 text-status-stitching" />
-          <span className="truncate max-w-[90px]">
-            {assignedStitcher?.name || 'Unassigned'}
+          <User className="h-3 w-3 text-status-stitching shrink-0" />
+          <span className="truncate max-w-[100px]">
+            {assignedStitcher?.name || ordersQueueT.unassignedCraftsman}
           </span>
         </div>
       </div>
@@ -239,22 +240,26 @@ export function OrderCard({
       {/* 4. Financial Status */}
       <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-xs">
         <div>
-          <span className="text-[11px] text-muted-foreground">Total: </span>
-          <span className="font-mono font-medium text-foreground">
-            Rs. {order.total_amount.toLocaleString()}
+          <span className={cn("text-[11px] text-muted-foreground", language === 'ur' ? "font-urdu-serif" : "")}>
+            {ordersQueueT.totalLabel}{' '}
           </span>
+          <bdi dir="ltr" className="font-mono font-medium text-foreground">
+            Rs. {order.total_amount.toLocaleString()}
+          </bdi>
         </div>
 
         {order.balance_due > 0 ? (
           <div className="flex items-center gap-1">
-            <span className="text-[10px] text-amber-400/90 font-medium">Bal:</span>
-            <span className="font-mono text-xs font-semibold text-rose-400">
-              Rs. {order.balance_due.toLocaleString()}
+            <span className={cn("text-[10px] text-amber-700 dark:text-amber-400 font-medium", language === 'ur' ? "font-urdu-serif" : "")}>
+              {ordersQueueT.balanceShort}
             </span>
+            <bdi dir="ltr" className="font-mono text-xs font-semibold text-rose-600 dark:text-rose-400">
+              Rs. {order.balance_due.toLocaleString()}
+            </bdi>
           </div>
         ) : (
-          <span className="inline-flex items-center rounded-full bg-status-ready/15 px-2 py-0.5 text-[10px] font-semibold text-status-ready border border-status-ready/30">
-            Fully Paid
+          <span className={cn("inline-flex items-center rounded-full bg-status-ready/15 px-2 py-0.5 text-[10px] font-semibold text-status-ready border border-status-ready/30", language === 'ur' ? "font-urdu-serif" : "")}>
+            {ordersQueueT.fullyPaid}
           </span>
         )}
       </div>
@@ -272,11 +277,11 @@ export function OrderCard({
                 e.stopPropagation();
                 onRollback(order.id);
               }}
-              title="Roll back stage"
-              className="h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-foreground"
+              title={ordersQueueT.rollbackAction}
+              className="h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              <span className="sr-only">Rollback</span>
+              <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
+              <span className="sr-only">{ordersQueueT.rollbackAction}</span>
             </Button>
           )}
 
@@ -289,11 +294,11 @@ export function OrderCard({
                 e.stopPropagation();
                 onOpenPrint(order);
               }}
-              title="Print 58mm Fabric Tag / 80mm Slip"
-              className="h-7 w-7 p-0 flex-shrink-0 text-primary hover:text-primary hover:bg-primary/10"
+              title={ordersQueueT.printBtn}
+              className="h-7 w-7 p-0 flex-shrink-0 text-primary hover:text-primary hover:bg-primary/10 cursor-pointer"
             >
               <Printer className="h-3.5 w-3.5" />
-              <span className="sr-only">Print Thermal Tag</span>
+              <span className="sr-only">{ordersQueueT.printBtn}</span>
             </Button>
           )}
 
@@ -306,17 +311,17 @@ export function OrderCard({
                 e.stopPropagation();
                 onOpenWhatsApp(order);
               }}
-              title="WhatsApp Receipt & Alert"
-              className="h-7 w-7 p-0 flex-shrink-0 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-950/30"
+              title={ordersQueueT.whatsappInquiry}
+              className="h-7 w-7 p-0 flex-shrink-0 text-emerald-600 dark:text-emerald-500 hover:text-emerald-500 hover:bg-emerald-500/15 cursor-pointer"
             >
               <MessageSquare className="h-3.5 w-3.5" />
-              <span className="sr-only">WhatsApp Receipt</span>
+              <span className="sr-only">{ordersQueueT.whatsappInquiry}</span>
             </Button>
           )}
 
           <div className="flex-1 text-center">
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
-              {STAGE_LABELS[order.status] || order.status}
+            <span className={cn("text-[10px] uppercase tracking-wider font-semibold text-muted-foreground", language === 'ur' ? "font-urdu-serif" : "")}>
+              {STAGE_LABELS[order.status]?.[language] || order.status}
             </span>
           </div>
 
@@ -330,11 +335,11 @@ export function OrderCard({
                 e.stopPropagation();
                 onAdvance(order.id);
               }}
-              title="Advance to next stage"
-              className="h-7 px-2.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-gold-hover"
+              title={ordersQueueT.advanceAction}
+              className="h-7 px-2.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-gold-hover cursor-pointer"
             >
-              <span>Advance</span>
-              <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
+              <span className={language === 'ur' ? "font-urdu-serif" : ""}>{ordersQueueT.advanceAction}</span>
+              <ChevronRight className="h-3.5 w-3.5 ml-0.5 rtl:rotate-180" />
             </Button>
           )}
         </div>

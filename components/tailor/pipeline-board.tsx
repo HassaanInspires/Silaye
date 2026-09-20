@@ -12,6 +12,7 @@ import {
   Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/lib/language-provider';
 import type { GarmentOrder, Customer, Staff, OrderStatus, OrderStatusLog } from '@/types/tailor';
 import { OrderCard } from './order-card';
 
@@ -128,6 +129,7 @@ export function PipelineBoard({
   onOpenPrint,
   className,
 }: PipelineBoardProps) {
+  const { language, ordersQueueT } = useLanguage();
   const [advancingOrderId, setAdvancingOrderId] = React.useState<string | null>(null);
 
   // Quick lookup helper maps
@@ -267,29 +269,27 @@ export function PipelineBoard({
                     <IconComponent className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <h3 className="text-sm font-bold text-foreground tracking-tight">
-                        {col.label}
-                      </h3>
-                      <span className="font-urdu-sans text-xs text-muted-foreground" dir="rtl">
-                        {col.labelUrdu}
-                      </span>
-                    </div>
+                    <h3 className={cn(
+                      "text-sm font-bold text-foreground tracking-tight",
+                      language === 'ur' ? "font-urdu-serif leading-relaxed text-base" : ""
+                    )}>
+                      {language === 'ur' ? col.labelUrdu : col.label}
+                    </h3>
                   </div>
                 </div>
 
                 {/* Count Badge */}
                 <span className={cn('flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-bold border', col.accentColor, col.accentBg)}>
-                  {columnOrders.length}
+                  <bdi dir="ltr">{columnOrders.length}</bdi>
                 </span>
               </div>
 
               {/* PKR Stage Summary */}
               <div className="mt-2.5 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-2">
-                <span>Total Value:</span>
-                <span className="font-mono font-semibold text-foreground">
+                <span className={language === 'ur' ? "font-urdu-serif" : ""}>{ordersQueueT.totalValue}:</span>
+                <bdi dir="ltr" className="font-mono font-semibold text-foreground">
                   Rs. {totalPkr.toLocaleString()}
-                </span>
+                </bdi>
               </div>
             </div>
 
@@ -323,9 +323,8 @@ export function PipelineBoard({
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 p-6 text-center text-muted-foreground/60">
                   <Inbox className="h-8 w-8 stroke-[1.25] text-muted-foreground/40 mb-2" />
-                  <p className="text-xs font-medium">No orders in this stage</p>
-                  <p className="font-urdu-sans text-[11px] text-muted-foreground/40 mt-0.5" dir="rtl">
-                    کوئی آرڈر موجود نہیں
+                  <p className={cn("text-xs font-medium", language === 'ur' ? "font-urdu-serif text-sm" : "")}>
+                    {ordersQueueT.noOrdersInStage}
                   </p>
                 </div>
               )}
