@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { formatPakistaniPhoneDisplay } from '@/lib/whatsapp';
+import { useLanguage } from '@/lib/language-provider';
 import type { Customer, KhataTransaction, GarmentOrder, Staff, Shop } from '@/types/tailor';
 
 export type KhataFilterTab = 'ALL' | 'DEBTORS' | 'CREDITORS' | 'SETTLED';
@@ -55,6 +56,8 @@ export function KhataLedgerView({
   onOpenCustomerDetail,
   onOpenWhatsAppReminder,
 }: KhataLedgerViewProps) {
+  const { language, khataT } = useLanguage();
+
   // Filter & Search states
   const [searchQuery, setSearchQuery] = React.useState<string>('');
   const [activeTab, setActiveTab] = React.useState<KhataFilterTab>('ALL');
@@ -151,76 +154,76 @@ export function KhataLedgerView({
       {/* ------------------------------------------------------------------ */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Receivables (Udhaar) */}
-        <Card className="premium-glass-card border-rose-500/30 bg-gradient-to-br from-rose-500/15 via-[#121418] to-transparent relative overflow-hidden shadow-xl hover:border-rose-500/50 transition-all duration-300">
+        <Card className="border border-rose-500/30 bg-card relative overflow-hidden shadow-sm hover:border-rose-500/50 transition-all duration-300">
           <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl pointer-events-none" />
-          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-white/5">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-border">
             <div className="space-y-0.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                Market Receivables
+              <span className={cn(
+                "text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+                language === 'ur' && "font-urdu-serif leading-relaxed"
+              )}>
+                {khataT.totalReceivables}
               </span>
-              <div className="font-urdu-serif text-sm text-rose-300 font-bold leading-urdu-display" dir="rtl">
-                واجب الادا ادھار
-              </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/20 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.25)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/15 text-rose-600 dark:text-rose-400">
               <ArrowUpRight className="h-5 w-5" />
             </div>
           </CardHeader>
           <CardContent className="pt-3">
-            <div className="font-mono text-2xl font-bold text-rose-300">
+            <div className="font-mono text-2xl font-bold text-rose-600 dark:text-rose-400">
               <bdi dir="ltr">Rs. {metrics.totalReceivables.toLocaleString()}</bdi>
             </div>
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-400">
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
               <Badge variant="status-udhaar-pending" className="px-1.5 py-0 text-[10px] font-bold">
-                {metrics.debtorsCount} Debtors
+                {metrics.debtorsCount} {khataT.debtorsCount}
               </Badge>
-              <span>awaiting recovery</span>
+              <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.awaitingRecovery}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Total Advance Deposits Held */}
-        <Card className="premium-glass-card border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-[#121418] to-transparent relative overflow-hidden shadow-xl hover:border-emerald-500/50 transition-all duration-300">
+        <Card className="border border-emerald-500/30 bg-card relative overflow-hidden shadow-sm hover:border-emerald-500/50 transition-all duration-300">
           <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
-          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-white/5">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-border">
             <div className="space-y-0.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                Advance Deposits Held
+              <span className={cn(
+                "text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+                language === 'ur' && "font-urdu-serif leading-relaxed"
+              )}>
+                {khataT.advanceDepositsHeld}
               </span>
-              <div className="font-urdu-serif text-sm text-emerald-300 font-bold leading-urdu-display" dir="rtl">
-                ایڈوانس رقم (ڈپازٹ)
-              </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
               <ArrowDownLeft className="h-5 w-5" />
             </div>
           </CardHeader>
           <CardContent className="pt-3">
-            <div className="font-mono text-2xl font-bold text-emerald-300">
+            <div className="font-mono text-2xl font-bold text-emerald-600 dark:text-emerald-400">
               <bdi dir="ltr">Rs. {metrics.totalAdvances.toLocaleString()}</bdi>
             </div>
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-400">
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
               <Badge variant="status-advance-credit" className="px-1.5 py-0 text-[10px] font-bold">
-                {metrics.advanceHoldersCount} Accounts
+                {metrics.advanceHoldersCount} {khataT.accounts}
               </Badge>
-              <span>in store credit</span>
+              <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.inStoreCredit}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Net Market Position */}
-        <Card className="premium-glass-card border-gold/30 bg-gradient-to-br from-gold/15 via-[#121418] to-transparent relative overflow-hidden shadow-xl hover:border-gold/50 transition-all duration-300">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gold/10 blur-2xl pointer-events-none" />
-          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-white/5">
+        <Card className="border border-primary/30 bg-card relative overflow-hidden shadow-sm hover:border-primary/50 transition-all duration-300">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
+          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-border">
             <div className="space-y-0.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                Net Market Balance
+              <span className={cn(
+                "text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+                language === 'ur' && "font-urdu-serif leading-relaxed"
+              )}>
+                {khataT.netMarketPosition}
               </span>
-              <div className="font-urdu-serif text-sm text-gold font-bold leading-urdu-display" dir="rtl">
-                خالص مارکیٹ پوزیشن
-              </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold/30 bg-gold/20 text-gold shadow-[0_0_12px_rgba(212,175,55,0.25)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/15 text-primary">
               <TrendingUp className="h-5 w-5" />
             </div>
           </CardHeader>
@@ -229,10 +232,10 @@ export function KhataLedgerView({
               className={cn(
                 'font-mono text-2xl font-bold',
                 metrics.netMarketPosition > 0
-                  ? 'text-rose-300'
+                  ? 'text-rose-600 dark:text-rose-400'
                   : metrics.netMarketPosition < 0
-                  ? 'text-emerald-300'
-                  : 'text-white'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-foreground'
               )}
             >
               <bdi dir="ltr">
@@ -240,38 +243,47 @@ export function KhataLedgerView({
                 {Math.abs(metrics.netMarketPosition).toLocaleString()}
               </bdi>
             </div>
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-400">
-              <span>{metrics.netMarketPosition >= 0 ? 'Net Receivable' : 'Net Advance Credit'}</span>
+            <div className={cn(
+              "mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground",
+              language === 'ur' && "font-urdu-serif"
+            )}>
+              <span>{metrics.netMarketPosition >= 0 ? khataT.netReceivable : khataT.netAdvance}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Active Accounts & Settled Ratio */}
-        <Card className="premium-glass-card border-white/10 bg-[#121418]/90 relative overflow-hidden shadow-xl hover:border-white/20 transition-all duration-300">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-white/5">
+        <Card className="border border-border bg-card relative overflow-hidden shadow-sm hover:border-border/80 transition-all duration-300">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-border">
             <div className="space-y-0.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                Khata Accounts
+              <span className={cn(
+                "text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+                language === 'ur' && "font-urdu-serif leading-relaxed"
+              )}>
+                {khataT.khataAccounts}
               </span>
-              <div className="font-urdu-serif text-sm text-gray-300 font-bold leading-urdu-display" dir="rtl">
-                کل گاہک کھاتے
-              </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-muted/40 text-muted-foreground">
               <Users className="h-5 w-5" />
             </div>
           </CardHeader>
           <CardContent className="pt-3">
-            <div className="font-mono text-2xl font-bold text-white">
+            <div className="font-mono text-2xl font-bold text-foreground">
               {metrics.totalCustomers}
             </div>
-            <div className="mt-1.5 flex items-center gap-2 text-xs text-gray-400">
-              <span className="text-emerald-400 font-medium font-urdu-sans">
-                {metrics.settledCount} بے باق
+            <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+              <span className={cn(
+                "text-emerald-600 dark:text-emerald-400 font-medium",
+                language === 'ur' && "font-urdu-serif"
+              )}>
+                {metrics.settledCount} {khataT.settled}
               </span>
               <span>•</span>
-              <span className="text-rose-400 font-medium font-urdu-sans">
-                {metrics.debtorsCount} ادھار
+              <span className={cn(
+                "text-rose-600 dark:text-rose-400 font-medium",
+                language === 'ur' && "font-urdu-serif"
+              )}>
+                {metrics.debtorsCount} {khataT.udhaar}
               </span>
             </div>
           </CardContent>
@@ -286,66 +298,64 @@ export function KhataLedgerView({
         <div className="flex flex-1 items-center gap-3">
           <Input
             type="search"
-            placeholder="Search customer by name, mobile number, or city…"
+            placeholder={khataT.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={<Search className="h-4 w-4" />}
+            leftIcon={<Search className="h-4 w-4 text-primary" />}
             className="max-w-md bg-card"
           />
 
           {/* Quick Filter Tabs */}
-          <div className="hidden sm:flex items-center rounded-lg border border-border bg-card p-1">
+          <div className="hidden sm:flex items-center rounded-xl border border-border bg-card p-1 shadow-sm">
             <button
               onClick={() => setActiveTab('ALL')}
               className={cn(
-                'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                'rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer',
                 activeTab === 'ALL'
                   ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              All ({customers.length})
+              <span className={language === 'ur' ? "font-urdu-serif leading-relaxed" : ""}>{khataT.allTab}</span> ({customers.length})
             </button>
             <button
               onClick={() => setActiveTab('DEBTORS')}
               className={cn(
-                'flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                'flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer',
                 activeTab === 'DEBTORS'
-                  ? 'bg-rose-500/20 text-rose-300 font-semibold shadow-sm'
-                  : 'text-muted-foreground hover:text-rose-400'
+                  ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold shadow-sm border border-rose-500/30'
+                  : 'text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400'
               )}
             >
-              <span>Udhaar</span>
-              <span className="urdu-data-text text-[11px]">(واجب الادا)</span>
-              <span className="ml-1 rounded-full bg-rose-500/20 px-1.5 py-0.2 font-mono text-[10px] text-rose-400">
+              <span className={language === 'ur' ? "font-urdu-serif leading-relaxed" : ""}>{khataT.debtorsTab}</span>
+              <span className="ml-1 rounded-full bg-rose-500/20 px-1.5 py-0.2 font-mono text-[10px] text-rose-600 dark:text-rose-400 font-bold">
                 {metrics.debtorsCount}
               </span>
             </button>
             <button
               onClick={() => setActiveTab('CREDITORS')}
               className={cn(
-                'flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                'flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer',
                 activeTab === 'CREDITORS'
-                  ? 'bg-emerald-500/20 text-emerald-300 font-semibold shadow-sm'
-                  : 'text-muted-foreground hover:text-emerald-400'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold shadow-sm border border-emerald-500/30'
+                  : 'text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400'
               )}
             >
-              <span>Advance</span>
-              <span className="urdu-data-text text-[11px]">(ایڈوانس)</span>
-              <span className="ml-1 rounded-full bg-emerald-500/20 px-1.5 py-0.2 font-mono text-[10px] text-emerald-400">
+              <span className={language === 'ur' ? "font-urdu-serif leading-relaxed" : ""}>{khataT.creditorsTab}</span>
+              <span className="ml-1 rounded-full bg-emerald-500/20 px-1.5 py-0.2 font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
                 {metrics.advanceHoldersCount}
               </span>
             </button>
             <button
               onClick={() => setActiveTab('SETTLED')}
               className={cn(
-                'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                'rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer',
                 activeTab === 'SETTLED'
-                  ? 'bg-secondary text-foreground font-semibold shadow-sm'
+                  ? 'bg-muted text-foreground font-semibold shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              Settled ({metrics.settledCount})
+              <span className={language === 'ur' ? "font-urdu-serif leading-relaxed" : ""}>{khataT.settledTab}</span> ({metrics.settledCount})
             </button>
           </div>
         </div>
@@ -354,27 +364,30 @@ export function KhataLedgerView({
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Sort Dropdown */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="hidden sm:inline">Sort:</span>
+            <span className={cn("hidden sm:inline", language === 'ur' && "font-urdu-serif")}>{khataT.sortLabel}</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as KhataSortOption)}
-              className="rounded-lg border border-input bg-card px-2.5 py-1.5 text-xs text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className={cn(
+                "rounded-lg border border-input bg-card px-2.5 py-1.5 text-xs text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary",
+                language === 'ur' && "font-urdu-serif"
+              )}
             >
-              <option value="HIGHEST_DEBT">Highest Debt (زیادہ ادھار)</option>
-              <option value="HIGHEST_CREDIT">Highest Advance (زیادہ ایڈوانس)</option>
-              <option value="NAME">Customer Name (A-Z)</option>
-              <option value="SPENT">Highest Spent (کل خریداری)</option>
-              <option value="ORDERS">Most Orders (زیادہ آرڈرز)</option>
+              <option value="HIGHEST_DEBT">{khataT.sortHighestDebt}</option>
+              <option value="HIGHEST_CREDIT">{khataT.sortHighestCredit}</option>
+              <option value="NAME">{khataT.sortName}</option>
+              <option value="SPENT">{khataT.sortSpent}</option>
+              <option value="ORDERS">{khataT.sortOrders}</option>
             </select>
           </div>
 
           {/* View Mode Toggle */}
-          <div className="flex items-center rounded-lg border border-border bg-card p-1">
+          <div className="flex items-center rounded-lg border border-border bg-card p-1 shadow-sm">
             <button
               onClick={() => setViewLayout('grid')}
               className={cn(
                 'rounded p-1 text-muted-foreground transition-colors',
-                viewLayout === 'grid' && 'bg-secondary text-foreground'
+                viewLayout === 'grid' && 'bg-muted text-foreground'
               )}
               title="Grid View"
             >
@@ -384,7 +397,7 @@ export function KhataLedgerView({
               onClick={() => setViewLayout('table')}
               className={cn(
                 'rounded p-1 text-muted-foreground transition-colors',
-                viewLayout === 'table' && 'bg-secondary text-foreground'
+                viewLayout === 'table' && 'bg-muted text-foreground'
               )}
               title="Table View"
             >
@@ -400,9 +413,8 @@ export function KhataLedgerView({
             className="gap-1.5 shadow-sm font-semibold"
           >
             <PlusCircle className="h-4 w-4" />
-            <span>Record Khata Entry</span>
-            <span className="urdu-data-text font-normal text-primary-foreground hidden md:inline">
-              (نیا اندراج)
+            <span className={language === 'ur' ? "font-urdu-serif text-sm" : ""}>
+              {khataT.newKhataEntryFull}
             </span>
           </Button>
         </div>
@@ -412,11 +424,13 @@ export function KhataLedgerView({
       {/* 3. CUSTOMER LEDGER CARDS GRID / TABLE VIEW                         */}
       {/* ------------------------------------------------------------------ */}
       {filteredCustomers.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 py-16 text-center shadow-sm">
           <Wallet className="h-12 w-12 text-muted-foreground/40 mb-3" />
-          <h3 className="text-base font-semibold text-foreground">No Khata accounts found</h3>
-          <p className="urdu-data-text text-sm text-muted-foreground mt-1 max-w-sm">
-            دیے گئے فلٹر یا تلاش کے مطابق کوئی کھاتہ دستیاب نہیں ہے۔
+          <h3 className={cn("text-base font-semibold text-foreground", language === 'ur' && "font-urdu-serif")}>
+            {khataT.noFilterResultsTitle}
+          </h3>
+          <p className={cn("text-sm text-muted-foreground mt-1 max-w-sm", language === 'ur' && "font-urdu-serif leading-relaxed")}>
+            {khataT.noFilterResultsDesc}
           </p>
           <Button
             variant="outline"
@@ -425,9 +439,9 @@ export function KhataLedgerView({
               setSearchQuery('');
               setActiveTab('ALL');
             }}
-            className="mt-4 gap-1.5 text-xs"
+            className={cn("mt-4 gap-1.5 text-xs border-border", language === 'ur' && "font-urdu-serif")}
           >
-            Clear Filters • تمام فلٹرز ختم کریں
+            {khataT.clearFilters}
           </Button>
         </div>
       ) : viewLayout === 'grid' ? (
@@ -441,17 +455,17 @@ export function KhataLedgerView({
               <Card
                 key={customer.id}
                 className={cn(
-                  'premium-glass-card transition-all duration-300 hover:border-gold/40 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between overflow-hidden',
+                  'rounded-2xl border transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-md flex flex-col justify-between overflow-hidden bg-card shadow-sm',
                   isDebtor
-                    ? 'border-rose-500/30 bg-[#121418]/90 hover:shadow-rose-950/20'
+                    ? 'border-rose-500/30 hover:shadow-rose-950/5'
                     : isCreditor
-                    ? 'border-emerald-500/30 bg-[#121418]/90 hover:shadow-emerald-950/20'
-                    : 'border-white/10 bg-[#121418]/90'
+                    ? 'border-emerald-500/30 hover:shadow-emerald-950/5'
+                    : 'border-border'
                 )}
               >
                 <div>
                   {/* Card Top Banner */}
-                  <CardHeader className="pb-3 border-b border-border/50">
+                  <CardHeader className="pb-3 border-b border-border">
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1 overflow-hidden">
                         <button
@@ -463,7 +477,7 @@ export function KhataLedgerView({
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Phone className="h-3.5 w-3.5 text-primary shrink-0" />
                           <span className="font-mono">
-                            {formatPakistaniPhoneDisplay(customer.phone)}
+                            <bdi dir="ltr">{formatPakistaniPhoneDisplay(customer.phone)}</bdi>
                           </span>
                         </div>
                       </div>
@@ -479,7 +493,9 @@ export function KhataLedgerView({
                         }
                         className="shrink-0"
                       >
-                        {isDebtor ? 'واجب الادا' : isCreditor ? 'ایڈوانس' : 'بے باق'}
+                        <span className={language === 'ur' ? "font-urdu-serif" : ""}>
+                          {isDebtor ? khataT.udhaar : isCreditor ? khataT.advance : khataT.settled}
+                        </span>
                       </Badge>
                     </div>
                   </CardHeader>
@@ -487,13 +503,19 @@ export function KhataLedgerView({
                   {/* Card Content & Financial Info */}
                   <CardContent className="pt-4 space-y-4">
                     {/* Big Balance Display */}
-                    <div className="rounded-xl border border-border/70 bg-card-elevated p-3 flex items-center justify-between">
+                    <div className="rounded-xl border border-border bg-muted/40 p-3 flex items-center justify-between">
                       <div>
-                        <div className="text-[11px] text-muted-foreground uppercase tracking-wider">
-                          Current Khata Balance
+                        <div className={cn(
+                          "text-[11px] text-muted-foreground uppercase tracking-wider font-medium",
+                          language === 'ur' && "font-urdu-serif leading-relaxed"
+                        )}>
+                          {khataT.currentKhataBalance}
                         </div>
-                        <div className="urdu-data-text text-[10px] text-muted-foreground">
-                          {isDebtor ? 'بقایا ادھار رقم' : isCreditor ? 'ایڈوانس جمع شدہ' : 'حساب برابر'}
+                        <div className={cn(
+                          "text-[10px] text-muted-foreground",
+                          language === 'ur' && "font-urdu-serif leading-relaxed"
+                        )}>
+                          {isDebtor ? khataT.currentBalanceDue : isCreditor ? khataT.advanceHeld : khataT.accountBalanced}
                         </div>
                       </div>
                       <div className="text-right">
@@ -502,9 +524,9 @@ export function KhataLedgerView({
                           className={cn(
                             'font-mono text-xl font-bold',
                             isDebtor
-                              ? 'text-rose-400'
+                              ? 'text-rose-600 dark:text-rose-400'
                               : isCreditor
-                              ? 'text-emerald-400'
+                              ? 'text-emerald-600 dark:text-emerald-400'
                               : 'text-muted-foreground'
                           )}
                         >
@@ -521,7 +543,9 @@ export function KhataLedgerView({
                         <span className="truncate">{customer.city || customer.address || 'Wah Cantt'}</span>
                       </div>
                       <div className="text-right">
-                        <span>{customer.total_orders_count} orders • </span>
+                        <span className={language === 'ur' ? "font-urdu-serif" : ""}>
+                          {customer.total_orders_count} {khataT.ordersCount} •{' '}
+                        </span>
                         <bdi dir="ltr" className="font-mono font-medium text-foreground">
                           Rs. {customer.total_spent.toLocaleString()}
                         </bdi>
@@ -531,17 +555,17 @@ export function KhataLedgerView({
                 </div>
 
                 {/* Card Action Buttons */}
-                <div className="border-t border-border/60 bg-card-elevated/40 p-3 flex items-center justify-between gap-2">
+                <div className="border-t border-border bg-muted/20 p-3 flex items-center justify-between gap-2">
                   {/* 1-Tap WhatsApp Reminder (Debtors only) */}
                   {isDebtor ? (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => onOpenWhatsAppReminder(customer)}
-                      className="gap-1.5 text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 flex-1"
+                      className="gap-1.5 text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 flex-1"
                     >
                       <MessageSquare className="h-3.5 w-3.5" />
-                      <span>Reminder</span>
+                      <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.whatsappReminder}</span>
                     </Button>
                   ) : (
                     <Button
@@ -551,7 +575,7 @@ export function KhataLedgerView({
                       className="gap-1 text-xs text-muted-foreground hover:text-foreground flex-1"
                     >
                       <FileText className="h-3.5 w-3.5" />
-                      <span>Statement</span>
+                      <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.statement}</span>
                     </Button>
                   )}
 
@@ -563,7 +587,7 @@ export function KhataLedgerView({
                     className="gap-1 text-xs flex-1"
                   >
                     <PlusCircle className="h-3.5 w-3.5" />
-                    <span>+ Entry</span>
+                    <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.recordEntry}</span>
                   </Button>
 
                   {/* Statement View */}
@@ -573,7 +597,7 @@ export function KhataLedgerView({
                       size="icon"
                       onClick={() => onOpenCustomerDetail(customer)}
                       className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      title="View Complete Statement"
+                      title={khataT.statement}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -588,16 +612,16 @@ export function KhataLedgerView({
         <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-border bg-card-elevated text-muted-foreground">
-                <th className="py-3 px-4 font-semibold uppercase tracking-wider">Customer / فون</th>
-                <th className="py-3 px-4 font-semibold uppercase tracking-wider">Location / شہر</th>
-                <th className="py-3 px-4 font-semibold uppercase tracking-wider text-center">Orders</th>
-                <th className="py-3 px-4 font-semibold uppercase tracking-wider text-right">Lifetime Spent</th>
-                <th className="py-3 px-4 font-semibold uppercase tracking-wider text-right">
-                  Khata Balance
+              <tr className="border-b border-border bg-muted/40 text-muted-foreground">
+                <th className={cn("py-3 px-4 font-semibold uppercase tracking-wider", language === 'ur' && "font-urdu-serif")}>{khataT.thCustomer}</th>
+                <th className={cn("py-3 px-4 font-semibold uppercase tracking-wider", language === 'ur' && "font-urdu-serif")}>{khataT.thLocation}</th>
+                <th className={cn("py-3 px-4 font-semibold uppercase tracking-wider text-center", language === 'ur' && "font-urdu-serif")}>{khataT.thOrders}</th>
+                <th className={cn("py-3 px-4 font-semibold uppercase tracking-wider text-right", language === 'ur' && "font-urdu-serif")}>{khataT.thSpent}</th>
+                <th className={cn("py-3 px-4 font-semibold uppercase tracking-wider text-right", language === 'ur' && "font-urdu-serif")}>
+                  {khataT.thBalance}
                 </th>
-                <th className="py-3 px-4 font-semibold uppercase tracking-wider text-center">Status</th>
-                <th className="py-3 px-4 font-semibold uppercase tracking-wider text-right">Actions</th>
+                <th className={cn("py-3 px-4 font-semibold uppercase tracking-wider text-center", language === 'ur' && "font-urdu-serif")}>{khataT.thStatus}</th>
+                <th className={cn("py-3 px-4 font-semibold uppercase tracking-wider text-right", language === 'ur' && "font-urdu-serif")}>{khataT.thActions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -608,7 +632,7 @@ export function KhataLedgerView({
                 return (
                   <tr
                     key={customer.id}
-                    className="hover:bg-card-elevated/60 transition-colors"
+                    className="hover:bg-muted/30 transition-colors"
                   >
                     <td className="py-3 px-4">
                       <button
@@ -618,7 +642,7 @@ export function KhataLedgerView({
                         {customer.full_name}
                       </button>
                       <div className="font-mono text-muted-foreground text-[11px]">
-                        {formatPakistaniPhoneDisplay(customer.phone)}
+                        <bdi dir="ltr">{formatPakistaniPhoneDisplay(customer.phone)}</bdi>
                       </div>
                     </td>
 
@@ -640,9 +664,9 @@ export function KhataLedgerView({
                         className={cn(
                           'font-mono text-sm font-bold',
                           isDebtor
-                            ? 'text-rose-400'
+                            ? 'text-rose-600 dark:text-rose-400'
                             : isCreditor
-                            ? 'text-emerald-400'
+                            ? 'text-emerald-600 dark:text-emerald-400'
                             : 'text-muted-foreground'
                         )}
                       >
@@ -662,7 +686,9 @@ export function KhataLedgerView({
                         }
                         className="text-[10px]"
                       >
-                        {isDebtor ? 'واجب الادا' : isCreditor ? 'ایڈوانس' : 'بے باق'}
+                        <span className={language === 'ur' ? "font-urdu-serif" : ""}>
+                          {isDebtor ? khataT.udhaar : isCreditor ? khataT.advance : khataT.settled}
+                        </span>
                       </Badge>
                     </td>
 
@@ -673,11 +699,11 @@ export function KhataLedgerView({
                             variant="ghost"
                             size="sm"
                             onClick={() => onOpenWhatsAppReminder(customer)}
-                            className="h-7 px-2 text-[11px] text-emerald-400 hover:bg-emerald-500/10"
+                            className="h-7 px-2 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
                             title="Send WhatsApp Reminder"
                           >
                             <MessageSquare className="h-3.5 w-3.5 mr-1" />
-                            Reminder
+                            <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.whatsappReminder}</span>
                           </Button>
                         )}
                         <Button
@@ -687,7 +713,7 @@ export function KhataLedgerView({
                           className="h-7 px-2 text-[11px] text-primary hover:bg-primary/10"
                         >
                           <PlusCircle className="h-3.5 w-3.5 mr-1" />
-                          Entry
+                          <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.recordEntry}</span>
                         </Button>
                         <Button
                           variant="ghost"
@@ -696,7 +722,7 @@ export function KhataLedgerView({
                           className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                         >
                           <FileText className="h-3.5 w-3.5 mr-1" />
-                          Statement
+                          <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.statement}</span>
                         </Button>
                       </div>
                     </td>

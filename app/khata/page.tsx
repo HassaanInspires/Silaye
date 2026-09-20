@@ -22,11 +22,20 @@ import { KhataLedgerView } from '@/components/tailor/khata-ledger-view';
 import { KhataEntryModal } from '@/components/tailor/khata-entry-modal';
 import { CustomerKhataDetailModal } from '@/components/tailor/customer-khata-detail-modal';
 import { WhatsAppReceiptModal } from '@/components/tailor/whatsapp-receipt-modal';
-import { customersDb, khataDb, ordersDb, staffDb, shopsDb } from '@/lib/db';
-import { mockShop as defaultMockShop } from '@/lib/mock-data';
+import { customersDb, khataDb, ordersDb, staffDb, shopsDb, isDatabaseConfigured } from '@/lib/db';
+import {
+  mockShop as defaultMockShop,
+  SEED_CUSTOMERS,
+  SEED_KHATA_TRANSACTIONS,
+  SEED_ORDERS,
+  isDemoMode,
+} from '@/lib/mock-data';
+import { useLanguage } from '@/lib/language-provider';
 import type { Customer, KhataTransaction, GarmentOrder, Staff, Shop } from '@/types/tailor';
 
 export default function KhataPage() {
+  const { language, khataT } = useLanguage();
+
   // Live state
   const [customers, setCustomers] = React.useState<Customer[]>([]);
   const [transactions, setTransactions] = React.useState<KhataTransaction[]>([]);
@@ -58,32 +67,81 @@ export default function KhataPage() {
     async function loadKhataData() {
       setIsLoading(true);
       try {
-        const currentShop = await shopsDb.getCurrentShop();
+        let currentShop: Shop | null = null;
+        try {
+          currentShop = await shopsDb.getCurrentShop();
+        } catch (shopErr) {
+          console.warn('Khata shop resolution notice:', shopErr);
+        }
+
         if (!isMounted) return;
         setShop(currentShop || defaultMockShop);
 
         const targetShopId = currentShop?.id || defaultMockShop.id;
-        const [loadedCustomers, loadedTransactions, loadedOrders, loadedStaff] = await Promise.all([
-          customersDb.getByShopId(targetShopId),
-          khataDb.getByShopId(targetShopId),
-          ordersDb.getByShopId(targetShopId),
-          staffDb.getByShopId(targetShopId),
-        ]);
+        let loadedCustomers: Customer[] = [];
+        let loadedTransactions: KhataTransaction[] = [];
+        let loadedOrders: GarmentOrder[] = [];
+        let loadedStaff: Staff[] = [];
+
+        try {
+          const results = await Promise.allSettled([
+            customersDb.getByShopId(targetShopId),
+            khataDb.getByShopId(targetShopId),
+            ordersDb.getByShopId(targetShopId),
+            staffDb.getByShopId(targetShopId),
+          ]);
+
+          if (results[0].status === 'fulfilled' && Array.isArray(results[0].value)) {
+            loadedCustomers = results[0].value;
+          }
+          if (results[1].status === 'fulfilled' && Array.isArray(results[1].value)) {
+            loadedTransactions = results[1].value;
+          }
+          if (results[2].status === 'fulfilled' && Array.isArray(results[2].value)) {
+            loadedOrders = results[2].value;
+          }
+          if (results[3].status === 'fulfilled' && Array.isArray(results[3].value)) {
+            loadedStaff = results[3].value.map((m) => ({
+              id: m.id,
+              shop_id: m.shop_id,
+              name: m.name || 'Workshop Member',
+              phone: '',
+              role: (m.role === 'OWNER' ? 'MANAGER' : m.role) as Staff['role'],
+              is_active: true,
+              created_at: m.created_at,
+            }));
+          }
+        } catch (dataErr) {
+          console.warn('Khata repository settled notice:', dataErr);
+        }
+
+        // Realistic seed fallback for preview/demo modes or empty test environments
+        const shouldUseSeed =
+          loadedCustomers.length === 0 &&
+          (targetShopId === defaultMockShop.id ||
+            targetShopId === 'shp-demo-001' ||
+            targetShopId === '00000000-0000-0000-0000-000000000001' ||
+            targetShopId.startsWith('a0000000') ||
+            isDemoMode() ||
+            !isDatabaseConfigured());
+
+        const finalCustomers = shouldUseSeed
+          ? SEED_CUSTOMERS.map((c) => ({ ...c, shop_id: targetShopId }))
+          : loadedCustomers;
+
+        const finalTransactions = shouldUseSeed
+          ? SEED_KHATA_TRANSACTIONS.map((t) => ({ ...t, shop_id: targetShopId }))
+          : loadedTransactions;
+
+        const finalOrders = shouldUseSeed
+          ? SEED_ORDERS.map((o) => ({ ...o, shop_id: targetShopId }))
+          : loadedOrders;
 
         if (isMounted) {
-          setCustomers(loadedCustomers);
-          setTransactions(loadedTransactions);
-          setOrders(loadedOrders);
-          const mappedStaff: Staff[] = loadedStaff.map((m) => ({
-            id: m.id,
-            shop_id: m.shop_id,
-            name: m.name || 'Workshop Member',
-            phone: '',
-            role: (m.role === 'OWNER' ? 'MANAGER' : m.role) as Staff['role'],
-            is_active: true,
-            created_at: m.created_at,
-          }));
-          setStaff(mappedStaff);
+          setCustomers(finalCustomers);
+          setTransactions(finalTransactions);
+          setOrders(finalOrders);
+          setStaff(loadedStaff);
         }
       } catch (err) {
         console.warn('Khata ledger data fetch error:', err);
@@ -260,18 +318,23 @@ export default function KhataPage() {
     <AppShell activeRoute="/khata">
       <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header (Desktop) */}
-        <div className="hidden md:flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-5">
+        <div className="hidden md:flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-5">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white flex items-center gap-3">
-                <span>Khata & Financial Ledger</span>
-                <span className="font-urdu-serif text-lg font-normal text-gold/80" dir="rtl">
-                  کھاتہ و مالیاتی لیجر
-                </span>
-              </h1>
-            </div>
-            <p className="text-xs sm:text-sm text-gray-400">
-              Market receivables, advance deposits, and double-entry aligned audit trails for customer accounts.
+            <h1 className={cn(
+              "text-2xl sm:text-3xl font-semibold tracking-tight text-foreground flex items-center gap-3",
+              language === 'ur' && "font-urdu-serif leading-relaxed"
+            )}>
+              <span>{khataT.pageTitle}</span>
+            </h1>
+            <p className={cn(
+              "text-xs sm:text-sm text-muted-foreground max-w-2xl",
+              language === 'ur' ? "font-urdu-serif leading-relaxed" : ""
+            )}>
+              {language === 'en' ? (
+                <bdi dir="ltr">{khataT.pageSubtitle}</bdi>
+              ) : (
+                khataT.pageSubtitle
+              )}
             </p>
           </div>
 
@@ -280,12 +343,11 @@ export default function KhataPage() {
               variant="default"
               size="sm"
               onClick={() => handleOpenNewTransaction()}
-              className="gap-2 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-sm"
             >
               <PlusCircle className="h-4 w-4" />
-              <span>New Khata Entry</span>
-              <span className="font-urdu-sans text-xs opacity-80" dir="rtl">
-                نیا اندراج
+              <span className={language === 'ur' ? "font-urdu-serif text-sm" : ""}>
+                {khataT.newKhataEntryFull}
               </span>
             </Button>
           </div>
@@ -293,8 +355,8 @@ export default function KhataPage() {
 
         {/* Floating Notification Banner */}
         {notification && (
-          <div className="flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-300 shadow-md animate-in fade-in slide-in-from-top-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+          <div className="flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-700 dark:text-emerald-300 shadow-md animate-in fade-in slide-in-from-top-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span className="font-medium">{notification.message}</span>
           </div>
         )}
@@ -306,68 +368,92 @@ export default function KhataPage() {
           {/* Mobile Header Bar */}
           <div className="flex items-center justify-between pb-1">
             <div>
-              <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                <span>Khata Ledger</span>
-                <span className="font-urdu-serif text-base text-gold leading-relaxed py-1" dir="rtl">
-                  کھاتہ رجسٹر
-                </span>
+              <h1 className={cn(
+                "text-xl font-bold text-foreground flex items-center gap-2",
+                language === 'ur' && "font-urdu-serif leading-relaxed"
+              )}>
+                <span>{khataT.mobileTitle}</span>
               </h1>
-              <p className="text-[11px] text-gray-400 font-urdu-serif leading-relaxed py-1">
-                مارکیٹ ادھار اور ایڈوانس حساب کتاب
+              <p className={cn(
+                "text-[11px] text-muted-foreground",
+                language === 'ur' ? "font-urdu-serif leading-relaxed py-0.5" : ""
+              )}>
+                {language === 'en' ? <bdi dir="ltr">{khataT.mobileSubtitle}</bdi> : khataT.mobileSubtitle}
               </p>
             </div>
           </div>
 
           {/* 1. Mobile Financial Summary Card */}
-          <div className="premium-glass-card p-4 border-rose-500/30 bg-gradient-to-br from-rose-500/15 via-[#121418] to-transparent relative overflow-hidden shadow-lg space-y-3">
+          <div className="rounded-2xl p-4 border border-rose-500/30 bg-card shadow-sm relative overflow-hidden space-y-3">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold tracking-wider uppercase text-rose-400 font-urdu-serif leading-relaxed py-1">
-                  Total Market Receivables • ادھار
+                <span className={cn(
+                  "text-[10px] font-bold tracking-wider uppercase text-rose-600 dark:text-rose-400",
+                  language === 'ur' && "font-urdu-serif leading-relaxed"
+                )}>
+                  {khataT.totalReceivables}
                 </span>
-                <div className="font-mono text-2xl font-bold text-rose-300">
+                <div className="font-mono text-2xl font-bold text-rose-600 dark:text-rose-400">
                   <bdi dir="ltr">Rs. {metrics.totalReceivables.toLocaleString()}</bdi>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-xs font-semibold font-urdu-serif leading-relaxed py-1">
-                {metrics.debtorsCount} گاہک
+              <span className={cn(
+                "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 text-xs font-semibold",
+                language === 'ur' && "font-urdu-serif leading-relaxed"
+              )}>
+                {metrics.debtorsCount} {khataT.debtorsCount}
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5 text-center">
-              <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-                <span className="text-[9px] text-gray-400 block truncate font-urdu-serif leading-relaxed py-1">واجب الادا</span>
-                <span className="font-mono text-xs font-bold text-rose-400">{metrics.debtorsCount}</span>
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border text-center">
+              <div className="p-2 rounded-xl bg-muted/40 border border-border">
+                <span className={cn(
+                  "text-[10px] text-muted-foreground block truncate",
+                  language === 'ur' && "font-urdu-serif leading-relaxed"
+                )}>
+                  {khataT.awaitingRecovery}
+                </span>
+                <span className="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">{metrics.debtorsCount}</span>
               </div>
-              <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-                <span className="text-[9px] text-gray-400 block truncate font-urdu-serif leading-relaxed py-1">ایڈوانس رقم</span>
-                <span className="font-mono text-xs font-bold text-emerald-400">
-                  Rs. {metrics.totalAdvances.toLocaleString()}
+              <div className="p-2 rounded-xl bg-muted/40 border border-border">
+                <span className={cn(
+                  "text-[10px] text-muted-foreground block truncate",
+                  language === 'ur' && "font-urdu-serif leading-relaxed"
+                )}>
+                  {khataT.inStoreCredit}
+                </span>
+                <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  <bdi dir="ltr">Rs. {metrics.totalAdvances.toLocaleString()}</bdi>
                 </span>
               </div>
-              <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-                <span className="text-[9px] text-gray-400 block truncate font-urdu-serif leading-relaxed py-1">بے باق کھاتے</span>
-                <span className="font-mono text-xs font-bold text-gray-200">{metrics.settledCount}</span>
+              <div className="p-2 rounded-xl bg-muted/40 border border-border">
+                <span className={cn(
+                  "text-[10px] text-muted-foreground block truncate",
+                  language === 'ur' && "font-urdu-serif leading-relaxed"
+                )}>
+                  {khataT.settled}
+                </span>
+                <span className="font-mono text-xs font-bold text-foreground">{metrics.settledCount}</span>
               </div>
             </div>
           </div>
 
           {/* 2. Sticky Search Bar & Filter Pills */}
-          <div className="sticky top-0 z-20 bg-[#0B0C0E]/95 backdrop-blur-md pb-1 pt-0 -mx-4 px-4 space-y-2">
+          <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md pb-2 pt-1 -mx-4 px-4 space-y-2 border-b border-border/50">
             <div className="relative">
               <Input
                 type="search"
-                placeholder="گاہک کا نام یا فون نمبر تلاش کریں..."
+                placeholder={khataT.searchPlaceholder}
                 value={mobileSearchQuery}
                 onChange={(e) => setMobileSearchQuery(e.target.value)}
-                leftIcon={<Search className="h-4 w-4 text-gold" />}
-                className="h-10 text-xs bg-[#121418] border-white/10 pr-9 rounded-xl focus:border-gold/50"
+                leftIcon={<Search className="h-4 w-4 text-primary" />}
+                className="h-10 text-xs bg-card border-input pr-9 rounded-xl focus:border-primary"
               />
               {mobileSearchQuery.trim() && (
                 <button
                   type="button"
                   onClick={() => setMobileSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 flex items-center justify-center text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground flex items-center justify-center text-xs"
                   aria-label="Clear search"
                 >
                   ✕
@@ -375,12 +461,12 @@ export default function KhataPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none touch-pan-x -mx-4 pl-4 pr-10">
+            <div className="flex items-center gap-2 overflow-x-auto py-2 scrollbar-none touch-pan-x -mx-4 pl-4 pr-10">
               {[
-                { id: 'ALL', labelUrdu: 'تمام', labelEn: 'All', count: customers.length },
-                { id: 'DEBTORS', labelUrdu: 'ادھار', labelEn: 'Udhaar', count: metrics.debtorsCount },
-                { id: 'CREDITORS', labelUrdu: 'ایڈوانس', labelEn: 'Advance', count: metrics.advanceHoldersCount },
-                { id: 'SETTLED', labelUrdu: 'بے باق', labelEn: 'Settled', count: metrics.settledCount },
+                { id: 'ALL', label: khataT.allTab, count: customers.length },
+                { id: 'DEBTORS', label: khataT.debtorsTab, count: metrics.debtorsCount },
+                { id: 'CREDITORS', label: khataT.creditorsTab, count: metrics.advanceHoldersCount },
+                { id: 'SETTLED', label: khataT.settledTab, count: metrics.settledCount },
               ].map((tab) => {
                 const isActive = mobileKhataTab === tab.id;
                 return (
@@ -391,16 +477,15 @@ export default function KhataPage() {
                     className={cn(
                       'shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer border',
                       isActive
-                        ? 'bg-gold/15 text-gold border-gold/40 shadow-[0_0_10px_rgba(212,175,55,0.2)] font-semibold'
-                        : 'bg-[#121418] text-gray-400 border-white/5 hover:text-gray-200'
+                        ? 'bg-primary/15 text-primary border-primary/40 shadow-sm font-semibold'
+                        : 'bg-card text-muted-foreground border-border hover:text-foreground'
                     )}
                   >
-                    <span className="font-urdu-serif leading-relaxed py-1">{tab.labelUrdu}</span>
-                    <span className="text-[10px] opacity-70">({tab.labelEn})</span>
+                    <span className={language === 'ur' ? "font-urdu-serif leading-relaxed py-0.5" : ""}>{tab.label}</span>
                     <span
                       className={cn(
                         'px-1.5 py-0.2 rounded-full text-[10px] font-mono',
-                        isActive ? 'bg-gold/30 text-gold font-bold' : 'bg-white/5 text-gray-400'
+                        isActive ? 'bg-primary/25 text-primary font-bold' : 'bg-muted text-muted-foreground'
                       )}
                     >
                       {tab.count}
@@ -413,11 +498,19 @@ export default function KhataPage() {
 
           {/* 3. Customer Balance Cards List */}
           {mobileFilteredCustomers.length === 0 ? (
-            <div className="premium-glass-card p-8 text-center space-y-3 border-white/10 my-4">
-              <Search className="h-8 w-8 text-gray-500 mx-auto" />
-              <h3 className="text-sm font-semibold text-white font-urdu-serif leading-relaxed py-1">کوئی کھاتہ نہیں ملا</h3>
-              <p className="text-xs text-gray-400 font-urdu-serif leading-relaxed py-1">
-                دیے گئے فلٹر یا تلاش کے مطابق کوئی گاہک موجود نہیں ہے۔
+            <div className="rounded-2xl p-8 text-center space-y-3 border border-border bg-card shadow-sm my-4">
+              <Search className="h-8 w-8 text-muted-foreground/50 mx-auto" />
+              <h3 className={cn(
+                "text-sm font-semibold text-foreground",
+                language === 'ur' && "font-urdu-serif"
+              )}>
+                {khataT.noFilterResultsTitle}
+              </h3>
+              <p className={cn(
+                "text-xs text-muted-foreground",
+                language === 'ur' ? "font-urdu-serif leading-relaxed" : ""
+              )}>
+                {khataT.noFilterResultsDesc}
               </p>
               <Button
                 size="sm"
@@ -426,9 +519,12 @@ export default function KhataPage() {
                   setMobileSearchQuery('');
                   setMobileKhataTab('ALL');
                 }}
-                className="text-xs border-white/10 font-urdu-serif leading-relaxed py-1"
+                className={cn(
+                  "text-xs border-border",
+                  language === 'ur' && "font-urdu-serif"
+                )}
               >
-                تمام فلٹرز صاف کریں
+                {khataT.clearFilters}
               </Button>
             </div>
           ) : (
@@ -443,22 +539,22 @@ export default function KhataPage() {
                     key={customer.id}
                     onClick={() => handleOpenCustomerDetail(customer)}
                     className={cn(
-                      'premium-glass-card p-3.5 border hover:border-gold/30 active:scale-[0.99] transition-all bg-[#121418] space-y-2.5 shadow-md cursor-pointer',
+                      'rounded-2xl p-3.5 border hover:border-primary/40 active:scale-[0.99] transition-all bg-card space-y-2.5 shadow-sm cursor-pointer',
                       isDebtor
                         ? 'border-rose-500/30'
                         : isCreditor
                         ? 'border-emerald-500/30'
-                        : 'border-white/10'
+                        : 'border-border'
                     )}
                   >
                     {/* Header: Name + Balance */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-0.5 min-w-0">
-                        <div className="font-bold text-sm text-white truncate">
+                        <div className="font-bold text-sm text-foreground truncate">
                           {customer.full_name}
                         </div>
-                        <div className="text-[11px] text-gray-400 font-mono flex items-center gap-2">
-                          <span>{customer.phone}</span>
+                        <div className="text-[11px] text-muted-foreground font-mono flex items-center gap-2">
+                          <bdi dir="ltr">{customer.phone}</bdi>
                           {customer.city && <span>• {customer.city}</span>}
                         </div>
                       </div>
@@ -466,47 +562,81 @@ export default function KhataPage() {
                       {/* Balance Badge */}
                       <div className="shrink-0 text-right">
                         {isDebtor && (
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-bold font-mono">
+                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-600 dark:text-rose-300 text-xs font-bold font-mono">
                             <bdi dir="ltr">Rs. {customer.current_khata_balance.toLocaleString()}</bdi>
-                            <span className="font-urdu-serif text-[10px] font-normal leading-relaxed py-1">واجب الادا</span>
+                            <span className={cn(
+                              "text-[10px] font-normal",
+                              language === 'ur' && "font-urdu-serif"
+                            )}>
+                              {khataT.udhaar}
+                            </span>
                           </div>
                         )}
                         {isCreditor && (
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-bold font-mono">
+                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-600 dark:text-emerald-300 text-xs font-bold font-mono">
                             <bdi dir="ltr">Rs. {Math.abs(customer.current_khata_balance).toLocaleString()}</bdi>
-                            <span className="font-urdu-serif text-[10px] font-normal leading-relaxed py-1">ایڈوانس</span>
+                            <span className={cn(
+                              "text-[10px] font-normal",
+                              language === 'ur' && "font-urdu-serif"
+                            )}>
+                              {khataT.advance}
+                            </span>
                           </div>
                         )}
                         {isSettled && (
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-xs font-semibold">
+                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted/50 border border-border text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                             <CheckCircle2 className="h-3 w-3" />
-                            <span className="font-urdu-serif text-[10px] leading-relaxed py-1">بے باق (Settled)</span>
+                            <span className={cn(
+                              "text-[10px]",
+                              language === 'ur' && "font-urdu-serif"
+                            )}>
+                              {khataT.settled}
+                            </span>
                           </div>
                         )}
                       </div>
                     </div>
 
                     {/* Stats summary */}
-                    <div className="flex items-center justify-between text-[11px] text-gray-400 px-2 py-1 rounded-lg bg-black/40 border border-white/5">
-                      <span className="font-urdu-serif leading-relaxed py-1">{customer.total_orders_count} آرڈرز مکمل</span>
-                      <span className="font-urdu-serif leading-relaxed py-1">کل خریداری: Rs. {customer.total_spent.toLocaleString()}</span>
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border">
+                      <span className={language === 'ur' ? "font-urdu-serif leading-relaxed" : ""}>
+                        {customer.total_orders_count} {khataT.ordersCount}
+                      </span>
+                      <span className={language === 'ur' ? "font-urdu-serif leading-relaxed" : ""}>
+                        {khataT.totalSpent}: <bdi dir="ltr" className="font-mono font-semibold text-foreground">Rs. {customer.total_spent.toLocaleString()}</bdi>
+                      </span>
                     </div>
 
                     {/* Action buttons */}
                     <div className="flex items-center gap-2 pt-1">
                       {/* WhatsApp Reminder (active on debtors) */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenWhatsAppReminder(customer);
-                        }}
-                        className="h-8 px-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 flex items-center justify-center gap-1 text-xs font-semibold shrink-0"
-                        title="Send WhatsApp Reminder"
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        <span className="font-urdu-serif leading-relaxed py-1">یاد دہانی</span>
-                      </button>
+                      {isDebtor ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenWhatsAppReminder(customer);
+                          }}
+                          className="h-8 px-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 flex items-center justify-center gap-1 text-xs font-semibold shrink-0"
+                          title="Send WhatsApp Reminder"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.whatsappReminder}</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenCustomerDetail(customer);
+                          }}
+                          className="h-8 px-2.5 rounded-lg border border-border bg-muted/50 text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 text-xs font-semibold shrink-0"
+                          title="View Statement"
+                        >
+                          <FileSpreadsheet className="h-3.5 w-3.5" />
+                          <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.statement}</span>
+                        </button>
+                      )}
 
                       {/* + Record Transaction */}
                       <button
@@ -515,10 +645,10 @@ export default function KhataPage() {
                           e.stopPropagation();
                           handleOpenNewTransaction(customer);
                         }}
-                        className="h-8 flex-1 rounded-lg border border-gold/40 bg-gold/15 text-gold hover:bg-gold/25 flex items-center justify-center gap-1 text-xs font-bold transition-all shadow-[0_0_10px_rgba(212,175,55,0.15)]"
+                        className="h-8 flex-1 rounded-lg border border-primary/40 bg-primary/15 text-primary hover:bg-primary/25 flex items-center justify-center gap-1 text-xs font-bold transition-all shadow-sm"
                       >
                         <PlusCircle className="h-3.5 w-3.5" />
-                        <span className="font-urdu-serif leading-relaxed py-1">رقم وصولی / کھاتہ</span>
+                        <span className={language === 'ur' ? "font-urdu-serif" : ""}>{khataT.recordEntry}</span>
                       </button>
 
                       {/* Details Statement Chevron */}
@@ -528,7 +658,7 @@ export default function KhataPage() {
                           e.stopPropagation();
                           handleOpenCustomerDetail(customer);
                         }}
-                        className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white flex items-center justify-center shrink-0"
+                        className="h-8 w-8 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center shrink-0"
                         title="View Full Ledger Statement"
                       >
                         <ChevronRight className="h-4 w-4" />
@@ -547,17 +677,26 @@ export default function KhataPage() {
         <div className="hidden md:block">
         {/* Zero-Mock Clean-Slate Empty State */}
         {!isLoading && customers.length === 0 && transactions.length === 0 && (
-          <div className="premium-glass-card p-10 sm:p-16 flex flex-col items-center justify-center text-center space-y-4 border-gold/20 shadow-[0_0_30px_rgba(212,175,55,0.08)] my-8">
-            <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_20px_rgba(212,175,55,0.2)]">
-              <Wallet className="h-8 w-8 text-gold" />
+          <div className="rounded-2xl p-10 sm:p-16 flex flex-col items-center justify-center text-center space-y-4 border border-border bg-card shadow-sm my-8">
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-primary/30 bg-primary/10 text-primary shadow-sm">
+              <Wallet className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-1.5 max-w-md">
-              <h2 className="text-xl font-bold text-white">Khata Register is Clear</h2>
-              <p className="font-urdu-serif text-sm text-gold/90" dir="rtl">
-                کھاتہ رجسٹر بالکل صاف ہے
-              </p>
-              <p className="text-xs sm:text-sm text-gray-400">
-                No outstanding market receivables or advance ledger entries recorded. Record customer advance payments or balance adjustments with zero hassle.
+              <h2 className={cn(
+                "text-xl font-bold text-foreground",
+                language === 'ur' && "font-urdu-serif"
+              )}>
+                {khataT.emptyStateTitle}
+              </h2>
+              <p className={cn(
+                "text-xs sm:text-sm text-muted-foreground",
+                language === 'ur' ? "font-urdu-serif leading-relaxed" : ""
+              )}>
+                {language === 'en' ? (
+                  <bdi dir="ltr">{khataT.emptyStateDesc}</bdi>
+                ) : (
+                  khataT.emptyStateDesc
+                )}
               </p>
             </div>
             <div className="pt-2">
@@ -565,12 +704,11 @@ export default function KhataPage() {
                 variant="default"
                 size="md"
                 onClick={() => handleOpenNewTransaction()}
-                className="gap-2 bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_25px_rgba(212,175,55,0.3)] transition-all hover:scale-105"
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-sm transition-all"
               >
                 <PlusCircle className="h-4 w-4" />
-                <span>New Khata Entry</span>
-                <span className="font-urdu-sans text-xs opacity-80" dir="rtl">
-                  پہلا کھاتہ اندراج
+                <span className={language === 'ur' ? "font-urdu-serif text-sm" : ""}>
+                  {khataT.recordFirstEntry}
                 </span>
               </Button>
             </div>

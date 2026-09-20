@@ -7,12 +7,14 @@ import {
   POST_BOOKING_I18N,
   CUSTOMERS_I18N,
   ORDERS_QUEUE_I18N,
+  KHATA_I18N,
   type Language,
   type DashboardTranslations,
   type NewOrderTranslations,
   type PostBookingTranslations,
   type CustomersTranslations,
   type OrdersQueueTranslations,
+  type KhataTranslations,
 } from './i18n/translations';
 
 export type {
@@ -22,6 +24,7 @@ export type {
   PostBookingTranslations,
   CustomersTranslations,
   OrdersQueueTranslations,
+  KhataTranslations,
 };
 export const SILAYE_LANGUAGE_KEY = 'silaye_language';
 export const SILAYE_LANGUAGE_CHANGED_EVENT = 'silaye:language-changed';
@@ -37,6 +40,7 @@ interface LanguageContextType {
   postBookingT: PostBookingTranslations;
   customersT: CustomersTranslations;
   ordersQueueT: OrdersQueueTranslations;
+  khataT: KhataTranslations;
 }
 
 
@@ -79,8 +83,20 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    const handleCustomChange = (e: Event) => {
+      const customEvent = e as CustomEvent<Language>;
+      if (customEvent.detail === 'en' || customEvent.detail === 'ur') {
+        setLanguageState(customEvent.detail);
+        applyLanguageToDOM(customEvent.detail);
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener(SILAYE_LANGUAGE_CHANGED_EVENT, handleCustomChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener(SILAYE_LANGUAGE_CHANGED_EVENT, handleCustomChange);
+    };
   }, []);
 
   const setLanguage = React.useCallback((newLang: Language) => {
@@ -104,6 +120,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const postBookingT = POST_BOOKING_I18N[language] || POST_BOOKING_I18N.ur;
   const customersT = CUSTOMERS_I18N[language] || CUSTOMERS_I18N.ur;
   const ordersQueueT = ORDERS_QUEUE_I18N[language] || ORDERS_QUEUE_I18N.ur;
+  const khataT = KHATA_I18N[language] || KHATA_I18N.ur;
 
   return (
     <LanguageContext.Provider
@@ -118,6 +135,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         postBookingT,
         customersT,
         ordersQueueT,
+        khataT,
       }}
     >
       {children}

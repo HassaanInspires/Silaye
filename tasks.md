@@ -733,5 +733,39 @@
   * Update `tasks.md` and `progress.md`.
   * Prepare visual walkthrough artifact for user sign-off on Option A before proceeding to Option B (Khata).
 
+---
+
+## Phase 32: Option B: Khata Ledger (`/khata`) 10/10 Atelier Light Theme Overhaul (Completed)
+- [x] 32.1 Localization & Single-Language BiDi Architecture:
+  * Implement comprehensive `KHATA_I18N` translation dictionary in `lib/i18n/translations.ts` covering headers, KPI stats, filter tabs, sorting options, table columns, and customer card action triggers in both Urdu (`ur`) and English (`en`).
+  * Connect `khataT` to `LanguageProvider` in `lib/language-provider.tsx` and attach `silaye:language-changed` custom event listener for immediate cross-viewport sync.
+- [x] 32.2 Khata Ledger Page Atelier Light Theme Modernization (`app/khata/page.tsx`):
+  * Eliminate all hardcoded dark obsidian tokens (`#121418`, `#0B0C0E`, `bg-black/40`, `border-white/5`, `border-white/10`).
+  * Overhaul Mobile Financial Summary Card: Replace dark slate gradient with `bg-card border-border border-rose-500/30`, replace dark stat boxes with `bg-muted/40 border border-border`, and wrap all currency/debt values in `<bdi dir="ltr">`.
+  * Overhaul Mobile Sticky Search & Filter Pills: Replace dark background with `bg-background/95 backdrop-blur-md border-b border-border/50` and `bg-card border-input`.
+  * Overhaul Mobile Customer Feed: Replace `bg-[#121418]` cards with `bg-card border-border shadow-sm`, wrap phone numbers and currency in `<bdi dir="ltr">`, and eliminate dual-language text stacking.
+  * Fortify `loadKhataData()` with `Promise.allSettled` and expanded `shouldUseSeed` to seamlessly handle test/mock shop UUIDs with zero latency or network crash risk.
+- [x] 32.3 Master Ledger Component Overhaul (`components/tailor/khata-ledger-view.tsx`):
+  * Modernize 4 Desktop KPI Cards: Replace dark gradients with `bg-card shadow-sm border-border`, use high-contrast text (`text-rose-600 dark:text-rose-400`, `text-emerald-600 dark:text-emerald-400`, `text-foreground`).
+  * Modernize Toolbar & Filter Tabs: Single-language tokens for search placeholder, filter pills (تمام / ادھار / ایڈوانس / بے باق), sort dropdown, and `+ نیا اندراج` CTA.
+  * Modernize Customer Cards Grid: Clean cards with `bg-card border-border shadow-sm hover:border-primary/40`, clear balance badges, and `<bdi dir="ltr">` phone/balance wrappers.
+  * Modernize Table View: Clean header styling with `bg-muted/40 border-b border-border` and smooth row hovers (`hover:bg-muted/30`).
+- [x] 32.4 Automated Verification Suite & Playwright Light Mode Visual Audit:
+  * `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  * `npm run build`: 29/29 Next.js static pages exported cleanly into `out/`.
+  * `npx tsx scripts/verify_db.ts`: 159/159 database assertions passed.
+  * Playwright Visual Audit (`scripts/audit_phase32_khata.mjs`): 7/7 screenshots captured with 0 uncaught errors:
+    - `01_khata_desktop_light_ur.png`: Desktop Urdu light theme with RTL alignment and Nastaliq typography.
+    - `02_khata_desktop_light_en.png`: Desktop English light theme with LTR alignment and single-language labels.
+    - `03_khata_desktop_statement_modal.png`: Customer statement & transaction detail modal in light theme.
+    - `04_khata_desktop_entry_modal.png`: New Khata entry modal in light theme.
+    - `05_khata_mobile_light_ur.png`: Mobile 360x740 Urdu light theme with high-contrast KPI card.
+    - `06_khata_mobile_filter_udhaar.png`: Mobile Udhaar filter pill interaction.
+    - `07_khata_mobile_whatsapp_modal.png`: Mobile 1-click WhatsApp balance reminder modal in light theme.
+- [x] 32.5 Git Commit & Branch Synchronization:
+  * Staged and committed Option B changes exclusively to `feat/home-light-theme-bidi`.
+  * Pushed to `origin/feat/home-light-theme-bidi`.
+
+
 
 
