@@ -33,52 +33,54 @@ function ParadigmShiftSection() {
   ];
 
   return (
-    <section className="bg-obsidian-bg py-24">
+    <section className="bg-background py-24">
       <div className="mx-auto max-w-6xl px-6">
         {/* Header */}
         <div className="mb-12 text-center">
-          <h2 className="font-editorial text-3xl font-normal leading-[1.15] tracking-[-0.01em] text-obsidian-text md:text-5xl">
-            The same craft.{' '}
-            <em className="italic text-primary">A different</em> system.
+          <h2 className="font-editorial text-3xl font-normal leading-[1.15] tracking-[-0.01em] text-foreground md:text-5xl">
+            <bdi dir="ltr">
+              The same craft.{' '}
+              <em className="italic text-primary">A different</em> system.
+            </bdi>
           </h2>
-          <p className="mt-4 text-base text-obsidian-text-muted">
-            What the old way costs you — and what Silaye gives you back.
+          <p className="mt-4 text-base text-muted-foreground">
+            <bdi dir="ltr">What the old way costs you — and what Silaye gives you back.</bdi>
           </p>
         </div>
 
         {/* Comparison grid */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Old way */}
-          <div className="rounded-2xl border border-obsidian-border bg-obsidian-card p-6">
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-muted-foreground" />
               <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                The Notebook Day
+                <bdi dir="ltr">The Notebook Day</bdi>
               </h3>
             </div>
             <ul className="space-y-3">
               {OLD_WAYS.map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-muted-foreground opacity-50" />
-                  <span className="text-sm text-muted-foreground">{item}</span>
+                  <span className="text-sm text-muted-foreground"><bdi dir="ltr">{item}</bdi></span>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Silaye way */}
-          <div className="rounded-2xl border border-primary/30 bg-obsidian-card-elevated p-6 shadow-[0_0_40px_rgba(200,169,126,0.07)]">
+          <div className="rounded-2xl border border-primary/30 bg-card p-6 shadow-sm hover:border-primary/50 transition-colors">
             <div className="mb-5 flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-primary" />
               <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-                The Silaye Way
+                <bdi dir="ltr">The Silaye Way</bdi>
               </h3>
             </div>
             <ul className="space-y-3">
               {NEW_WAYS.map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
-                  <span className="text-sm text-obsidian-text">{item}</span>
+                  <span className="text-sm text-foreground"><bdi dir="ltr">{item}</bdi></span>
                 </li>
               ))}
             </ul>
@@ -100,20 +102,20 @@ function MobileShowcaseSection() {
   ];
 
   return (
-    <section className="bg-obsidian-card py-24">
+    <section className="bg-card border-y border-border py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
           {/* Phone mock (pure CSS) */}
           <div className="flex justify-center order-2 md:order-1">
             <div className="relative w-48">
               {/* Phone frame */}
-              <div className="rounded-[2rem] border-2 border-obsidian-border bg-obsidian-bg p-3 shadow-2xl">
+              <div className="rounded-[2rem] border-2 border-border bg-background p-3 shadow-2xl">
                 <div className="mb-2 flex items-center justify-between px-1">
-                  <span className="h-1.5 w-8 rounded-full bg-obsidian-border" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-obsidian-border" />
+                  <span className="h-1.5 w-8 rounded-full bg-border" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-border" />
                 </div>
                 {/* Mini measurement form mock */}
-                <div className="space-y-1.5 rounded-xl bg-obsidian-card-elevated p-3">
+                <div className="space-y-1.5 rounded-xl bg-card border border-border/60 p-3 shadow-sm">
                   <p className="text-[9px] font-semibold text-primary uppercase tracking-wider">
                     New Measurement
                   </p>
@@ -124,9 +126,9 @@ function MobileShowcaseSection() {
                   ].map(([label, val]) => (
                     <div
                       key={label}
-                      className="flex items-center justify-between rounded-lg border border-obsidian-border bg-obsidian-bg px-2 py-1.5"
+                      className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-2 py-1.5"
                     >
-                      <span className="font-urdu-serif text-[11px] text-gray-300 font-medium" dir="rtl">
+                      <span className="font-urdu-serif text-[11px] text-foreground font-medium" dir="rtl">
                         {label}
                       </span>
                       <span className="font-mono text-[10px] font-bold text-primary">
@@ -136,7 +138,7 @@ function MobileShowcaseSection() {
                   ))}
                   <button
                     type="button"
-                    className="w-full rounded-lg bg-primary py-1.5 text-[10px] font-bold text-primary-foreground"
+                    className="w-full rounded-lg bg-primary py-1.5 text-[10px] font-bold text-primary-foreground shadow-sm"
                   >
                     Save Measurements
                   </button>
@@ -149,7 +151,7 @@ function MobileShowcaseSection() {
                       className={`rounded-md p-1 text-center text-[8px] font-semibold ${
                         i === 2
                           ? 'bg-status-stitching/20 text-status-stitching border border-status-stitching/30'
-                          : 'border border-obsidian-border text-muted-foreground'
+                          : 'border border-border text-muted-foreground'
                       }`}
                     >
                       {s}
@@ -173,19 +175,23 @@ function MobileShowcaseSection() {
                 Mobile-First
               </span>
             </div>
-            <h2 className="font-editorial text-3xl font-normal leading-[1.15] tracking-tight text-obsidian-text md:text-4xl">
-              The workshop,{' '}
-              <em className="italic text-primary">on the move.</em>
+            <h2 className="font-editorial text-3xl font-normal leading-[1.15] tracking-tight text-foreground md:text-4xl">
+              <bdi dir="ltr">
+                The workshop,{' '}
+                <em className="italic text-primary">on the move.</em>
+              </bdi>
             </h2>
-            <p className="mt-4 text-base text-obsidian-text-muted">
-              Install as a mobile app on Android. Take measurements, advance payments, and
-              WhatsApp confirmations — all without sitting behind a counter.
+            <p className="mt-4 text-base text-muted-foreground">
+              <bdi dir="ltr">
+                Install as a mobile app on Android. Take measurements, advance payments, and
+                WhatsApp confirmations — all without sitting behind a counter.
+              </bdi>
             </p>
             <ul className="mt-6 space-y-3">
               {mobileFeatures.map((feat) => (
                 <li key={feat} className="flex items-start gap-2.5">
                   <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
-                  <span className="text-sm text-obsidian-text-muted">{feat}</span>
+                  <span className="text-sm text-muted-foreground"><bdi dir="ltr">{feat}</bdi></span>
                 </li>
               ))}
             </ul>
@@ -248,11 +254,11 @@ function TestimonialsSection() {
           {TESTIMONIALS.map((t) => (
             <div
               key={t.name}
-              className="premium-glass-card flex flex-col rounded-2xl border border-white/10 bg-[#121418]/90 p-6 shadow-xl hover:border-gold/30 hover:-translate-y-1 transition-all duration-300"
+              className="premium-glass-card flex flex-col rounded-2xl border border-border bg-card p-6 shadow-md hover:border-primary/40 hover:-translate-y-1 transition-all duration-300"
             >
               {/* Authentic Nastaliq Urdu quote */}
               <blockquote
-                className="font-urdu-serif text-base leading-urdu-display text-gold/90 font-medium py-1"
+                className="font-urdu-serif text-base leading-urdu-display text-primary font-medium py-1"
                 dir="rtl"
                 lang="ur"
               >
@@ -260,10 +266,10 @@ function TestimonialsSection() {
               </blockquote>
 
               {/* English quote */}
-              <p className="mt-3 text-sm italic text-muted-foreground">&ldquo;{t.quote}&rdquo;</p>
+              <p className="mt-3 text-sm italic text-muted-foreground"><bdi dir="ltr">&ldquo;{t.quote}&rdquo;</bdi></p>
 
               {/* Author */}
-              <div className="mt-5 border-t border-white/5 pt-4">
+              <div className="mt-5 border-t border-border pt-4">
                 <p className="text-sm font-semibold text-foreground">{t.name}</p>
                 <p className="text-xs text-muted-foreground">{t.shop}</p>
                 <p className="text-xs text-muted-foreground">{t.city}</p>
@@ -280,7 +286,7 @@ function TestimonialsSection() {
 
 function FooterCTA() {
   return (
-    <section className="bg-obsidian-bg py-24">
+    <section className="bg-background py-24">
       <div className="mx-auto max-w-3xl px-6 text-center">
         {/* Nastaliq display headline */}
         <p
@@ -290,14 +296,18 @@ function FooterCTA() {
         >
           آپ کا فن لازوال ہے۔ آپ کا نظام بھی ہونا چاہیے۔
         </p>
-        <h2 className="font-editorial text-3xl font-normal leading-[1.15] tracking-[-0.01em] text-obsidian-text md:text-5xl">
-          Your craft is <em className="italic text-primary">timeless.</em>
-          <br className="hidden md:block" />
-          Your system should be too.
+        <h2 className="font-editorial text-3xl font-normal leading-[1.15] tracking-[-0.01em] text-foreground md:text-5xl">
+          <bdi dir="ltr">
+            Your craft is <em className="italic text-primary">timeless.</em>
+            <br className="hidden md:block" />
+            Your system should be too.
+          </bdi>
         </h2>
-        <p className="mt-4 text-base text-obsidian-text-muted">
-          Join master craftsmen across Pakistan who manage their workshop with Silaye.
-          Start your 14-day free trial today.
+        <p className="mt-4 text-base text-muted-foreground">
+          <bdi dir="ltr">
+            Join master craftsmen across Pakistan who manage their workshop with Silaye.
+            Start your 14-day free trial today.
+          </bdi>
         </p>
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
@@ -309,7 +319,7 @@ function FooterCTA() {
           </Link>
           <Link
             href="/track/DP-2026-0801"
-            className="text-sm text-obsidian-text-muted underline-offset-2 hover:text-obsidian-text hover:underline"
+            className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
           >
             See Live Order Tracker →
           </Link>
@@ -323,7 +333,7 @@ function FooterCTA() {
 
 function SiteFooter() {
   return (
-    <footer className="border-t border-obsidian-border bg-obsidian-bg px-6 py-10">
+    <footer className="border-t border-border bg-card px-6 py-10">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           {/* Brand */}
@@ -332,13 +342,13 @@ function SiteFooter() {
               <Scissors className="h-full w-full p-2 object-contain aspect-square text-primary" />
             </div>
             <div>
-              <span className="font-editorial text-base italic text-obsidian-text">Silaye</span>
+              <span className="font-editorial text-base italic text-foreground">Silaye</span>
               <span className="urdu-display-text ml-2 text-sm text-primary">سِلائی</span>
             </div>
           </div>
 
           {/* Nav links */}
-          <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-obsidian-text-muted">
+          <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
             {[
               ['Features', '#features'],
               ['Pricing', '#pricing'],
@@ -348,7 +358,7 @@ function SiteFooter() {
               <Link
                 key={label}
                 href={href}
-                className="transition-colors hover:text-obsidian-text"
+                className="transition-colors hover:text-foreground"
               >
                 {label}
               </Link>
@@ -356,14 +366,14 @@ function SiteFooter() {
           </nav>
 
           {/* Locale note */}
-          <div className="flex items-center gap-3 text-xs text-obsidian-text-muted">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span>English</span>
             <span>/</span>
             <span className="urdu-data-text" dir="rtl">اردو</span>
           </div>
         </div>
 
-        <div className="mt-8 border-t border-obsidian-border pt-6 text-xs text-obsidian-text-muted">
+        <div className="mt-8 border-t border-border pt-6 text-xs text-muted-foreground">
           <p>© 2026 Silaye Workshop OS · Built for Pakistani Bespoke Tailors</p>
         </div>
       </div>
@@ -427,8 +437,8 @@ export default function HomePage() {
 
   // 3. Desktop Browser or Electron (Mounted): Full Luxury Editorial Landing Page
   return (
-    <main className="min-h-screen bg-obsidian-bg">
-      {/* Section 1: Obsidian Dark Hero */}
+    <main className="min-h-screen bg-background">
+      {/* Section 1: Hero Section */}
       <HeroSection />
 
       {/* Section 2: Raw Linen Bento Grid */}

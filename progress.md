@@ -3737,6 +3737,53 @@
     * `09_customer_order_tracking_portal.png`: PASS
 
 * **Next Immediate Task:**
-  - Review Phase 30 walkthrough with user and await subsequent instructions.
+  - Phase 31: Crash Protection & Option A: Home Landing Page (`/`) Atelier Light Theme Overhaul (Completed).
+
+---
+
+## Phase 31: Crash Protection & Option A: Home Landing Page (`/`) Atelier Light Theme Overhaul (Completed)
+* **Date:** 2026-09-20
+* **Git Branch:** `feat/home-light-theme-bidi`
+* **Tasks Completed:**
+  - `31.1` Dashboard Client-Side Crash Protection & Null-Guards (`app/dashboard/page.tsx`):
+    * Guarded all `.toLocaleString()` calls on `balance_due`, `total_amount`, `unsettledKhataTotal`, `activeOrdersValue`, `dueTodayValue`, `overdueValue` with `?? 0`.
+    * Fortified `loadDashboardData()` with nested `try...catch` and `Promise.allSettled` to prevent unhandled promise rejection crashes when users are unlinked or unauthenticated.
+  - `31.2` Delivery Date Urgency Guard (`components/tailor/order-card.tsx`):
+    * Added pre-flight date validity check in `getDeliveryUrgency()` to prevent `NaN` or `Invalid Date` crashes on missing or malformed delivery dates.
+  - `31.3` Option A: Hero Section Atelier Light Theme Overhaul (`components/landing/hero-section.tsx`):
+    * Fixed invisible hero headline in Light Mode by replacing `text-obsidian-text` with `text-foreground` and `text-obsidian-text-muted` with `text-muted-foreground`.
+    * Wrapped English headlines, overlines, and sub-copies in `<bdi dir="ltr">` to eliminate BiDi punctuation inversion (`.than a notebook` -> `than a notebook.`).
+    * Modernized `WorkshopPreviewCard` with semantic borders, muted background, and high-contrast typography.
+    * Updated bottom scroll gradient fade to use semantic `from-transparent to-background`.
+  - `31.4` Option A: Landing Page Sections Modernization (`app/page.tsx`, `components/landing/pricing-section.tsx`):
+    * Refactored `ParadigmShiftSection`, `MobileShowcaseSection`, `TestimonialsSection`, `FooterCTA`, and `SiteFooter` using semantic tokens (`bg-card`, `border-border`, `text-foreground`, `text-muted-foreground`, `bg-background`).
+    * Replaced remaining hardcoded obsidian tokens in `components/landing/pricing-section.tsx` with semantic classes and clean borders.
+  - `31.5` Automated Verification Suite & Playwright Light Theme Visual Proofs:
+    * `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    * `npm run build`: 29/29 Next.js static pages exported cleanly into `out/`.
+    * `npx tsx scripts/verify_db.ts`: 159/159 database assertions passed across all 17 test suites in 570.10s.
+    * Playwright Light Mode Visual Audit: Verified desktop (`1280x850`) and mobile (`360x740`) screenshots for `/` and `/dashboard/`. Zero crashes, crisp typography.
+  - `31.6` Documentation, Walkthrough & User Sign-Off:
+    * Updated `tasks.md` and `progress.md`.
+    * Generated walkthrough artifact for user sign-off on Option A before proceeding to Option B (Khata).
+
+* **Active File Changes:**
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `components/tailor/order-card.tsx` [MODIFIED]
+  - `components/landing/hero-section.tsx` [MODIFIED]
+  - `components/landing/pricing-section.tsx` [MODIFIED]
+  - `app/page.tsx` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  - `npm run build`: 29/29 static routes compiled into `out/`.
+  - `npx tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `node scripts/audit_light_theme_pages.mjs`: Visual audit completed with 0 uncaught client exceptions.
+
+* **Next Immediate Task:**
+  - Present Option A results to the user and await approval to proceed to Option B (Khata Ledger `/khata` 10/10 Atelier Light Theme Polish).
+
 
 

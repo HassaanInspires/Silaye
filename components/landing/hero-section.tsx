@@ -75,11 +75,11 @@ function WorkshopPreviewCard() {
       aria-hidden="true"
     >
       {/* Mac-style desktop window header */}
-      <div className="mac-window-header">
+      <div className="mac-window-header border-b border-border/40">
         <span className="mac-dot close" />
         <span className="mac-dot minimize" />
         <span className="mac-dot expand" />
-        <span className="ml-3 flex-1 text-center text-[11px] text-white/30">
+        <span className="ml-3 flex-1 text-center text-[11px] text-muted-foreground font-mono">
           silaye — live workshop queue
         </span>
       </div>
@@ -105,7 +105,7 @@ function WorkshopPreviewCard() {
           {PREVIEW_ORDERS.map((order) => (
             <div
               key={order.id}
-              className="flex items-center justify-between rounded-lg border border-white/[0.05] bg-white/[0.03] px-3 py-2 backdrop-blur-sm"
+              className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
@@ -228,19 +228,21 @@ export function HeroSection() {
           {/* Left column: copy */}
           <div className="flex flex-col items-start">
             {/* All-caps overline — muted gold, ultra-wide tracking */}
-            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gold-muted">
-              EST. FOR THE SOUTH ASIAN MASTER
+            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-primary">
+              <bdi dir="ltr">EST. FOR THE SOUTH ASIAN MASTER</bdi>
             </p>
 
             {/* H1 — massive editorial serif, tightly tracked */}
-            <h1 className="font-editorial text-6xl font-normal leading-[1.02] tracking-tighter text-obsidian-text md:text-8xl">
-              Your workshop deserves more than a{' '}
-              <em className="italic text-primary">notebook.</em>
+            <h1 className="font-editorial text-6xl font-normal leading-[1.02] tracking-tighter text-foreground md:text-8xl">
+              <bdi dir="ltr">
+                Your workshop deserves more than a{' '}
+                <em className="italic text-primary">notebook.</em>
+              </bdi>
             </h1>
 
             {/* Urdu subtitle */}
             <p
-              className="urdu-data-text mt-5 text-base leading-urdu-data text-obsidian-text-muted md:text-lg"
+              className="urdu-data-text mt-5 text-base leading-urdu-data text-muted-foreground md:text-lg"
               dir="rtl"
             >
               ماسٹر درزی اور کٹنگ ورکشاپس کے لیے جدید ترین ڈیجیٹل کسٹمر، ناپ اور کھاتہ مینجمنٹ
@@ -249,8 +251,10 @@ export function HeroSection() {
 
             {/* English sub-copy */}
             <p className="mt-3 max-w-lg text-base text-muted-foreground">
-              Intuitive measurement vault, production queue pipeline, 1-click WhatsApp receipts,
-              and offline-first sync — built for the Pakistani tailor.
+              <bdi dir="ltr">
+                Intuitive measurement vault, production queue pipeline, 1-click WhatsApp receipts,
+                and offline-first sync — built for the Pakistani tailor.
+              </bdi>
             </p>
 
             {/* CTA buttons */}
@@ -272,7 +276,7 @@ export function HeroSection() {
             </div>
 
             {/* Proof metrics row */}
-            <div className="mt-12 flex flex-wrap divide-x divide-border rounded-xl border border-border bg-card/60 backdrop-blur-sm">
+            <div className="mt-12 flex flex-wrap divide-x divide-border rounded-xl border border-border bg-card/80 backdrop-blur-sm shadow-sm">
               <ProofMetric prefix="Rs. " value={2800000} suffix="+" label="Revenue Tracked" />
               <ProofMetric value={98000} suffix="+" label="Suits Delivered" />
               <ProofMetric value={0} suffix="" label="Lost Orders" prefix="" />
@@ -288,8 +292,7 @@ export function HeroSection() {
 
       {/* Scroll fade gradient */}
       <div
-        className="pointer-events-none absolute bottom-0 left-0 right-0 h-24"
-        style={{ background: 'linear-gradient(to bottom, transparent, var(--surface-obsidian-bg))' }}
+        className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-background"
         aria-hidden="true"
       />
     </section>

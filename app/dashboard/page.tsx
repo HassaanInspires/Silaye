@@ -83,22 +83,47 @@ export default function DashboardPage() {
     async function loadDashboardData() {
       setIsLoading(true);
       try {
-        const currentShop = await shopsDb.getCurrentShop();
+        let currentShop: Shop | null = null;
+        try {
+          currentShop = await shopsDb.getCurrentShop();
+        } catch (shopErr) {
+          console.warn('Dashboard shop resolution notice:', shopErr);
+        }
+
         if (!isMounted) return;
         setShop(currentShop || defaultMockShop);
 
         const targetShopId = currentShop?.id || defaultMockShop.id;
-        const [loadedOrders, loadedCustomers] = await Promise.all([
-          ordersDb.getByShopId(targetShopId),
-          customersDb.getByShopId(targetShopId),
-        ]);
+        let loadedOrders: GarmentOrder[] = [];
+        let loadedCustomers: Customer[] = [];
+
+        try {
+          const results = await Promise.allSettled([
+            ordersDb.getByShopId(targetShopId),
+            customersDb.getByShopId(targetShopId),
+          ]);
+
+          if (results[0].status === 'fulfilled' && Array.isArray(results[0].value)) {
+            loadedOrders = results[0].value;
+          } else if (results[0].status === 'rejected') {
+            console.warn('Orders query handled fallback:', results[0].reason);
+          }
+
+          if (results[1].status === 'fulfilled' && Array.isArray(results[1].value)) {
+            loadedCustomers = results[1].value;
+          } else if (results[1].status === 'rejected') {
+            console.warn('Customers query handled fallback:', results[1].reason);
+          }
+        } catch (dataErr) {
+          console.warn('Dashboard repository settled notice:', dataErr);
+        }
 
         if (isMounted) {
           setOrders(loadedOrders);
           setCustomers(loadedCustomers);
         }
       } catch (err) {
-        console.warn('Dashboard data fetch error:', err);
+        console.warn('Dashboard top-level data fetch error:', err);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -298,7 +323,7 @@ export default function DashboardPage() {
                   {t.unsettledKhata}
                 </span>
                 <span className="font-mono text-sm sm:text-base font-bold text-rose-600 dark:text-rose-400 truncate max-w-[90px] leading-none mt-0.5">
-                  Rs.{unsettledKhataTotal >= 10000 ? `${(unsettledKhataTotal / 1000).toFixed(1)}k` : unsettledKhataTotal.toLocaleString()}
+                  Rs.{(unsettledKhataTotal ?? 0) >= 10000 ? `${((unsettledKhataTotal ?? 0) / 1000).toFixed(1)}k` : (unsettledKhataTotal ?? 0).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -468,7 +493,7 @@ export default function DashboardPage() {
                               order.balance_due === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                             )}
                           >
-                            {order.balance_due === 0 ? t.paidBadge : `Rs. ${order.balance_due.toLocaleString()}`}
+                            {order.balance_due === 0 ? t.paidBadge : `Rs. ${(order.balance_due ?? 0).toLocaleString()}`}
                           </span>
                         </div>
                       </div>
@@ -637,7 +662,7 @@ export default function DashboardPage() {
                   {t.totalValue}
                 </span>
                 <span className="font-semibold text-gold shrink-0">
-                  <bdi dir="ltr">Rs. {activeOrdersValue.toLocaleString()}</bdi>
+                  <bdi dir="ltr">Rs. {(activeOrdersValue ?? 0).toLocaleString()}</bdi>
                 </span>
               </div>
             </div>
@@ -674,7 +699,7 @@ export default function DashboardPage() {
                   {t.dueValue}
                 </span>
                 <span className="font-semibold text-amber-600 dark:text-amber-300 shrink-0">
-                  <bdi dir="ltr">Rs. {dueTodayValue.toLocaleString()}</bdi>
+                  <bdi dir="ltr">Rs. {(dueTodayValue ?? 0).toLocaleString()}</bdi>
                 </span>
               </div>
             </div>
@@ -711,7 +736,7 @@ export default function DashboardPage() {
                   {t.delayed}
                 </span>
                 <span className="font-semibold text-rose-600 dark:text-rose-300 shrink-0">
-                  <bdi dir="ltr">Rs. {overdueValue.toLocaleString()}</bdi>
+                  <bdi dir="ltr">Rs. {(overdueValue ?? 0).toLocaleString()}</bdi>
                 </span>
               </div>
             </div>
@@ -743,7 +768,7 @@ export default function DashboardPage() {
             <div className="space-y-1 sm:space-y-1.5">
               <div className="flex items-baseline gap-1.5 sm:gap-2">
                 <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-rose-600 dark:text-rose-300">
-                  <bdi dir="ltr">Rs. {unsettledKhataTotal.toLocaleString()}</bdi>
+                  <bdi dir="ltr">Rs. {(unsettledKhataTotal ?? 0).toLocaleString()}</bdi>
                 </span>
               </div>
               <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-border/50">
@@ -1000,10 +1025,10 @@ export default function DashboardPage() {
                             ) : (
                               <div className="space-y-0.5">
                                 <span className="font-mono text-xs font-semibold text-rose-400">
-                                  <bdi dir="ltr">Rs. {order.balance_due.toLocaleString()}</bdi>
+                                  <bdi dir="ltr">Rs. {(order.balance_due ?? 0).toLocaleString()}</bdi>
                                 </span>
                                 <span className="block text-[10px] text-gray-500">
-                                  Total: <bdi dir="ltr">Rs. {order.total_amount.toLocaleString()}</bdi>
+                                  Total: <bdi dir="ltr">Rs. {(order.total_amount ?? 0).toLocaleString()}</bdi>
                                 </span>
                               </div>
                             )}

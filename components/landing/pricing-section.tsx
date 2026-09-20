@@ -131,7 +131,7 @@ function PricingCard({ tier, isAnnual }: PricingCardProps) {
       </div>
 
       {/* Price block */}
-      <div className="mb-6 border-t border-white/10 pt-5">
+      <div className="mb-6 border-t border-border pt-5">
         <div className="flex items-baseline gap-1">
           <span className="font-editorial text-4xl font-normal text-foreground md:text-5xl">
             <bdi dir="ltr">{formatPKR(displayMonthly)}</bdi>
@@ -238,11 +238,11 @@ export function PricingSection() {
               Transparent Pricing
             </span>
           </div>
-          <h2 className="font-editorial text-4xl tracking-tight text-obsidian-text md:text-5xl">
+          <h2 className="font-editorial text-4xl tracking-tight text-foreground md:text-5xl">
             Pricing without{' '}
             <em className="italic text-primary">complications.</em>
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base text-obsidian-text-muted">
+          <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
             PKR billing. No hidden fees. No foreign exchange surprises.
             Start free for 14 days — no credit card required.
           </p>
@@ -261,7 +261,7 @@ export function PricingSection() {
         </div>
 
         {/* Footer note */}
-        <p className="mt-12 text-center text-xs text-obsidian-text-muted">
+        <p className="mt-12 text-center text-xs text-muted-foreground">
           All plans include 14-day free trial. Pricing in Pakistani Rupees (PKR).
           Annual plans billed as a single payment.
         </p>

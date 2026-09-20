@@ -63,6 +63,14 @@ export function getDeliveryUrgency(deliveryDateStr: string): {
   label: string;
   daysDiff: number;
 } {
+  if (!deliveryDateStr || isNaN(new Date(deliveryDateStr).getTime())) {
+    return {
+      urgency: 'safe',
+      label: 'Date unassigned',
+      daysDiff: 999,
+    };
+  }
+
   const now = new Date();
   const delivery = new Date(deliveryDateStr);
   // Reset time portions for pure day comparisons
