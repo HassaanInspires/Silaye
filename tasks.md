@@ -839,6 +839,31 @@
 - [x] 35.5 Official GitHub Release Publication:
   * Published official GitHub Release `v1.1.5` with attached production assets and release notes at `https://github.com/HassaanInspires/Silaye/releases/tag/v1.1.5`.
 
+---
+
+## Phase 36: Capacitor Native Navigation Fix & Official Release v1.1.6
+- [x] 36.1 Client-Side SPA Navigation Hardening:
+  * Replaced all raw HTML `<a href="...">` anchors with Next.js `<Link href="...">` across `components/layout/app-shell.tsx`, `app/dashboard/page.tsx`, `app/print/page.tsx`, and `app/admin/page.tsx`.
+  * Preserved full in-memory React SPA routing, preventing Capacitor Android WebView HTTP fallback page reloads and redirect loops.
+- [x] 36.2 Mobile Touch Optimization:
+  * Eliminated nested `<button>` inside anchor tags in `app/dashboard/page.tsx` (`Book New Suit`, `Search Parchi`), styling directly on `<Link className="...">` for smooth touch response.
+  * Wrapped center FAB icon and text label in `components/layout/mobile-bottom-nav.tsx` inside `<Link href="/orders/new">` for reliable thumb tap targets.
+- [x] 36.3 Mobile Header Notification Center:
+  * Added direct Notification & Alerts `<Link href="/settings#alerts">` Bell icon button in mobile header next to Search and Settings.
+- [x] 36.4 Settings Back Stack Normalization:
+  * Replaced URL space injection (`' '`) in `app/settings/page.tsx` back button with `window.location.pathname`, eliminating router corruption.
+- [x] 36.5 Production Verification & Quality Assurance:
+  * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
+  * Verified 29/29 static routes compiled and exported into `out/` (`npm run build`).
+  * Verified 159/159 database and repository test assertions pass (`npx tsx scripts/verify_db.ts`).
+- [ ] 36.6 Cross-Platform Cloud Compilation via GitHub Actions:
+  * Windows NSIS Installer (`.exe`) compiled on `windows-latest`.
+  * Android Native Package (`.apk`) compiled on `ubuntu-latest`.
+- [ ] 36.7 Ingestion to Dedicated Laptop Directory:
+  * Download compiled binaries into new separate folder `/home/hassaan/Silaye/release-binaries-v116/` without overwriting prior release directories.
+- [ ] 36.8 Official GitHub Release Publication:
+  * Publish official GitHub Release `v1.1.6` with attached production assets.
+
 
 
 

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   Printer,
   Search,
@@ -238,7 +239,7 @@ export default function PrintStationPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <a href="/orders/new">
+            <Link href="/orders/new">
               <Button
                 variant="default"
                 size="sm"
@@ -247,7 +248,7 @@ export default function PrintStationPage() {
                 <PlusCircle className="h-4 w-4" />
                 <span>New Booking</span>
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -268,7 +269,7 @@ export default function PrintStationPage() {
                 Once you book suits in the production queue, you can generate 58mm fabric staple tags and 80mm customer booking receipts here with 1-click thermal triggers.
               </p>
             </div>
-            <a href="/orders/new" className="pt-2">
+            <Link href="/orders/new" className="pt-2">
               <Button
                 variant="default"
                 size="md"
@@ -280,7 +281,7 @@ export default function PrintStationPage() {
                   پہلا سوٹ بک کریں
                 </span>
               </Button>
-            </a>
+            </Link>
           </div>
         )}
 

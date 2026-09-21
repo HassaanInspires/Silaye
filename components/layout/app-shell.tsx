@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Home,
@@ -232,7 +233,7 @@ function SidebarItem({ item, isActive, onNavigate }: SidebarItemProps) {
   const isUrdu = language === 'ur';
 
   return (
-    <a
+    <Link
       href={item.route}
       onClick={onNavigate}
       aria-current={isActive ? 'page' : undefined}
@@ -252,7 +253,7 @@ function SidebarItem({ item, isActive, onNavigate }: SidebarItemProps) {
       <span className={cn('truncate', isUrdu ? 'font-urdu-sans text-sm font-medium' : 'font-sans')}>
         {isUrdu ? item.labelUrdu : item.label}
       </span>
-    </a>
+    </Link>
   );
 }
 
@@ -742,7 +743,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         <div className="flex flex-col gap-6">
           {/* Brand Logo & Header */}
           <div className="flex items-center justify-between px-1">
-            <a href="/dashboard" className="flex items-center gap-2.5 group">
+            <Link href="/dashboard" className="flex items-center gap-2.5 group">
               <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-transform group-hover:scale-105">
                 <Scissors className="h-full w-full p-2 object-contain aspect-square" />
               </div>
@@ -759,7 +760,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   سلائے ماسٹر
                 </span>
               </div>
-            </a>
+            </Link>
             {shopPlanTier === 'PRO' ? (
               <span className="rounded-full border border-gold/50 bg-gold/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-gold uppercase shadow-[0_0_10px_rgba(212,175,55,0.2)] flex items-center gap-1">
                 <Crown className="h-3 w-3" />
@@ -866,7 +867,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
             <div className="flex flex-col gap-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <a href="/dashboard" className="flex items-center gap-2.5">
+                  <Link href="/dashboard" className="flex items-center gap-2.5">
                     <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold">
                       <Scissors className="h-full w-full p-2 object-contain aspect-square" />
                     </div>
@@ -876,7 +877,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                         BETA
                       </span>
                     </div>
-                  </a>
+                  </Link>
                   {shopPlanTier === 'PRO' ? (
                     <span className="rounded-full border border-gold/50 bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-gold uppercase shadow-[0_0_10px_rgba(212,175,55,0.2)] flex items-center gap-1">
                       <Crown className="h-2.5 w-2.5" />
@@ -918,7 +919,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                     <span className="px-3 text-[10px] font-semibold uppercase tracking-wider text-cyan-400">
                       {language === 'ur' ? 'ایڈمن کنٹرول' : 'Platform Admin'}
                     </span>
-                    <a
+                    <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
                       aria-current={activeRoute === '/admin' ? 'page' : undefined}
@@ -938,7 +939,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                       <span className={cn('truncate', language === 'ur' ? 'font-urdu-sans text-sm' : 'font-sans text-sm')}>
                         {t.superAdmin}
                       </span>
-                    </a>
+                    </Link>
                   </div>
                 )}
               </nav>
@@ -1066,14 +1067,14 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   </button>
                 )}
 
-                <a href="/dashboard" className="flex items-center gap-1.5" aria-label="Silaye Dashboard">
+                <Link href="/dashboard" className="flex items-center gap-1.5" aria-label="Silaye Dashboard">
                   <div className="relative h-7 w-7 shrink-0 flex items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary shadow-xs">
                     <Scissors className="h-3.5 w-3.5 object-contain aspect-square" />
                   </div>
                   <span className="font-bold text-base tracking-tight text-foreground font-sans">
                     Silaye
                   </span>
-                </a>
+                </Link>
               </div>
 
               {/* Mobile Center: Ambient Sync Status Pill */}
@@ -1081,7 +1082,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 <ConnectionPill />
               </div>
 
-              {/* Mobile End: Search + Settings Gear Icon */}
+              {/* Mobile End: Search + Notification Bell + Settings Gear Icon */}
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
@@ -1094,7 +1095,17 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   <Search className="h-4 w-4" />
                 </button>
 
-                <a
+                <Link
+                  href="/settings#alerts"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-primary hover:bg-accent transition-colors cursor-pointer shadow-xs"
+                  aria-label="Notifications & Alerts"
+                  title={language === 'ur' ? 'نوٹیفیکیشنز اور الرٹس' : 'Notifications & Alerts'}
+                  data-testid="mobile-header-notifications-btn"
+                >
+                  <Bell className="h-4 w-4" />
+                </Link>
+
+                <Link
                   href="/settings"
                   className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-primary hover:bg-accent transition-colors cursor-pointer shadow-xs"
                   aria-label="Settings"
@@ -1102,7 +1113,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   data-testid="mobile-header-settings-btn"
                 >
                   <Settings className="h-4 w-4" />
-                </a>
+                </Link>
               </div>
             </div>
           )}
@@ -1159,7 +1170,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                 )}
               </button>
 
-              <a href="/orders/new">
+              <Link href="/orders/new">
                 <Button
                   variant="default"
                   size="sm"
@@ -1170,7 +1181,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                     {language === 'ur' ? 'نیا سوٹ' : 'New Booking'}
                   </span>
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -1207,7 +1218,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   </span>
                 </div>
               </div>
-              <a href="/settings" className="shrink-0">
+              <Link href="/settings" className="shrink-0">
                 <Button
                   variant="outline"
                   size="sm"
@@ -1216,7 +1227,7 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   <span>Manage Subscription</span>
                   <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
                 </Button>
-              </a>
+              </Link>
             </div>
           )}
 

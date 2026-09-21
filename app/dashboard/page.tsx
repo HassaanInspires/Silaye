@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   Scissors,
   Clock,
@@ -332,44 +333,40 @@ export default function DashboardPage() {
           {/* Block 2: Two 56px Thumb Buttons */}
           <div className="grid grid-cols-2 gap-2.5 mt-3">
             {/* Primary Gold: Book New Suit */}
-            <a href="/orders/new" className="block">
-              <button
-                type="button"
-                className="w-full h-14 rounded-2xl bg-gold hover:bg-gold-hover text-[#18181B] font-bold shadow-[0_4px_16px_rgba(197,154,63,0.3)] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 cursor-pointer border border-gold/40"
-              >
-                <div className="flex items-center gap-1.5">
-                  <PlusCircle className="h-4 w-4 text-[#18181B] shrink-0" />
-                  <span className={cn('text-xs font-bold leading-tight', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
-                    {t.bookNewSuit}
-                  </span>
-                </div>
-                <span className={cn('text-[10px] font-semibold text-[#18181B]/80', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
-                  {t.bookNewSuitSub}
+            <Link
+              href="/orders/new"
+              className="w-full h-14 rounded-2xl bg-gold hover:bg-gold-hover text-[#18181B] font-bold shadow-[0_4px_16px_rgba(197,154,63,0.3)] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 cursor-pointer border border-gold/40 block"
+            >
+              <div className="flex items-center gap-1.5">
+                <PlusCircle className="h-4 w-4 text-[#18181B] shrink-0" />
+                <span className={cn('text-xs font-bold leading-tight', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.bookNewSuit}
                 </span>
-              </button>
-            </a>
+              </div>
+              <span className={cn('text-[10px] font-semibold text-[#18181B]/80', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                {t.bookNewSuitSub}
+              </span>
+            </Link>
 
             {/* Ghost Outline: Search Parchi */}
-            <a href="/orders" className="block">
-              <button
-                type="button"
-                className="w-full h-14 rounded-2xl border border-border bg-card hover:bg-muted/50 text-foreground font-semibold shadow-sm active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 backdrop-blur-md cursor-pointer"
-              >
-                <div className="flex items-center gap-1.5">
-                  <Search className="h-4 w-4 text-gold shrink-0" />
-                  <span className={cn('text-xs font-bold leading-tight text-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
-                    {t.searchParchi}
-                  </span>
-                </div>
-                <span className={cn('text-[10px] text-muted-foreground font-medium', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
-                  {t.searchParchiSub}
+            <Link
+              href="/orders"
+              className="w-full h-14 rounded-2xl border border-border bg-card hover:bg-muted/50 text-foreground font-semibold shadow-sm active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 px-2 backdrop-blur-md cursor-pointer block"
+            >
+              <div className="flex items-center gap-1.5">
+                <Search className="h-4 w-4 text-gold shrink-0" />
+                <span className={cn('text-xs font-bold leading-tight text-foreground', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                  {t.searchParchi}
                 </span>
-              </button>
-            </a>
+              </div>
+              <span className={cn('text-[10px] text-muted-foreground font-medium', language === 'ur' ? 'font-urdu-sans' : 'font-sans')}>
+                {t.searchParchiSub}
+              </span>
+            </Link>
           </div>
 
           {/* Block 2.5: Digital Naap Register & Saved Sizing Quick Access Card */}
-          <a href="/customers" className="block mt-2.5" data-testid="dashboard-customers-register-card">
+          <Link href="/customers" className="block mt-2.5" data-testid="dashboard-customers-register-card">
             <div className="rounded-2xl border border-gold/30 bg-card p-3 shadow-xs hover:border-gold/50 active:scale-[0.99] transition-all flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15 border border-gold/30 text-gold shrink-0">
@@ -394,7 +391,7 @@ export default function DashboardPage() {
                 <ChevronRight className={cn('h-4 w-4 transition-transform', dir === 'rtl' ? 'rotate-180' : '')} />
               </div>
             </div>
-          </a>
+          </Link>
 
           {/* Block 3: Vertical Urgent Deliveries Feed */}
           <div className="space-y-3 mt-4">
@@ -407,13 +404,13 @@ export default function DashboardPage() {
                   {t.urgentBadge}
                 </span>
               </div>
-              <a
+              <Link
                 href="/orders"
                 className="inline-flex items-center gap-1 text-xs text-gold font-medium h-8 px-2.5 rounded-xl border border-gold/20 bg-gold/5 hover:bg-gold/15 transition-colors"
               >
                 <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.allOrders}</span>
                 <ChevronRight className={cn('h-3.5 w-3.5 transition-transform', dir === 'rtl' ? 'rotate-180' : '')} />
-              </a>
+              </Link>
             </div>
 
             {urgentOrders.length === 0 ? (
@@ -585,7 +582,7 @@ export default function DashboardPage() {
                 })}
               </span>
             </div>
-            <a href="/orders">
+            <Link href="/orders">
               <Button
                 variant="outline"
                 size="sm"
@@ -594,7 +591,7 @@ export default function DashboardPage() {
                 <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.viewFullQueue}</span>
                 <ArrowUpRight className={cn("h-3.5 w-3.5 text-gold transition-transform", dir === 'rtl' ? 'rotate-[-90deg]' : '')} />
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -619,7 +616,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-              <a href="/orders/new" className="shrink-0 w-full sm:w-auto">
+              <Link href="/orders/new" className="shrink-0 w-full sm:w-auto">
                 <Button
                   variant="default"
                   size="md"
@@ -628,7 +625,7 @@ export default function DashboardPage() {
                   <PlusCircle className="h-4 w-4" />
                   <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.bookFirstSuit}</span>
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         )}
@@ -812,7 +809,7 @@ export default function DashboardPage() {
 
           <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
             {/* Button 1: Book New Suit (Gold Primary) */}
-            <a href="/orders/new">
+            <Link href="/orders/new">
               <Button
                 variant="default"
                 size="md"
@@ -823,10 +820,10 @@ export default function DashboardPage() {
                   {t.bookNewSuit}
                 </span>
               </Button>
-            </a>
+            </Link>
 
             {/* Button 1.5: Digital Naap Register */}
-            <a href="/customers" data-testid="desktop-dashboard-customers-register-btn">
+            <Link href="/customers" data-testid="desktop-dashboard-customers-register-btn">
               <Button
                 variant="outline"
                 size="md"
@@ -837,7 +834,7 @@ export default function DashboardPage() {
                   {t.naapRegisterBtn}
                 </span>
               </Button>
-            </a>
+            </Link>
 
             {/* Button 2: Find Customer (Ghost/Glass) */}
             <Button
@@ -856,7 +853,7 @@ export default function DashboardPage() {
             </Button>
 
             {/* Button 3: Print Daily Run-Sheet (Outline) */}
-            <a href="/print">
+            <Link href="/print">
               <Button
                 variant="outline"
                 size="md"
@@ -867,7 +864,7 @@ export default function DashboardPage() {
                   {t.printCounter}
                 </span>
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -896,13 +893,13 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <a
+            <Link
               href="/orders"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-gold hover:text-gold-hover transition-colors"
             >
               <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.viewAllOrdersQueue}</span>
               <ChevronRight className={cn('h-3.5 w-3.5', dir === 'rtl' ? 'rotate-180' : '')} />
-            </a>
+            </Link>
           </div>
 
           {/* Table Container with required overflow-x-auto wrapper */}
@@ -934,7 +931,7 @@ export default function DashboardPage() {
                             {t.allCaughtUpDesc}
                           </p>
                         </div>
-                        <a href="/orders/new" className="mt-2">
+                        <Link href="/orders/new" className="mt-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -943,7 +940,7 @@ export default function DashboardPage() {
                             <PlusCircle className="h-3.5 w-3.5" />
                             <span className={language === 'ur' ? 'font-urdu-sans' : 'font-sans'}>{t.bookNewSuit}</span>
                           </Button>
-                        </a>
+                        </Link>
                       </div>
                     </td>
                   </tr>

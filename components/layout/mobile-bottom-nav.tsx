@@ -145,11 +145,13 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
         })}
 
         {/* Center Slot: Elevated Burnished Gold Action FAB */}
-        <div className="flex flex-col items-center justify-center relative min-w-[54px]">
-          <Link
-            href="/orders/new"
-            aria-label={language === 'ur' ? 'نیا سوٹ بک کریں' : 'Book New Suit'}
-            title={language === 'ur' ? 'نیا سوٹ بک کریں' : 'Book New Suit'}
+        <Link
+          href="/orders/new"
+          aria-label={language === 'ur' ? 'نیا سوٹ بک کریں' : 'Book New Suit'}
+          title={language === 'ur' ? 'نیا سوٹ بک کریں' : 'Book New Suit'}
+          className="flex flex-col items-center justify-center relative min-w-[54px] group"
+        >
+          <div
             className={cn(
               '-translate-y-4 h-14 w-14 rounded-full',
               'bg-gradient-to-tr from-[#C59A3F] via-[#D4AF37] to-[#B38A34] text-[#18181B]',
@@ -159,17 +161,17 @@ export function MobileBottomNav({ activeRoute = '', navLayout }: MobileBottomNav
             )}
           >
             <Plus className="h-6 w-6 stroke-[2.5] text-[#18181B]" />
-          </Link>
+          </div>
           <span
             className={cn(
               'text-[10px] font-bold -mt-3 transition-colors',
               language === 'ur' ? 'font-urdu-sans' : 'font-sans',
-              isFabActive ? 'text-gold' : 'text-muted-foreground'
+              isFabActive ? 'text-gold' : 'text-muted-foreground group-hover:text-foreground'
             )}
           >
             {t.navNewSuit}
           </span>
-        </div>
+        </Link>
 
         {/* Right Tabs (Khata, Settings) */}
         {MOBILE_TABS_RIGHT.map((tab) => {

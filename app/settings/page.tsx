@@ -1173,7 +1173,7 @@ export default function SettingsPage() {
               type="button"
               onClick={() => {
                 setMobileSection(null);
-                window.history.replaceState(null, '', ' ');
+                window.history.replaceState(null, '', window.location.pathname);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
               }}

@@ -3975,7 +3975,49 @@
   - `gh release view v1.1.5`: Live GitHub release verified with downloadable assets.
 
 * **Next Immediate Task:**
-  - Monitor production feedback and workshop telemetry.
+  - Phase 36: Capacitor Native Navigation Fix & Official Release v1.1.6 (In Progress).
+
+---
+
+## Phase 36: Capacitor Native Navigation Fix & Official Release v1.1.6 (In Progress)
+* **Date:** 2026-09-21
+* **Tasks Completed:**
+  - `36.1` Client-Side SPA Navigation Hardening:
+    * Replaced all raw HTML `<a href="...">` anchors with Next.js `<Link href="...">` across `components/layout/app-shell.tsx`, `app/dashboard/page.tsx`, `app/print/page.tsx`, and `app/admin/page.tsx`.
+    * Confirmed 0 raw internal `<a href="/...">` remain across the entire codebase.
+    * Preserved in-memory React SPA transitions, completely eliminating Capacitor Android WebView full-page HTTP fallback reloads and route reset bounce.
+  - `36.2` Mobile Touch Optimization:
+    * Eliminated nested `<button>` inside anchor tags in `app/dashboard/page.tsx` (`Book New Suit`, `Search Parchi`), transferring all styling and interactions directly to `<Link className="...">` for smooth touch event propagation on Android WebView.
+    * Wrapped center FAB icon and text label in `components/layout/mobile-bottom-nav.tsx` inside `<Link href="/orders/new">` to ensure touching either the circular FAB or the label triggers navigation.
+  - `36.3` Mobile Header Notification Center:
+    * Added direct Notification & Alerts `<Link href="/settings#alerts">` Bell icon button in mobile header next to Search and Settings, providing 1-tap access to notifications.
+  - `36.4` Settings Back Stack Normalization:
+    * Replaced URL space injection (`' '`) in `app/settings/page.tsx` back button with `window.location.pathname`, eliminating router corruption.
+  - `36.5` Production Verification & Quality Assurance:
+    * `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    * `npm run build`: 29/29 Next.js static pages exported into `out/`.
+    * `npx tsx scripts/verify_db.ts`: 159/159 database and repository assertions passed across all 17 test suites.
+    * Bumped version to `1.1.6` in `package.json` and `package-lock.json`.
+
+* **Active File Changes:**
+  - `components/layout/app-shell.tsx` [MODIFIED]
+  - `app/dashboard/page.tsx` [MODIFIED]
+  - `components/layout/mobile-bottom-nav.tsx` [MODIFIED]
+  - `app/settings/page.tsx` [MODIFIED]
+  - `app/print/page.tsx` [MODIFIED]
+  - `app/admin/page.tsx` [MODIFIED]
+  - `package.json` [MODIFIED]
+  - `package-lock.json` [MODIFIED]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors.
+  - `npm run build`: 29/29 static routes compiled into `out/`.
+  - `scripts/verify_db.ts`: 159/159 passed.
+
+* **Next Immediate Task:**
+  - Task 36.6: Push to `main`, tag `v1.1.6`, compile binaries via GitHub Actions, download to `release-binaries-v116/`, and publish official GitHub release.
 
 
 

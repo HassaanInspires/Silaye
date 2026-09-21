@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -516,7 +517,7 @@ export default function SuperAdminDashboardPage() {
               </p>
             </div>
 
-            <a href="/dashboard">
+            <Link href="/dashboard">
               <Button
                 variant="default"
                 className="w-full bg-gold text-[#0B0C0E] hover:bg-gold-hover font-semibold shadow-[0_0_20px_rgba(212,175,55,0.2)]"
@@ -524,7 +525,7 @@ export default function SuperAdminDashboardPage() {
                 <span>Return to Workshop Dashboard</span>
                 <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
-            </a>
+            </Link>
           </Card>
         </div>
       </AppShell>
