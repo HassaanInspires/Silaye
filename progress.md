@@ -3979,7 +3979,7 @@
 
 ---
 
-## Phase 36: Capacitor Native Navigation Fix & Official Release v1.1.6 (In Progress)
+## Phase 36: Capacitor Native Navigation Fix & Official Release v1.1.6 (Completed)
 * **Date:** 2026-09-21
 * **Tasks Completed:**
   - `36.1` Client-Side SPA Navigation Hardening:
@@ -3998,6 +3998,15 @@
     * `npm run build`: 29/29 Next.js static pages exported into `out/`.
     * `npx tsx scripts/verify_db.ts`: 159/159 database and repository assertions passed across all 17 test suites.
     * Bumped version to `1.1.6` in `package.json` and `package-lock.json`.
+  - `36.6` Cross-Platform Cloud Compilation via GitHub Actions:
+    * Windows NSIS Installer (`Silaye.Beta.Setup.1.1.6.exe` [167.06 MB]) compiled on `windows-latest`.
+    * Android Native Package (`app-debug.apk` [7.85 MB]) compiled on `ubuntu-latest`.
+  - `36.7` Dedicated Binary Ingestion to Laptop:
+    * Stored binaries in `/home/hassaan/Silaye/release-binaries-v116/` without overriding prior release folders (`release-binaries-v115/`, `release-binaries-concept1-v114/`, `preview-binaries/`).
+    * Verified `app-debug.apk` archive integrity (0 errors detected).
+  - `36.8` Official GitHub Release Publication:
+    * Published official GitHub Release `v1.1.6` at `https://github.com/HassaanInspires/Silaye/releases/tag/v1.1.6`.
+    * Attached production assets: `Silaye.Beta.Setup.1.1.6.exe` (167.06 MB) and `app-debug.apk` (7.85 MB).
 
 * **Active File Changes:**
   - `components/layout/app-shell.tsx` [MODIFIED]
@@ -4006,18 +4015,23 @@
   - `app/settings/page.tsx` [MODIFIED]
   - `app/print/page.tsx` [MODIFIED]
   - `app/admin/page.tsx` [MODIFIED]
+  - `.github/workflows/build-artifacts.yml` [MODIFIED]
   - `package.json` [MODIFIED]
   - `package-lock.json` [MODIFIED]
   - `tasks.md` [MODIFIED]
   - `progress.md` [MODIFIED]
+  - `release-binaries-v116/app-debug.apk` [NEW]
+  - `release-binaries-v116/Silaye.Beta.Setup.1.1.6.exe` [NEW]
 
 * **Verification Results:**
   - `npx tsc --noEmit`: 0 errors.
   - `npm run build`: 29/29 static routes compiled into `out/`.
   - `scripts/verify_db.ts`: 159/159 passed.
+  - `gh release view v1.1.6`: Verified live release with assets.
+  - `unzip -t release-binaries-v116/app-debug.apk`: OK.
 
 * **Next Immediate Task:**
-  - Task 36.6: Push to `main`, tag `v1.1.6`, compile binaries via GitHub Actions, download to `release-binaries-v116/`, and publish official GitHub release.
+  - Monitor workshop customer feedback on Android APK navigation and desktop installer.
 
 
 

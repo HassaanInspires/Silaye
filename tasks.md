@@ -856,13 +856,13 @@
   * Verified 0 TypeScript compiler errors (`npx tsc --noEmit`).
   * Verified 29/29 static routes compiled and exported into `out/` (`npm run build`).
   * Verified 159/159 database and repository test assertions pass (`npx tsx scripts/verify_db.ts`).
-- [ ] 36.6 Cross-Platform Cloud Compilation via GitHub Actions:
-  * Windows NSIS Installer (`.exe`) compiled on `windows-latest`.
-  * Android Native Package (`.apk`) compiled on `ubuntu-latest`.
-- [ ] 36.7 Ingestion to Dedicated Laptop Directory:
-  * Download compiled binaries into new separate folder `/home/hassaan/Silaye/release-binaries-v116/` without overwriting prior release directories.
-- [ ] 36.8 Official GitHub Release Publication:
-  * Publish official GitHub Release `v1.1.6` with attached production assets.
+- [x] 36.6 Cross-Platform Cloud Compilation via GitHub Actions:
+  * Windows NSIS Installer (`Silaye.Beta.Setup.1.1.6.exe` [167.06 MB]) compiled on `windows-latest`.
+  * Android Native Package (`app-debug.apk` [7.85 MB]) compiled on `ubuntu-latest`.
+- [x] 36.7 Ingestion to Dedicated Laptop Directory:
+  * Ingested compiled binaries into new separate directory `/home/hassaan/Silaye/release-binaries-v116/` without overwriting prior release directories.
+- [x] 36.8 Official GitHub Release Publication:
+  * Published official GitHub Release `v1.1.6` at `https://github.com/HassaanInspires/Silaye/releases/tag/v1.1.6` with attached production assets.
 
 
 
