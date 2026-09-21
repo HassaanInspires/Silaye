@@ -800,6 +800,30 @@
   * Staged and committed Option C changes exclusively to `feat/home-light-theme-bidi`.
   * Pushed to `origin/feat/home-light-theme-bidi`.
 
+---
+
+## Phase 34: Option D: New Booking (`/orders/new`) 10/10 Atelier Light Theme Polish
+- [x] 34.1 Mobile Stepper Header & Label Polish:
+  * Refine mobile 3-step wizard navigation header (`app/orders/new/page.tsx`) with uncrushable sizing `text-[10.5px] xs:text-xs font-semibold whitespace-nowrap`, eliminating ellipsis truncation on 360px viewports.
+  * Ensure Urdu and English labels fit cleanly in single-line pills with active primary pill background.
+- [x] 34.2 SectionCard & Atelier Light Theme Card Contrast:
+  * Elevate `SectionCard` with high-contrast `border-border/80 bg-card shadow-xs hover:border-primary/40` and refined header styling.
+  * Elevate Sticky Order Summary sidebar in light theme with crisp border contrast, clear itemized financial dividers, and high-contrast balance status badge.
+- [x] 34.3 Strict Pakistani Quarter-Inch Fractions Preservation & BiDi Alignment:
+  * Preserve traditional fractional pills (`0`, `¼`, `½`, `¾`) in `components/tailor/fractional-pill-selector.tsx` without decimals.
+  * Ensure strict `<bdi dir="ltr">` currency and numeric isolation across all financial rows and inputs.
+- [x] 34.4 Craftsman Assignment & Form Controls Polish:
+  * Refine Cutting Master and Stitching Master `select` dropdowns with crisp light-theme input borders and focus rings.
+- [x] 34.5 Automated Verification Suite & Playwright Light Mode Visual Audit:
+  * Run `npx tsc --noEmit` to verify 0 type errors.
+  * Run `npm run build` to verify 29/29 Next.js static pages exported into `out/`.
+  * Run `npx tsx scripts/verify_db.ts` to verify 159/159 database assertions.
+  * Run Playwright audit (`scripts/audit_phase34_orders_new.mjs`) and verify all 7 screenshots.
+- [x] 34.6 Git Commit & Branch Synchronization:
+  * Stage and commit Option D changes exclusively to `feat/home-light-theme-bidi`.
+  * Push to `origin/feat/home-light-theme-bidi`.
+
+
 
 
 

@@ -158,8 +158,8 @@ function SectionCard({ title, urTitle, icon, children, className }: SectionCardP
   const displayTitle = isUrdu && urTitle ? urTitle : title;
 
   return (
-    <Card className={cn('premium-glass-card flex flex-col gap-0 border border-border bg-card shadow-xs hover:border-primary/30 transition-all duration-300', className)}>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-border/60 pb-3 pt-3.5 bg-card-elevated/40">
+    <Card className={cn('flex flex-col gap-0 border border-border/80 bg-card rounded-2xl shadow-xs hover:border-primary/40 transition-all duration-200', className)}>
+      <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-border/60 pb-3 pt-3.5 bg-card-elevated/40 rounded-t-2xl">
         <div className="flex items-center gap-2.5">
           <span className="text-primary p-1.5 rounded-lg bg-primary/10 border border-primary/20 shadow-xs">{icon}</span>
           <CardTitle className={cn("text-sm font-semibold text-foreground tracking-tight", isUrdu && "font-urdu-serif text-base")}>
@@ -1065,11 +1065,11 @@ export default function NewOrderPage() {
         {/* ================================================================ */}
         <div className="block md:hidden space-y-4 pb-44 pb-safe">
           {/* Step Progress Pills Header */}
-          <div className="grid grid-cols-3 gap-1.5 p-1 bg-card rounded-xl border border-border shadow-xs">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-card rounded-xl border border-border/80 shadow-xs">
             {[
-              { step: 1, label: t.stepCustomer },
-              { step: 2, label: t.stepStyle },
-              { step: 3, label: t.stepMatrix },
+              { step: 1, label: isUrdu ? 'گاہک و سوٹ' : t.stepCustomer },
+              { step: 2, label: isUrdu ? 'ڈیزائن و کٹ' : t.stepStyle },
+              { step: 3, label: isUrdu ? 'ناپ میٹرکس' : t.stepMatrix },
             ].map((s) => {
               const isCurrent = mobileStep === s.step;
               const isPast = mobileStep > s.step;
@@ -1080,7 +1080,7 @@ export default function NewOrderPage() {
                   data-testid={`mobile-step-${s.step}`}
                   onClick={() => setMobileStep(s.step as 1 | 2 | 3)}
                   className={cn(
-                    'flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg transition-all border',
+                    'flex items-center justify-center gap-1 py-2 px-1 rounded-lg transition-all border min-w-0',
                     isCurrent
                       ? 'bg-primary/15 text-primary border-primary/40 shadow-xs font-semibold'
                       : isPast
@@ -1089,12 +1089,12 @@ export default function NewOrderPage() {
                   )}
                 >
                   <span className={cn(
-                    "inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-bold shrink-0",
+                    "inline-flex items-center justify-center w-4.5 h-4.5 rounded-full text-[10px] font-mono font-bold shrink-0",
                     isCurrent ? "bg-primary text-primary-foreground" : isPast ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-muted text-muted-foreground"
                   )}>
                     <bdi>{s.step}</bdi>
                   </span>
-                  <span className={cn('text-xs font-medium truncate', isUrdu ? 'font-urdu-sans text-[11px]' : 'font-sans')}>
+                  <span className={cn('text-[11px] font-medium whitespace-nowrap', isUrdu ? 'font-urdu-sans text-[10.5px]' : 'font-sans')}>
                     {s.label}
                   </span>
                 </button>
@@ -2720,7 +2720,7 @@ export default function NewOrderPage() {
                         <select
                           value={assignedCutterId}
                           onChange={(e) => setAssignedCutterId(e.target.value)}
-                          className="h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rtl:pr-3 rtl:pl-9"
+                          className="h-10 w-full appearance-none rounded-lg border border-border/80 bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs hover:border-primary/40 focus:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary transition-all rtl:pr-3 rtl:pl-9 cursor-pointer"
                         >
                           <option value="">{t.unassigned}</option>
                           {cuttingMasters.map((s) => {
@@ -2746,7 +2746,7 @@ export default function NewOrderPage() {
                         <select
                           value={assignedStitcherId}
                           onChange={(e) => setAssignedStitcherId(e.target.value)}
-                          className="h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rtl:pr-3 rtl:pl-9"
+                          className="h-10 w-full appearance-none rounded-lg border border-border/80 bg-card pr-9 pl-3 text-xs font-medium text-foreground shadow-xs hover:border-primary/40 focus:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary transition-all rtl:pr-3 rtl:pl-9 cursor-pointer"
                         >
                           <option value="">{t.unassigned}</option>
                           {stitchers.map((s) => {
@@ -2812,7 +2812,7 @@ export default function NewOrderPage() {
             <div className="flex flex-col gap-5 static lg:sticky lg:top-20">
               
               {/* Main Summary Glass Card */}
-              <div className="premium-glass-card p-5 flex flex-col gap-5 border border-border/80 shadow-2xl">
+              <div className="rounded-2xl border border-border/80 bg-card p-5 flex flex-col gap-5 shadow-sm hover:border-primary/30 transition-all">
                 
                 {/* Header: Real-Time Order Preview */}
                 <div className="flex items-center justify-between border-b border-border/60 pb-3">
@@ -2935,7 +2935,14 @@ export default function NewOrderPage() {
                     />
 
                     {/* Real-time Balance Due Card */}
-                    <div className="mt-2 rounded-xl border border-border/80 bg-card-elevated/80 p-3 flex items-center justify-between">
+                    <div className={cn(
+                      "mt-2 rounded-xl border p-3 flex items-center justify-between transition-all",
+                      isOverpayment
+                        ? "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-400"
+                        : financials.balance_due === 0
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-400"
+                        : "border-rose-500/30 bg-rose-500/10 text-rose-800 dark:text-rose-400"
+                    )}>
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-foreground">

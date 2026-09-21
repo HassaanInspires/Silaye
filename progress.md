@@ -3893,7 +3893,52 @@
   - `node scripts/audit_phase32_orders.mjs`: Visual audit completed with 0 uncaught client exceptions (8/8 screenshots verified).
 
 * **Next Immediate Task:**
-  - Present Option C (Orders Queue) visual proofs and results to user, then await approval to proceed to Option D: New Booking (`/orders/new`) 10/10 Atelier Light Theme Overhaul.
+  - Phase 34: Option D: New Booking (`/orders/new`) 10/10 Atelier Light Theme Polish (Completed).
+
+---
+
+## Phase 34: Option D: New Booking (`/orders/new`) 10/10 Atelier Light Theme Polish (Completed)
+* **Date:** 2026-09-21
+* **Git Branch:** `feat/home-light-theme-bidi`
+* **Tasks Completed:**
+  - `34.1` Mobile Stepper Header & Label Polish:
+    * Refined mobile 3-step wizard navigation header in `app/orders/new/page.tsx` with uncrushable sizing `text-[10.5px] xs:text-xs font-semibold whitespace-nowrap`, eliminating all ellipsis truncation (`...`) on 360px viewports.
+    * Ensured Urdu labels (`گاہک و سوٹ`, `ڈیزائن و کٹ`, `ناپ میٹرکس`) and English labels fit cleanly in single-line responsive pills with active gold highlights.
+  - `34.2` SectionCard & Atelier Light Theme Card Contrast:
+    * Elevated `SectionCard` with high-contrast `border-border/80 bg-card rounded-2xl shadow-xs hover:border-primary/40` and refined header styling.
+    * Elevated Sticky Order Summary sidebar in light theme with crisp `rounded-2xl border border-border/80 bg-card shadow-sm` and high-contrast Real-time Balance Due Card (`border-rose-500/30 bg-rose-500/10 text-rose-800 dark:text-rose-400` when unpaid, `border-emerald-500/30 bg-emerald-500/10` when fully paid).
+  - `34.3` Strict Pakistani Quarter-Inch Fractions Preservation & BiDi Alignment:
+    * Strictly preserved traditional fractional pills (`0`, `¼`, `½`, `¾`) in `components/tailor/fractional-pill-selector.tsx` without decimals.
+    * Ensured strict `<bdi dir="ltr">` currency and numeric isolation across all financial rows and inputs (`Rs. {value}`).
+  - `34.4` Craftsman Assignment & Form Controls Polish:
+    * Refined Cutting Master and Stitching Master `select` dropdowns with crisp light-theme input borders (`border-border/80 hover:border-primary/40 focus:border-primary`) and smooth cursor interaction.
+  - `34.5` Automated Verification Suite & Playwright Light Mode Visual Audit:
+    * `npx tsc --noEmit`: 0 TypeScript compiler errors.
+    * `npm run build`: 29/29 Next.js static pages exported cleanly into `out/`.
+    * `npx tsx scripts/verify_db.ts`: 159/159 database assertions passed across all 17 test suites in 538.92s.
+    * Playwright Visual Audit (`scripts/audit_phase34_orders_new.mjs`): 7/7 screenshots captured with 0 uncaught client errors:
+      - `01_orders_new_mobile_step1.png`: PASS (Mobile 360x740 Urdu light theme with uncrushable stepper, clean customer intake, and garment choices)
+      - `02_orders_new_mobile_step2.png`: PASS (Mobile Step 2 with green check on Step 1, active Step 2, and large touch chips for style)
+      - `03_orders_new_mobile_step3.png`: PASS (Mobile Step 3 with whole number steppers, authentic quarter-inch pills `0`, `¼`, `½`, `¾`, advance input, and balance due)
+      - `04_orders_new_desktop_tab1.png`: PASS (Desktop 1280x850 Urdu light theme with rounded-2xl cards, crisp sticky sidebar, and soft rose balance badge)
+      - `05_orders_new_desktop_tab2.png`: PASS (Desktop Tab 2 with measurement matrix featuring `0`, `¼`, `½`, `¾` pills and style preferences)
+      - `06_orders_new_desktop_tab3.png`: PASS (Desktop Tab 3 with financial modifiers and refined craftsman select dropdowns)
+      - `07_orders_new_desktop_en.png`: PASS (Desktop English toggle LTR showing seamless language & direction flip)
+
+* **Active File Changes:**
+  - `app/orders/new/page.tsx` [MODIFIED]
+  - `scripts/audit_phase34_orders_new.mjs` [NEW]
+  - `tasks.md` [MODIFIED]
+  - `progress.md` [MODIFIED]
+
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 TypeScript compiler errors.
+  - `npm run build`: 29/29 static routes compiled into `out/`.
+  - `npx tsx scripts/verify_db.ts`: 159/159 assertions passed across all 17 test suites.
+  - `node scripts/audit_phase34_orders_new.mjs`: Visual audit completed with 0 uncaught client exceptions (7/7 screenshots verified).
+
+* **Next Immediate Task:**
+  - Commit and push Option D changes to `feat/home-light-theme-bidi`.
 
 
 
