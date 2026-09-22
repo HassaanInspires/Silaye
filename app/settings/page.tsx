@@ -50,9 +50,14 @@ import {
   Bell,
   Volume2,
   VolumeX,
+  Sun,
+  Moon,
+  Palette,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/lib/theme-provider';
+import { useLanguage } from '@/lib/language-provider';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -321,6 +326,7 @@ const SECTION_TITLES: Record<string, { ur: string; en: string }> = {
   navigation: { ur: 'نیویگیشن اسٹائل', en: 'Navigation Layout' },
   reset: { ur: 'ڈیٹا اور کیشے', en: 'Data & Cache' },
   account: { ur: 'اکاؤنٹ اور پلان', en: 'Account & Plan' },
+  appearance: { ur: 'ظاہری شکل اور زبان', en: 'Appearance & Language' },
 };
 
 export default function SettingsPage() {
@@ -333,6 +339,11 @@ export default function SettingsPage() {
     type: 'success' | 'error' | 'info';
   } | null>(null);
   const [phoneError, setPhoneError] = React.useState<string | null>(null);
+
+  // Theme & Language (for Appearance sub-section)
+  const { theme, setTheme, isMounted: isThemeMounted } = useTheme();
+  const { language, toggleLanguage } = useLanguage();
+  const activeTheme = isThemeMounted ? theme : 'dark';
 
   // Safe Shop Initialization
   const workshopName = shop?.name || 'Silaye Master Tailors';
@@ -1228,43 +1239,42 @@ export default function SettingsPage() {
         {/* MOBILE SETTINGS HUB (When mobileSection === null)                 */}
         {/* ----------------------------------------------------------------- */}
         {mobileSection === null && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Header */}
-            <div className="flex items-center justify-between py-2 border-b border-white/5 mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center text-gold">
-                  <Settings className="h-4 w-4" />
-                </div>
-                <div>
-                  <h1 className="text-sm font-bold text-white font-urdu-serif leading-tight">
-                    ورکشاپ سیٹنگز
-                  </h1>
-                  <p className="text-[10px] text-gray-400 font-sans">
-                    Workshop Configuration Hub
-                  </p>
-                </div>
+            <div className="flex items-center gap-3 pb-2 border-b border-white/5">
+              <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center text-gold shrink-0">
+                <Settings className="h-4 w-4" />
+              </div>
+              <div>
+                <h1 className="text-sm font-bold text-white font-urdu-serif leading-tight">
+                  ورکشاپ سیٹنگز
+                </h1>
+                <p className="text-[10px] text-gray-400 font-sans">
+                  Workshop Configuration Hub
+                </p>
               </div>
             </div>
 
-            {/* Group 1: General Workshop (کاروبار اور عملہ) */}
+            {/* ── GROUP 1: BUSINESS (کاروبار) ── emerald accent ─────────────── */}
             <div>
-              <div className="flex items-center justify-between px-1 mb-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider font-sans">
-                  General Workshop
+              <div className="flex items-center justify-between px-1 mb-2">
+                <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest font-sans flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
+                  Business
                 </span>
-                <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
-                  کاروبار اور عملہ
+                <span className="font-urdu-serif text-xs text-emerald-400/70" dir="rtl">
+                  کاروبار
                 </span>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md divide-y divide-white/5 overflow-hidden shadow-xl mb-4">
-                {/* 🏢 Workshop & Receipt */}
+              <div className="rounded-2xl border border-emerald-500/15 bg-[#0D1512]/60 backdrop-blur-md divide-y divide-white/5 overflow-hidden shadow-xl">
+                {/* 🏪 Workshop Identity & Receipts */}
                 <button
                   type="button"
                   onClick={() => handleSelectSection('workshop')}
                   className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                       <Store className="h-4 w-4" />
                     </div>
                     <div>
@@ -1286,7 +1296,7 @@ export default function SettingsPage() {
                   className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                       <Users className="h-4 w-4" />
                     </div>
                     <div>
@@ -1294,7 +1304,7 @@ export default function SettingsPage() {
                         <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
                           کاریگر اور عملہ
                         </span>
-                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-gold/15 text-gold border border-gold/30">
+                        <span className="text-[9px] font-mono px-1.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                           {staffMembers.length}
                         </span>
                       </div>
@@ -1313,7 +1323,7 @@ export default function SettingsPage() {
                   className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                       <Scissors className="h-4 w-4" />
                     </div>
                     <div>
@@ -1330,47 +1340,26 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Group 2: Hardware & Preferences (ہارڈویئر اور ترجیحات) */}
+            {/* ── GROUP 2: PREFERENCES (ترجیحات) ── blue accent ─────────────── */}
             <div>
-              <div className="flex items-center justify-between px-1 mb-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider font-sans">
-                  Hardware & Preferences
+              <div className="flex items-center justify-between px-1 mb-2">
+                <span className="text-[10px] font-bold text-blue-400/80 uppercase tracking-widest font-sans flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400 inline-block" />
+                  Preferences
                 </span>
-                <span className="font-urdu-serif text-xs text-gold/80" dir="rtl">
-                  ہارڈویئر اور ترجیحات
+                <span className="font-urdu-serif text-xs text-blue-400/70" dir="rtl">
+                  ترجیحات
                 </span>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md divide-y divide-white/5 overflow-hidden shadow-xl mb-4">
-                {/* 🖨️ Thermal Printer */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectSection('printer')}
-                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
-                      <Printer className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
-                        تھرمل پرنٹر سیٹ اپ
-                      </span>
-                      <span className="text-[10px] text-gray-400 font-sans block">
-                        58mm/80mm Thermal Printer
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
-                </button>
-
-                {/* 🔔 Sound & Alerts */}
+              <div className="rounded-2xl border border-blue-500/15 bg-[#0D1018]/60 backdrop-blur-md divide-y divide-white/5 overflow-hidden shadow-xl">
+                {/* 🔔 Notifications & Alerts */}
                 <button
                   type="button"
                   onClick={() => handleSelectSection('alerts')}
                   className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                       <Bell className="h-4 w-4" />
                     </div>
                     <div>
@@ -1385,7 +1374,34 @@ export default function SettingsPage() {
                   <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
                 </button>
 
-                {/* 📱 Navigation Layout */}
+                {/* 🎨 Appearance & Language — was MISSING on mobile, now added */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('appearance')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                      <Palette className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                          ظاہری شکل اور زبان
+                        </span>
+                        <span className="text-[9px] font-mono px-1.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                          {activeTheme === 'dark' ? 'Dark' : 'Light'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-sans block">
+                        Theme & Language / موڈ اور زبان
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
+                </button>
+
+                {/* 📲 Navigation Layout */}
                 <button
                   type="button"
                   onClick={() => handleSelectSection('navigation')}
@@ -1393,7 +1409,7 @@ export default function SettingsPage() {
                   data-testid="mobile-settings-nav-layout-row"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                       <Sliders className="h-4 w-4" />
                     </div>
                     <div>
@@ -1401,34 +1417,12 @@ export default function SettingsPage() {
                         <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
                           نیویگیشن اسٹائل
                         </span>
-                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-gold/15 text-gold border border-gold/30">
+                        <span className="text-[9px] font-mono px-1.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30">
                           {navLayout === 'tabs' ? 'Tabs' : navLayout === 'drawer' ? 'Drawer' : 'Hybrid'}
                         </span>
                       </div>
                       <span className="text-[10px] text-gray-400 font-sans block">
-                        Mobile Navigation Mode (Tabs / Drawer / Hybrid)
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
-                </button>
-
-                {/* ⚠️ Workshop Data & Reset */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectSection('reset')}
-                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
-                      <AlertTriangle className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
-                        ڈیٹا صفائی اور کیشے
-                      </span>
-                      <span className="text-[10px] text-gray-400 font-sans block">
-                        Flush Cache & Purge Test Data
+                        Mobile Navigation Mode
                       </span>
                     </div>
                   </div>
@@ -1437,14 +1431,50 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Bottom Docked Account Pill (ChatGPT/Linear Style) */}
+            {/* ── GROUP 3: HARDWARE (ہارڈویئر) ── purple accent ─────────────── */}
+            <div>
+              <div className="flex items-center justify-between px-1 mb-2">
+                <span className="text-[10px] font-bold text-purple-400/80 uppercase tracking-widest font-sans flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-purple-400 inline-block" />
+                  Hardware
+                </span>
+                <span className="font-urdu-serif text-xs text-purple-400/70" dir="rtl">
+                  ہارڈویئر
+                </span>
+              </div>
+              <div className="rounded-2xl border border-purple-500/15 bg-[#100D18]/60 backdrop-blur-md divide-y divide-white/5 overflow-hidden shadow-xl">
+                {/* 🖨️ Thermal Printer */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('printer')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+                      <Printer className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                        تھرمل پرنٹر سیٹ اپ
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-sans block">
+                        58mm / 80mm Thermal Printer
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-500 shrink-0" />
+                </button>
+              </div>
+            </div>
+
+            {/* ── ACCOUNT CARD (full-width, gold border) ────────────────────── */}
             <button
               type="button"
               onClick={() => handleSelectSection('account')}
-              className="w-full p-3 rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.06] to-white/[0.02] hover:border-gold/30 active:scale-[0.99] flex items-center justify-between transition-all shadow-lg cursor-pointer mb-4"
+              className="w-full p-3.5 rounded-2xl border border-gold/25 bg-gradient-to-r from-gold/[0.06] to-white/[0.02] hover:border-gold/40 hover:from-gold/[0.09] active:scale-[0.99] flex items-center justify-between transition-all shadow-lg cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-gold/20 border border-gold/40 text-gold font-bold text-xs flex items-center justify-center font-mono">
+                <div className="h-10 w-10 rounded-xl bg-gold/20 border border-gold/40 text-gold font-bold text-sm flex items-center justify-center font-mono">
                   {workshopName.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="text-left">
@@ -1455,17 +1485,148 @@ export default function SettingsPage() {
                     </span>
                   </div>
                   <span className="text-[10px] text-gray-400 font-sans truncate block">
-                    {primaryPhone} • ورکشاپ مالک
+                    {primaryPhone} · ورکشاپ مالک
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-gold text-xs font-sans font-medium">
-                <span className="text-[10px] text-gray-400">Manage</span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-gray-400 font-sans">Manage</span>
                 <ChevronRight className="h-4 w-4 text-gold/60" />
               </div>
             </button>
 
+            {/* ── DANGER ZONE ───────────────────────────────────────────────── */}
+            <div>
+              <div className="flex items-center gap-2 px-1 mb-2">
+                <div className="flex-1 h-px bg-rose-500/20" />
+                <span className="text-[10px] font-bold text-rose-400/70 uppercase tracking-widest font-sans flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-400 inline-block" />
+                  Danger Zone
+                </span>
+                <div className="flex-1 h-px bg-rose-500/20" />
+              </div>
+              <div className="rounded-2xl border border-rose-500/20 bg-[#130A0A]/60 backdrop-blur-md overflow-hidden shadow-xl">
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('reset')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-rose-500/[0.03] active:bg-rose-500/[0.06] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                      <AlertTriangle className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="font-urdu-serif text-xs font-bold text-white block leading-relaxed" dir="rtl">
+                        ڈیٹا صفائی اور کیشے
+                      </span>
+                      <span className="text-[10px] text-rose-400/70 font-sans block">
+                        Flush Cache & Purge Test Data
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-rose-500/50 shrink-0" />
+                </button>
+              </div>
+            </div>
+
             {/* Bottom Clearance Spacer for Hub */}
+            <div className="h-36 w-full shrink-0" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* SUB-VIEW: APPEARANCE & LANGUAGE (mobileSection === 'appearance')   */}
+        {/* ----------------------------------------------------------------- */}
+        {mobileSection === 'appearance' && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Theme Card */}
+            <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-3 shadow-xl">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold text-white uppercase tracking-wide flex items-center gap-2">
+                  <Sun className="h-4 w-4 text-yellow-400" />
+                  <span>Theme / ظاہری شکل</span>
+                </h3>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-gray-400">
+                  {activeTheme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 p-1.5 rounded-xl bg-black/30 border border-white/10 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setTheme('light')}
+                  aria-pressed={activeTheme === 'light'}
+                  className={cn(
+                    'h-11 min-h-[44px] flex items-center justify-center gap-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer select-none',
+                    activeTheme === 'light'
+                      ? 'bg-yellow-400 text-[#18181B] shadow-[0_1px_3px_rgba(0,0,0,0.1)] font-bold'
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                  )}
+                >
+                  <Sun className="h-4 w-4 shrink-0" />
+                  <span>Light / دن</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme('dark')}
+                  aria-pressed={activeTheme === 'dark'}
+                  className={cn(
+                    'h-11 min-h-[44px] flex items-center justify-center gap-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer select-none',
+                    activeTheme === 'dark'
+                      ? 'bg-blue-500 text-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] font-bold'
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                  )}
+                >
+                  <Moon className="h-4 w-4 shrink-0" />
+                  <span>Dark / رات</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Language Card */}
+            <div className="rounded-2xl border border-white/10 bg-[#121418]/60 backdrop-blur-md p-4 space-y-3 shadow-xl">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold text-white uppercase tracking-wide flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-blue-400" />
+                  <span>Language / زبان</span>
+                </h3>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300">
+                  {language === 'ur' ? 'اردو' : 'English'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 p-1.5 rounded-xl bg-black/30 border border-white/10 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => { if (language !== 'ur') toggleLanguage(); }}
+                  aria-pressed={language === 'ur'}
+                  className={cn(
+                    'h-11 min-h-[44px] flex items-center justify-center px-3 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer select-none font-urdu-serif',
+                    language === 'ur'
+                      ? 'bg-blue-500 text-white font-bold shadow-[0_1px_3px_rgba(0,0,0,0.15)]'
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                  )}
+                >
+                  اردو (Urdu)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { if (language !== 'en') toggleLanguage(); }}
+                  aria-pressed={language === 'en'}
+                  className={cn(
+                    'h-11 min-h-[44px] flex items-center justify-center px-3 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer select-none font-sans',
+                    language === 'en'
+                      ? 'bg-blue-500 text-white font-bold shadow-[0_1px_3px_rgba(0,0,0,0.15)]'
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                  )}
+                >
+                  English (EN)
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-500 font-sans text-center leading-relaxed">
+                Changes apply immediately throughout the app.
+              </p>
+            </div>
+
+            {/* Bottom spacer */}
             <div className="h-36 w-full shrink-0" aria-hidden="true" />
           </div>
         )}

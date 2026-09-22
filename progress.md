@@ -4038,3 +4038,25 @@
 
 
 
+
+---
+
+## Phase 37: Bug Fix Sprint (Completed)
+* **Date:** 2026-09-22
+* **Tasks Completed:** 37.1 → 37.11 (all complete)
+* **Summary:** Full 4-issue bug fix sprint — swipe exit prevention, back button exit dialog, notification panel, and settings restructure.
+* **Files Modified:**
+  - `app/globals.css` [MODIFIED] — overscroll-behavior: none prevents horizontal swipe exit on Android
+  - `lib/notifications.ts` [MODIFIED] — removed all beep.wav refs, added pushNotification calls to all 3 functions
+  - `lib/notification-store.ts` [NEW] — IndexedDB notification history store (idb, max 50, color-coded)
+  - `components/layout/notification-panel.tsx` [NEW] — native bottom sheet notification center
+  - `components/layout/app-shell.tsx` [MODIFIED] — Capacitor back button handler, exit dialog, notification panel, Bell button upgrade, unread badge
+  - `electron/main.cjs` [MODIFIED] — before-quit dialog.showMessageBoxSync for desktop exit confirmation
+  - `app/settings/page.tsx` [MODIFIED] — 4-group hub redesign, new Appearance sub-view, useTheme/useLanguage integration
+  - `package.json` [MODIFIED] — @capacitor/app added
+* **Verification Results:**
+  - `npx tsc --noEmit`: 0 errors ✅
+  - `npm run build`: compiled successfully ✅
+* **Next Immediate Task:**
+  - Run `npx cap sync android` to sync Capacitor plugins to the Android project.
+  - Then rebuild APK and release v1.1.7.

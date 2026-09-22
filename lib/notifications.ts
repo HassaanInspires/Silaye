@@ -7,6 +7,7 @@
 
 import { isNativeMobile } from './platform';
 import { getNotificationPreferences } from './notification-preferences';
+import { pushNotification } from './notification-store';
 import type { GarmentOrder } from '@/types/tailor';
 
 /** Fixed notification ID for daily 9:00 AM morning briefing */
@@ -188,7 +189,7 @@ export async function scheduleDailyMorningBriefing(orders: GarmentOrder[]): Prom
               at: targetScheduleDate,
               allowWhileIdle: true,
             },
-            sound: prefs.soundEnabled ? 'beep.wav' : undefined,
+            sound: undefined, // Web Audio chime handles in-app audio via playNotificationChime()
             extra: {
               route: '/orders',
               type: 'morning_briefing',
@@ -196,6 +197,16 @@ export async function scheduleDailyMorningBriefing(orders: GarmentOrder[]): Prom
           },
         ],
       });
+
+      // Persist to in-app notification history
+      await pushNotification({
+        title,
+        body,
+        type: 'morning_briefing',
+        route: '/orders',
+        timestamp: Date.now(),
+      });
+
       return;
     } catch (err) {
       console.warn('[Silaye Notifications] Native morning briefing schedule notice:', err);
@@ -276,7 +287,7 @@ export async function scheduleUrgentOrderAlert(order: GarmentOrder): Promise<voi
             title,
             body,
             schedule: { at: new Date(Date.now() + 1000) },
-            sound: prefs.soundEnabled ? 'beep.wav' : undefined,
+            sound: undefined, // Web Audio chime handles in-app audio via playNotificationChime()
             extra: {
               route: '/orders',
               orderId: order.id,
@@ -285,6 +296,16 @@ export async function scheduleUrgentOrderAlert(order: GarmentOrder): Promise<voi
           },
         ],
       });
+
+      // Persist to in-app notification history
+      await pushNotification({
+        title,
+        body,
+        type: 'urgent_order',
+        route: '/orders',
+        timestamp: Date.now(),
+      });
+
       return;
     } catch (err) {
       console.warn('[Silaye Notifications] Native urgent order alert notice:', err);
@@ -338,11 +359,20 @@ export async function sendTestNotification(): Promise<boolean> {
             title,
             body,
             schedule: { at: new Date(Date.now() + 500) },
-            sound: prefs.soundEnabled ? 'beep.wav' : undefined,
+            sound: undefined, // Web Audio chime handles in-app audio via playNotificationChime()
             extra: { type: 'test' },
           },
         ],
       });
+
+      // Persist to in-app notification history
+      await pushNotification({
+        title,
+        body,
+        type: 'test',
+        timestamp: Date.now(),
+      });
+
       return true;
     } catch (err) {
       console.warn('[Silaye Notifications] Native test notification notice:', err);

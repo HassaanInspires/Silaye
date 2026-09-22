@@ -863,10 +863,50 @@
   * Ingested compiled binaries into new separate directory `/home/hassaan/Silaye/release-binaries-v116/` without overwriting prior release directories.
 - [x] 36.8 Official GitHub Release Publication:
   * Published official GitHub Release `v1.1.6` at `https://github.com/HassaanInspires/Silaye/releases/tag/v1.1.6` with attached production assets.
+---
 
-
-
-
+## Phase 37: Bug Fix Sprint — Navigation, Exit Dialog, Settings Redesign & Notification Panel
+- [x] 37.1 Swipe-Exit Prevention (Android WebView):
+  * Added `overscroll-behavior: none; touch-action: pan-y pinch-zoom; overscroll-behavior-x: none;` to `html, body` in `app/globals.css`.
+  * Prevents horizontal swipe gestures from triggering the Android WebView back-navigation.
+- [x] 37.2 Capacitor Back Button Handler & Exit Confirmation Sheet:
+  * Installed `@capacitor/app` package (`npm install @capacitor/app`).
+  * Added `Capacitor` import and `App.addListener('backButton', ...)` useEffect in `components/layout/app-shell.tsx`.
+  * Shows bilingual "رہنے دیں / Stay" + "چھوڑ دیں / Leave" bottom sheet instead of instantly closing.
+  * On root route (/) → opens exit dialog; on sub-routes → uses `window.history.back()`.
+- [x] 37.3 Desktop Exit Confirmation (Electron):
+  * Added `dialog` to Electron require in `electron/main.cjs`.
+  * Added `before-quit` event handler showing `dialog.showMessageBoxSync` with "Stay" / "Exit" buttons before any quit event (✕ button, Ctrl+Q, Alt+F4).
+- [x] 37.4 Notification Store (IndexedDB Persistence):
+  * Created `lib/notification-store.ts` using `idb` — max 50 notifications, color-coded by type.
+  * Exports: `pushNotification`, `getAllNotifications`, `markAsRead`, `markAllAsRead`, `deleteNotification`, `clearAllNotifications`, `getUnreadCount`, `NOTIFICATIONS_UPDATE_EVENT`, `NOTIF_TYPE_COLORS`.
+- [x] 37.5 Notification Panel Bottom Sheet:
+  * Created `components/layout/notification-panel.tsx` — native slides-up-from-bottom sheet.
+  * Features: drag handle, unread count badge, "Mark all read", "Clear all", per-row delete (🗑), color-coded type rows, bilingual empty state, loading skeleton, Escape key close.
+- [x] 37.6 AppShell Notification Panel Integration:
+  * Replaced Bell `<Link href="/settings#alerts">` with `<button>` that opens notification panel.
+  * Added animated red unread count badge (max "9+") on Bell icon.
+  * Added unread count sync useEffect (listens to `NOTIFICATIONS_UPDATE_EVENT`).
+  * Mounted `<NotificationPanel>` and exit dialog bottom sheet at bottom of AppShell JSX tree.
+- [x] 37.7 Fix Broken beep.wav References:
+  * Removed all 3 `sound: prefs.soundEnabled ? 'beep.wav' : undefined` references in `lib/notifications.ts`.
+  * Replaced with `sound: undefined` — audio is handled by the existing `playNotificationChime()` Web Audio synthesizer.
+- [x] 37.8 Persist Notifications to History Store:
+  * Added `pushNotification(...)` calls after every successful `LocalNotifications.schedule()` in all 3 notification functions (morning briefing, urgent order alert, test notification).
+- [x] 37.9 Settings Hub Restructure (Mobile):
+  * Replaced 2-group hub with 4-group layout: (1) Business [emerald], (2) Preferences [blue], (3) Hardware [purple], (4) Danger Zone [rose].
+  * Moved "Reset/Cache" out of preferences into its own visually separated Danger Zone.
+  * Account card upgraded to gold-bordered full-width card above Danger Zone.
+  * Added new "Appearance & Language" (ظاہری شکل اور زبان) row to Preferences group — was completely missing from mobile.
+- [x] 37.10 New Appearance Sub-View (Mobile):
+  * Added `appearance` to `SECTION_TITLES` map.
+  * Created new Appearance sub-view with: Theme toggle (Light ☀️ / Dark 🌙) and Language toggle (اردو / English) in native segmented-control-style cards.
+  * Added `useTheme` and `useLanguage` hook calls inside SettingsPage component.
+  * Added `Sun`, `Moon`, `Palette` to lucide imports.
+- [x] 37.11 TypeScript & Build Verification:
+  * 0 TypeScript compiler errors (`npx tsc --noEmit`).
+  * Production build verified (`npm run build`).
+  * Capacitor sync recommended (`npx cap sync android`) for back button handler to take effect on APK.
 
 
 

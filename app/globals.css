@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Native Mobile Overscroll & Swipe-Back Prevention
+   Prevents Android WebView from treating horizontal swipes
+   as browser back-navigation gestures which exit the app.
+   Also eliminates iOS rubber-band bounce and pull-to-refresh.
+   ============================================================ */
+html,
+body {
+  overscroll-behavior: none;
+  touch-action: pan-y pinch-zoom;
+  -webkit-overflow-scrolling: auto;
+  overscroll-behavior-x: none;
+}
+
 :root {
   /* Default Theme: Obsidian Dark Mode (Hex Constants for Legacy/Canvas) */
   --surface-obsidian-bg: #0B0C0E;

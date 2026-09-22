@@ -59,6 +59,12 @@ import {
   SILAYE_CACHED_SESSION_KEY,
   type User,
 } from '@/lib/supabase/client';
+import { Capacitor } from '@capacitor/core';
+import { NotificationPanel } from '@/components/layout/notification-panel';
+import {
+  getUnreadCount,
+  NOTIFICATIONS_UPDATE_EVENT,
+} from '@/lib/notification-store';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -339,6 +345,9 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
   });
   const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState<boolean>(false);
   const [navLayout, setNavLayout] = React.useState<NavLayoutPreference>('tabs');
+  const [isExitDialogOpen, setIsExitDialogOpen] = React.useState<boolean>(false);
+  const [isNotifPanelOpen, setIsNotifPanelOpen] = React.useState<boolean>(false);
+  const [unreadCount, setUnreadCount] = React.useState<number>(0);
   const isOnline = useOnlineStatus();
 
   const mobileSearchRef = React.useRef<HTMLInputElement>(null);
@@ -479,6 +488,63 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         window.removeEventListener('silaye:plan-updated', handlePlanUpdated);
       }
     };
+  }, []);
+
+  // ── Capacitor Hardware Back Button Handler ──────────────────────────────────
+  // Intercepts the Android hardware/gesture back button to show an exit
+  // confirmation dialog instead of closing the app immediately.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!Capacitor.isNativePlatform()) return;
+
+    let cleanupFn: (() => void) | undefined;
+
+    async function registerBackHandler() {
+      try {
+        const { App } = await import('@capacitor/app');
+        const handle = await App.addListener('backButton', ({ canGoBack }) => {
+          const currentPath =
+            typeof window !== 'undefined' ? window.location.pathname : '';
+          // On root/dashboard — show exit confirmation sheet
+          if (
+            currentPath === '/dashboard' ||
+            currentPath === '/' ||
+            currentPath === ''
+          ) {
+            setIsExitDialogOpen(true);
+            return;
+          }
+          // On any other page with available history — navigate back
+          if (canGoBack) {
+            window.history.back();
+          } else {
+            // No history available — show exit dialog as last resort
+            setIsExitDialogOpen(true);
+          }
+        });
+        cleanupFn = () => handle.remove().catch(() => {});
+      } catch (err) {
+        console.warn('[Silaye] Back button registration notice:', err);
+      }
+    }
+
+    registerBackHandler();
+    return () => cleanupFn?.();
+  }, []); // Runs once on mount — listener is persistent
+
+  // ── Unread Notification Count Sync ─────────────────────────────────────────
+  // Keeps the Bell icon badge count in sync with the notification store.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const refreshCount = async () => {
+      const count = await getUnreadCount();
+      setUnreadCount(count);
+    };
+
+    refreshCount();
+    window.addEventListener(NOTIFICATIONS_UPDATE_EVENT, refreshCount);
+    return () => window.removeEventListener(NOTIFICATIONS_UPDATE_EVENT, refreshCount);
   }, []);
 
   // Supabase Auth Session Lifecycle Check & Deterministic Route Guard Interlock
@@ -672,6 +738,18 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
     setIsOfflineAuth(false);
     await signOut();
     router.replace('/login');
+  };
+
+  const handleExitApp = async () => {
+    try {
+      const { App } = await import('@capacitor/app');
+      await App.exitApp();
+    } catch {
+      // Graceful fallback for non-Capacitor environments
+      if (typeof window !== 'undefined') {
+        window.close();
+      }
+    }
   };
 
   // 1. Unauthenticated Offline Barrier (First-Time Launch Fallback)
@@ -1095,15 +1173,24 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
                   <Search className="h-4 w-4" />
                 </button>
 
-                <Link
-                  href="/settings#alerts"
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-primary hover:bg-accent transition-colors cursor-pointer shadow-xs"
-                  aria-label="Notifications & Alerts"
-                  title={language === 'ur' ? 'نوٹیفیکیشنز اور الرٹس' : 'Notifications & Alerts'}
+                <button
+                  type="button"
+                  onClick={() => setIsNotifPanelOpen(true)}
+                  className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-primary hover:bg-accent transition-colors cursor-pointer shadow-xs"
+                  aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+                  title={language === 'ur' ? 'نوٹیفیکیشنز' : 'Notifications'}
                   data-testid="mobile-header-notifications-btn"
                 >
                   <Bell className="h-4 w-4" />
-                </Link>
+                  {unreadCount > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 h-4 min-w-[16px] rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center px-1 shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse pointer-events-none"
+                      aria-hidden="true"
+                    >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
 
                 <Link
                   href="/settings"
@@ -1256,6 +1343,66 @@ export function AppShell({ children, activeRoute = '' }: AppShellProps) {
         !activeRoute?.startsWith('/orders/new') && (
           <MobileBottomNav activeRoute={activeRoute || pathname} navLayout={navLayout} />
         )}
+
+      {/* ── Notification Panel Bottom Sheet ──────────────────────────────── */}
+      <NotificationPanel
+        isOpen={isNotifPanelOpen}
+        onClose={() => setIsNotifPanelOpen(false)}
+      />
+
+      {/* ── Exit Confirmation Bottom Sheet (Android Back Button / Swipe) ──── */}
+      {isExitDialogOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex flex-col justify-end md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirm exit Silaye"
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setIsExitDialogOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Sheet Panel */}
+          <div className="relative z-10 w-full rounded-t-3xl bg-[#0F1115] border-t border-white/10 p-6 pb-safe space-y-5 shadow-[0_-20px_60px_rgba(0,0,0,0.8)] animate-in slide-in-from-bottom duration-300">
+            {/* Drag handle */}
+            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto -mt-1" aria-hidden="true" />
+
+            {/* Icon + bilingual title */}
+            <div className="text-center space-y-2">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mb-3">
+                <LogOut className="h-6 w-6 text-rose-400" />
+              </div>
+              <h3 className="text-base font-bold text-white font-urdu-serif leading-relaxed">
+                سلائے ایپ بند کریں؟
+              </h3>
+              <p className="text-xs text-gray-400 font-sans">
+                Do you want to exit the Silaye Workshop app?
+              </p>
+            </div>
+
+            {/* Stay / Leave actions */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setIsExitDialogOpen(false)}
+                className="h-12 rounded-2xl border border-white/10 bg-white/[0.04] text-white font-bold text-sm hover:bg-white/[0.08] active:scale-[0.97] transition-all cursor-pointer font-urdu-serif"
+              >
+                رہنے دیں / Stay
+              </button>
+              <button
+                type="button"
+                onClick={handleExitApp}
+                className="h-12 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm active:scale-[0.97] transition-all cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.3)] font-urdu-serif"
+              >
+                چھوڑ دیں / Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, ipcMain, session } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, session, dialog } = require('electron');
 const path = require('path');
 const url = require('url');
 
@@ -111,6 +111,33 @@ ipcMain.handle('get-app-version', () => {
 
 // App Lifecycle
 app.whenReady().then(createWindow);
+
+// Desktop Close Confirmation — shown before any quit (✕ button, Ctrl+Q, Alt+F4)
+let isConfirmedQuit = false;
+app.on('before-quit', (e) => {
+  if (isConfirmedQuit) return; // Already confirmed — let it through
+  e.preventDefault();
+  const focusedWindow = BrowserWindow.getFocusedWindow();
+  if (!focusedWindow) {
+    isConfirmedQuit = true;
+    app.quit();
+    return;
+  }
+  const choice = dialog.showMessageBoxSync(focusedWindow, {
+    type: 'question',
+    buttons: ['Stay / رہنے دیں', 'Exit / چھوڑ دیں'],
+    defaultId: 0,
+    cancelId: 0,
+    title: 'Silaye Workshop',
+    message: 'Exit Silaye Beta?',
+    detail:
+      'Are you sure you want to close the Silaye workshop management system?\nمیں واقعی سلائے ورکشاپ بند کرنا چاہتے ہیں؟',
+  });
+  if (choice === 1) {
+    isConfirmedQuit = true;
+    app.quit();
+  }
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
